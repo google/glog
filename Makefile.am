@@ -1,0 +1,172 @@
+## Process this file with automake to produce Makefile.in
+
+# Make sure that when we re-make ./configure, we get the macros we need
+ACLOCAL_AMFLAGS = -I m4
+
+# This is so we can #include <glog/foo>
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+# This is mostly based on configure options
+AM_CXXFLAGS =
+
+# These are good warnings to turn on by default
+if GCC
+AM_CXXFLAGS += -Wall -Wwrite-strings -Woverloaded-virtual -Wno-sign-compare
+endif
+
+# These are x86-specific, having to do with frame-pointers
+if X86_64
+if ENABLE_FRAME_POINTERS
+AM_CXXFLAGS += -fno-omit-frame-pointer
+else
+  # TODO(csilvers): check if -fomit-frame-pointer might be in $(CXXFLAGS),
+  #                 before setting this.
+AM_CXXFLAGS += -DNO_FRAME_POINTER
+endif
+endif
+
+glogincludedir = $(includedir)/glog
+## The .h files you want to install (that is, .h files that people
+## who install this package can include in their own applications.)
+gloginclude_HEADERS = src/glog/log_severity.h src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h
+
+docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
+## This is for HTML and other documentation you want to install.
+## Add your documentation files (in doc/) in addition to these
+## top-level boilerplate files.  Also add a TODO file if you have one.
+dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
+        doc/designstyle.css doc/glog.html
+
+## The libraries (.so's) you want to install
+lib_LTLIBRARIES =
+
+## unittests you want to run when people type 'make check'.
+## TESTS is for binary unittests, check_SCRIPTS for script-based unittests.
+## TESTS_ENVIRONMENT sets environment variables for when you run unittest,
+## but it only seems to take effect for *binary* unittests (argh!)
+TESTS =
+TESTS_ENVIRONMENT =
+check_SCRIPTS =
+# Every time you add a unittest to check_SCRIPTS, add it here too
+noinst_SCRIPTS =
+# Binaries used for script-based unittests.
+TEST_BINARIES =
+
+TESTS += logging_unittest
+logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                            src/logging_unittest.cc
+logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+logging_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+check_SCRIPTS += logging_striplog_test_sh
+noinst_SCRIPTS += src/logging_striplog_test.sh
+logging_striplog_test_sh: logging_striptest0 logging_striptest2 logging_striptest10
+	$(top_srcdir)/src/logging_striplog_test.sh
+
+check_SCRIPTS += demangle_unittest_sh
+noinst_SCRIPTS += src/demangle_unittest.sh
+demangle_unittest_sh: demangle_unittest
+	$(top_srcdir)/demangle_unittest  # force to create lt-demangle_unittest
+	$(top_srcdir)/src/demangle_unittest.sh
+
+TEST_BINARIES += logging_striptest0
+logging_striptest0_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                             src/logging_striptest_main.cc
+logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest0_LDFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest0_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TEST_BINARIES += logging_striptest2
+logging_striptest2_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                             src/logging_striptest2.cc
+logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest2_LDFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest2_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TEST_BINARIES += logging_striptest10
+logging_striptest10_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                              src/logging_striptest10.cc
+logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest10_LDFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest10_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TESTS += demangle_unittest
+demangle_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                            src/demangle_unittest.cc
+demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+demangle_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TESTS += stacktrace_unittest
+stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                              src/stacktrace_unittest.cc
+stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TESTS += symbolize_unittest
+symbolize_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                              src/symbolize_unittest.cc
+symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+symbolize_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TESTS += stacktrace_framesizes_unittest
+stacktrace_framesizes_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                                         src/stacktrace_framesizes_unittest.cc
+stacktrace_framesizes_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_framesizes_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_framesizes_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+TESTS += stl_logging_unittest
+stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                               src/stl_logging_unittest.cc
+stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+stl_logging_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
+## vvvv RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
+
+lib_LTLIBRARIES += libglog.la
+libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                       src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
+                       src/utilities.cc src/utilities.h \
+	 	       src/demangle.cc src/demangle.h \
+                       src/stacktrace.cc src/stacktrace.h \
+                       src/stacktrace_generic-inl.h \
+                       src/stacktrace_libunwind-inl.h \
+                       src/stacktrace_powerpc-inl.h \
+                       src/stacktrace_x86-inl.h \
+                       src/stacktrace_x86_64-inl.h \
+                       src/symbolize.cc src/symbolize.h \
+                       src/base/mutex.h src/base/googleinit.h \
+                       src/base/commandlineflags.h src/googletest.h
+
+libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
+libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
+libglog_la_LIBADD = $(PTHREAD_LIBS)
+
+## ^^^^ END OF RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
+
+
+## This should always include $(TESTS), but may also include other
+## binaries that you compile but don't want automatically installed.
+noinst_PROGRAMS = $(TESTS) $(TEST_BINARIES)
+
+rpm: dist-gzip packages/rpm.sh packages/rpm/rpm.spec
+	@cd packages && ./rpm.sh ${PACKAGE} ${VERSION}
+
+deb: dist-gzip packages/deb.sh packages/deb/*
+	@cd packages && ./deb.sh ${PACKAGE} ${VERSION}
+
+# TODO(hamaji): We don't support Visual Studio for now.
+## Windows wants write permission to .vcproj files and maybe even sln files.
+#dist-hook:
+#	test -e "$(distdir)/vsprojects" \
+#	   && chmod -R u+w $(distdir)/*.sln $(distdir)/vsprojects/
+
+libtool: $(LIBTOOL_DEPS)
+	$(SHELL) ./config.status --recheck
+EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb \
+	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt

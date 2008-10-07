@@ -1,0 +1,6 @@
+2008-10-07  Google Inc. <opensource@google.com>
+
+	* google-glog: initial release:
+	The glog package contains a library that implements application-level
+	logging.  This library provides logging APIs based on C++-style
+	streams and various helper macros.
