@@ -18,7 +18,7 @@
     color: #000;
     font-family: "Times Roman", times, serif;
   }
-  ul.blacklist li {  
+  ul.blacklist li {
     color: #000;
     font-family: "Times Roman", times, serif;
   }
@@ -96,7 +96,7 @@ in addition to log files.
 
 <h2><A NAME=flags>Setting Flags</A></h2>
 
-<p>Several flags influences glog's output behavior.
+<p>Several flags influence glog's output behavior.
 If the <a href="http://code.google.com/p/google-gflags/">Google
 gflags library</a> is installed on your machine, the
 <code>configure</code> script (see the INSTALL file in the package for
@@ -122,7 +122,7 @@ environment variables, prefixing the flag name with "GLOG_", e.g.
 <dt><code>logtostderr</code> (<code>bool</code>, default=<code>false</code>)
 <dd>Log messages to stderr instead of logfiles.<br>
 Note: you can set binary flags to <code>true</code> by specifying
-<code>1</code>, <code>true</code> , or <code>yes</code> (case
+<code>1</code>, <code>true</code>, or <code>yes</code> (case
 insensitive).
 Also, you can set binary flags to <code>false</code> by specifying
 <code>0</code>, <code>false</code>, or <code>no</code> (again, case
@@ -131,7 +131,7 @@ insensitive).
 is <code>ERROR</code>)
 <dd>Copy log messages at or above this level to stderr in
 addition to logfiles.  The numbers of severity levels
-<code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, and 
+<code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, and
 <code>FATAL</code> are 0, 1, 2, and 3, respectively.
 <dt><code>minloglevel</code> (<code>int</code>, default=0, which
 is <code>INFO</code>)
@@ -168,7 +168,7 @@ conditions. You can use the following macros to perform conditional
 logging:
 
 <pre>
-   LOG_IF(INFO, num_cookies > 10) &lt;&lt; "Got lots of cookies";
+   LOG_IF(INFO, num_cookies &gt; 10) &lt;&lt; "Got lots of cookies";
 </pre>
 
 The "Got lots of cookies" message is logged only when the variable
@@ -176,7 +176,7 @@ The "Got lots of cookies" message is logged only when the variable
 
 If a line of code is executed many times, it may be useful to only log
 a message at certain intervals.  This kind of logging is most useful
-for informational messages. 
+for informational messages.
 
 <pre>
    LOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; COUNTER &lt;&lt; "th cookie";
@@ -191,7 +191,7 @@ happening.
 following macro.
 
 <pre>
-   LOG_IF_EVERY_N(INFO, (size > 1024), 10) &lt;&lt; "Got the " &lt;&lt; COUNTER
+   LOG_IF_EVERY_N(INFO, (size &gt; 1024), 10) &lt;&lt; "Got the " &lt;&lt; COUNTER
                                            &lt;&lt; "th big cookie";
 </pre>
 
@@ -216,13 +216,10 @@ application due to excessive logging.
 <pre>
    DLOG(INFO) &lt;&lt; "Found cookies";
 
-   DLOG_IF(INFO, num_cookies > 10) &lt;&lt; "Got lots of cookies";
+   DLOG_IF(INFO, num_cookies &gt; 10) &lt;&lt; "Got lots of cookies";
 
    DLOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; COUNTER &lt;&lt; "th cookie";
 </pre>
-
-<p>All "debug mode" logging is compiled away to nothing for non-debug mode
-compiles.
 
 <h2><A NAME=check>CHECK Macros</A></h2>
 
@@ -235,11 +232,11 @@ defined in the standard C library.
 <p><code>CHECK</code> aborts the application if a condition is not
 true.  Unlike <code>assert</code>, it is *not* controlled by
 <code>NDEBUG</code>, so the check will be executed regardless of
-compilation mode.  Therefore, <code>fp->Write(x)</code> in the
+compilation mode.  Therefore, <code>fp-&gt;Write(x)</code> in the
 following example is always executed:
 
 <pre>
-   CHECK(fp->Write(x) == 4) &lt;&lt; "Write failed!";
+   CHECK(fp-&gt;Write(x) == 4) &lt;&lt; "Write failed!";
 </pre>
 
 <p>There are various helper macros for
@@ -272,14 +269,14 @@ pointer and the other is NULL. To work around this, simply static_cast
 NULL to the type of the desired pointer.
 
 <pre>
-   CHECK_EQ(some_ptr, static_cast<SomeType*>(NULL));
+   CHECK_EQ(some_ptr, static_cast&lt;SomeType*&gt;(NULL));
 </pre>
 
 <p>Better yet, use the CHECK_NOTNULL macro:
 
 <pre>
    CHECK_NOTNULL(some_ptr);
-   some_ptr->DoSomething();
+   some_ptr-&gt;DoSomething();
 </pre>
 
 <p>Since this macro returns the given pointer, this is very useful in
@@ -308,7 +305,7 @@ equal.
 <p>Note that both arguments may be temporary strings which are
 destructed at the end of the current "full expression"
 (e.g., <code>CHECK_STREQ(Foo().c_str(), Bar().c_str())</code> where
-<code>Foo</code> and <code>Bar</code> returns C++'s
+<code>Foo</code> and <code>Bar</code> return C++'s
 <code>std::string</code>).
 
 <p>The <code>CHECK_DOUBLE_EQ</code> macro checks the equality of two
@@ -323,7 +320,7 @@ useful.  However, you may want to ignore too verbose messages in usual
 development.  For such verbose logging, glog provides the
 <code>VLOG</code> macro, which allows you to define your own numeric
 logging levels.  The <code>--v</code> command line option controls
-which verbose messages are logged: 
+which verbose messages are logged:
 
 <pre>
    VLOG(1) &lt;&lt; "I'm printed when you run the program with --v=1 or higher";
@@ -383,13 +380,13 @@ analogous to <code>LOG_IF</code>, <code>LOG_EVERY_N</code>,
 opposed to a severity level.
 
 <pre>
-   VLOG_IF(1, (size > 1024))
+   VLOG_IF(1, (size &gt; 1024))
       &lt;&lt; "I'm printed when size is more than 1024 and when you run the "
          "program with --v=1 or more";
    VLOG_EVERY_N(1, 10)
       &lt;&lt; "I'm printed every 10th occurrence, and when you run the program "
          "with --v=1 or more. Present occurence is " &lt;&lt; COUNTER;
-   VLOG_IF_EVERY_N(1, (size > 1024), 10)
+   VLOG_IF_EVERY_N(1, (size &gt; 1024), 10)
       &lt;&lt; "I'm printed on every 10th occurence of case when size is more "
          " than 1024, when you run the program with --v=1 or more. ";
          "Present occurence is " &lt;&lt; COUNTER;
@@ -406,7 +403,7 @@ expressions when the conditions are false.  So, the following check
 may not sacrifice the performance of your application.
 
 <pre>
-   CHECK(obj.ok) << obj.CreatePrettyFormattedStringButVerySlow();
+   CHECK(obj.ok) &lt;&lt; obj.CreatePrettyFormattedStringButVerySlow();
 </pre>
 
 <h3><A NAME=failure>User-defined Failure Function</A></h3>
@@ -451,13 +448,13 @@ description of the current state of errno to their output lines.
 E.g.
 
 <pre>
-   PCHECK(write(1, NULL, 2) >= 0) << "Write NULL failed";
+   PCHECK(write(1, NULL, 2) &gt;= 0) &lt;&lt; "Write NULL failed";
 </pre>
 
 <p>This check fails with the following error message.
 
 <pre>
-   F0825 185142 test.cc:22] Check failed: write(1, NULL, 2) >= 0 Write NULL failed: Bad address [14]
+   F0825 185142 test.cc:22] Check failed: write(1, NULL, 2) &gt;= 0 Write NULL failed: Bad address [14]
 </pre>
 
 <h3><A NAME=syslog>Syslog</A></h3>
@@ -484,7 +481,7 @@ the GOOGLE_STRIP_LOG macro:
    #include &lt;google/logging.h&gt;
 </pre>
 
-<p>The compiler will remove the log messages whose severity are less
+<p>The compiler will remove the log messages whose severities are less
 than the specified integer value.  Since
 <code>VLOG</code> logs at the severity level <code>INFO</code>
 (numeric value <code>0</code>),
