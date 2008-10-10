@@ -46,7 +46,7 @@ You can log a message by simply streaming things to LOG(&lt;a
 particular <a href="#severity">severity level</a>&gt;), e.g.
 
 <pre>
-   #include &lt;google/logging.h&gt;
+   #include &lt;glog/logging.h&gt;
 
    int main(int argc, char* argv[]) {
      // Initialize Google's logging library.
@@ -65,7 +65,7 @@ verbose logging levels, and more.  This document describes the
 functionality supported by glog.  Please note that this document
 doesn't describe all features in this library, but the most useful
 ones.  If you want to find less common features, please check
-header files under <code>src/google</code> directory.
+header files under <code>src/glog</code> directory.
 
 <h2> <A NAME=severity>Severity Level</A> </h2>
 
@@ -431,12 +431,12 @@ of September 2008, glog supports stack tracing for x86 and x86_64).
 
 <h3><A NAME=raw>Raw Logging</A></h3>
 
-<p>The header file <code>&lt;google/raw_logging.h&gt;</code> can be
+<p>The header file <code>&lt;glog/raw_logging.h&gt;</code> can be
 used for thread-safe logging, which does not allocate any memory or
 acquire any locks.  Therefore, the macros defined in this
 header file can be used by low-level memory allocation and
 synchronization code.
-Please check <code>src/google/raw_logging.h.in</code> for detail.
+Please check <code>src/glog/raw_logging.h.in</code> for detail.
 </p>
 
 <h3><A NAME=plog>Google Style perror()</A></h3>
@@ -478,7 +478,7 @@ the GOOGLE_STRIP_LOG macro:
 
 <pre>
    #define GOOGLE_STRIP_LOG 1    // this must go before the #include!
-   #include &lt;google/logging.h&gt;
+   #include &lt;glog/logging.h&gt;
 </pre>
 
 <p>The compiler will remove the log messages whose severities are less
