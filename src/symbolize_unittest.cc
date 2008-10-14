@@ -126,7 +126,7 @@ const char kAlternateStackFillValue = 0x55;
 // These helper functions look at the alternate stack buffer, and figure
 // out what portion of this buffer has been touched - this is the stack
 // consumption of the signal handler running on this alternate stack.
-static bool StackGrowsDown(int *x) {
+static ATTRIBUTE_NOINLINE bool StackGrowsDown(int *x) {
   int y;
   return &y < x;
 }
@@ -277,7 +277,7 @@ void ATTRIBUTE_NOINLINE TestWithPCInsideNonInlineFunction() {
   void *pc = non_inline_func();
   const char *symbol = TrySymbolize(pc);
   CHECK(symbol != NULL);
-  CHECK_EQ(0, strcmp(symbol, "non_inline_func"));
+  CHECK_STREQ(symbol, "non_inline_func");
   cout << "Test case TestWithPCInsideNonInlineFunction passed." << endl;
 #endif
 }
@@ -287,7 +287,7 @@ void ATTRIBUTE_NOINLINE TestWithPCInsideInlineFunction() {
   void *pc = inline_func();  // Must be inlined.
   const char *symbol = TrySymbolize(pc);
   CHECK(symbol != NULL);
-  CHECK_EQ(0, strcmp(symbol, __FUNCTION__));
+  CHECK_STREQ(symbol, __FUNCTION__);
   cout << "Test case TestWithPCInsideInlineFunction passed." << endl;
 #endif
 }
@@ -299,7 +299,7 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
   void *return_address = __builtin_return_address(0);
   const char *symbol = TrySymbolize(return_address);
   CHECK(symbol != NULL);
-  CHECK_EQ(0, strcmp(symbol, "main"));
+  CHECK_STREQ(symbol, "main");
   cout << "Test case TestWithReturnAddress passed." << endl;
 #endif
 }
@@ -307,6 +307,9 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
+  // We don't want to get affected by the callback interface, that may be
+  // used to install some callback function at InitGoogle() time.
+  InstallSymbolizeCallback(NULL);
 
   // Symbolize() now only supports ELF binaries.
   // The test makes sense only if __ELF__ is defined.
