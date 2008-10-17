@@ -80,7 +80,7 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
   void* stack[32];
   int depth = GetStackTrace(stack, sizeof(stack)/sizeof(*stack), skip_count+1);
   for (int i = 0; i < depth; i++) {
-#if defined(__ELF__)
+#if defined(HAVE_SYMBOLIZE)
     if (FLAGS_symbolize_stacktrace) {
       DumpPCAndSymbol(writerfn, arg, stack[i], "    ");
     } else {

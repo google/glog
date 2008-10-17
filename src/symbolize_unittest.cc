@@ -325,7 +325,11 @@ int main(int argc, char **argv) {
 
 #else
 int main() {
+#ifdef HAVE_SYMBOLIZE
+  printf("PASS (no symbolize_unittest support)\n");
+#else
   printf("PASS (no symbolize support)\n");
+#endif
   return 0;
 }
 #endif  // HAVE_STACKTRACE

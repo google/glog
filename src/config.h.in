@@ -3,6 +3,9 @@
 /* Namespace for Google classes */
 #undef GOOGLE_NAMESPACE
 
+/* Define if you have the `dladdr' function */
+#undef HAVE_DLADDR
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -56,6 +59,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* define if the compiler supports using expression for operator */
+#undef HAVE_USING_OPERATOR
 
 /* define if your compiler has __attribute__ */
 #undef HAVE___ATTRIBUTE__

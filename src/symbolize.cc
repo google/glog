@@ -18,7 +18,51 @@
 // and memmove().  We assume they are async-signal-safe.
 //
 
-#if defined(__ELF__)  // defined by gcc on Linux
+#include "utilities.h"
+
+#if defined(HAVE_SYMBOLIZE)
+
+#include "symbolize.h"
+#include "demangle.h"
+
+_START_GOOGLE_NAMESPACE_
+
+// We don't use assert() since it's not guaranteed to be
+// async-signal-safe.  Instead we define a minimal assertion
+// macro. So far, we don't need pretty printing for __FILE__, etc.
+
+// A wrapper for abort() to make it callable in ? :.
+static int AssertFail() {
+  abort();
+  return 0;  // Should not reach.
+}
+
+#define SAFE_ASSERT(expr) ((expr) ? 0 : AssertFail())
+
+static SymbolizeCallback g_symbolize_callback = NULL;
+void InstallSymbolizeCallback(SymbolizeCallback callback) {
+  g_symbolize_callback = callback;
+}
+
+// This function wraps the Demangle function to provide an interface
+// where the input symbol is demangled in-place.
+// To keep stack consumption low, we would like this function to not
+// get inlined.
+static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
+  char demangled[256];  // Big enough for sane demangled symbols.
+  if (Demangle(out, demangled, sizeof(demangled))) {
+    // Demangling succeeded. Copy to out if the space allows.
+    int len = strlen(demangled);
+    if (len + 1 <= out_size) {  // +1 for '\0'.
+      SAFE_ASSERT(len < sizeof(demangled));
+      memmove(out, demangled, len + 1);
+    }
+  }
+}
+
+_END_GOOGLE_NAMESPACE_
+
+#if defined(__ELF__)
 
 #include <dlfcn.h>
 #include <elf.h>
@@ -36,27 +80,13 @@
 #include <unistd.h>
 
 #include "symbolize.h"
-#include "demangle.h"
 #include "config.h"
-#include "utilities.h"
 #include "glog/raw_logging.h"
 
 // Re-runs fn until it doesn't cause EINTR.
 #define NO_INTR(fn)   do {} while ((fn) < 0 && errno == EINTR)
 
 _START_GOOGLE_NAMESPACE_
-
-// We don't use assert() since it's not guaranteed to be
-// async-signal-safe.  Instead we define a minimal assertion
-// macro. So far, we don't need pretty printing for __FILE__, etc.
-
-// A wrapper for abort() to make it callable in ? :.
-static int AssertFail() {
-  abort();
-  return 0;  // Should not reach.
-}
-
-#define SAFE_ASSERT(expr) ((expr) ? 0 : AssertFail())
 
 // Read up to "count" bytes from file descriptor "fd" into the buffer
 // starting at "buf" while handling short reads and EINTR.  On
@@ -519,28 +549,6 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
   }
 }
 
-
-SymbolizeCallback g_symbolize_callback = NULL;
-void InstallSymbolizeCallback(SymbolizeCallback callback) {
-  g_symbolize_callback = callback;
-}
-
-// This function wraps the Demangle function to provide an interface
-// where the input symbol is demangled in-place.
-// To keep stack consumption low, we would like this function to not
-// get inlined.
-static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
-  char demangled[256];  // Big enough for sane demangled symbols.
-  if (Demangle(out, demangled, sizeof(demangled))) {
-    // Demangling succeeded. Copy to out if the space allows.
-    int len = strlen(demangled);
-    if (len + 1 <= out_size) {  // +1 for '\0'.
-      SAFE_ASSERT(len < sizeof(demangled));
-      memmove(out, demangled, len + 1);
-    }
-  }
-}
-
 // The implementation of our symbolization routine.  If it
 // successfully finds the symbol containing "pc" and obtains the
 // symbol name, returns true and write the symbol name to "out".
@@ -581,10 +589,42 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                out, out_size, start_address)) {
     return false;
   }
+
   // Symbolization succeeded.  Now we try to demangle the symbol.
   DemangleInplace(out, out_size);
   return true;
 }
+
+_END_GOOGLE_NAMESPACE_
+
+#elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
+
+#include <dlfcn.h>
+#include <string.h>
+
+_START_GOOGLE_NAMESPACE_
+
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
+                                                    int out_size) {
+  Dl_info info;
+  if (dladdr(pc, &info)) {
+    if (strlen(info.dli_sname) < out_size) {
+      strcpy(out, info.dli_sname);
+      // Symbolization succeeded.  Now we try to demangle the symbol.
+      DemangleInplace(out, out_size);
+      return true;
+    }
+  }
+  return false;
+}
+
+_END_GOOGLE_NAMESPACE_
+
+#else
+# error BUG: HAVE_SYMBOLIZE was wrongly set
+#endif
+
+_START_GOOGLE_NAMESPACE_
 
 bool Symbolize(void *pc, char *out, int out_size) {
   SAFE_ASSERT(out_size >= 0);
@@ -593,7 +633,7 @@ bool Symbolize(void *pc, char *out, int out_size) {
 
 _END_GOOGLE_NAMESPACE_
 
-#else  /* __ELF__ */
+#else  /* HAVE_SYMBOLIZE */
 
 #include <assert.h>
 
@@ -601,8 +641,7 @@ _END_GOOGLE_NAMESPACE_
 
 _START_GOOGLE_NAMESPACE_
 
-// TODO: osx-port-incomplete.  An alternative is Brakepad, but I don't
-// think we want that mixed up in google3.
+// TODO: Support other environments.
 bool Symbolize(void *pc, char *out, int out_size) {
   assert(0);
   return false;

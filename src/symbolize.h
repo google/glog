@@ -26,8 +26,11 @@
 #ifndef BASE_SYMBOLIZE_H_
 #define BASE_SYMBOLIZE_H_
 
+#include "utilities.h"
 #include "config.h"
 #include "glog/logging.h"
+
+#ifdef HAVE_SYMBOLIZE
 
 #if defined(__ELF__)  // defined by gcc on Linux
 #include <elf.h>
@@ -46,6 +49,17 @@
 
 _START_GOOGLE_NAMESPACE_
 
+// Gets the section header for the given name, if it exists. Returns true on
+// success. Otherwise, returns false.
+bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
+                            ElfW(Shdr) *out);
+
+_END_GOOGLE_NAMESPACE_
+
+#endif  /* __ELF__ */
+
+_START_GOOGLE_NAMESPACE_
+
 // Installs a callback function, which will be called right before a symbol name
 // is printed. The callback is intended to be used for showing a file name and a
 // line number preceding a symbol name.
@@ -57,14 +71,9 @@ typedef int (*SymbolizeCallback)(int fd, void *pc, char *out, size_t out_size,
                                  uint64 relocation);
 void InstallSymbolizeCallback(SymbolizeCallback callback);
 
-// Gets the section header for the given name, if it exists. Returns true on
-// success. Otherwise, returns false.
-bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
-                            ElfW(Shdr) *out);
-
 _END_GOOGLE_NAMESPACE_
 
-#endif  /* __ELF__ */
+#endif
 
 _START_GOOGLE_NAMESPACE_
 

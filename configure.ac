@@ -45,6 +45,9 @@ AC_CHECK_TYPE(__uint16, ac_cv_have___uint16=1, ac_cv_have___uint16=0)
 AC_CHECK_FUNC(sigaltstack,
               AC_DEFINE(HAVE_SIGALTSTACK, 1,
                         [Define if you have the `sigaltstack' function]))
+AC_CHECK_FUNC(dladdr,
+              AC_DEFINE(HAVE_DLADDR, 1,
+                        [Define if you have the `dladdr' function]))
 
 AX_C___ATTRIBUTE__
 # We only care about these two attributes.

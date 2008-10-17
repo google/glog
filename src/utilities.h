@@ -46,6 +46,13 @@
 # define HAVE_STACKTRACE
 #endif
 
+#if defined(__ELF__)  // defined by gcc on Linux
+# define HAVE_SYMBOLIZE
+#elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
+// Use dladdr to symbolize.
+# define HAVE_SYMBOLIZE
+#endif
+
 _START_GOOGLE_NAMESPACE_
 
 namespace glog_internal_namespace_ {
