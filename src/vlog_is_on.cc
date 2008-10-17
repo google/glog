@@ -88,8 +88,9 @@ static VModuleInfo* vmodule_list = 0;
 // Boolean initialization flag.
 static bool inited_vmodule = false;
 
+// L >= vmodule_lock.
 static void VLOG2Initializer() {
-  MutexLock l(&vmodule_lock);
+  vmodule_lock.AssertHeld();
   // Can now parse --vmodule flag and initialize mapping of module-specific
   // logging levels.
   inited_vmodule = false;
@@ -119,8 +120,6 @@ static void VLOG2Initializer() {
   }
   inited_vmodule = true;
 }
-
-REGISTER_MODULE_INITIALIZER(vlog_is_on, VLOG2Initializer());
 
 // This can be called very early, so we use SpinLock and RAW_VLOG here.
 int SetVLOGLevel(const char* module_pattern, int log_level) {
@@ -161,12 +160,8 @@ bool InitVLOG3__(int32** site_flag, int32* site_default,
                  const char* fname, int32 verbose_level) {
   MutexLock l(&vmodule_lock);
   bool read_vmodule_flag = inited_vmodule;
-  if (!read_vmodule_flag  &&  vmodule_list == 0) {
-    // The command line --vmodule flags haven't been parsed
-    // and nothing was set with SetVLOGLevel yet,
-    // but *site_default (usually FLAGS_v) might be manually set
-    // by some early-executing code, or else it's still 0.
-    return *site_default >= verbose_level;
+  if (!read_vmodule_flag) {
+    VLOG2Initializer();
   }
 
   // protect the errno global in case someone writes:
