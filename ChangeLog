@@ -1,3 +1,10 @@
+2008-10-15  Google Inc. <opensource@google.com>
+	* google-glog: version 0.1.1
+	* Support symbolize for MacOSX 10.5.
+	* BUG FIX: --vmodule didn't work with gflags.
+	* BUG FIX: symbolize_unittest failed with GCC 4.3.
+	* Several fixes on the document.
+
 2008-10-07  Google Inc. <opensource@google.com>
 
 	* google-glog: initial release:
