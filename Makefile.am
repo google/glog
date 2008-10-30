@@ -70,6 +70,13 @@ demangle_unittest_sh: demangle_unittest
 	$(top_srcdir)/demangle_unittest  # force to create lt-demangle_unittest
 	$(top_srcdir)/src/demangle_unittest.sh
 
+check_SCRIPTS += signalhandler_unittest_sh
+noinst_SCRIPTS += src/signalhandler_unittest.sh
+signalhandler_unittest_sh: signalhandler_unittest
+        # force to create lt-signalhandler_unittest
+	$(top_srcdir)/signalhandler_unittest
+	$(top_srcdir)/src/signalhandler_unittest.sh
+
 TEST_BINARIES += logging_striptest0
 logging_striptest0_SOURCES = $(gloginclude_HEADERS) src/config.h \
                              src/logging_striptest_main.cc
@@ -126,6 +133,13 @@ stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 stl_logging_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
 
+TEST_BINARIES += signalhandler_unittest
+signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                               src/signalhandler_unittest.cc
+signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+signalhandler_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+signalhandler_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+
 ## vvvv RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 
 lib_LTLIBRARIES += libglog.la
@@ -140,6 +154,7 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
                        src/stacktrace_x86-inl.h \
                        src/stacktrace_x86_64-inl.h \
                        src/symbolize.cc src/symbolize.h \
+                       src/signalhandler.cc \
                        src/base/mutex.h src/base/googleinit.h \
                        src/base/commandlineflags.h src/googletest.h
 

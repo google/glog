@@ -1,5 +1,6 @@
 #include "utilities.h"
 
+#include <signal.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -94,6 +95,14 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
 
 static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
+
+  // Set the default signal handler for SIGABRT, to avoid invoking our
+  // own signal handler installed by InstallFailedSignalHandler().
+  struct sigaction sig_action = {};  // Zero-clear.
+  sigemptyset(&sig_action.sa_mask);
+  sig_action.sa_handler = SIG_DFL;
+  sigaction(SIGABRT, &sig_action, NULL);
+
   abort();
 }
 #endif

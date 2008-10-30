@@ -57,6 +57,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
 
+/* Define to 1 if you have the <ucontext.h> header file. */
+#undef HAVE_UCONTEXT_H
+
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
@@ -68,6 +71,9 @@
 
 /* define if your compiler has __builtin_expect */
 #undef HAVE___BUILTIN_EXPECT
+
+/* define if your compiler has __sync_val_compare_and_swap */
+#undef HAVE___SYNC_VAL_COMPARE_AND_SWAP
 
 /* Name of package */
 #undef PACKAGE
@@ -87,11 +93,14 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* How to access the PC from a struct ucontext */
+#undef PC_FROM_UCONTEXT
+
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
 #undef PTHREAD_CREATE_JOINABLE
 
-/* The size of a `void *', as computed by sizeof. */
+/* The size of `void *', as computed by sizeof. */
 #undef SIZEOF_VOID_P
 
 /* Define to 1 if you have the ANSI C header files. */

@@ -392,6 +392,34 @@ opposed to a severity level.
          "Present occurence is " &lt;&lt; COUNTER;
 </pre>
 
+<h2> <A name="signal">Failure Signal Handler</A> </h2>
+
+<p>
+The library provides a convenient signal handler that will dump useful
+information when the program crashes on certain signals such as SIGSEGV.
+The signal handler can be installed by
+google::InstallFailureSignalHandler().  The following is an example of output
+from the signal handler.
+
+<pre>
+*** Aborted at 1225095260 (unix time) try "date -d @1225095260" if you are using GNU date ***
+*** SIGSEGV (@0x0) received by PID 17711 (TID 0x7f893090a6f0) from PID 0; stack trace: ***
+PC: @           0x412eb1 TestWaitingLogSink::send()
+    @     0x7f892fb417d0 (unknown)
+    @           0x412eb1 TestWaitingLogSink::send()
+    @     0x7f89304f7f06 google::LogMessage::SendToLog()
+    @     0x7f89304f35af google::LogMessage::Flush()
+    @     0x7f89304f3739 google::LogMessage::~LogMessage()
+    @           0x408cf4 TestLogSinkWaitTillSent()
+    @           0x4115de main
+    @     0x7f892f7ef1c4 (unknown)
+    @           0x4046f9 (unknown)
+</pre>
+
+<p>
+By default, the signal handler writes the failure dump to the standard
+error.  You can customize the destination by InstallFailureWriter().
+
 <h2> <A name="misc">Miscellaneous Notes</A> </h2>
 
 <h3><A NAME=message>Performance of Messages</A></h3>
