@@ -94,12 +94,6 @@ typedef __uint64 uint64;
 #endif
 #endif
 
-// A macro to disallow the evil copy constructor and operator= functions
-// This should be used in the private: declarations for a class
-#define DISALLOW_EVIL_CONSTRUCTORS(TypeName)    \
-  TypeName(const TypeName&);                    \
-  void operator=(const TypeName&)
-
 // Make a bunch of macros for logging.  The way to log things is to stream
 // things to LOG(<a particular severity level>).  E.g.,
 //
@@ -980,7 +974,8 @@ private:
     ~LogMessageData();
 
    private:
-    DISALLOW_EVIL_CONSTRUCTORS(LogMessageData);
+    LogMessageData(const LogMessageData&);
+    void operator=(const LogMessageData&);
   };
 
   LogMessageData* allocated_;
@@ -988,7 +983,8 @@ private:
 
   friend class LogDestination;
 
-  DISALLOW_EVIL_CONSTRUCTORS(LogMessage);
+  LogMessage(const LogMessage&);
+  void operator=(const LogMessage&);
 };
 
 // This class happens to be thread-hostile because all instances share
@@ -1033,8 +1029,8 @@ class ErrnoLogMessage : public LogMessage {
   ~ErrnoLogMessage();
 
  private:
-
-  DISALLOW_EVIL_CONSTRUCTORS(ErrnoLogMessage);
+  ErrnoLogMessage(const ErrnoLogMessage&);
+  void operator=(const ErrnoLogMessage&);
 };
 
 
@@ -1304,9 +1300,6 @@ void InstallFailureSignalHandler();
 // is the size of the message.  You should not expect the data is
 // terminated with '\0'.
 void InstallFailureWriter(void (*writer)(const char* data, int size));
-
-// Undefine these macros not to taint namespace.
-#undef DISALLOW_EVIL_CONSTRUCTORS
 
 @ac_google_end_namespace@
 
