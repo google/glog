@@ -189,10 +189,10 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   formatter.AppendString(" (TID 0x");
   // We assume pthread_t is an integral number or a pointer, rather
   // than a complex struct.  In some environments, pthread_self()
-  // returns an int64 but in some other environments pthread_self()
+  // returns an uint64 but in some other environments pthread_self()
   // returns a pointer.  Hence we use C-style cast here, rather than
   // reinterpret/static_cast, to support both types of environments.
-  formatter.AppendUint64((int)pthread_self(), 16);
+  formatter.AppendUint64((uintptr_t)pthread_self(), 16);
   formatter.AppendString(") ");
   // Only linux has the PID of the signal sender in si_pid.
 #ifdef OS_LINUX
@@ -240,7 +240,7 @@ void InvokeDefaultSignalHandler(int signal_number) {
 
 // This variable is used for protecting FailureSignalHandler() from
 // dumping stuff while another thread is doing it.  Our policy is to let
-// the first thread dump stuff and let other threads to wait.
+// the first thread dump stuff and let other threads wait.
 // See also comments in FailureSignalHandler().
 static pthread_t* g_entered_thread_id_pointer = NULL;
 
