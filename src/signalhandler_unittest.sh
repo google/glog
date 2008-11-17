@@ -35,6 +35,13 @@ if [ x`$BINARY` != 'xOK' ]; then
   exit 0
 fi
 
+# The PC cannot be obtained in signal handlers on PowerPC correctly.
+# We just skip the test for PowerPC.
+if [ x`uname -p` = x"powerpc" ]; then
+  echo "PASS (We don't test the signal handler on PowerPC.)"
+  exit 0
+fi
+
 # Test for a case the program kills itself by SIGSEGV.
 $BINARY segv 2> signalhandler.out1
 for pattern in SIGSEGV 0xdead main "Aborted at [0-9]"; do

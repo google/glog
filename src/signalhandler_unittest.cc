@@ -27,7 +27,7 @@ void WriteToStdout(const char* data, int size) {
 }
 
 int main(int argc, char **argv) {
-#ifdef HAVE_STACKTRACE
+#if defined(HAVE_STACKTRACE) && defined(HAVE_SYMBOLIZE)
   InitGoogleLogging(argv[0]);
   InstallFailureSignalHandler();
   const std::string command = argc > 1 ? argv[1] : "none";

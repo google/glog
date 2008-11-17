@@ -40,6 +40,9 @@ dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
 ## The libraries (.so's) you want to install
 lib_LTLIBRARIES =
 
+# The libraries libglog depends on.
+COMMON_LIBS=$(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+
 ## unittests you want to run when people type 'make check'.
 ## TESTS is for binary unittests, check_SCRIPTS for script-based unittests.
 ## TESTS_ENVIRONMENT sets environment variables for when you run unittest,
@@ -57,7 +60,7 @@ logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                             src/logging_unittest.cc
 logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 check_SCRIPTS += logging_striplog_test_sh
 noinst_SCRIPTS += src/logging_striplog_test.sh
@@ -82,63 +85,63 @@ logging_striptest0_SOURCES = $(gloginclude_HEADERS) src/config.h \
                              src/logging_striptest_main.cc
 logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest0_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_striptest0_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+logging_striptest0_LDADD = libglog.la $(COMMON_LIBS)
 
 TEST_BINARIES += logging_striptest2
 logging_striptest2_SOURCES = $(gloginclude_HEADERS) src/config.h \
                              src/logging_striptest2.cc
 logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest2_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_striptest2_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+logging_striptest2_LDADD = libglog.la $(COMMON_LIBS)
 
 TEST_BINARIES += logging_striptest10
 logging_striptest10_SOURCES = $(gloginclude_HEADERS) src/config.h \
                               src/logging_striptest10.cc
 logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest10_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_striptest10_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+logging_striptest10_LDADD = libglog.la $(COMMON_LIBS)
 
 TESTS += demangle_unittest
 demangle_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                             src/demangle_unittest.cc
 demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-demangle_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+demangle_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 TESTS += stacktrace_unittest
 stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                               src/stacktrace_unittest.cc
 stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 stacktrace_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-stacktrace_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+stacktrace_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 TESTS += symbolize_unittest
 symbolize_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                               src/symbolize_unittest.cc
 symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-symbolize_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
-
-TESTS += stacktrace_framesizes_unittest
-stacktrace_framesizes_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
-                                         src/stacktrace_framesizes_unittest.cc
-stacktrace_framesizes_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
-stacktrace_framesizes_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-stacktrace_framesizes_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 TESTS += stl_logging_unittest
 stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                                src/stl_logging_unittest.cc
 stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-stl_logging_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 TEST_BINARIES += signalhandler_unittest
 signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
                                src/signalhandler_unittest.cc
 signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 signalhandler_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-signalhandler_unittest_LDADD = libglog.la $(PTHREAD_LIBS) $(GFLAGS_LIBS)
+signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS)
+
+TESTS += utilities_unittest
+utilities_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+                             src/utilities_unittest.cc
+utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
+utilities_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
 ## vvvv RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 
@@ -147,7 +150,7 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
                        src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
                        src/utilities.cc src/utilities.h \
 	 	       src/demangle.cc src/demangle.h \
-                       src/stacktrace.cc src/stacktrace.h \
+                       src/stacktrace.h \
                        src/stacktrace_generic-inl.h \
                        src/stacktrace_libunwind-inl.h \
                        src/stacktrace_powerpc-inl.h \
@@ -160,7 +163,7 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
 
 libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
 libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
-libglog_la_LIBADD = $(PTHREAD_LIBS)
+libglog_la_LIBADD = $(COMMON_LIBS)
 
 ## ^^^^ END OF RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 

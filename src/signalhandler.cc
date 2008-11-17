@@ -22,30 +22,6 @@ _START_GOOGLE_NAMESPACE_
 
 namespace {
 
-// Wrapper of __sync_val_compare_and_swap. If the GCC extension isn't
-// defined, we try the CPU specific logics (we only support x86 and
-// x86_64 for now) first, then use a naive implementation, which has a
-// race condition.
-template<typename T>
-inline T* sync_val_compare_and_swap(T** ptr, T* oldval, T* newval) {
-#if defined(HAVE___SYNC_VAL_COMPARE_AND_SWAP)
-  return __sync_val_compare_and_swap(ptr, oldval, newval);
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-  T* ret;
-  __asm__ __volatile__("lock; cmpxchg %1, (%2);"
-                       :"=a"(ret)
-                       :"r"(newval), "r"(ptr), "a"(oldval)
-                       :"memory", "cc");
-  return ret;
-#else
-  T* ret = *ptr;
-  if (ret == oldval) {
-    *ptr = newval;
-  }
-  return ret;
-#endif
-}
-
 // We'll install the failure signal handler for these signals.  We could
 // use strsignal() to get signal names, but we don't use it to avoid
 // introducing yet another #ifdef complication.
@@ -262,9 +238,10 @@ void FailureSignalHandler(int signal_number,
   // old value (value returned from __sync_val_compare_and_swap) is
   // different from the original value (in this case NULL).
   pthread_t* old_thread_id_pointer =
-      sync_val_compare_and_swap(&g_entered_thread_id_pointer,
-                                static_cast<pthread_t*>(NULL),
-                                &my_thread_id);
+      glog_internal_namespace_::sync_val_compare_and_swap(
+          &g_entered_thread_id_pointer,
+          static_cast<pthread_t*>(NULL),
+          &my_thread_id);
   if (old_thread_id_pointer != NULL) {
     // We've already entered the signal handler.  What should we do?
     if (pthread_equal(my_thread_id, *g_entered_thread_id_pointer)) {

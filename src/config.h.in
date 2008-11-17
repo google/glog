@@ -15,8 +15,14 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the <libunwind.h> header file. */
+#undef HAVE_LIBUNWIND_H
+
 /* define if you have google gflags library */
 #undef HAVE_LIB_GFLAGS
+
+/* define if you have libunwind */
+#undef HAVE_LIB_UNWIND
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H

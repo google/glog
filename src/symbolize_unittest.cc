@@ -3,6 +3,8 @@
 //
 // Unit tests for functions in symbolize.cc.
 
+#include "utilities.h"
+
 #include <signal.h>
 #include <iostream>
 
@@ -10,7 +12,6 @@
 #include "symbolize.h"
 #include "googletest.h"
 #include "config.h"
-#include "utilities.h"
 
 using namespace std;
 using namespace GOOGLE_NAMESPACE;
@@ -307,19 +308,17 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
+#ifdef HAVE_SYMBOLIZE
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.
   InstallSymbolizeCallback(NULL);
 
-  // Symbolize() now only supports ELF binaries.
-  // The test makes sense only if __ELF__ is defined.
-#ifndef __ELF__
-  return 0;
-#else
   TestWithPCInsideInlineFunction();
   TestWithPCInsideNonInlineFunction();
   TestWithReturnAddress();
   return RUN_ALL_TESTS();
+#else
+  return 0;
 #endif
 }
 

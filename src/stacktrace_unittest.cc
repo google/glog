@@ -93,6 +93,9 @@ void CheckStackTraceLeaf(void) {
     CheckRetAddrIsInFunction(stack[i], expected_stack[i]);
     printf("OK\n");
   }
+
+  // Check if the second stacktrace returns the same size.
+  CHECK_EQ(size, GetStackTrace(stack, STACK_LEN, 0));
 }
 
 //-----------------------------------------------------------------------//

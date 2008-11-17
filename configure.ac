@@ -31,8 +31,9 @@ AC_CHECK_HEADER(inttypes.h, ac_cv_have_inttypes_h=1, ac_cv_have_inttypes_h=0)
 AC_CHECK_HEADERS(syscall.h)
 AC_CHECK_HEADERS(sys/syscall.h)
 # For backtrace with glibc.
-# TODO(hamaji): Support other platforms using libgcc.
 AC_CHECK_HEADERS(execinfo.h)
+# For backtrace with libunwind.
+AC_CHECK_HEADERS(libunwind.h, ac_cv_have_libunwind_h=1, ac_cv_have_libunwind_h=0)
 AC_CHECK_HEADERS(ucontext.h)
 
 AC_CHECK_SIZEOF(void *)
@@ -90,6 +91,19 @@ if test x"$ac_cv_have_libgflags" = x"1"; then
   AC_DEFINE(HAVE_LIB_GFLAGS, 1, [define if you have google gflags library])
 else
   GFLAGS_LIBS=
+fi
+
+# We want to link in libunwind if it exists
+UNWIND_LIBS=
+# Unfortunately, we need to check the header file in addition to the
+# lib file to check if libunwind is available since libunwind-0.98
+# doesn't install all necessary header files.
+if test x"$ac_cv_have_libunwind_h" = x"1"; then
+ AC_CHECK_LIB(unwind, backtrace, UNWIND_LIBS=-lunwind)
+fi
+AC_SUBST(UNWIND_LIBS)
+if test x"$UNWIND_LIBS" != x""; then
+  AC_DEFINE(HAVE_LIB_UNWIND, 1, [define if you have libunwind])
 fi
 
 # We'd like to use read/write locks in several places in the code.

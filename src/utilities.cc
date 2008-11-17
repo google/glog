@@ -1,3 +1,6 @@
+// Copyright 2008 Google Inc. All Rights Reserved.
+// Author: hamaji@google.com (Shinichiro Hamaji)
+
 #include "utilities.h"
 
 #include <signal.h>
@@ -105,7 +108,8 @@ static void DumpStackTraceAndExit() {
 
   abort();
 }
-#endif
+
+#endif  // HAVE_STACKTRACE
 
 namespace glog_internal_namespace_ {
 
@@ -179,3 +183,8 @@ void InitGoogleLogging(const char* argv0) {
 }
 
 _END_GOOGLE_NAMESPACE_
+
+// Make an implementation of stacktrace compiled.
+#ifdef STACKTRACE_H
+# include STACKTRACE_H
+#endif
