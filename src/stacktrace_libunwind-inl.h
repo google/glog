@@ -21,8 +21,8 @@ _START_GOOGLE_NAMESPACE_
 // internal mmap based memory allocator), and that mmap gets trapped
 // and causes a stack-trace request.  If were to try to honor that
 // recursive request, we'd end up with infinite recursion or deadlock.
-// Luckily, it's safe to gnore those subsequent traces.  In such cases,
-// we return 0 to indicate the situation.
+// Luckily, it's safe to ignore those subsequent traces.  In such
+// cases, we return 0 to indicate the situation.
 static bool g_now_entering = false;
 
 // If you change this function, also change GetStackFrames below.
