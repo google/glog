@@ -1,3 +1,9 @@
+2008-11-18  Google Inc. <opensource@google.com>
+	* google-glog: version 0.1.2
+	* Add InstallFailureSignalHandler(). (satorux)
+	* Re-organize the way to produce stacktraces.
+	* Don't define unnecessary macro DISALLOW_EVIL_CONSTRUCTORS.
+
 2008-10-15  Google Inc. <opensource@google.com>
 	* google-glog: version 0.1.1
 	* Support symbolize for MacOSX 10.5.
