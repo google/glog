@@ -83,6 +83,9 @@ AM_CONDITIONAL(X86_64, test "$is_x86_64" = yes)
 
 # Some of the code in this directory depends on pthreads
 ACX_PTHREAD
+# To make libglog depend on libpthread on Linux, we need to add
+# -lpthread in addition to -pthread.
+AC_CHECK_LIB(pthread, pthread_self)
 
 # Check if there is google-gflags library installed.
 AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
