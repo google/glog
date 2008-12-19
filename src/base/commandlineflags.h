@@ -63,12 +63,12 @@
 
 #define DECLARE_VARIABLE(type, name, tn)                                      \
   namespace FLAG__namespace_do_not_use_directly_use_DECLARE_##tn##_instead {  \
-  extern type FLAGS_##name;                                                   \
+  extern GOOGLE_GLOG_DLL_DECL type FLAGS_##name;                              \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_##tn##_instead::FLAGS_##name
 #define DEFINE_VARIABLE(type, name, value, meaning, tn) \
   namespace FLAG__namespace_do_not_use_directly_use_DECLARE_##tn##_instead {  \
-  type FLAGS_##name(value);                                                   \
+  GOOGLE_GLOG_DLL_DECL type FLAGS_##name(value);                              \
   char FLAGS_no##name;                                                        \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_##tn##_instead::FLAGS_##name
@@ -90,12 +90,13 @@
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
 #define DECLARE_string(name)                                          \
   namespace FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead {  \
-  extern std::string FLAGS_##name;                                            \
+  extern GOOGLE_GLOG_DLL_DECL std::string FLAGS_##name;                       \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead::FLAGS_##name
 #define DEFINE_string(name, value, meaning) \
   namespace FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead {  \
-  std::string FLAGS_##name(EnvToString("GLOG_" #name, value));                \
+  GOOGLE_GLOG_DLL_DECL std::string                                            \
+      FLAGS_##name(EnvToString("GLOG_" #name, value));                        \
   char FLAGS_no##name;                                                        \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead::FLAGS_##name

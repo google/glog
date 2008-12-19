@@ -15,7 +15,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include "base/commandlineflags.h"
 
@@ -23,14 +25,43 @@ using std::map;
 using std::string;
 using std::vector;
 
-DEFINE_string(test_tmpdir, "/tmp", "Dir we use for temp files");
-DEFINE_string(test_srcdir, ".",
-              "Source-dir root, needed to find glog_unittest_flagfile");
-DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
-
 _START_GOOGLE_NAMESPACE_
 
-extern void (*g_logging_fail_func)();
+extern GOOGLE_GLOG_DLL_DECL void (*g_logging_fail_func)();
+
+_END_GOOGLE_NAMESPACE_
+
+#undef GOOGLE_GLOG_DLL_DECL
+#define GOOGLE_GLOG_DLL_DECL
+
+static string GetTempDir() {
+#ifndef OS_WINDOWS
+  return "/tmp";
+#else
+  char tmp[MAX_PATH];
+  GetTempPathA(MAX_PATH, tmp);
+  return tmp;
+#endif
+}
+
+#ifdef OS_WINDOWS
+// The test will run in glog/vsproject/<project name>
+// (e.g., glog/vsproject/logging_unittest).
+static const char TEST_SRC_DIR[] = "../..";
+#else
+static const char TEST_SRC_DIR[] = ".";
+#endif
+
+DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
+DEFINE_string(test_srcdir, TEST_SRC_DIR,
+              "Source-dir root, needed to find glog_unittest_flagfile");
+#ifdef NDEBUG
+DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
+#else
+DEFINE_int32(benchmark_iters, 1000000, "Number of iterations per benchmark");
+#endif
+
+_START_GOOGLE_NAMESPACE_
 
 // The following is some bare-bones testing infrastructure
 
@@ -96,6 +127,10 @@ static void CalledAbort() {
   longjmp(g_jmp_buf, 1);
 }
 
+#ifdef OS_WINDOWS
+// TODO(hamaji): Death test somehow doesn't work in Windows.
+#define ASSERT_DEATH(fn, msg)
+#else
 #define ASSERT_DEATH(fn, msg)                                           \
   do {                                                                  \
     g_called_abort = false;                                             \
@@ -110,6 +145,7 @@ static void CalledAbort() {
       exit(1);                                                          \
     }                                                                   \
   } while (0)
+#endif
 
 #ifdef NDEBUG
 #define ASSERT_DEBUG_DEATH(fn, msg)
@@ -307,11 +343,10 @@ static string MungeLine(const string& line) {
   iss >> logcode_date;
   while (!IsLoggingPrefix(logcode_date)) {
     before += " " + logcode_date;
-    if (iss.eof()) {
+    if (!(iss >> logcode_date)) {
       // We cannot find the header of log output.
       return before;
     }
-    iss >> logcode_date;
   }
   if (!before.empty()) before += " ";
   iss >> time;
@@ -354,6 +389,8 @@ static string Munge(const string& filename) {
     char null_str[256];
     sprintf(null_str, "%p", NULL);
     StringReplace(&line, "__NULLP__", null_str);
+    // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
+    StringReplace(&line, " 0x", " ");
 
     char errmsg_buf[100];
     posix_strerror_r(0, errmsg_buf, sizeof(errmsg_buf));
@@ -429,16 +466,32 @@ struct FlagSaver {
 };
 #endif
 
-// TODO(hamaji): Make it portable.
 class Thread {
  public:
   void SetJoinable(bool joinable) {}
+#if defined(HAVE_PTHREAD)
   void Start() {
     pthread_create(&th_, NULL, &Thread::InvokeThread, this);
   }
   void Join() {
     pthread_join(th_, NULL);
   }
+#elif defined(OS_WINDOWS)
+  void Start() {
+    handle_ = CreateThread(NULL,
+                           0,
+                           (LPTHREAD_START_ROUTINE)&Thread::InvokeThread,
+                           (LPVOID)this,
+                           0,
+                           &th_);
+    CHECK(handle_) << "CreateThread";
+  }
+  void Join() {
+    WaitForSingleObject(handle_, INFINITE);
+  }
+#else
+# error No thread implementation.
+#endif
 
  protected:
   virtual void Run() = 0;
@@ -450,11 +503,17 @@ class Thread {
   }
 
   pthread_t th_;
+#ifdef OS_WINDOWS
+  HANDLE handle_;
+#endif
 };
 
-// TODO(hamaji): Make it portable.
 static void SleepForMilliseconds(int t) {
+#ifndef OS_WINDOWS
   usleep(t * 1000);
+#else
+  Sleep(t);
+#endif
 }
 
 // Add hook for operator new to ensure there are no memory allocation.

@@ -3,21 +3,28 @@
 #include "utilities.h"
 
 #include <assert.h>
-#include <pthread.h>
 #include <iomanip>
 #include <string>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>  // For _exit.
+#endif
 #include <climits>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/utsname.h>
+#ifdef HAVE_SYS_UTSNAME_H
+# include <sys/utsname.h>  // For uname.
+#endif
 #include <fcntl.h>
 #include <cstdio>
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <pwd.h>
-#include <syslog.h>
+#ifdef HAVE_PWD_H
+# include <pwd.h>
+#endif
+#ifdef HAVE_SYSLOG_H
+# include <syslog.h>
+#endif
 #include <vector>
 #include <errno.h>                   // for errno
 #include <sstream>
@@ -101,6 +108,28 @@ DEFINE_bool(stop_logging_if_full_disk, false,
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
 
+static void GetHostName(string* hostname) {
+#if defined(HAVE_SYS_UTSNAME_H)
+  struct utsname buf;
+  if (0 != uname(&buf)) {
+    // ensure null termination on failure
+    *buf.nodename = '\0';
+  }
+  *hostname = buf.nodename;
+#elif defined(OS_WINDOWS)
+  char buf[256];
+  DWORD len;
+  if (GetComputerNameA(buf, &len)) {
+    *hostname = buf;
+  } else {
+    hostname->clear();
+  }
+#else
+# warning There is no way to retrieve the host name.
+  *hostname = "(unknown)";
+#endif
+}
+
 _START_GOOGLE_NAMESPACE_
 
 // A mutex that allows only one thread to log at a time, to keep things from
@@ -129,6 +158,8 @@ static bool SendEmailInternal(const char*dest, const char *subject,
 
 base::Logger::~Logger() {
 }
+
+namespace {
 
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
@@ -182,61 +213,7 @@ class LogFileObject : public base::Logger {
   bool CreateLogfile(const char* time_pid_string);
 };
 
-LogFileObject::LogFileObject(LogSeverity severity,
-                             const char* base_filename)
-  : base_filename_selected_(base_filename != NULL),
-    base_filename_((base_filename != NULL) ? base_filename : ""),
-    symlink_basename_(ProgramInvocationShortName()),
-    filename_extension_(),
-    file_(NULL),
-    severity_(severity),
-    bytes_since_flush_(0),
-    file_length_(0),
-    rollover_attempt_(kRolloverAttemptFrequency-1),
-    next_flush_time_(0) {
-  assert(severity >= 0);
-  assert(severity < NUM_SEVERITIES);
-}
-
-LogFileObject::~LogFileObject() {
-  MutexLock l(&lock_);
-  if (file_ != NULL) {
-    fclose(file_);
-    file_ = NULL;
-  }
-}
-
-void LogFileObject::SetBasename(const char* basename) {
-  MutexLock l(&lock_);
-  base_filename_selected_ = true;
-  if (base_filename_ != basename) {
-    // Get rid of old log file since we are changing names
-    if (file_ != NULL) {
-      fclose(file_);
-      file_ = NULL;
-      rollover_attempt_ = kRolloverAttemptFrequency-1;
-    }
-    base_filename_ = basename;
-  }
-}
-
-void LogFileObject::SetExtension(const char* ext) {
-  MutexLock l(&lock_);
-  if (filename_extension_ != ext) {
-    // Get rid of old log file since we are changing names
-    if (file_ != NULL) {
-      fclose(file_);
-      file_ = NULL;
-      rollover_attempt_ = kRolloverAttemptFrequency-1;
-    }
-    filename_extension_ = ext;
-  }
-}
-
-void LogFileObject::SetSymlinkBasename(const char* symlink_basename) {
-  MutexLock l(&lock_);
-  symlink_basename_ = symlink_basename;
-}
+}  // namespace
 
 class LogDestination {
  public:
@@ -339,10 +316,8 @@ Mutex LogDestination::sink_mutex_;
 /* static */
 const string& LogDestination::hostname() {
   if (hostname_.empty()) {
-    struct utsname buf;
-    if (0 == uname(&buf)) {
-      hostname_ = buf.nodename;
-    } else {
+    GetHostName(&hostname_);
+    if (hostname_.empty()) {
       hostname_ = "(unknown)";
     }
   }
@@ -353,22 +328,6 @@ LogDestination::LogDestination(LogSeverity severity,
                                const char* base_filename)
   : fileobject_(severity, base_filename),
     logger_(&fileobject_) {
-}
-
-void LogFileObject::Flush() {
-  MutexLock l(&lock_);
-  FlushUnlocked();
-}
-
-void LogFileObject::FlushUnlocked(){
-  if (file_ != NULL) {
-    fflush(file_);
-    bytes_since_flush_ = 0;
-  }
-  // Figure out when we are due for another flush.
-  const int64 next = (FLAGS_logbufsecs
-                      * static_cast<int64>(1000000));  // in usec
-  next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
 }
 
 inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
@@ -476,7 +435,7 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
 static void WriteToStderr(const char* message, size_t len) {
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
-  fwrite(message, len, 1, stderr);
+  write(STDERR_FILENO, message, len);
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
@@ -568,14 +527,100 @@ inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   }
 }
 
+LogDestination* LogDestination::log_destinations_[NUM_SEVERITIES];
+
+inline LogDestination* LogDestination::log_destination(LogSeverity severity) {
+  assert(severity >=0 && severity < NUM_SEVERITIES);
+  if (!log_destinations_[severity]) {
+    log_destinations_[severity] = new LogDestination(severity, NULL);
+  }
+  return log_destinations_[severity];
+}
+
+namespace {
+
+LogFileObject::LogFileObject(LogSeverity severity,
+                             const char* base_filename)
+  : base_filename_selected_(base_filename != NULL),
+    base_filename_((base_filename != NULL) ? base_filename : ""),
+    symlink_basename_(ProgramInvocationShortName()),
+    filename_extension_(),
+    file_(NULL),
+    severity_(severity),
+    bytes_since_flush_(0),
+    file_length_(0),
+    rollover_attempt_(kRolloverAttemptFrequency-1),
+    next_flush_time_(0) {
+  assert(severity >= 0);
+  assert(severity < NUM_SEVERITIES);
+}
+
+LogFileObject::~LogFileObject() {
+  MutexLock l(&lock_);
+  if (file_ != NULL) {
+    fclose(file_);
+    file_ = NULL;
+  }
+}
+
+void LogFileObject::SetBasename(const char* basename) {
+  MutexLock l(&lock_);
+  base_filename_selected_ = true;
+  if (base_filename_ != basename) {
+    // Get rid of old log file since we are changing names
+    if (file_ != NULL) {
+      fclose(file_);
+      file_ = NULL;
+      rollover_attempt_ = kRolloverAttemptFrequency-1;
+    }
+    base_filename_ = basename;
+  }
+}
+
+void LogFileObject::SetExtension(const char* ext) {
+  MutexLock l(&lock_);
+  if (filename_extension_ != ext) {
+    // Get rid of old log file since we are changing names
+    if (file_ != NULL) {
+      fclose(file_);
+      file_ = NULL;
+      rollover_attempt_ = kRolloverAttemptFrequency-1;
+    }
+    filename_extension_ = ext;
+  }
+}
+
+void LogFileObject::SetSymlinkBasename(const char* symlink_basename) {
+  MutexLock l(&lock_);
+  symlink_basename_ = symlink_basename;
+}
+
+void LogFileObject::Flush() {
+  MutexLock l(&lock_);
+  FlushUnlocked();
+}
+
+void LogFileObject::FlushUnlocked(){
+  if (file_ != NULL) {
+    fflush(file_);
+    bytes_since_flush_ = 0;
+  }
+  // Figure out when we are due for another flush.
+  const int64 next = (FLAGS_logbufsecs
+                      * static_cast<int64>(1000000));  // in usec
+  next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
+}
+
 bool LogFileObject::CreateLogfile(const char* time_pid_string) {
   string string_filename = base_filename_+filename_extension_+
                            time_pid_string;
   const char* filename = string_filename.c_str();
   int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0664);
   if (fd == -1) return false;
+#ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
   fcntl(fd, F_SETFD, FD_CLOEXEC);
+#endif
 
   file_ = fdopen(fd, "a");  // Make a FILE*.
   if (file_ == NULL) {  // Man, we're screwed!
@@ -599,6 +644,8 @@ bool LogFileObject::CreateLogfile(const char* time_pid_string) {
     linkpath += linkname;
     unlink(linkpath.c_str());                    // delete old one if it exists
 
+    // We must have unistd.h.
+#ifdef HAVE_UNISTD_H
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
     const char *linkdest = slash ? (slash + 1) : filename;
@@ -611,6 +658,7 @@ bool LogFileObject::CreateLogfile(const char* time_pid_string) {
       unlink(linkpath.c_str());                  // delete old one if it exists
       symlink(filename, linkpath.c_str());       // silently ignore failures
     }
+#endif
   }
 
   return true;  // Everything worked
@@ -627,7 +675,7 @@ void LogFileObject::Write(bool force_flush,
     return;
   }
 
-  if ((file_length_ >> 20) >= FLAGS_max_log_size) {
+  if (static_cast<int>(file_length_ >> 20) >= FLAGS_max_log_size) {
     fclose(file_);
     file_ = NULL;
     file_length_ = bytes_since_flush_ = 0;
@@ -679,10 +727,8 @@ void LogFileObject::Write(bool force_flush,
       // Where does the file get put?  Successively try the directories
       // "/tmp", and "."
       string stripped_filename(ProgramInvocationShortName());  // in cmdlineflag
-      struct utsname buf;
-      if (0 != uname(&buf)) {
-        *buf.nodename = '\0';  // ensure null termination on failure
-      }
+      string hostname;
+      GetHostName(&hostname);
 
       string uidname = MyUserName();
       // We should not call CHECK() here because this function can be
@@ -691,7 +737,7 @@ void LogFileObject::Write(bool force_flush,
       // deadlock. Simply use a name like invalid-user.
       if (uidname.empty()) uidname = "invalid-user";
 
-      stripped_filename = stripped_filename+'.'+buf.nodename+'.'
+      stripped_filename = stripped_filename+'.'+hostname+'.'
                           +uidname+".log."
                           +LogSeverityNames[severity_]+'.';
       // We're going to (potentially) try to put logs in several different dirs
@@ -771,26 +817,7 @@ void LogFileObject::Write(bool force_flush,
   }
 }
 
-LogDestination* LogDestination::log_destinations_[NUM_SEVERITIES];
-
-inline LogDestination* LogDestination::log_destination(LogSeverity severity) {
-  assert(severity >=0 && severity < NUM_SEVERITIES);
-  if (!log_destinations_[severity]) {
-    log_destinations_[severity] = new LogDestination(severity, NULL);
-  }
-  return log_destinations_[severity];
-}
-
-// Get the part of filepath after the last path separator.
-// (Doesn't modify filepath, contrary to basename() in libgen.h.)
-static const char* const_basename(const char* filepath) {
-  const char* base = strrchr(filepath, '/');
-#ifdef OS_WINDOWS  // Look for either path separator in Windows
-  if (!base)
-    base = strrchr(filepath, '\\');
-#endif
-  return base ? (base+1) : filepath;
-}
+}  // namespace
 
 //
 // LogMessage's constructor starts each message with a string like:
@@ -1098,7 +1125,7 @@ void LogMessage::SendToLog() {
 }
 
 static void logging_fail() {
-#if defined _DEBUG && defined COMPILER_MSVC
+#if defined(_DEBUG) && defined(_MSC_VER)
   // When debugging on windows, avoid the obnoxious dialog and make
   // it possible to continue past a LOG(FATAL) in the debugger
   _asm int 3
@@ -1108,9 +1135,10 @@ static void logging_fail() {
 }
 
 #ifdef HAVE___ATTRIBUTE__
+GOOGLE_GLOG_DLL_DECL
 void (*g_logging_fail_func)() __attribute__((noreturn)) = &logging_fail;
 #else
-void (*g_logging_fail_func)() = &logging_fail;
+GOOGLE_GLOG_DLL_DECL void (*g_logging_fail_func)() = &logging_fail;
 #endif
 
 void InstallFailureFunction(void (*fail_func)()) {
@@ -1151,6 +1179,7 @@ void LogMessage::SaveOrSendToLog() {
 
 // L >= log_mutex (callers must hold the log_mutex).
 void LogMessage::SendToSyslogAndLog() {
+#ifdef HAVE_SYSLOG_H
   // Before any calls to syslog(), make a single call to openlog()
   static bool openlog_already_called = false;
   if (!openlog_already_called) {
@@ -1165,6 +1194,9 @@ void LogMessage::SendToSyslogAndLog() {
          int(data_->num_chars_to_syslog_),
          data_->message_text_ + data_->num_prefix_chars_);
   SendToLog();
+#else
+  LOG(ERROR) << "No syslog support: message=" << data_->message_text_;
+#endif
 }
 
 base::Logger* base::GetLogger(LogSeverity severity) {
@@ -1333,7 +1365,7 @@ bool SendEmail(const char*dest, const char *subject, const char*body){
   return SendEmailInternal(dest, subject, body, true);
 }
 
-void GetTempDirectories(vector<string>* list) {
+static void GetTempDirectories(vector<string>* list) {
   list->clear();
 #ifdef OS_WINDOWS
   // On windows we'll try to find a directory in this order:
@@ -1429,7 +1461,7 @@ void GetExistingTempDirectories(vector<string>* list) {
 }
 
 void TruncateLogFile(const char *path, int64 limit, int64 keep) {
-
+#ifdef HAVE_UNISTD_H
   struct stat statbuf;
   const int kCopyBlockSize = 8 << 10;
   char copybuf[kCopyBlockSize];
@@ -1498,28 +1530,36 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
 
  out_close_fd:
   close(fd);
-
+#else
+  LOG(ERROR) << "No log truncation support.";
+#endif
 }
 
 void TruncateStdoutStderr() {
+#ifdef HAVE_UNISTD_H
   int64 limit = FLAGS_max_log_size << 20;
   int64 keep = 1 << 20;
   TruncateLogFile("/proc/self/fd/1", limit, keep);
   TruncateLogFile("/proc/self/fd/2", limit, keep);
+#else
+  LOG(ERROR) << "No log truncation support.";
+#endif
 }
 
 
 // Helper functions for string comparisons.
-#define DEFINE_CHECK_STROP_IMPL(name, func, expected) \
-  string* Check##func##expected##Impl(const char* s1, const char* s2, \
-                                      const char* names) { \
-    bool equal = s1 == s2 || (s1 && s2 && !func(s1, s2)); \
-    if (equal == expected) return NULL; \
-    else { \
-      strstream ss; \
+#define DEFINE_CHECK_STROP_IMPL(name, func, expected)                   \
+  string* Check##func##expected##Impl(const char* s1, const char* s2,   \
+                                      const char* names) {              \
+    bool equal = s1 == s2 || (s1 && s2 && !func(s1, s2));               \
+    if (equal == expected) return NULL;                                 \
+    else {                                                              \
+      strstream ss;                                                     \
+      if (!s1) s1 = "";                                                 \
+      if (!s2) s2 = "";                                                 \
       ss << #name " failed: " << names << " (" << s1 << " vs. " << s2 << ")"; \
-      return new string(ss.str(), ss.pcount()); \
-    } \
+      return new string(ss.str(), ss.pcount());                         \
+    }                                                                   \
   }
 DEFINE_CHECK_STROP_IMPL(CHECK_STREQ, strcmp, true)
 DEFINE_CHECK_STROP_IMPL(CHECK_STRNE, strcmp, false)

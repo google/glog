@@ -28,13 +28,19 @@ AC_HEADER_STDC
 AC_CHECK_HEADER(stdint.h, ac_cv_have_stdint_h=1, ac_cv_have_stdint_h=0)
 AC_CHECK_HEADER(sys/types.h, ac_cv_have_systypes_h=1, ac_cv_have_systypes_h=0)
 AC_CHECK_HEADER(inttypes.h, ac_cv_have_inttypes_h=1, ac_cv_have_inttypes_h=0)
+AC_CHECK_HEADERS(unistd.h, ac_cv_have_unistd_h=1, ac_cv_have_unistd_h=0)
 AC_CHECK_HEADERS(syscall.h)
 AC_CHECK_HEADERS(sys/syscall.h)
 # For backtrace with glibc.
 AC_CHECK_HEADERS(execinfo.h)
 # For backtrace with libunwind.
-AC_CHECK_HEADERS(libunwind.h, ac_cv_have_libunwind_h=1, ac_cv_have_libunwind_h=0)
+AC_CHECK_HEADERS(libunwind.h)
 AC_CHECK_HEADERS(ucontext.h)
+AC_CHECK_HEADERS(sys/utsname.h)
+AC_CHECK_HEADERS(pwd.h)
+AC_CHECK_HEADERS(syslog.h)
+AC_CHECK_HEADERS(sys/time.h)
+AC_CHECK_HEADERS(glob.h)
 
 AC_CHECK_SIZEOF(void *)
 
@@ -50,6 +56,9 @@ AC_CHECK_FUNC(sigaltstack,
 AC_CHECK_FUNC(dladdr,
               AC_DEFINE(HAVE_DLADDR, 1,
                         [Define if you have the `dladdr' function]))
+AC_CHECK_FUNC(fcntl,
+              AC_DEFINE(HAVE_FCNTL, 1,
+                        [Define if you have the `fcntl' function]))
 
 AX_C___ATTRIBUTE__
 # We only care about these two attributes.
@@ -168,6 +177,7 @@ AC_SUBST(ac_cv_have___builtin_expect)
 AC_SUBST(ac_cv_have_stdint_h)
 AC_SUBST(ac_cv_have_systypes_h)
 AC_SUBST(ac_cv_have_inttypes_h)
+AC_SUBST(ac_cv_have_unistd_h)
 AC_SUBST(ac_cv_have_uint16_t)
 AC_SUBST(ac_cv_have_u_int16_t)
 AC_SUBST(ac_cv_have___uint16)

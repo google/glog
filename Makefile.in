@@ -49,7 +49,7 @@ TESTS = logging_unittest$(EXEEXT) demangle_unittest$(EXEEXT) \
 noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
-	$(gloginclude_HEADERS) $(srcdir)/Makefile.am \
+	$(gloginclude_HEADERS) $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
 	$(top_srcdir)/src/config.h.in \
 	$(top_srcdir)/src/glog/logging.h.in \
@@ -82,7 +82,7 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(glogincludedir)"
+	"$(DESTDIR)$(glogincludedir)" "$(DESTDIR)$(glogincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
@@ -94,7 +94,9 @@ am_libglog_la_OBJECTS = $(am__objects_1) libglog_la-logging.lo \
 	libglog_la-raw_logging.lo libglog_la-vlog_is_on.lo \
 	libglog_la-utilities.lo libglog_la-demangle.lo \
 	libglog_la-symbolize.lo libglog_la-signalhandler.lo
-libglog_la_OBJECTS = $(am_libglog_la_OBJECTS)
+nodist_libglog_la_OBJECTS = $(am__objects_1)
+libglog_la_OBJECTS = $(am_libglog_la_OBJECTS) \
+	$(nodist_libglog_la_OBJECTS)
 libglog_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libglog_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libglog_la_LDFLAGS) $(LDFLAGS) -o $@
@@ -106,7 +108,9 @@ am__EXEEXT_2 = logging_striptest0$(EXEEXT) logging_striptest2$(EXEEXT) \
 PROGRAMS = $(noinst_PROGRAMS)
 am_demangle_unittest_OBJECTS = $(am__objects_1) \
 	demangle_unittest-demangle_unittest.$(OBJEXT)
-demangle_unittest_OBJECTS = $(am_demangle_unittest_OBJECTS)
+nodist_demangle_unittest_OBJECTS = $(am__objects_1)
+demangle_unittest_OBJECTS = $(am_demangle_unittest_OBJECTS) \
+	$(nodist_demangle_unittest_OBJECTS)
 demangle_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 demangle_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -114,7 +118,9 @@ demangle_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(demangle_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_logging_striptest0_OBJECTS = $(am__objects_1) \
 	logging_striptest0-logging_striptest_main.$(OBJEXT)
-logging_striptest0_OBJECTS = $(am_logging_striptest0_OBJECTS)
+nodist_logging_striptest0_OBJECTS = $(am__objects_1)
+logging_striptest0_OBJECTS = $(am_logging_striptest0_OBJECTS) \
+	$(nodist_logging_striptest0_OBJECTS)
 logging_striptest0_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 logging_striptest0_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -122,7 +128,9 @@ logging_striptest0_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(logging_striptest0_LDFLAGS) $(LDFLAGS) -o $@
 am_logging_striptest10_OBJECTS = $(am__objects_1) \
 	logging_striptest10-logging_striptest10.$(OBJEXT)
-logging_striptest10_OBJECTS = $(am_logging_striptest10_OBJECTS)
+nodist_logging_striptest10_OBJECTS = $(am__objects_1)
+logging_striptest10_OBJECTS = $(am_logging_striptest10_OBJECTS) \
+	$(nodist_logging_striptest10_OBJECTS)
 logging_striptest10_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 logging_striptest10_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -130,7 +138,9 @@ logging_striptest10_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(logging_striptest10_LDFLAGS) $(LDFLAGS) -o $@
 am_logging_striptest2_OBJECTS = $(am__objects_1) \
 	logging_striptest2-logging_striptest2.$(OBJEXT)
-logging_striptest2_OBJECTS = $(am_logging_striptest2_OBJECTS)
+nodist_logging_striptest2_OBJECTS = $(am__objects_1)
+logging_striptest2_OBJECTS = $(am_logging_striptest2_OBJECTS) \
+	$(nodist_logging_striptest2_OBJECTS)
 logging_striptest2_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 logging_striptest2_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -138,7 +148,9 @@ logging_striptest2_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(logging_striptest2_LDFLAGS) $(LDFLAGS) -o $@
 am_logging_unittest_OBJECTS = $(am__objects_1) \
 	logging_unittest-logging_unittest.$(OBJEXT)
-logging_unittest_OBJECTS = $(am_logging_unittest_OBJECTS)
+nodist_logging_unittest_OBJECTS = $(am__objects_1)
+logging_unittest_OBJECTS = $(am_logging_unittest_OBJECTS) \
+	$(nodist_logging_unittest_OBJECTS)
 logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -146,7 +158,9 @@ logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(logging_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_signalhandler_unittest_OBJECTS = $(am__objects_1) \
 	signalhandler_unittest-signalhandler_unittest.$(OBJEXT)
-signalhandler_unittest_OBJECTS = $(am_signalhandler_unittest_OBJECTS)
+nodist_signalhandler_unittest_OBJECTS = $(am__objects_1)
+signalhandler_unittest_OBJECTS = $(am_signalhandler_unittest_OBJECTS) \
+	$(nodist_signalhandler_unittest_OBJECTS)
 signalhandler_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 signalhandler_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -154,7 +168,9 @@ signalhandler_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(signalhandler_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_stacktrace_unittest_OBJECTS = $(am__objects_1) \
 	stacktrace_unittest-stacktrace_unittest.$(OBJEXT)
-stacktrace_unittest_OBJECTS = $(am_stacktrace_unittest_OBJECTS)
+nodist_stacktrace_unittest_OBJECTS = $(am__objects_1)
+stacktrace_unittest_OBJECTS = $(am_stacktrace_unittest_OBJECTS) \
+	$(nodist_stacktrace_unittest_OBJECTS)
 stacktrace_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 stacktrace_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -162,7 +178,9 @@ stacktrace_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(stacktrace_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_stl_logging_unittest_OBJECTS = $(am__objects_1) \
 	stl_logging_unittest-stl_logging_unittest.$(OBJEXT)
-stl_logging_unittest_OBJECTS = $(am_stl_logging_unittest_OBJECTS)
+nodist_stl_logging_unittest_OBJECTS = $(am__objects_1)
+stl_logging_unittest_OBJECTS = $(am_stl_logging_unittest_OBJECTS) \
+	$(nodist_stl_logging_unittest_OBJECTS)
 stl_logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 stl_logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -170,7 +188,9 @@ stl_logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(stl_logging_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_symbolize_unittest_OBJECTS = $(am__objects_1) \
 	symbolize_unittest-symbolize_unittest.$(OBJEXT)
-symbolize_unittest_OBJECTS = $(am_symbolize_unittest_OBJECTS)
+nodist_symbolize_unittest_OBJECTS = $(am__objects_1)
+symbolize_unittest_OBJECTS = $(am_symbolize_unittest_OBJECTS) \
+	$(nodist_symbolize_unittest_OBJECTS)
 symbolize_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 symbolize_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -178,7 +198,9 @@ symbolize_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(symbolize_unittest_LDFLAGS) $(LDFLAGS) -o $@
 am_utilities_unittest_OBJECTS = $(am__objects_1) \
 	utilities_unittest-utilities_unittest.$(OBJEXT)
-utilities_unittest_OBJECTS = $(am_utilities_unittest_OBJECTS)
+nodist_utilities_unittest_OBJECTS = $(am__objects_1)
+utilities_unittest_OBJECTS = $(am_utilities_unittest_OBJECTS) \
+	$(nodist_utilities_unittest_OBJECTS)
 utilities_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
 utilities_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
@@ -206,12 +228,26 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-SOURCES = $(libglog_la_SOURCES) $(demangle_unittest_SOURCES) \
-	$(logging_striptest0_SOURCES) $(logging_striptest10_SOURCES) \
-	$(logging_striptest2_SOURCES) $(logging_unittest_SOURCES) \
+SOURCES = $(libglog_la_SOURCES) $(nodist_libglog_la_SOURCES) \
+	$(demangle_unittest_SOURCES) \
+	$(nodist_demangle_unittest_SOURCES) \
+	$(logging_striptest0_SOURCES) \
+	$(nodist_logging_striptest0_SOURCES) \
+	$(logging_striptest10_SOURCES) \
+	$(nodist_logging_striptest10_SOURCES) \
+	$(logging_striptest2_SOURCES) \
+	$(nodist_logging_striptest2_SOURCES) \
+	$(logging_unittest_SOURCES) $(nodist_logging_unittest_SOURCES) \
 	$(signalhandler_unittest_SOURCES) \
-	$(stacktrace_unittest_SOURCES) $(stl_logging_unittest_SOURCES) \
-	$(symbolize_unittest_SOURCES) $(utilities_unittest_SOURCES)
+	$(nodist_signalhandler_unittest_SOURCES) \
+	$(stacktrace_unittest_SOURCES) \
+	$(nodist_stacktrace_unittest_SOURCES) \
+	$(stl_logging_unittest_SOURCES) \
+	$(nodist_stl_logging_unittest_SOURCES) \
+	$(symbolize_unittest_SOURCES) \
+	$(nodist_symbolize_unittest_SOURCES) \
+	$(utilities_unittest_SOURCES) \
+	$(nodist_utilities_unittest_SOURCES)
 DIST_SOURCES = $(libglog_la_SOURCES) $(demangle_unittest_SOURCES) \
 	$(logging_striptest0_SOURCES) $(logging_striptest10_SOURCES) \
 	$(logging_striptest2_SOURCES) $(logging_unittest_SOURCES) \
@@ -221,7 +257,9 @@ DIST_SOURCES = $(libglog_la_SOURCES) $(demangle_unittest_SOURCES) \
 dist_docDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(dist_doc_DATA)
 glogincludeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(gloginclude_HEADERS)
+nodist_glogincludeHEADERS_INSTALL = $(INSTALL_HEADER)
+HEADERS = $(gloginclude_HEADERS) $(nodist_gloginclude_HEADERS) \
+	$(noinst_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -316,6 +354,7 @@ ac_cv_have_stdint_h = @ac_cv_have_stdint_h@
 ac_cv_have_systypes_h = @ac_cv_have_systypes_h@
 ac_cv_have_u_int16_t = @ac_cv_have_u_int16_t@
 ac_cv_have_uint16_t = @ac_cv_have_uint16_t@
+ac_cv_have_unistd_h = @ac_cv_have_unistd_h@
 ac_google_end_namespace = @ac_google_end_namespace@
 ac_google_namespace = @ac_google_namespace@
 ac_google_start_namespace = @ac_google_start_namespace@
@@ -374,7 +413,9 @@ AM_CPPFLAGS = -I$(top_srcdir)/src
 # This is mostly based on configure options
 AM_CXXFLAGS = $(am__append_1) $(am__append_2) $(am__append_3)
 glogincludedir = $(includedir)/glog
-gloginclude_HEADERS = src/glog/log_severity.h src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h
+gloginclude_HEADERS = src/glog/log_severity.h
+nodist_gloginclude_HEADERS = src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h
+noinst_HEADERS = src/glog/logging.h.in src/glog/raw_logging.h.in src/glog/vlog_is_on.h.in src/glog/stl_logging.h.in
 dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
         doc/designstyle.css doc/glog.html
 
@@ -391,67 +432,78 @@ noinst_SCRIPTS = src/logging_striplog_test.sh src/demangle_unittest.sh \
 # Binaries used for script-based unittests.
 TEST_BINARIES = logging_striptest0 logging_striptest2 \
 	logging_striptest10 signalhandler_unittest
-logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
-                            src/logging_unittest.cc
+logging_unittest_SOURCES = $(gloginclude_HEADERS) \
+                            src/logging_unittest.cc \
+                            src/config_for_unittests.h
 
+nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
-logging_striptest0_SOURCES = $(gloginclude_HEADERS) src/config.h \
+logging_striptest0_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest_main.cc
 
+nodist_logging_striptest0_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest0_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest0_LDADD = libglog.la $(COMMON_LIBS)
-logging_striptest2_SOURCES = $(gloginclude_HEADERS) src/config.h \
+logging_striptest2_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest2.cc
 
+nodist_logging_striptest2_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest2_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest2_LDADD = libglog.la $(COMMON_LIBS)
-logging_striptest10_SOURCES = $(gloginclude_HEADERS) src/config.h \
+logging_striptest10_SOURCES = $(gloginclude_HEADERS) \
                               src/logging_striptest10.cc
 
+nodist_logging_striptest10_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest10_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest10_LDADD = libglog.la $(COMMON_LIBS)
-demangle_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
                             src/demangle_unittest.cc
 
+nodist_demangle_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDADD = libglog.la $(COMMON_LIBS)
-stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/stacktrace_unittest.cc
 
+nodist_stacktrace_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 stacktrace_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 stacktrace_unittest_LDADD = libglog.la $(COMMON_LIBS)
-symbolize_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/symbolize_unittest.cc
 
+nodist_symbolize_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS)
-stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/stl_logging_unittest.cc
 
+nodist_stl_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
-signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/signalhandler_unittest.cc
 
+nodist_signalhandler_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 signalhandler_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS)
-utilities_unittest_SOURCES = $(gloginclude_HEADERS) src/config.h \
+utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
                              src/utilities_unittest.cc
 
+nodist_utilities_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDADD = libglog.la $(COMMON_LIBS)
-libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
+libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
                        src/utilities.cc src/utilities.h \
 	 	       src/demangle.cc src/demangle.h \
@@ -466,11 +518,20 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) src/config.h \
                        src/base/mutex.h src/base/googleinit.h \
                        src/base/commandlineflags.h src/googletest.h
 
+nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
 libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
 libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
+WINDOWS_PROJECTS = google-glog.sln vsprojects/libglog/libglog.vcproj \
+	vsprojects/logging_unittest/logging_unittest.vcproj
 EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb \
-	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt
+	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt \
+	src/windows/config.h src/windows/port.h src/windows/port.cc \
+	src/windows/preprocess.sh \
+	src/windows/glog/log_severity.h src/windows/glog/logging.h \
+	src/windows/glog/raw_logging.h src/windows/glog/stl_logging.h \
+	src/windows/glog/vlog_is_on.h \
+	$(WINDOWS_PROJECTS)
 
 all: all-am
 
@@ -877,6 +938,23 @@ uninstall-glogincludeHEADERS:
 	  echo " rm -f '$(DESTDIR)$(glogincludedir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(glogincludedir)/$$f"; \
 	done
+install-nodist_glogincludeHEADERS: $(nodist_gloginclude_HEADERS)
+	@$(NORMAL_INSTALL)
+	test -z "$(glogincludedir)" || $(MKDIR_P) "$(DESTDIR)$(glogincludedir)"
+	@list='$(nodist_gloginclude_HEADERS)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(nodist_glogincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(glogincludedir)/$$f'"; \
+	  $(nodist_glogincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(glogincludedir)/$$f"; \
+	done
+
+uninstall-nodist_glogincludeHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(nodist_gloginclude_HEADERS)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(glogincludedir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(glogincludedir)/$$f"; \
+	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -1026,6 +1104,9 @@ distdir: $(DISTFILES)
 	    || exit 1; \
 	  fi; \
 	done
+	$(MAKE) $(AM_MAKEFLAGS) \
+	  top_distdir="$(top_distdir)" distdir="$(distdir)" \
+	  dist-hook
 	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
 	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
 	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
@@ -1136,7 +1217,7 @@ check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 		$(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(glogincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(glogincludedir)" "$(DESTDIR)$(glogincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1185,7 +1266,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_docDATA install-glogincludeHEADERS
+install-data-am: install-dist_docDATA install-glogincludeHEADERS \
+	install-nodist_glogincludeHEADERS
 
 install-dvi: install-dvi-am
 
@@ -1224,28 +1306,30 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-dist_docDATA uninstall-glogincludeHEADERS \
-	uninstall-libLTLIBRARIES
+	uninstall-libLTLIBRARIES uninstall-nodist_glogincludeHEADERS
 
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am am--refresh check check-TESTS check-am \
 	clean clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstPROGRAMS ctags dist dist-all dist-bzip2 dist-gzip \
-	dist-lzma dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
+	dist-hook dist-lzma dist-shar dist-tarZ dist-zip distcheck \
+	distclean distclean-compile distclean-generic distclean-hdr \
 	distclean-libtool distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am \
 	install-dist_docDATA install-dvi install-dvi-am install-exec \
 	install-exec-am install-glogincludeHEADERS install-html \
 	install-html-am install-info install-info-am \
-	install-libLTLIBRARIES install-man install-pdf install-pdf-am \
+	install-libLTLIBRARIES install-man \
+	install-nodist_glogincludeHEADERS install-pdf install-pdf-am \
 	install-ps install-ps-am install-strip installcheck \
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-dist_docDATA \
-	uninstall-glogincludeHEADERS uninstall-libLTLIBRARIES
+	uninstall-glogincludeHEADERS uninstall-libLTLIBRARIES \
+	uninstall-nodist_glogincludeHEADERS
 
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@  # TODO(csilvers): check if -fomit-frame-pointer might be in $(CXXFLAGS),
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@  #                 before setting this.
@@ -1265,10 +1349,10 @@ rpm: dist-gzip packages/rpm.sh packages/rpm/rpm.spec
 deb: dist-gzip packages/deb.sh packages/deb/*
 	@cd packages && ./deb.sh ${PACKAGE} ${VERSION}
 
-# TODO(hamaji): We don't support Visual Studio for now.
-#dist-hook:
-#	test -e "$(distdir)/vsprojects" \
-#	   && chmod -R u+w $(distdir)/*.sln $(distdir)/vsprojects/
+# Windows wants write permission to .vcproj files and maybe even sln files.
+dist-hook:
+	test -e "$(distdir)/vsprojects" \
+	   && chmod -R u+w $(distdir)/*.sln $(distdir)/vsprojects/
 
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck

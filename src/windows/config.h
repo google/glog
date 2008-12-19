@@ -1,7 +1,7 @@
 /* src/config.h.in.  Generated from configure.ac by autoheader.  */
 
 /* Namespace for Google classes */
-#undef GOOGLE_NAMESPACE
+#define GOOGLE_NAMESPACE google
 
 /* Define if you have the `dladdr' function */
 #undef HAVE_DLADDR
@@ -12,17 +12,8 @@
 /* Define to 1 if you have the <execinfo.h> header file. */
 #undef HAVE_EXECINFO_H
 
-/* Define if you have the `fcntl' function */
-#undef HAVE_FCNTL
-
-/* Define to 1 if you have the <glob.h> header file. */
-#undef HAVE_GLOB_H
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Define to 1 if you have the `pthread' library (-lpthread). */
-#undef HAVE_LIBPTHREAD
 
 /* Define to 1 if you have the <libunwind.h> header file. */
 #undef HAVE_LIBUNWIND_H
@@ -41,9 +32,6 @@
 
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
-
-/* Define to 1 if you have the <pwd.h> header file. */
-#undef HAVE_PWD_H
 
 /* define if the compiler implements pthread_rwlock_* */
 #undef HAVE_RWLOCK
@@ -66,23 +54,14 @@
 /* Define to 1 if you have the <syscall.h> header file. */
 #undef HAVE_SYSCALL_H
 
-/* Define to 1 if you have the <syslog.h> header file. */
-#undef HAVE_SYSLOG_H
-
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/syscall.h> header file. */
 #undef HAVE_SYS_SYSCALL_H
 
-/* Define to 1 if you have the <sys/time.h> header file. */
-#undef HAVE_SYS_TIME_H
-
 /* Define to 1 if you have the <sys/types.h> header file. */
 #undef HAVE_SYS_TYPES_H
-
-/* Define to 1 if you have the <sys/utsname.h> header file. */
-#undef HAVE_SYS_UTSNAME_H
 
 /* Define to 1 if you have the <ucontext.h> header file. */
 #undef HAVE_UCONTEXT_H
@@ -140,7 +119,18 @@
 #undef VERSION
 
 /* Stops putting the code inside the Google namespace */
-#undef _END_GOOGLE_NAMESPACE_
+#define _END_GOOGLE_NAMESPACE_ }
 
 /* Puts following code inside the Google namespace */
-#undef _START_GOOGLE_NAMESPACE_
+#define _START_GOOGLE_NAMESPACE_ namespace google {
+
+/* Always the empty-string on non-windows systems. On windows, should be
+   "__declspec(dllexport)". This way, when we compile the dll, we export our
+   functions/classes. It's safe to define this here because config.h is only
+   used internally, to compile the DLL, and every DLL source file #includes
+   "config.h" before anything else. */
+#ifndef GOOGLE_GLOG_DLL_DECL
+# define GOOGLE_GLOG_IS_A_DLL  1   /* not set if you're statically linking */
+# define GOOGLE_GLOG_DLL_DECL  __declspec(dllexport)
+# define GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS  __declspec(dllimport)
+#endif

@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <fnmatch.h>  // fnmatch() is used in obsolete _InitVLOG
 #include <cstdio>
 #include <string>
 #include "base/commandlineflags.h"
@@ -32,12 +31,16 @@ DEFINE_string(vmodule, "", "per-module verbose level."
 
 _START_GOOGLE_NAMESPACE_
 
+namespace glog_internal_namespace_ {
+
 // Implementation of fnmatch that does not need 0-termination
 // of arguments and does not allocate any memory,
 // but we only support "*" and "?" wildcards, not the "[...]" patterns.
 // It's not a static function for the unittest.
-bool SafeFNMatch_(const char* pattern, size_t patt_len,
-                  const char* str, size_t str_len) {
+GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
+                                       size_t patt_len,
+                                       const char* str,
+                                       size_t str_len) {
   int p = 0;
   int s = 0;
   while (1) {
@@ -62,6 +65,10 @@ bool SafeFNMatch_(const char* pattern, size_t patt_len,
     return false;
   }
 }
+
+}  // namespace glog_internal_namespace_
+
+using glog_internal_namespace_::SafeFNMatch_;
 
 int32 kLogSiteUninitialized = 1000;
 

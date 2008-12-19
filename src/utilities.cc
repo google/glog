@@ -4,7 +4,9 @@
 #include "utilities.h"
 
 #include <signal.h>
-#include <sys/time.h>
+#ifdef HAVE_SYS_TIME_H
+# include <sys/time.h>
+#endif
 #include <time.h>
 
 #include "base/googleinit.h"
@@ -138,9 +140,17 @@ bool is_default_thread() {
 
 int64 CycleClock_Now() {
   // TODO(hamaji): temporary impementation - it might be too slow.
+#ifdef OS_WINDOWS
+  SYSTEMTIME now;
+  GetSystemTime(&now);
+  return (static_cast<int64>(now.wSecond) * 1000000 +
+          static_cast<int64>(now.wMilliseconds) * 1000);
+#else
+  // TODO(hamaji): temporary impementation - it might be too slow.
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;
+#endif
 }
 
 int64 UsecToCycles(int64 usec) {
@@ -150,6 +160,15 @@ int64 UsecToCycles(int64 usec) {
 static int32 g_main_thread_pid = getpid();
 int32 GetMainThreadPid() {
   return g_main_thread_pid;
+}
+
+const char* const_basename(const char* filepath) {
+  const char* base = strrchr(filepath, '/');
+#ifdef OS_WINDOWS  // Look for either path separator in Windows
+  if (!base)
+    base = strrchr(filepath, '\\');
+#endif
+  return base ? (base+1) : filepath;
 }
 
 static string g_my_user_name;

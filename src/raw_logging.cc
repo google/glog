@@ -17,15 +17,9 @@
 #elif defined(HAVE_SYS_SYSCALL_H)
 #include <sys/syscall.h>                 // for syscall()
 #endif
-#include <unistd.h>
-
-#if defined(OS_MACOSX)
-#ifndef __DARWIN_UNIX03
-#define __DARWIN_UNIX03  // tells libgen.h to define basename()
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
 #endif
-#endif  // OS_MACOSX
-
-#include <libgen.h>                      // basename()
 
 _START_GOOGLE_NAMESPACE_
 
@@ -82,13 +76,13 @@ void RawLog__(LogSeverity severity, const char* file, int line,
      DoRawLog(&buf, &size, "%c%02d%02d %02d%02d%02d %s:%d] RAW: ",
               LogSeverityNames[severity][0],
               1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
-              basename(const_cast<char *>(file)), line);
+              const_basename(const_cast<char *>(file)), line);
   } else {
     DoRawLog(&buf, &size, "%c%02d%02d %02d%02d%02d %08x %s:%d] RAW: ",
              LogSeverityNames[severity][0],
              1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
              int(pthread_self()),
-             basename(const_cast<char *>(file)), line);
+             const_basename(const_cast<char *>(file)), line);
   }
   va_list ap;
   va_start(ap, format);

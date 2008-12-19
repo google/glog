@@ -4,12 +4,17 @@
 //
 // Author: Ray Sidney
 
+#include "config_for_unittests.h"
 #include "utilities.h"
 
 #include <fcntl.h>
-#include <glob.h>
+#ifdef HAVE_GLOB_H
+# include <glob.h>
+#endif
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include <iomanip>
 #include <iostream>
@@ -356,7 +361,7 @@ void TestLogString() {
   LOG_STRING(WARNING, no_errors) << "LOG_STRING: " << "reported warning";
   LOG_STRING(ERROR, NULL) << "LOG_STRING: " << "reported error";
 
-  for (int i = 0; i < errors.size(); ++i) {
+  for (size_t i = 0; i < errors.size(); ++i) {
     LOG(INFO) << "Captured by LOG_STRING:  " << errors[i];
   }
 }
@@ -386,7 +391,7 @@ void TestLogSink() {
   LOG_TO_SINK(NULL, ERROR) << "LOG_TO_SINK: " << "reported error";
 
   LOG(INFO) << "Captured by LOG_TO_SINK:";
-  for (int i = 0; i < sink.errors.size(); ++i) {
+  for (size_t i = 0; i < sink.errors.size(); ++i) {
     LogMessage("foo", LogMessage::kNoLogPrefix, INFO).stream()
       << sink.errors[i];
   }
@@ -481,6 +486,7 @@ TEST(DeathCheckNN, Simple) {
 // Get list of file names that match pattern
 static void GetFiles(const string& pattern, vector<string>* files) {
   files->clear();
+#if defined(HAVE_GLOB_H)
   glob_t g;
   const int r = glob(pattern.c_str(), 0, NULL, &g);
   CHECK((r == 0) || (r == GLOB_NOMATCH)) << ": error matching " << pattern;
@@ -488,13 +494,32 @@ static void GetFiles(const string& pattern, vector<string>* files) {
     files->push_back(string(g.gl_pathv[i]));
   }
   globfree(&g);
+#elif defined(OS_WINDOWS)
+  WIN32_FIND_DATAA data;
+  HANDLE handle = FindFirstFileA(pattern.c_str(), &data);
+  size_t index = pattern.rfind('\\');
+  if (index == string::npos) {
+    LOG(FATAL) << "No directory separator.";
+  }
+  const string dirname = pattern.substr(0, index + 1);
+  if (FAILED(handle)) {
+    // Finding no files is OK.
+    return;
+  }
+  do {
+    files->push_back(dirname + data.cFileName);
+  } while (FindNextFileA(handle, &data));
+  LOG_SYSRESULT(FindClose(handle));
+#else
+# error There is no way to do glob.
+#endif
 }
 
 // Delete files patching pattern
 static void DeleteFiles(const string& pattern) {
   vector<string> files;
   GetFiles(pattern, &files);
-  for (int i = 0; i < files.size(); i++) {
+  for (size_t i = 0; i < files.size(); i++) {
     CHECK(unlink(files[i].c_str()) == 0) << ": " << strerror(errno);
   }
 }
@@ -519,18 +544,22 @@ static void CheckFile(const string& name, const string& expected_string) {
 
 static void TestBasename() {
   fprintf(stderr, "==== Test setting log file basename\n");
-  string dest = FLAGS_test_tmpdir + "/logging_test_basename";
+  const string dest = FLAGS_test_tmpdir + "/logging_test_basename";
   DeleteFiles(dest + "*");
 
   SetLogDestination(INFO, dest.c_str());
   LOG(INFO) << "message to new base";
   FlushLogFiles(INFO);
+
   CheckFile(dest, "message to new base");
 
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
   DeleteFiles(dest + "*");
 }
 
 static void TestSymlink() {
+#ifndef OS_WINDOWS
   fprintf(stderr, "==== Test setting log file symlink\n");
   string dest = FLAGS_test_tmpdir + "/logging_test_symlink";
   string sym = FLAGS_test_tmpdir + "/symlinkbase";
@@ -545,6 +574,7 @@ static void TestSymlink() {
 
   DeleteFiles(dest + "*");
   DeleteFiles(sym + "*");
+#endif
 }
 
 static void TestExtension() {
@@ -564,6 +594,8 @@ static void TestExtension() {
   CHECK_EQ(filenames.size(), 1);
   CHECK(strstr(filenames[0].c_str(), "specialextension") != NULL);
 
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
   DeleteFiles(dest + "*");
 }
 
@@ -633,9 +665,10 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   CHECK_ERR(lseek(fd, 0, SEEK_SET));
 
   // File should contain the suffix of the original file
-  char buf[statbuf.st_size + 1];
+  int buf_size = statbuf.st_size + 1;
+  char* buf = new char[buf_size];
   memset(buf, 0, sizeof(buf));
-  CHECK_ERR(read(fd, buf, sizeof(buf)));
+  CHECK_ERR(read(fd, buf, buf_size));
 
   const char *p = buf;
   int64 checked = 0;
@@ -645,9 +678,11 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
     checked += bytes;
   }
   close(fd);
+  delete[] buf;
 }
 
 static void TestTruncate() {
+#ifdef HAVE_UNISTD_H
   fprintf(stderr, "==== Test log truncation\n");
   string path = FLAGS_test_tmpdir + "/truncatefile";
 
@@ -663,8 +698,10 @@ static void TestTruncate() {
   TestOneTruncate(path.c_str(), 10, 50, 0, 10, 10);
   TestOneTruncate(path.c_str(), 50, 100, 0, 30, 30);
 
-  // MacOSX 10.4 doesn't fail in this case. Let's just ignore this test.
-#if !defined(OS_MACOSX)
+  // MacOSX 10.4 doesn't fail in this case.
+  // Windows doesn't have symlink.
+  // Let's just ignore this test for these cases.
+#if !defined(OS_MACOSX) && !defined(OS_WINDOWS)
   // Through a symlink should fail to truncate
   string linkname = path + ".link";
   unlink(linkname.c_str());
@@ -681,12 +718,17 @@ static void TestTruncate() {
   snprintf(fdpath, sizeof(fdpath), "/proc/self/fd/%d", fd);
   TestOneTruncate(fdpath, 10, 10, 10, 10, 10);
 #endif
+
+#endif
 }
 
 _START_GOOGLE_NAMESPACE_
+namespace glog_internal_namespace_ {
 extern  // in logging.cc
 bool SafeFNMatch_(const char* pattern, size_t patt_len,
                   const char* str, size_t str_len);
+} // namespace glog_internal_namespace_
+using glog_internal_namespace_::SafeFNMatch_;
 _END_GOOGLE_NAMESPACE_
 
 static bool WrapSafeFNMatch(string pattern, string str) {
@@ -865,7 +907,7 @@ static void TestLogSinkWaitTillSent() {
     LOG(WARNING) << "Message 3";
     SleepForMilliseconds(60);
   }
-  for (int i = 0; i < global_messages.size(); ++i) {
+  for (size_t i = 0; i < global_messages.size(); ++i) {
     LOG(INFO) << "Sink capture: " << global_messages[i];
   }
   CHECK_EQ(global_messages.size(), 3);
@@ -874,12 +916,13 @@ static void TestLogSinkWaitTillSent() {
 TEST(Strerror, logging) {
   int errcode = EINTR;
   char *msg = strdup(strerror(errcode));
-  char buf[strlen(msg) + 1];
+  int buf_size = strlen(msg) + 1;
+  char *buf = new char[buf_size];
   CHECK_EQ(posix_strerror_r(errcode, NULL, 0), -1);
   buf[0] = 'A';
   CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
   CHECK_EQ(buf[0], 'A');
-  CHECK_EQ(posix_strerror_r(errcode, NULL, sizeof(buf)), -1);
+  CHECK_EQ(posix_strerror_r(errcode, NULL, buf_size), -1);
 #if defined(OS_MACOSX) || defined(OS_FREEBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.
@@ -888,9 +931,10 @@ TEST(Strerror, logging) {
   CHECK_EQ(posix_strerror_r(errcode, buf, 1), 0);
 #endif
   CHECK_STREQ(buf, "");
-  CHECK_EQ(posix_strerror_r(errcode, buf, sizeof(buf)), 0);
+  CHECK_EQ(posix_strerror_r(errcode, buf, buf_size), 0);
   CHECK_STREQ(buf, msg);
   free(msg);
+  delete[] buf;
 }
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and

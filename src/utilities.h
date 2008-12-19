@@ -40,6 +40,10 @@
 
 #include <string>
 
+#ifdef OS_WINDOWS
+# include "port.h"
+#endif
+
 #include "config.h"
 #include "glog/logging.h"
 
@@ -115,6 +119,10 @@ int64 UsecToCycles(int64 usec);
 int32 GetMainThreadPid();
 
 const std::string& MyUserName();
+
+// Get the part of filepath after the last path separator.
+// (Doesn't modify filepath, contrary to basename() in libgen.h.)
+const char* const_basename(const char* filepath);
 
 // Wrapper of __sync_val_compare_and_swap. If the GCC extension isn't
 // defined, we try the CPU specific logics (we only support x86 and
