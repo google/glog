@@ -279,6 +279,20 @@ void FailureSignalHandler(int signal_number,
     DumpStackFrameInfo("    ", stack[i]);
   }
 #endif
+
+  // *** TRANSITION ***
+  //
+  // BEFORE this point, all code must be async-termination-safe!
+  // (See WARNING above.)
+  //
+  // AFTER this point, we do unsafe things, like using LOG()!
+  // The process could be terminated or hung at any time.  We try to
+  // do more useful things first and riskier things later.
+
+  // Flush the logs before we do anything in case 'anything'
+  // causes problems.
+  FlushLogFilesUnsafe(0);
+
   // Kill ourself by the default signal handler.
   InvokeDefaultSignalHandler(signal_number);
 }

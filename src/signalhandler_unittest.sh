@@ -13,6 +13,7 @@ BINDIR=".libs"
 LIBGLOG="$BINDIR/libglog.so"
 
 BINARY="$BINDIR/signalhandler_unittest"
+LOG_INFO="./signalhandler_unittest.INFO"
 
 # Remove temporary files.
 rm -f signalhandler.out*
@@ -43,12 +44,16 @@ if [ x`uname -p` = x"powerpc" ]; then
 fi
 
 # Test for a case the program kills itself by SIGSEGV.
-$BINARY segv 2> signalhandler.out1
+GOOGLE_LOG_DIR=. $BINARY segv 2> signalhandler.out1
 for pattern in SIGSEGV 0xdead main "Aborted at [0-9]"; do
   if ! grep --quiet "$pattern" signalhandler.out1; then
     die "'$pattern' should appear in the output"
   fi
 done
+if ! grep --quiet "a message before segv" $LOG_INFO; then
+  die "'a message before segv' should appear in the INFO log"
+fi
+rm -f $LOG_INFO
 
 # Test for a case the program is killed by this shell script.
 # $! = the process id of the last command run in the background.

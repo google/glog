@@ -32,6 +32,9 @@ int main(int argc, char **argv) {
   InstallFailureSignalHandler();
   const std::string command = argc > 1 ? argv[1] : "none";
   if (command == "segv") {
+    // We'll check if this is outputted.
+    LOG(INFO) << "create the log file";
+    LOG(INFO) << "a message before segv";
     // We assume 0xDEAD is not writable.
     int *a = (int*)0xDEAD;
     *a = 0;
