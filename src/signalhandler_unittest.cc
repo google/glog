@@ -29,6 +29,9 @@ void WriteToStdout(const char* data, int size) {
 int main(int argc, char **argv) {
 #if defined(HAVE_STACKTRACE) && defined(HAVE_SYMBOLIZE)
   InitGoogleLogging(argv[0]);
+#ifdef HAVE_LIB_GFLAGS
+  ParseCommandLineFlags(&argc, &argv, true);
+#endif
   InstallFailureSignalHandler();
   const std::string command = argc > 1 ? argv[1] : "none";
   if (command == "segv") {
