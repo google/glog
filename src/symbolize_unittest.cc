@@ -308,6 +308,7 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
+  InitGoogleTest(&argc, argv);
 #ifdef HAVE_SYMBOLIZE
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.

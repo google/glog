@@ -61,7 +61,17 @@ DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
 DEFINE_int32(benchmark_iters, 1000000, "Number of iterations per benchmark");
 #endif
 
+#ifdef HAVE_LIB_GTEST
+# include <gtest/gtest.h>
+// Use our ASSERT_DEATH implementation.
+# undef ASSERT_DEATH
+# undef ASSERT_DEBUG_DEATH
+using testing::InitGoogleTest;
+#else
+
 _START_GOOGLE_NAMESPACE_
+
+void InitGoogleTest(int* argc, char** argv) {}
 
 // The following is some bare-bones testing infrastructure
 
@@ -120,6 +130,33 @@ _START_GOOGLE_NAMESPACE_
     }                                                                   \
   } while (0)
 
+vector<void (*)()> g_testlist;  // the tests to run
+
+#define TEST(a, b)                                      \
+  struct Test_##a##_##b {                               \
+    Test_##a##_##b() { g_testlist.push_back(&Run); }    \
+    static void Run() { FlagSaver fs; RunTest(); }      \
+    static void RunTest();                              \
+  };                                                    \
+  static Test_##a##_##b g_test_##a##_##b;               \
+  void Test_##a##_##b::RunTest()
+
+
+static int RUN_ALL_TESTS() {
+  vector<void (*)()>::const_iterator it;
+  for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
+    (*it)();
+  }
+  fprintf(stderr, "Passed %d tests\n\nPASS\n", (int)g_testlist.size());
+  return 0;
+}
+
+_END_GOOGLE_NAMESPACE_
+
+#endif
+
+_START_GOOGLE_NAMESPACE_
+
 static bool g_called_abort;
 static jmp_buf g_jmp_buf;
 static void CalledAbort() {
@@ -152,27 +189,6 @@ static void CalledAbort() {
 #else
 #define ASSERT_DEBUG_DEATH(fn, msg) ASSERT_DEATH(fn, msg)
 #endif  // NDEBUG
-
-vector<void (*)()> g_testlist;  // the tests to run
-
-#define TEST(a, b)                                      \
-  struct Test_##a##_##b {                               \
-    Test_##a##_##b() { g_testlist.push_back(&Run); }    \
-    static void Run() { FlagSaver fs; RunTest(); }      \
-    static void RunTest();                              \
-  };                                                    \
-  static Test_##a##_##b g_test_##a##_##b;               \
-  void Test_##a##_##b::RunTest()
-
-
-static int RUN_ALL_TESTS() {
-  vector<void (*)()>::const_iterator it;
-  for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
-    (*it)();
-  }
-  fprintf(stderr, "Passed %d tests\n\nPASS\n", (int)g_testlist.size());
-  return 0;
-}
 
 // Benchmark tools.
 

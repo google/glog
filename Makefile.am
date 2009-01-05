@@ -45,7 +45,9 @@ dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
 lib_LTLIBRARIES =
 
 # The libraries libglog depends on.
-COMMON_LIBS=$(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+# Libraries for our unittest.
+TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
 
 ## unittests you want to run when people type 'make check'.
 ## TESTS is for binary unittests, check_SCRIPTS for script-based unittests.
@@ -66,7 +68,7 @@ logging_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
+logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 check_SCRIPTS += logging_striplog_test_sh
 noinst_SCRIPTS += src/logging_striplog_test.sh
@@ -116,7 +118,7 @@ demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_demangle_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-demangle_unittest_LDADD = libglog.la $(COMMON_LIBS)
+demangle_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 TESTS += stacktrace_unittest
 stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -132,7 +134,7 @@ symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_symbolize_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS)
+symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 TESTS += stl_logging_unittest
 stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -156,7 +158,7 @@ utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_utilities_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-utilities_unittest_LDADD = libglog.la $(COMMON_LIBS)
+utilities_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 ## vvvv RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 

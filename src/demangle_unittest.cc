@@ -65,6 +65,8 @@ int main(int argc, char **argv) {
 #ifdef HAVE_LIB_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
+  InitGoogleTest(&argc, argv);
+
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   if (FLAGS_demangle_filter) {

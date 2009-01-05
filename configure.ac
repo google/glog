@@ -105,6 +105,25 @@ else
   GFLAGS_LIBS=
 fi
 
+# Check if there is gtest library installed.
+AC_CHECK_LIB(gtest, main, ac_cv_have_libgtest=1, ac_cv_have_libgtest=0)
+if test x"$ac_cv_have_libgtest" = x"1"; then
+  GTEST_LIBS=-lgtest
+  AC_DEFINE(HAVE_LIB_GTEST, 1, [define if you have google gtest library])
+
+  # Check if there is gmock library installed.
+  AC_CHECK_LIB(gmock, main, ac_cv_have_libgmock=1, ac_cv_have_libgmock=0,
+               [$GTEST_LIBS])
+  if test x"$ac_cv_have_libgmock" = x"1"; then
+    GMOCK_LIBS=-lgmock
+    AC_DEFINE(HAVE_LIB_GMOCK, 1, [define if you have google gmock library])
+  else
+    GMOCK_LIBS=
+  fi
+else
+  GTEST_LIBS=
+fi
+
 # We want to link in libunwind if it exists
 UNWIND_LIBS=
 # Unfortunately, we need to check the header file in addition to the
@@ -183,6 +202,8 @@ AC_SUBST(ac_cv_have_u_int16_t)
 AC_SUBST(ac_cv_have___uint16)
 AC_SUBST(ac_cv_have_libgflags)
 AC_SUBST(GFLAGS_LIBS)
+AC_SUBST(GTEST_LIBS)
+AC_SUBST(GMOCK_LIBS)
 
 # Write generated configuration file
 AC_CONFIG_FILES([Makefile src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h])

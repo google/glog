@@ -111,7 +111,9 @@ am_demangle_unittest_OBJECTS = $(am__objects_1) \
 nodist_demangle_unittest_OBJECTS = $(am__objects_1)
 demangle_unittest_OBJECTS = $(am_demangle_unittest_OBJECTS) \
 	$(nodist_demangle_unittest_OBJECTS)
-demangle_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
+demangle_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 demangle_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(demangle_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -151,7 +153,8 @@ am_logging_unittest_OBJECTS = $(am__objects_1) \
 nodist_logging_unittest_OBJECTS = $(am__objects_1)
 logging_unittest_OBJECTS = $(am_logging_unittest_OBJECTS) \
 	$(nodist_logging_unittest_OBJECTS)
-logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(logging_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -191,7 +194,8 @@ am_symbolize_unittest_OBJECTS = $(am__objects_1) \
 nodist_symbolize_unittest_OBJECTS = $(am__objects_1)
 symbolize_unittest_OBJECTS = $(am_symbolize_unittest_OBJECTS) \
 	$(nodist_symbolize_unittest_OBJECTS)
-symbolize_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+symbolize_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 symbolize_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(symbolize_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -201,7 +205,8 @@ am_utilities_unittest_OBJECTS = $(am__objects_1) \
 nodist_utilities_unittest_OBJECTS = $(am__objects_1)
 utilities_unittest_OBJECTS = $(am_utilities_unittest_OBJECTS) \
 	$(nodist_utilities_unittest_OBJECTS)
-utilities_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+utilities_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_3)
 utilities_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(utilities_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -302,7 +307,9 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 GFLAGS_LIBS = @GFLAGS_LIBS@
+GMOCK_LIBS = @GMOCK_LIBS@
 GREP = @GREP@
+GTEST_LIBS = @GTEST_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -423,6 +430,8 @@ lib_LTLIBRARIES = libglog.la
 
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+# Libraries for our unittest.
+TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
 TESTS_ENVIRONMENT = 
 check_SCRIPTS = logging_striplog_test_sh demangle_unittest_sh \
 	signalhandler_unittest_sh
@@ -439,7 +448,7 @@ logging_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
+logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 logging_striptest0_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest_main.cc
 
@@ -467,7 +476,7 @@ demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_demangle_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-demangle_unittest_LDADD = libglog.la $(COMMON_LIBS)
+demangle_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/stacktrace_unittest.cc
 
@@ -481,7 +490,7 @@ symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_symbolize_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS)
+symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/stl_logging_unittest.cc
 
@@ -502,7 +511,7 @@ utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
 nodist_utilities_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-utilities_unittest_LDADD = libglog.la $(COMMON_LIBS)
+utilities_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
                        src/utilities.cc src/utilities.h \

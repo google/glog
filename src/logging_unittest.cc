@@ -112,6 +112,8 @@ int main(int argc, char **argv) {
 
   RunSpecifiedBenchmarks();
 
+  InitGoogleTest(&argc, argv);
+
   // so that death tests run before we use threads
   CHECK_EQ(RUN_ALL_TESTS(), 0);
 
