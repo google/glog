@@ -81,7 +81,7 @@
 
 // int32 specialization
 #define DECLARE_int32(name) \
-  DECLARE_VARIABLE(@ac_google_namespace@::int32, name, int32)
+  DECLARE_VARIABLE(GOOGLE_NAMESPACE::int32, name, int32)
 #define DEFINE_int32(name, value, meaning) \
   DEFINE_VARIABLE(GOOGLE_NAMESPACE::int32, name, \
                   EnvToInt("GLOG_" #name, value), meaning, int32)
