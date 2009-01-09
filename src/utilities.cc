@@ -84,7 +84,7 @@ static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
 static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
   // Print stack trace
   void* stack[32];
-  int depth = GetStackTrace(stack, sizeof(stack)/sizeof(*stack), skip_count+1);
+  int depth = GetStackTrace(stack, ARRAYSIZE(stack), skip_count+1);
   for (int i = 0; i < depth; i++) {
 #if defined(HAVE_SYMBOLIZE)
     if (FLAGS_symbolize_stacktrace) {

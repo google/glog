@@ -17,9 +17,6 @@
 
 _START_GOOGLE_NAMESPACE_
 
-// There is a better way, but this is good enough in this file.
-#define NAIVE_ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
-
 namespace {
 
 // We'll install the failure signal handler for these signals.  We could
@@ -139,7 +136,7 @@ void DumpTimeInfo() {
 void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   // Get the signal name.
   const char* signal_name = NULL;
-  for (int i = 0; i < NAIVE_ARRAYSIZE(kFailureSignals); ++i) {
+  for (int i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
     if (signal_number == kFailureSignals[i].number) {
       signal_name = kFailureSignals[i].name;
     }
@@ -272,7 +269,7 @@ void FailureSignalHandler(int signal_number,
   // Get the stack traces.
   void *stack[32];
   // +1 to exclude this function.
-  const int depth = GetStackTrace(stack, NAIVE_ARRAYSIZE(stack), 1);
+  const int depth = GetStackTrace(stack, ARRAYSIZE(stack), 1);
   DumpSignalInfo(signal_number, signal_info);
   // Dump the stack traces.
   for (int i = 0; i < depth; ++i) {
@@ -306,7 +303,7 @@ void InstallFailureSignalHandler() {
   sig_action.sa_flags |= SA_SIGINFO;
   sig_action.sa_sigaction = &FailureSignalHandler;
 
-  for (int i = 0; i < NAIVE_ARRAYSIZE(kFailureSignals); ++i) {
+  for (int i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
     CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
   }
 }

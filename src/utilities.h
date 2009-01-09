@@ -95,6 +95,9 @@
 # define HAVE_SYMBOLIZE
 #endif
 
+// There is a better way, but this is good enough in this file.
+#define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
+
 _START_GOOGLE_NAMESPACE_
 
 namespace glog_internal_namespace_ {

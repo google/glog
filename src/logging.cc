@@ -1393,7 +1393,7 @@ static void GetTempDirectories(vector<string>* list) {
     "/tmp",
   };
 
-  for (int i = 0; i < sizeof(candidates) / sizeof(*candidates); i++) {
+  for (int i = 0; i < ARRAYSIZE(candidates); i++) {
     const char *d = candidates[i];
     if (!d) continue;  // Empty env var
 
