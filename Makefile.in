@@ -45,8 +45,10 @@ host_triplet = @host@
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@am__append_3 = -DNO_FRAME_POINTER
 TESTS = logging_unittest$(EXEEXT) demangle_unittest$(EXEEXT) \
 	stacktrace_unittest$(EXEEXT) symbolize_unittest$(EXEEXT) \
-	stl_logging_unittest$(EXEEXT) utilities_unittest$(EXEEXT)
-noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
+	stl_logging_unittest$(EXEEXT) utilities_unittest$(EXEEXT) \
+	$(am__EXEEXT_1)
+@HAVE_GMOCK_TRUE@am__append_4 = mock_log_test
+noinst_PROGRAMS = $(am__EXEEXT_2) $(am__EXEEXT_3)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
 	$(gloginclude_HEADERS) $(noinst_HEADERS) $(srcdir)/Makefile.am \
@@ -100,10 +102,12 @@ libglog_la_OBJECTS = $(am_libglog_la_OBJECTS) \
 libglog_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libglog_la_CXXFLAGS) \
 	$(CXXFLAGS) $(libglog_la_LDFLAGS) $(LDFLAGS) -o $@
-am__EXEEXT_1 = logging_unittest$(EXEEXT) demangle_unittest$(EXEEXT) \
+@HAVE_GMOCK_TRUE@am__EXEEXT_1 = mock_log_test$(EXEEXT)
+am__EXEEXT_2 = logging_unittest$(EXEEXT) demangle_unittest$(EXEEXT) \
 	stacktrace_unittest$(EXEEXT) symbolize_unittest$(EXEEXT) \
-	stl_logging_unittest$(EXEEXT) utilities_unittest$(EXEEXT)
-am__EXEEXT_2 = logging_striptest0$(EXEEXT) logging_striptest2$(EXEEXT) \
+	stl_logging_unittest$(EXEEXT) utilities_unittest$(EXEEXT) \
+	$(am__EXEEXT_1)
+am__EXEEXT_3 = logging_striptest0$(EXEEXT) logging_striptest2$(EXEEXT) \
 	logging_striptest10$(EXEEXT) signalhandler_unittest$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 am_demangle_unittest_OBJECTS = $(am__objects_1) \
@@ -159,6 +163,18 @@ logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(logging_unittest_CXXFLAGS) $(CXXFLAGS) \
 	$(logging_unittest_LDFLAGS) $(LDFLAGS) -o $@
+am__mock_log_test_SOURCES_DIST = src/glog/log_severity.h \
+	src/mock-log_test.cc
+@HAVE_GMOCK_TRUE@am_mock_log_test_OBJECTS = $(am__objects_1) \
+@HAVE_GMOCK_TRUE@	mock_log_test-mock-log_test.$(OBJEXT)
+@HAVE_GMOCK_TRUE@nodist_mock_log_test_OBJECTS = $(am__objects_1)
+mock_log_test_OBJECTS = $(am_mock_log_test_OBJECTS) \
+	$(nodist_mock_log_test_OBJECTS)
+@HAVE_GMOCK_TRUE@mock_log_test_DEPENDENCIES = libglog.la \
+@HAVE_GMOCK_TRUE@	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
+mock_log_test_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(mock_log_test_CXXFLAGS) \
+	$(CXXFLAGS) $(mock_log_test_LDFLAGS) $(LDFLAGS) -o $@
 am_signalhandler_unittest_OBJECTS = $(am__objects_1) \
 	signalhandler_unittest-signalhandler_unittest.$(OBJEXT)
 nodist_signalhandler_unittest_OBJECTS = $(am__objects_1)
@@ -243,6 +259,7 @@ SOURCES = $(libglog_la_SOURCES) $(nodist_libglog_la_SOURCES) \
 	$(logging_striptest2_SOURCES) \
 	$(nodist_logging_striptest2_SOURCES) \
 	$(logging_unittest_SOURCES) $(nodist_logging_unittest_SOURCES) \
+	$(mock_log_test_SOURCES) $(nodist_mock_log_test_SOURCES) \
 	$(signalhandler_unittest_SOURCES) \
 	$(nodist_signalhandler_unittest_SOURCES) \
 	$(stacktrace_unittest_SOURCES) \
@@ -256,6 +273,7 @@ SOURCES = $(libglog_la_SOURCES) $(nodist_libglog_la_SOURCES) \
 DIST_SOURCES = $(libglog_la_SOURCES) $(demangle_unittest_SOURCES) \
 	$(logging_striptest0_SOURCES) $(logging_striptest10_SOURCES) \
 	$(logging_striptest2_SOURCES) $(logging_unittest_SOURCES) \
+	$(am__mock_log_test_SOURCES_DIST) \
 	$(signalhandler_unittest_SOURCES) \
 	$(stacktrace_unittest_SOURCES) $(stl_logging_unittest_SOURCES) \
 	$(symbolize_unittest_SOURCES) $(utilities_unittest_SOURCES)
@@ -307,8 +325,12 @@ EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
 GFLAGS_LIBS = @GFLAGS_LIBS@
+GMOCK_CFLAGS = @GMOCK_CFLAGS@
+GMOCK_CONFIG = @GMOCK_CONFIG@
 GMOCK_LIBS = @GMOCK_LIBS@
 GREP = @GREP@
+GTEST_CFLAGS = @GTEST_CFLAGS@
+GTEST_CONFIG = @GTEST_CONFIG@
 GTEST_LIBS = @GTEST_LIBS@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -424,12 +446,14 @@ gloginclude_HEADERS = src/glog/log_severity.h
 nodist_gloginclude_HEADERS = src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h
 noinst_HEADERS = src/glog/logging.h.in src/glog/raw_logging.h.in src/glog/vlog_is_on.h.in src/glog/stl_logging.h.in
 dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
-        doc/designstyle.css doc/glog.html
+                doc/designstyle.css doc/glog.html
 
 lib_LTLIBRARIES = libglog.la
 
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+# Compile switches for our unittest.
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS)
 # Libraries for our unittest.
 TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
 TESTS_ENVIRONMENT = 
@@ -442,11 +466,11 @@ noinst_SCRIPTS = src/logging_striplog_test.sh src/demangle_unittest.sh \
 TEST_BINARIES = logging_striptest0 logging_striptest2 \
 	logging_striptest10 signalhandler_unittest
 logging_unittest_SOURCES = $(gloginclude_HEADERS) \
-                            src/logging_unittest.cc \
-                            src/config_for_unittests.h
+                           src/logging_unittest.cc \
+                           src/config_for_unittests.h
 
 nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 logging_striptest0_SOURCES = $(gloginclude_HEADERS) \
@@ -474,7 +498,7 @@ demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
                             src/demangle_unittest.cc
 
 nodist_demangle_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -488,7 +512,7 @@ symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/symbolize_unittest.cc
 
 nodist_symbolize_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -509,13 +533,20 @@ utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
                              src/utilities_unittest.cc
 
 nodist_utilities_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
+@HAVE_GMOCK_TRUE@mock_log_test_SOURCES = $(gloginclude_HEADERS) \
+@HAVE_GMOCK_TRUE@                        src/mock-log_test.cc
+
+@HAVE_GMOCK_TRUE@nodist_mock_log_test_SOURCES = $(nodist_gloginclude_HEADERS)
+@HAVE_GMOCK_TRUE@mock_log_test_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
+@HAVE_GMOCK_TRUE@mock_log_test_LDFLAGS = $(PTHREAD_CFLAGS)
+@HAVE_GMOCK_TRUE@mock_log_test_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
                        src/utilities.cc src/utilities.h \
-	 	       src/demangle.cc src/demangle.h \
+                       src/demangle.cc src/demangle.h \
                        src/stacktrace.h \
                        src/stacktrace_generic-inl.h \
                        src/stacktrace_libunwind-inl.h \
@@ -655,6 +686,9 @@ logging_striptest2$(EXEEXT): $(logging_striptest2_OBJECTS) $(logging_striptest2_
 logging_unittest$(EXEEXT): $(logging_unittest_OBJECTS) $(logging_unittest_DEPENDENCIES) 
 	@rm -f logging_unittest$(EXEEXT)
 	$(logging_unittest_LINK) $(logging_unittest_OBJECTS) $(logging_unittest_LDADD) $(LIBS)
+mock_log_test$(EXEEXT): $(mock_log_test_OBJECTS) $(mock_log_test_DEPENDENCIES) 
+	@rm -f mock_log_test$(EXEEXT)
+	$(mock_log_test_LINK) $(mock_log_test_OBJECTS) $(mock_log_test_LDADD) $(LIBS)
 signalhandler_unittest$(EXEEXT): $(signalhandler_unittest_OBJECTS) $(signalhandler_unittest_DEPENDENCIES) 
 	@rm -f signalhandler_unittest$(EXEEXT)
 	$(signalhandler_unittest_LINK) $(signalhandler_unittest_OBJECTS) $(signalhandler_unittest_LDADD) $(LIBS)
@@ -689,6 +723,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logging_striptest10-logging_striptest10.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logging_striptest2-logging_striptest2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/logging_unittest-logging_unittest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mock_log_test-mock-log_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/signalhandler_unittest-signalhandler_unittest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stacktrace_unittest-stacktrace_unittest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stl_logging_unittest-stl_logging_unittest.Po@am__quote@
@@ -834,6 +869,20 @@ logging_unittest-logging_unittest.obj: src/logging_unittest.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/logging_unittest.cc' object='logging_unittest-logging_unittest.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(logging_unittest_CXXFLAGS) $(CXXFLAGS) -c -o logging_unittest-logging_unittest.obj `if test -f 'src/logging_unittest.cc'; then $(CYGPATH_W) 'src/logging_unittest.cc'; else $(CYGPATH_W) '$(srcdir)/src/logging_unittest.cc'; fi`
+
+mock_log_test-mock-log_test.o: src/mock-log_test.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mock_log_test_CXXFLAGS) $(CXXFLAGS) -MT mock_log_test-mock-log_test.o -MD -MP -MF $(DEPDIR)/mock_log_test-mock-log_test.Tpo -c -o mock_log_test-mock-log_test.o `test -f 'src/mock-log_test.cc' || echo '$(srcdir)/'`src/mock-log_test.cc
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/mock_log_test-mock-log_test.Tpo $(DEPDIR)/mock_log_test-mock-log_test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/mock-log_test.cc' object='mock_log_test-mock-log_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mock_log_test_CXXFLAGS) $(CXXFLAGS) -c -o mock_log_test-mock-log_test.o `test -f 'src/mock-log_test.cc' || echo '$(srcdir)/'`src/mock-log_test.cc
+
+mock_log_test-mock-log_test.obj: src/mock-log_test.cc
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mock_log_test_CXXFLAGS) $(CXXFLAGS) -MT mock_log_test-mock-log_test.obj -MD -MP -MF $(DEPDIR)/mock_log_test-mock-log_test.Tpo -c -o mock_log_test-mock-log_test.obj `if test -f 'src/mock-log_test.cc'; then $(CYGPATH_W) 'src/mock-log_test.cc'; else $(CYGPATH_W) '$(srcdir)/src/mock-log_test.cc'; fi`
+@am__fastdepCXX_TRUE@	mv -f $(DEPDIR)/mock_log_test-mock-log_test.Tpo $(DEPDIR)/mock_log_test-mock-log_test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='src/mock-log_test.cc' object='mock_log_test-mock-log_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(mock_log_test_CXXFLAGS) $(CXXFLAGS) -c -o mock_log_test-mock-log_test.obj `if test -f 'src/mock-log_test.cc'; then $(CYGPATH_W) 'src/mock-log_test.cc'; else $(CYGPATH_W) '$(srcdir)/src/mock-log_test.cc'; fi`
 
 signalhandler_unittest-signalhandler_unittest.o: src/signalhandler_unittest.cc
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(signalhandler_unittest_CXXFLAGS) $(CXXFLAGS) -MT signalhandler_unittest-signalhandler_unittest.o -MD -MP -MF $(DEPDIR)/signalhandler_unittest-signalhandler_unittest.Tpo -c -o signalhandler_unittest-signalhandler_unittest.o `test -f 'src/signalhandler_unittest.cc' || echo '$(srcdir)/'`src/signalhandler_unittest.cc
@@ -1348,8 +1397,7 @@ demangle_unittest_sh: demangle_unittest
 	$(top_srcdir)/demangle_unittest  # force to create lt-demangle_unittest
 	$(top_srcdir)/src/demangle_unittest.sh
 signalhandler_unittest_sh: signalhandler_unittest
-        # force to create lt-signalhandler_unittest
-	$(top_srcdir)/signalhandler_unittest
+	$(top_srcdir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
 	$(top_srcdir)/src/signalhandler_unittest.sh
 
 rpm: dist-gzip packages/rpm.sh packages/rpm/rpm.spec

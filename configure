@@ -884,6 +884,10 @@ acx_pthread_config
 PTHREAD_CC
 PTHREAD_LIBS
 PTHREAD_CFLAGS
+GTEST_CONFIG
+GMOCK_CONFIG
+HAVE_GMOCK_TRUE
+HAVE_GMOCK_FALSE
 UNWIND_LIBS
 ac_google_start_namespace
 ac_google_end_namespace
@@ -901,6 +905,8 @@ ac_cv_have_u_int16_t
 ac_cv_have___uint16
 ac_cv_have_libgflags
 GFLAGS_LIBS
+GTEST_CFLAGS
+GMOCK_CFLAGS
 GTEST_LIBS
 GMOCK_LIBS
 LIBOBJS
@@ -5066,7 +5072,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5069 "configure"' > conftest.$ac_ext
+  echo '#line 5075 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7421,11 +7427,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7424: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7430: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7428: \$? = $ac_status" >&5
+   echo "$as_me:7434: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7711,11 +7717,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7714: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7720: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7718: \$? = $ac_status" >&5
+   echo "$as_me:7724: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -7815,11 +7821,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7818: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7824: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7822: \$? = $ac_status" >&5
+   echo "$as_me:7828: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -10192,7 +10198,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10195 "configure"
+#line 10201 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10292,7 +10298,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10295 "configure"
+#line 10301 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12693,11 +12699,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12696: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12702: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12700: \$? = $ac_status" >&5
+   echo "$as_me:12706: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -12797,11 +12803,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12800: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12806: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12804: \$? = $ac_status" >&5
+   echo "$as_me:12810: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14395,11 +14401,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14398: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14404: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14402: \$? = $ac_status" >&5
+   echo "$as_me:14408: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -14499,11 +14505,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14502: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14508: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14506: \$? = $ac_status" >&5
+   echo "$as_me:14512: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16719,11 +16725,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16722: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16728: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16726: \$? = $ac_status" >&5
+   echo "$as_me:16732: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17009,11 +17015,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17012: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17018: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:17016: \$? = $ac_status" >&5
+   echo "$as_me:17022: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -17113,11 +17119,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:17116: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:17122: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:17120: \$? = $ac_status" >&5
+   echo "$as_me:17126: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -23927,151 +23933,119 @@ else
   GFLAGS_LIBS=
 fi
 
-# Check if there is gtest library installed.
-{ echo "$as_me:$LINENO: checking for main in -lgtest" >&5
-echo $ECHO_N "checking for main in -lgtest... $ECHO_C" >&6; }
-if test "${ac_cv_lib_gtest_main+set}" = set; then
+# TODO(hamaji): Use official m4 macros provided by testing libraries
+#               once the m4 macro of Google Mocking becomes ready.
+# Check if there is Google Test library installed.
+# Extract the first word of "gtest-config", so it can be a program name with args.
+set dummy gtest-config; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_GTEST_CONFIG+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lgtest  $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_gtest_main=yes
+  if test -n "$GTEST_CONFIG"; then
+  ac_cv_prog_GTEST_CONFIG="$GTEST_CONFIG" # Let the user override the test.
 else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_GTEST_CONFIG=""yes""
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
 
-	ac_cv_lib_gtest_main=no
 fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
 fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_gtest_main" >&5
-echo "${ECHO_T}$ac_cv_lib_gtest_main" >&6; }
-if test $ac_cv_lib_gtest_main = yes; then
-  ac_cv_have_libgtest=1
+GTEST_CONFIG=$ac_cv_prog_GTEST_CONFIG
+if test -n "$GTEST_CONFIG"; then
+  { echo "$as_me:$LINENO: result: $GTEST_CONFIG" >&5
+echo "${ECHO_T}$GTEST_CONFIG" >&6; }
 else
-  ac_cv_have_libgtest=0
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
 fi
 
-if test x"$ac_cv_have_libgtest" = x"1"; then
-  GTEST_LIBS=-lgtest
+
+if test x"$GTEST_CONFIG" = "xyes"; then
+  GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
+  GTEST_LIBS=`gtest-config --ldflags --libs`
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_LIB_GTEST 1
 _ACEOF
 
 
-  # Check if there is gmock library installed.
-  { echo "$as_me:$LINENO: checking for main in -lgmock" >&5
-echo $ECHO_N "checking for main in -lgmock... $ECHO_C" >&6; }
-if test "${ac_cv_lib_gmock_main+set}" = set; then
+  # Check if there is Google Mocking library installed.
+  # Extract the first word of "gmock-config", so it can be a program name with args.
+set dummy gmock-config; ac_word=$2
+{ echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6; }
+if test "${ac_cv_prog_GMOCK_CONFIG+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
-  ac_check_lib_save_LIBS=$LIBS
-LIBS="-lgmock $GTEST_LIBS $LIBS"
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-
-int
-main ()
-{
-return main ();
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (ac_try="$ac_link"
-case "(($ac_try" in
-  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
-  *) ac_try_echo=$ac_try;;
-esac
-eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
-  (eval "$ac_link") 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } && {
-	 test -z "$ac_c_werror_flag" ||
-	 test ! -s conftest.err
-       } && test -s conftest$ac_exeext &&
-       $as_test_x conftest$ac_exeext; then
-  ac_cv_lib_gmock_main=yes
+  if test -n "$GMOCK_CONFIG"; then
+  ac_cv_prog_GMOCK_CONFIG="$GMOCK_CONFIG" # Let the user override the test.
 else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
+as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if { test -f "$as_dir/$ac_word$ac_exec_ext" && $as_test_x "$as_dir/$ac_word$ac_exec_ext"; }; then
+    ac_cv_prog_GMOCK_CONFIG=""yes""
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+IFS=$as_save_IFS
 
-	ac_cv_lib_gmock_main=no
 fi
-
-rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
-      conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
 fi
-{ echo "$as_me:$LINENO: result: $ac_cv_lib_gmock_main" >&5
-echo "${ECHO_T}$ac_cv_lib_gmock_main" >&6; }
-if test $ac_cv_lib_gmock_main = yes; then
-  ac_cv_have_libgmock=1
+GMOCK_CONFIG=$ac_cv_prog_GMOCK_CONFIG
+if test -n "$GMOCK_CONFIG"; then
+  { echo "$as_me:$LINENO: result: $GMOCK_CONFIG" >&5
+echo "${ECHO_T}$GMOCK_CONFIG" >&6; }
 else
-  ac_cv_have_libgmock=0
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
 fi
 
-  if test x"$ac_cv_have_libgmock" = x"1"; then
-    GMOCK_LIBS=-lgmock
+
+  if test x"$GMOCK_CONFIG" = "xyes"; then
+    GMOCK_CFLAGS=`gmock-config --cppflags --cxxflags`
+    GMOCK_LIBS=`gmock-config --ldflags --libs`
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_LIB_GMOCK 1
 _ACEOF
 
   else
+    # We don't run test cases which use Google Mocking framework.
+    GMOCK_CFLAGS=
     GMOCK_LIBS=
   fi
 else
+  # We'll use src/googletest.h for our unittests.
+  GTEST_CFLAGS=
   GTEST_LIBS=
 fi
+ if test x"$GMOCK_CONFIG" = "xyes"; then
+  HAVE_GMOCK_TRUE=
+  HAVE_GMOCK_FALSE='#'
+else
+  HAVE_GMOCK_TRUE='#'
+  HAVE_GMOCK_FALSE=
+fi
+
 
 # We want to link in libunwind if it exists
 UNWIND_LIBS=
@@ -24632,6 +24606,8 @@ fi
 
 
 
+
+
 # Write generated configuration file
 ac_config_files="$ac_config_files Makefile src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h"
 
@@ -24770,6 +24746,13 @@ if test -z "${X86_64_TRUE}" && test -z "${X86_64_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"X86_64\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
 echo "$as_me: error: conditional \"X86_64\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+if test -z "${HAVE_GMOCK_TRUE}" && test -z "${HAVE_GMOCK_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"HAVE_GMOCK\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"HAVE_GMOCK\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
@@ -25465,6 +25448,10 @@ acx_pthread_config!$acx_pthread_config$ac_delim
 PTHREAD_CC!$PTHREAD_CC$ac_delim
 PTHREAD_LIBS!$PTHREAD_LIBS$ac_delim
 PTHREAD_CFLAGS!$PTHREAD_CFLAGS$ac_delim
+GTEST_CONFIG!$GTEST_CONFIG$ac_delim
+GMOCK_CONFIG!$GMOCK_CONFIG$ac_delim
+HAVE_GMOCK_TRUE!$HAVE_GMOCK_TRUE$ac_delim
+HAVE_GMOCK_FALSE!$HAVE_GMOCK_FALSE$ac_delim
 UNWIND_LIBS!$UNWIND_LIBS$ac_delim
 ac_google_start_namespace!$ac_google_start_namespace$ac_delim
 ac_google_end_namespace!$ac_google_end_namespace$ac_delim
@@ -25482,13 +25469,15 @@ ac_cv_have_u_int16_t!$ac_cv_have_u_int16_t$ac_delim
 ac_cv_have___uint16!$ac_cv_have___uint16$ac_delim
 ac_cv_have_libgflags!$ac_cv_have_libgflags$ac_delim
 GFLAGS_LIBS!$GFLAGS_LIBS$ac_delim
+GTEST_CFLAGS!$GTEST_CFLAGS$ac_delim
+GMOCK_CFLAGS!$GMOCK_CFLAGS$ac_delim
 GTEST_LIBS!$GTEST_LIBS$ac_delim
 GMOCK_LIBS!$GMOCK_LIBS$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 39; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 45; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

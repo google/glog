@@ -105,24 +105,32 @@ else
   GFLAGS_LIBS=
 fi
 
-# Check if there is gtest library installed.
-AC_CHECK_LIB(gtest, main, ac_cv_have_libgtest=1, ac_cv_have_libgtest=0)
-if test x"$ac_cv_have_libgtest" = x"1"; then
-  GTEST_LIBS=-lgtest
+# TODO(hamaji): Use official m4 macros provided by testing libraries
+#               once the m4 macro of Google Mocking becomes ready.
+# Check if there is Google Test library installed.
+AC_CHECK_PROG(GTEST_CONFIG, gtest-config, "yes")
+if test x"$GTEST_CONFIG" = "xyes"; then
+  GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
+  GTEST_LIBS=`gtest-config --ldflags --libs`
   AC_DEFINE(HAVE_LIB_GTEST, 1, [define if you have google gtest library])
 
-  # Check if there is gmock library installed.
-  AC_CHECK_LIB(gmock, main, ac_cv_have_libgmock=1, ac_cv_have_libgmock=0,
-               [$GTEST_LIBS])
-  if test x"$ac_cv_have_libgmock" = x"1"; then
-    GMOCK_LIBS=-lgmock
+  # Check if there is Google Mocking library installed.
+  AC_CHECK_PROG(GMOCK_CONFIG, gmock-config, "yes")
+  if test x"$GMOCK_CONFIG" = "xyes"; then
+    GMOCK_CFLAGS=`gmock-config --cppflags --cxxflags`
+    GMOCK_LIBS=`gmock-config --ldflags --libs`
     AC_DEFINE(HAVE_LIB_GMOCK, 1, [define if you have google gmock library])
   else
+    # We don't run test cases which use Google Mocking framework.
+    GMOCK_CFLAGS=
     GMOCK_LIBS=
   fi
 else
+  # We'll use src/googletest.h for our unittests.
+  GTEST_CFLAGS=
   GTEST_LIBS=
 fi
+AM_CONDITIONAL(HAVE_GMOCK, test x"$GMOCK_CONFIG" = "xyes")
 
 # We want to link in libunwind if it exists
 UNWIND_LIBS=
@@ -202,6 +210,8 @@ AC_SUBST(ac_cv_have_u_int16_t)
 AC_SUBST(ac_cv_have___uint16)
 AC_SUBST(ac_cv_have_libgflags)
 AC_SUBST(GFLAGS_LIBS)
+AC_SUBST(GTEST_CFLAGS)
+AC_SUBST(GMOCK_CFLAGS)
 AC_SUBST(GTEST_LIBS)
 AC_SUBST(GMOCK_LIBS)
 

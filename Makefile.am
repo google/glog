@@ -11,17 +11,17 @@ AM_CXXFLAGS =
 
 # These are good warnings to turn on by default
 if GCC
-AM_CXXFLAGS += -Wall -Wwrite-strings -Woverloaded-virtual -Wno-sign-compare
+  AM_CXXFLAGS += -Wall -Wwrite-strings -Woverloaded-virtual -Wno-sign-compare
 endif
 
 # These are x86-specific, having to do with frame-pointers
 if X86_64
 if ENABLE_FRAME_POINTERS
-AM_CXXFLAGS += -fno-omit-frame-pointer
+  AM_CXXFLAGS += -fno-omit-frame-pointer
 else
   # TODO(csilvers): check if -fomit-frame-pointer might be in $(CXXFLAGS),
   #                 before setting this.
-AM_CXXFLAGS += -DNO_FRAME_POINTER
+  AM_CXXFLAGS += -DNO_FRAME_POINTER
 endif
 endif
 
@@ -39,13 +39,15 @@ docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
 ## Add your documentation files (in doc/) in addition to these
 ## top-level boilerplate files.  Also add a TODO file if you have one.
 dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
-        doc/designstyle.css doc/glog.html
+                doc/designstyle.css doc/glog.html
 
 ## The libraries (.so's) you want to install
 lib_LTLIBRARIES =
 
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
+# Compile switches for our unittest.
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS)
 # Libraries for our unittest.
 TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
 
@@ -63,10 +65,10 @@ TEST_BINARIES =
 
 TESTS += logging_unittest
 logging_unittest_SOURCES = $(gloginclude_HEADERS) \
-                            src/logging_unittest.cc \
-                            src/config_for_unittests.h
+                           src/logging_unittest.cc \
+                           src/config_for_unittests.h
 nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
@@ -84,8 +86,7 @@ demangle_unittest_sh: demangle_unittest
 check_SCRIPTS += signalhandler_unittest_sh
 noinst_SCRIPTS += src/signalhandler_unittest.sh
 signalhandler_unittest_sh: signalhandler_unittest
-        # force to create lt-signalhandler_unittest
-	$(top_srcdir)/signalhandler_unittest
+	$(top_srcdir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
 	$(top_srcdir)/src/signalhandler_unittest.sh
 
 TEST_BINARIES += logging_striptest0
@@ -116,7 +117,7 @@ TESTS += demangle_unittest
 demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
                             src/demangle_unittest.cc
 nodist_demangle_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+demangle_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 demangle_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 demangle_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
@@ -132,7 +133,7 @@ TESTS += symbolize_unittest
 symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/symbolize_unittest.cc
 nodist_symbolize_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+symbolize_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 symbolize_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 symbolize_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
@@ -156,9 +157,19 @@ TESTS += utilities_unittest
 utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
                              src/utilities_unittest.cc
 nodist_utilities_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+utilities_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 utilities_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 utilities_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
+
+if HAVE_GMOCK
+TESTS += mock_log_test
+mock_log_test_SOURCES = $(gloginclude_HEADERS) \
+                        src/mock-log_test.cc
+nodist_mock_log_test_SOURCES = $(nodist_gloginclude_HEADERS)
+mock_log_test_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
+mock_log_test_LDFLAGS = $(PTHREAD_CFLAGS)
+mock_log_test_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
+endif
 
 ## vvvv RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 
@@ -166,7 +177,7 @@ lib_LTLIBRARIES += libglog.la
 libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/logging.cc src/raw_logging.cc src/vlog_is_on.cc \
                        src/utilities.cc src/utilities.h \
-	 	       src/demangle.cc src/demangle.h \
+                       src/demangle.cc src/demangle.h \
                        src/stacktrace.h \
                        src/stacktrace_generic-inl.h \
                        src/stacktrace_libunwind-inl.h \
