@@ -58,7 +58,7 @@ DEFINE_string(test_srcdir, TEST_SRC_DIR,
 #ifdef NDEBUG
 DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
 #else
-DEFINE_int32(benchmark_iters, 1000000, "Number of iterations per benchmark");
+DEFINE_int32(benchmark_iters, 100000, "Number of iterations per benchmark");
 #endif
 
 #ifdef HAVE_LIB_GTEST
@@ -153,7 +153,7 @@ static int RUN_ALL_TESTS() {
 
 _END_GOOGLE_NAMESPACE_
 
-#endif
+#endif  // ! HAVE_LIB_GTEST
 
 _START_GOOGLE_NAMESPACE_
 
@@ -366,7 +366,6 @@ static string MungeLine(const string& line) {
   }
   if (!before.empty()) before += " ";
   iss >> time;
-  CHECK_EQ(6, time.size());
   iss >> thread_lineinfo;
   CHECK(!thread_lineinfo.empty());
   if (thread_lineinfo[thread_lineinfo.size() - 1] != ']') {

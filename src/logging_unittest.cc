@@ -28,8 +28,34 @@
 #include "glog/raw_logging.h"
 #include "googletest.h"
 
+DECLARE_string(log_backtrace_at);  // logging.cc
+
+#ifdef HAVE_LIB_GMOCK
+#include <gmock/gmock.h>
+#include "mock-log.h"
+// Introduce several symbols from gmock.
+using testing::_;
+using testing::AnyNumber;
+using testing::HasSubstr;
+using testing::AllOf;
+using testing::StrNe;
+using testing::StrictMock;
+using testing::InitGoogleMock;
+using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+#endif
+
 using namespace std;
 using namespace GOOGLE_NAMESPACE;
+
+// Some non-advertised functions that we want to test or use.
+_START_GOOGLE_NAMESPACE_
+namespace base {
+namespace internal {
+bool GetExitOnDFatal();
+void SetExitOnDFatal(bool value);
+}  // namespace internal
+}  // namespace base
+_END_GOOGLE_NAMESPACE_
 
 static void TestLogging(bool check_counts);
 static void TestRawLogging();
@@ -37,6 +63,7 @@ static void LogWithLevels(int v, int severity, bool err, bool alsoerr);
 static void TestLoggingLevels();
 static void TestLogString();
 static void TestLogSink();
+static void TestLogToString();
 static void TestLogSinkWaitTillSent();
 static void TestCHECK();
 static void TestDCHECK();
@@ -98,6 +125,20 @@ BENCHMARK(BM_Check2);
 static void CheckFailure(int a, int b, const char* file, int line, const char* msg) {
 }
 
+static void BM_logspeed(int n) {
+  while (n-- > 0) {
+    LOG(INFO) << "test message";
+  }
+}
+BENCHMARK(BM_logspeed);
+
+static void BM_vlog(int n) {
+  while (n-- > 0) {
+    VLOG(1) << "test message";
+  }
+}
+BENCHMARK(BM_vlog);
+
 int main(int argc, char **argv) {
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
@@ -106,13 +147,16 @@ int main(int argc, char **argv) {
   LogWithLevels(0, 0, 0, 0);  // simulate "before global c-tors"
   const string early_stderr = GetCapturedTestStderr();
 
-  FLAGS_logtostderr = true;
-
   InitGoogleLogging(argv[0]);
 
   RunSpecifiedBenchmarks();
 
+  FLAGS_logtostderr = true;
+
   InitGoogleTest(&argc, argv);
+#ifdef HAVE_LIB_GTEST
+  InitGoogleMock(&argc, argv);
+#endif
 
   // so that death tests run before we use threads
   CHECK_EQ(RUN_ALL_TESTS(), 0);
@@ -127,6 +171,7 @@ int main(int argc, char **argv) {
   TestLoggingLevels();
   TestLogString();
   TestLogSink();
+  TestLogToString();
   TestLogSinkWaitTillSent();
   TestCHECK();
   TestDCHECK();
@@ -145,7 +190,7 @@ int main(int argc, char **argv) {
   TestErrno();
   TestTruncate();
 
-  LOG(INFO) << "PASS";
+  fprintf(stdout, "PASS\n");
   return 0;
 }
 
@@ -368,6 +413,22 @@ void TestLogString() {
   }
 }
 
+void TestLogToString() {
+  string error;
+  string* no_error = NULL;
+
+  LOG_TO_STRING(INFO, &error) << "LOG_TO_STRING: " << "collected info";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+  LOG_TO_STRING(WARNING, &error) << "LOG_TO_STRING: " << "collected warning";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+  LOG_TO_STRING(ERROR, &error) << "LOG_TO_STRING: " << "collected error";
+  LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
+
+  LOG_TO_STRING(INFO, no_error) << "LOG_TO_STRING: " << "reported info";
+  LOG_TO_STRING(WARNING, no_error) << "LOG_TO_STRING: " << "reported warning";
+  LOG_TO_STRING(ERROR, NULL) << "LOG_TO_STRING: " << "reported error";
+}
+
 class TestLogSinkImpl : public LogSink {
  public:
   vector<string> errors;
@@ -391,6 +452,20 @@ void TestLogSink() {
   LOG_TO_SINK(no_sink, INFO) << "LOG_TO_SINK: " << "reported info";
   LOG_TO_SINK(no_sink, WARNING) << "LOG_TO_SINK: " << "reported warning";
   LOG_TO_SINK(NULL, ERROR) << "LOG_TO_SINK: " << "reported error";
+
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, INFO)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected info";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, WARNING)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected warning";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, ERROR)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected error";
+
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(no_sink, INFO)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed info";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(no_sink, WARNING)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed warning";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(NULL, ERROR)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed error";
 
   LOG(INFO) << "Captured by LOG_TO_SINK:";
   for (size_t i = 0; i < sink.errors.size(); ++i) {
@@ -947,6 +1022,127 @@ void MyFatal() {
 void MyCheck(bool a, bool b) {
   CHECK_EQ(a, b);
 }
+
+#ifdef HAVE_LIB_GMOCK
+
+TEST(DVLog, Basic) {
+  ScopedMockLog log;
+
+#if NDEBUG
+  // We are expecting that nothing is logged.
+  EXPECT_CALL(log, Log(_, _, _)).Times(0);
+#else
+  EXPECT_CALL(log, Log(INFO, __FILE__, "debug log"));
+#endif
+
+  FLAGS_v = 1;
+  DVLOG(1) << "debug log";
+}
+
+TEST(DVLog, V0) {
+  ScopedMockLog log;
+
+  // We are expecting that nothing is logged.
+  EXPECT_CALL(log, Log(_, _, _)).Times(0);
+
+  FLAGS_v = 0;
+  DVLOG(1) << "debug log";
+}
+
+TEST(LogAtLevel, Basic) {
+  ScopedMockLog log;
+
+  // The function version outputs "logging.h" as a file name.
+  EXPECT_CALL(log, Log(WARNING, StrNe(__FILE__), "function version"));
+  EXPECT_CALL(log, Log(INFO, __FILE__, "macro version"));
+
+  int severity = WARNING;
+  LogAtLevel(severity, "function version");
+
+  severity = INFO;
+  // We can use the macro version as a C++ stream.
+  LOG_AT_LEVEL(severity) << "macro" << ' ' << "version";
+}
+
+TEST(TestExitOnDFatal, ToBeOrNotToBe) {
+  // Check the default setting...
+  EXPECT_TRUE(base::internal::GetExitOnDFatal());
+
+  // Turn off...
+  base::internal::SetExitOnDFatal(false);
+  EXPECT_FALSE(base::internal::GetExitOnDFatal());
+
+  // We don't die.
+  {
+    ScopedMockLog log;
+    //EXPECT_CALL(log, Log(_, _, _)).Times(AnyNumber());
+    // LOG(DFATAL) has severity FATAL if debugging, but is
+    // downgraded to ERROR if not debugging.
+    const LogSeverity severity =
+#ifdef NDEBUG
+        ERROR;
+#else
+        FATAL;
+#endif
+    EXPECT_CALL(log, Log(severity, __FILE__, "This should not be fatal"));
+    LOG(DFATAL) << "This should not be fatal";
+  }
+
+  // Turn back on...
+  base::internal::SetExitOnDFatal(true);
+  EXPECT_TRUE(base::internal::GetExitOnDFatal());
+
+  // Death comes on little cats' feet.
+  EXPECT_DEBUG_DEATH({
+      LOG(DFATAL) << "This should be fatal in debug mode";
+    }, "This should be fatal in debug mode");
+}
+
+#ifdef HAVE_STACKTRACE
+
+static void BacktraceAtHelper() {
+  LOG(INFO) << "Not me";
+
+// The vertical spacing of the next 3 lines is significant.
+  LOG(INFO) << "Backtrace me";
+}
+static int kBacktraceAtLine = __LINE__ - 2;  // The line of the LOG(INFO) above
+
+TEST(LogBacktraceAt, DoesNotBacktraceWhenDisabled) {
+  StrictMock<ScopedMockLog> log;
+
+  FLAGS_log_backtrace_at = "";
+
+  EXPECT_CALL(log, Log(_, _, "Backtrace me"));
+  EXPECT_CALL(log, Log(_, _, "Not me"));
+
+  BacktraceAtHelper();
+}
+
+TEST(LogBacktraceAt, DoesBacktraceAtRightLineWhenEnabled) {
+  StrictMock<ScopedMockLog> log;
+
+  char where[100];
+  snprintf(where, 100, "%s:%d", const_basename(__FILE__), kBacktraceAtLine);
+  FLAGS_log_backtrace_at = where;
+
+  // The LOG at the specified line should include a stacktrace which includes
+  // the name of the containing function, followed by the log message.
+  // We use HasSubstr()s instead of ContainsRegex() for environments
+  // which don't have regexp.
+  EXPECT_CALL(log, Log(_, _, AllOf(HasSubstr("stacktrace:"),
+                                   HasSubstr("BacktraceAtHelper"),
+                                   HasSubstr("main"),
+                                   HasSubstr("Backtrace me"))));
+  // Other LOGs should not include a backtrace.
+  EXPECT_CALL(log, Log(_, _, "Not me"));
+
+  BacktraceAtHelper();
+}
+
+#endif // HAVE_STACKTRACE
+
+#endif // HAVE_LIB_GMOCK
 
 struct UserDefinedClass {
   bool operator==(const UserDefinedClass& rhs) const { return true; }

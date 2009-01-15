@@ -40,7 +40,7 @@
 
 #include <string>
 
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS) && !defined(__CYGWIN__)
 # include "port.h"
 #endif
 
@@ -74,7 +74,7 @@
 #  define STACKTRACE_H "stacktrace_x86-inl.h"
 # elif defined(__x86_64__) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_x86_64-inl.h"
-# elif ((__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
+# elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_powerpc-inl.h"
 # endif
 #endif
@@ -95,8 +95,10 @@
 # define HAVE_SYMBOLIZE
 #endif
 
-// There is a better way, but this is good enough in this file.
-#define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
+#ifndef ARRAYSIZE
+// There is a better way, but this is good enough for our purpose.
+# define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
+#endif
 
 _START_GOOGLE_NAMESPACE_
 
@@ -119,7 +121,12 @@ int64 CycleClock_Now();
 
 int64 UsecToCycles(int64 usec);
 
+typedef double WallTime;
+WallTime WallTime_Now();
+
 int32 GetMainThreadPid();
+
+pid_t GetTID();
 
 const std::string& MyUserName();
 
@@ -154,6 +161,23 @@ inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
   return ret;
 #endif
 }
+
+void DumpStackTraceToString(std::string* stacktrace);
+
+struct CrashReason {
+  CrashReason() : filename(0), line_number(0), message(0), depth(0) {}
+
+  const char* filename;
+  int line_number;
+  const char* message;
+
+  // We'll also store a bit of context at the time of crash as it may not be
+  // available later on.
+  void* stack[32];
+  int depth;
+};
+
+void SetCrashReason(const CrashReason* r);
 
 }  // namespace glog_internal_namespace_
 

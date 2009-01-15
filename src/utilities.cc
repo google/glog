@@ -8,6 +8,11 @@
 # include <sys/time.h>
 #endif
 #include <time.h>
+#if defined(HAVE_SYSCALL_H)
+#include <syscall.h>                 // for syscall()
+#elif defined(HAVE_SYS_SYSCALL_H)
+#include <sys/syscall.h>                 // for syscall()
+#endif
 
 #include "base/googleinit.h"
 #include "stacktrace.h"
@@ -39,6 +44,10 @@ static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 static void DebugWriteToStderr(const char* data, void *unused) {
   // This one is signal-safe.
   write(STDERR_FILENO, data, strlen(data));
+}
+
+void DebugWriteToString(const char* data, void *arg) {
+  reinterpret_cast<string*>(arg)->append(data);
 }
 
 // Print a program counter and its symbol name.
@@ -146,7 +155,6 @@ int64 CycleClock_Now() {
   return (static_cast<int64>(now.wSecond) * 1000000 +
           static_cast<int64>(now.wMilliseconds) * 1000);
 #else
-  // TODO(hamaji): temporary impementation - it might be too slow.
   struct timeval tv;
   gettimeofday(&tv, NULL);
   return static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;
@@ -157,9 +165,51 @@ int64 UsecToCycles(int64 usec) {
   return usec;
 }
 
+WallTime WallTime_Now() {
+  // Now, cycle clock is retuning microseconds since the epoch.
+  return CycleClock_Now() * 0.000001;
+}
+
 static int32 g_main_thread_pid = getpid();
 int32 GetMainThreadPid() {
   return g_main_thread_pid;
+}
+
+pid_t GetTID() {
+  // On Linux and FreeBSD, we try to use gettid().
+#if defined OS_LINUX || defined OS_FREEBSD || defined OS_MACOSX
+#ifndef __NR_gettid
+#ifdef OS_MACOSX
+#define __NR_gettid SYS_gettid
+#elif ! defined __i386__
+#error "Must define __NR_gettid for non-x86 platforms"
+#else
+#define __NR_gettid 224
+#endif
+#endif
+  static bool lacks_gettid = false;
+  if (!lacks_gettid) {
+    pid_t tid = syscall(__NR_gettid);
+    if (tid != -1) {
+      return tid;
+    }
+    // Technically, this variable has to be volatile, but there is a small
+    // performance penalty in accessing volatile variables and there should
+    // not be any serious adverse effect if a thread does not immediately see
+    // the value change to "true".
+    lacks_gettid = true;
+  }
+#endif  // OS_LINUX || OS_FREEBSD
+
+  // If gettid() could not be used, we use one of the following.
+#if defined OS_LINUX
+  return getpid();  // Linux:  getpid returns thread ID when gettid is absent
+#elif defined OS_WINDOWS || defined OS_CYGWIN
+  return GetCurrentThreadId();
+#else
+  // If none of the techniques above worked, we use pthread_self().
+  return (pid_t)pthread_self();
+#endif
 }
 
 const char* const_basename(const char* filepath) {
@@ -185,6 +235,22 @@ static void MyUserNameInitializer() {
   }
 }
 REGISTER_MODULE_INITIALIZER(utilities, MyUserNameInitializer());
+
+#ifdef HAVE_STACKTRACE
+void DumpStackTraceToString(string* stacktrace) {
+  DumpStackTrace(1, DebugWriteToString, stacktrace);
+}
+#endif
+
+// We use an atomic operation to prevent problems with calling CrashReason
+// from inside the Mutex implementation (potentially through RAW_CHECK).
+static const CrashReason* g_reason = 0;
+
+void SetCrashReason(const CrashReason* r) {
+  sync_val_compare_and_swap(&g_reason,
+                            reinterpret_cast<const CrashReason*>(0),
+                            r);
+}
 
 }  // namespace glog_internal_namespace_
 

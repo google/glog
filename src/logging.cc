@@ -33,10 +33,15 @@
 #include "glog/raw_logging.h"
 #include "base/googleinit.h"
 
+#ifdef HAVE_STACKTRACE
+# include "stacktrace.h"
+#endif
+
 using std::string;
 using std::vector;
 using std::ostrstream;
 using std::setw;
+using std::setfill;
 using std::hex;
 using std::dec;
 using std::min;
@@ -44,10 +49,32 @@ using std::ostream;
 using std::ostringstream;
 using std::strstream;
 
-DEFINE_bool(logtostderr, false,
+// There is no thread annotation support.
+#define EXCLUSIVE_LOCKS_REQUIRED(mu)
+
+static bool BoolFromEnv(const char *varname, bool defval) {
+  const char* const valstr = getenv(varname);
+  if (!valstr) {
+    return defval;
+  }
+  return memchr("tTyY1\0", valstr[0], 6) != NULL;
+}
+
+DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
             "log messages go to stderr instead of logfiles");
-DEFINE_bool(alsologtostderr, false,
+DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
             "log messages go to stderr in addition to logfiles");
+#ifdef OS_LINUX
+DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
+            "Logs can grow very quickly and they are rarely read before they "
+            "need to be evicted from memory. Instead, drop them from memory "
+            "as soon as they are flushed to disk.");
+_START_GOOGLE_NAMESPACE_
+namespace logging {
+static const int64 kPageSize = getpagesize();
+}
+_END_GOOGLE_NAMESPACE_
+#endif
 
 // By default, errors (including fatal errors) get logged to stderr as
 // well as the file.
@@ -100,10 +127,14 @@ DEFINE_string(log_link, "", "Put additional links to the log "
               "files in this directory");
 
 DEFINE_int32(max_log_size, 1800,
-             "approx. maximum log file size (in MB)");
+             "approx. maximum log file size (in MB). A value of 0 will "
+             "be silently overridden to 1.");
 
 DEFINE_bool(stop_logging_if_full_disk, false,
             "Stop attempting to log to disk if the disk is full.");
+
+DEFINE_string(log_backtrace_at, "",
+              "Emit a backtrace when logging at file:linenum.");
 
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
@@ -132,6 +163,11 @@ static void GetHostName(string* hostname) {
 
 _START_GOOGLE_NAMESPACE_
 
+// Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
+static int32 MaxLogSize() {
+  return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
+}
+
 // A mutex that allows only one thread to log at a time, to keep things from
 // getting jumbled.  Some other very uncommon logging operations (like
 // changing the destination file for log messages of a given severity) also
@@ -148,6 +184,9 @@ static bool stop_writing = false;
 const char*const LogSeverityNames[NUM_SEVERITIES] = {
   "INFO", "WARNING", "ERROR", "FATAL"
 };
+
+// Has the user called SetExitOnDFatal(true)?
+static bool exit_on_dfatal = true;
 
 const char* GetLogSeverityName(LogSeverity severity) {
   return LogSeverityNames[severity];
@@ -307,8 +346,8 @@ class LogDestination {
 // Errors do not get logged to email by default.
 LogSeverity LogDestination::email_logging_severity_ = 99999;
 
-string LogDestination::addresses_ = "";
-string LogDestination::hostname_ = "";
+string LogDestination::addresses_;
+string LogDestination::hostname_;
 
 vector<LogSink*>* LogDestination::sinks_ = NULL;
 Mutex LogDestination::sink_mutex_;
@@ -521,8 +560,10 @@ inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
       (*sinks_)[i]->WaitTillSent();
     }
   }
-  if (data->send_method_ == &LogMessage::SendToSinkAndLog &&
-      data->sink_ != NULL) {
+  const bool send_to_sink =
+      (data->send_method_ == &LogMessage::SendToSink) ||
+      (data->send_method_ == &LogMessage::SendToSinkAndLog);
+  if (send_to_sink && data->sink_ != NULL) {
     data->sink_->WaitTillSent();
   }
 }
@@ -675,8 +716,8 @@ void LogFileObject::Write(bool force_flush,
     return;
   }
 
-  if (static_cast<int>(file_length_ >> 20) >= FLAGS_max_log_size) {
-    fclose(file_);
+  if (static_cast<int>(file_length_ >> 20) >= MaxLogSize()) {
+    if (file_ != NULL) fclose(file_);
     file_ = NULL;
     file_length_ = bytes_since_flush_ = 0;
     rollover_attempt_ = kRolloverAttemptFrequency-1;
@@ -778,6 +819,8 @@ void LogFileObject::Write(bool force_flush,
                        << setw(2) << tm_time.tm_sec << '\n'
                        << "Running on machine: "
                        << LogDestination::hostname() << '\n'
+                       << "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu "
+                       << "threadid file:line] msg" << '\n'
                        << '\0';
     int header_len = strlen(file_header_string);
     fwrite(file_header_string, 1, header_len, file_);
@@ -814,153 +857,168 @@ void LogFileObject::Write(bool force_flush,
        (bytes_since_flush_ >= 1000000) ||
        (CycleClock_Now() >= next_flush_time_) ) {
     FlushUnlocked();
+#ifdef OS_LINUX
+    if (FLAGS_drop_log_memory) {
+      if (file_length_ >= logging::kPageSize) {
+        // don't evict the most recent page
+        uint32 len = file_length_ & ~(logging::kPageSize - 1);
+        posix_fadvise(fileno(file_), 0, len, POSIX_FADV_DONTNEED);
+      }
+    }
+#endif
   }
 }
 
 }  // namespace
 
-//
-// LogMessage's constructor starts each message with a string like:
-// I1018 160715 logging.cc:1153]
-// (1st letter of severity level, GMT month, date, & time;
-// thread id (if not 0x400); basename of file and line of the logging command)
-// We ignore thread id 0x400 because it seems to be the default for single-
-// threaded programs.
-
 // An arbitrary limit on the length of a single log message.  This
 // is so that streaming can be done more efficiently.
 const size_t LogMessage::kMaxLogMessageLen = 30000;
 
-// Need to reserve some space for FATAL messages because
-// we usually do LOG(FATAL) when we ran out of heap memory.
-// However, since LogMessage() also calls new[], in this case,
-// it will recusively call LOG(FATAL), which then call new[] ... etc.
-// Eventually, the program will run out of stack memory and no message
-// will get logged.   Note that we will not be protecting this buffer
-// with a lock because the chances are very small that there will
-// be a contention during LOG(FATAL) which can only happen at most
-// once per program.
-static char fatal_message_buffer[LogMessage::kMaxLogMessageLen+1];
-
-// Similarly we reserve space for a LogMessageData struct to be used
-// for FATAL messages.
-LogMessage::LogMessageData LogMessage::fatal_message_data_(0, FATAL, 0);
-
-LogMessage::LogMessageData::LogMessageData(int preserved_errno,
-                                           LogSeverity severity,
-                                           int ctr) :
-    // ORDER DEPENDENCY: buf_ comes before message_text_ comes before stream_
-    preserved_errno_(preserved_errno),
-    // Use static buffer for LOG(FATAL)
-    buf_((severity != FATAL) ? new char[kMaxLogMessageLen+1] : NULL),
-    message_text_((severity != FATAL) ? buf_ : fatal_message_buffer),
-    stream_(message_text_, kMaxLogMessageLen, ctr),
-    severity_(severity) {
-}
+// Static log data space to avoid alloc failures in a LOG(FATAL)
+//
+// Since multiple threads may call LOG(FATAL), and we want to preserve
+// the data from the first call, we allocate two sets of space.  One
+// for exclusive use by the first thread, and one for shared use by
+// all other threads.
+static Mutex fatal_msg_lock;
+static CrashReason crash_reason;
+static bool fatal_msg_exclusive = true;
+static char fatal_msg_buf_exclusive[LogMessage::kMaxLogMessageLen+1];
+static char fatal_msg_buf_shared[LogMessage::kMaxLogMessageLen+1];
+static LogMessage::LogStream fatal_msg_stream_exclusive(
+    fatal_msg_buf_exclusive, LogMessage::kMaxLogMessageLen, 0);
+static LogMessage::LogStream fatal_msg_stream_shared(
+    fatal_msg_buf_shared, LogMessage::kMaxLogMessageLen, 0);
+LogMessage::LogMessageData LogMessage::fatal_msg_data_exclusive_;
+LogMessage::LogMessageData LogMessage::fatal_msg_data_shared_;
 
 LogMessage::LogMessageData::~LogMessageData() {
   delete[] buf_;
-}
-
-LogMessage::LogMessageData* LogMessage::GetMessageData(int preserved_errno,
-                                                       LogSeverity severity,
-                                                       int ctr) {
-  if (severity != FATAL) {
-    return allocated_;
-  } else {
-    fatal_message_data_.preserved_errno_ = preserved_errno;
-    fatal_message_data_.stream_.set_ctr(ctr);
-    return &fatal_message_data_;
-  }
+  delete stream_alloc_;
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-		       int ctr, void (LogMessage::*send_method)()) :
-    allocated_((severity != FATAL) ?
-               new LogMessageData(errno, severity, ctr) : NULL),
-    data_(GetMessageData(errno, severity, ctr)) {
+		       int ctr, void (LogMessage::*send_method)()) {
   Init(file, line, severity, send_method);
+  data_->stream_->set_ctr(ctr);
 }
 
-LogMessage::LogMessage(const char* file, int line, const CheckOpString& result)
-    : allocated_(NULL),
-      data_(GetMessageData(errno, FATAL, 0)) {
+LogMessage::LogMessage(const char* file, int line,
+                       const CheckOpString& result) {
   Init(file, line, FATAL, &LogMessage::SendToLog);
   stream() << "Check failed: " << (*result.str_) << " ";
 }
 
-LogMessage::LogMessage(const char* file, int line) :
-    allocated_(new LogMessageData(errno, INFO, 0)),
-    data_(GetMessageData(errno, INFO, 0)) {
+LogMessage::LogMessage(const char* file, int line) {
   Init(file, line, INFO, &LogMessage::SendToLog);
 }
 
-LogMessage::LogMessage(const char* file, int line, LogSeverity severity) :
-    allocated_((severity != FATAL) ?
-               new LogMessageData(errno, severity, 0) : NULL),
-    data_(GetMessageData(errno, severity, 0)) {
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity) {
   Init(file, line, severity, &LogMessage::SendToLog);
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       LogSink* sink) :
-    allocated_((severity != FATAL) ?
-               new LogMessageData(errno, severity, 0) : NULL),
-    data_(GetMessageData(errno, severity, 0)) {
-  Init(file, line, severity, &LogMessage::SendToSinkAndLog);
+                       LogSink* sink, bool also_send_to_log) {
+  Init(file, line, severity, also_send_to_log ? &LogMessage::SendToSinkAndLog :
+                                                &LogMessage::SendToSink);
   data_->sink_ = sink;  // override Init()'s setting to NULL
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       vector<string> *outvec) :
-    allocated_((severity != FATAL) ?
-               new LogMessageData(errno, severity, 0) : NULL),
-    data_(GetMessageData(errno, severity, 0)) {
+                       vector<string> *outvec) {
   Init(file, line, severity, &LogMessage::SaveOrSendToLog);
   data_->outvec_ = outvec; // override Init()'s setting to NULL
 }
 
-void LogMessage::Init(const char* file, int line, LogSeverity severity,
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
+                       string *message) {
+  Init(file, line, severity, &LogMessage::WriteToStringAndLog);
+  data_->message_ = message;  // override Init()'s setting to NULL
+}
+
+void LogMessage::Init(const char* file,
+                      int line,
+                      LogSeverity severity,
                       void (LogMessage::*send_method)()) {
-  data_->line_ = line;
-  data_->send_method_ = send_method;
-
-  data_->outvec_ = NULL;
-  data_->sink_ = NULL;
-  data_->timestamp_ = time(NULL);
-  localtime_r(&data_->timestamp_, &data_->tm_time_);
-  RawLog__SetLastTime(data_->tm_time_);
-  data_->basename_ = const_basename(file);
-  data_->fullname_ = file;
-  data_->stream_.fill('0');
-
-  // In some cases, we use logging like a print mechanism and
-  // the prefixes get in the way
-  if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
-    if ( is_default_thread() ) {
-      stream() << LogSeverityNames[severity][0]
-               << setw(2) << 1+data_->tm_time_.tm_mon
-               << setw(2) << data_->tm_time_.tm_mday
-               << ' '
-               << setw(2) << data_->tm_time_.tm_hour
-               << setw(2) << data_->tm_time_.tm_min
-               << setw(2) << data_->tm_time_.tm_sec
-               << ' ' << data_->basename_ << ':' << data_->line_ << "] ";
+  allocated_ = NULL;
+  if (severity != FATAL || !exit_on_dfatal) {
+    allocated_ = new LogMessageData();
+    data_ = allocated_;
+    data_->buf_ = new char[kMaxLogMessageLen+1];
+    data_->message_text_ = data_->buf_;
+    data_->stream_alloc_ =
+        new LogStream(data_->message_text_, kMaxLogMessageLen, 0);
+    data_->stream_ = data_->stream_alloc_;
+    data_->first_fatal_ = false;
+  } else {
+    MutexLock l(&fatal_msg_lock);
+    if (fatal_msg_exclusive) {
+      fatal_msg_exclusive = false;
+      data_ = &fatal_msg_data_exclusive_;
+      data_->message_text_ = fatal_msg_buf_exclusive;
+      data_->stream_ = &fatal_msg_stream_exclusive;
+      data_->first_fatal_ = true;
     } else {
-      stream() << LogSeverityNames[severity][0]
-               << setw(2) << 1+data_->tm_time_.tm_mon
-               << setw(2) << data_->tm_time_.tm_mday
-               << ' '
-               << setw(2) << data_->tm_time_.tm_hour
-               << setw(2) << data_->tm_time_.tm_min
-               << setw(2) << data_->tm_time_.tm_sec
-               << ' ' << setw(8) << std::hex << pthread_self() << std::dec
-               << ' ' << data_->basename_ << ':' << data_->line_ << "] ";
+      data_ = &fatal_msg_data_shared_;
+      data_->message_text_ = fatal_msg_buf_shared;
+      data_->stream_ = &fatal_msg_stream_shared;
+      data_->first_fatal_ = false;
     }
+    data_->stream_alloc_ = NULL;
   }
 
-  data_->num_prefix_chars_ = data_->stream_.pcount();
+  stream().fill('0');
+  data_->preserved_errno_ = errno;
+  data_->severity_ = severity;
+  data_->line_ = line;
+  data_->send_method_ = send_method;
+  data_->sink_ = NULL;
+  data_->outvec_ = NULL;
+  WallTime now = WallTime_Now();
+  data_->timestamp_ = static_cast<time_t>(now);
+  localtime_r(&data_->timestamp_, &data_->tm_time_);
+  int usecs = static_cast<int>((now - data_->timestamp_) * 1000000);
+  RawLog__SetLastTime(data_->tm_time_, usecs);
+
+  data_->num_chars_to_log_ = 0;
+  data_->num_chars_to_syslog_ = 0;
+  data_->basename_ = const_basename(file);
+  data_->fullname_ = file;
   data_->has_been_flushed_ = false;
+
+  // If specified, prepend a prefix to each line.  For example:
+  //    I1018 160715 f5d4fbb0 logging.cc:1153]
+  //    (log level, GMT month, date, time, thread_id, file basename, line)
+  // We exclude the thread_id for the default thread.
+  if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
+    stream() << LogSeverityNames[severity][0]
+             << setw(2) << 1+data_->tm_time_.tm_mon
+             << setw(2) << data_->tm_time_.tm_mday
+             << ' '
+             << setw(2) << data_->tm_time_.tm_hour  << ':'
+             << setw(2) << data_->tm_time_.tm_min   << ':'
+             << setw(2) << data_->tm_time_.tm_sec   << "."
+             << setw(6) << usecs
+             << ' '
+             << setfill(' ') << setw(5)
+             << static_cast<unsigned int>(GetTID()) << setfill('0')
+             << ' '
+             << data_->basename_ << ':' << data_->line_ << "] ";
+  }
+  data_->num_prefix_chars_ = data_->stream_->pcount();
+
+  if (!FLAGS_log_backtrace_at.empty()) {
+    char fileline[128];
+    snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
+#ifdef HAVE_STACKTRACE
+    if (!strcmp(FLAGS_log_backtrace_at.c_str(), fileline)) {
+      string stacktrace;
+      DumpStackTraceToString(&stacktrace);
+      stream() << " (stacktrace:\n" << stacktrace << ") ";
+    }
+#endif
+  }
 }
 
 LogMessage::~LogMessage() {
@@ -974,13 +1032,13 @@ void LogMessage::Flush() {
   if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
     return;
 
-  data_->num_chars_to_log_ = data_->stream_.pcount();
+  data_->num_chars_to_log_ = data_->stream_->pcount();
   data_->num_chars_to_syslog_ =
     data_->num_chars_to_log_ - data_->num_prefix_chars_;
 
   // Do we need to add a \n to the end of this message?
   bool append_newline =
-    (data_->message_text_[data_->num_chars_to_log_-1] != '\n');
+      (data_->message_text_[data_->num_chars_to_log_-1] != '\n');
   char original_final_char = '\0';
 
   // If we do need to add a \n, we'll do it by violating the memory of the
@@ -1022,13 +1080,9 @@ void LogMessage::Flush() {
   data_->has_been_flushed_ = true;
 }
 
-// Copy of FATAL log message so that we can print it out again after
-// all the stack traces.
-// We cannot simply use fatal_message_buffer, because two or more FATAL log
-// messages may happen in a row. This is a real possibility given that
-// FATAL log messages are often associated with corrupted process state.
-// In this case, we still want to reprint the first FATAL log message, so
-// we need to save away the first message in a separate buffer.
+// Copy of first FATAL log message so that we can print it out again
+// after all the stack traces.  To preserve legacy behavior, we don't
+// use fatal_msg_buf_exclusive.
 static time_t fatal_time;
 static char fatal_message[256];
 
@@ -1044,7 +1098,7 @@ void ReprintFatalMessage() {
 }
 
 // L >= log_mutex (callers must hold the log_mutex).
-void LogMessage::SendToLog() {
+void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   static bool already_warned_before_initgoogle = false;
 
   log_mutex.AssertHeld();
@@ -1097,13 +1151,28 @@ void LogMessage::SendToLog() {
   // If we log a FATAL message, flush all the log destinations, then toss
   // a signal for others to catch. We leave the logs in a state that
   // someone else can use them (as long as they flush afterwards)
-  if (data_->severity_ == FATAL) {
-    // save away the fatal message so we can print it again later
-    const int copy = min<int>(data_->num_chars_to_log_,
-                              sizeof(fatal_message)-1);
-    memcpy(fatal_message, data_->message_text_, copy);
-    fatal_message[copy] = '\0';
-    fatal_time = data_->timestamp_;
+  if (data_->severity_ == FATAL && exit_on_dfatal) {
+    if (data_->first_fatal_) {
+      crash_reason.filename = fatal_msg_data_exclusive_.fullname_;
+      crash_reason.line_number = fatal_msg_data_exclusive_.line_;
+      crash_reason.message = fatal_msg_buf_exclusive +
+                             fatal_msg_data_exclusive_.num_prefix_chars_;
+#ifdef HAVE_STACKTRACE
+      crash_reason.depth = GetStackTrace(crash_reason.stack,
+                                         ARRAYSIZE(crash_reason.stack),
+                                         3);
+#else
+      crash_reason.depth = 0;
+#endif
+      SetCrashReason(&crash_reason);
+
+      // Store shortened fatal message for other logs and GWQ status
+      const int copy = min<int>(data_->num_chars_to_log_,
+                                sizeof(fatal_message)-1);
+      memcpy(fatal_message, data_->message_text_, copy);
+      fatal_message[copy] = '\0';
+      fatal_time = data_->timestamp_;
+    }
 
     if (!FLAGS_logtostderr) {
       for (int i = 0; i < NUM_SEVERITIES; ++i) {
@@ -1111,7 +1180,7 @@ void LogMessage::SendToLog() {
           LogDestination::log_destinations_[i]->logger_->Write(true, 0, "", 0);
       }
     }
-    
+
     // release the lock that our caller (directly or indirectly)
     // LogMessage::~LogMessage() grabbed so that signal handlers
     // can use the logging facility. Alternately, we could add
@@ -1120,6 +1189,8 @@ void LogMessage::SendToLog() {
     log_mutex.Unlock();
     LogDestination::WaitForSinks(data_);
 
+    const char* message = "*** Check failure stack trace: ***\n";
+    write(STDERR_FILENO, message, strlen(message));
     Fail();
   }
 }
@@ -1150,7 +1221,7 @@ void LogMessage::Fail() {
 }
 
 // L >= log_mutex (callers must hold the log_mutex).
-void LogMessage::SendToSinkAndLog() {
+void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   if (data_->sink_ != NULL) {
     RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
@@ -1160,11 +1231,16 @@ void LogMessage::SendToSinkAndLog() {
                        (data_->num_chars_to_log_ -
                         data_->num_prefix_chars_ - 1));
   }
+}
+
+// L >= log_mutex (callers must hold the log_mutex).
+void LogMessage::SendToSinkAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+  SendToSink();
   SendToLog();
 }
 
 // L >= log_mutex (callers must hold the log_mutex).
-void LogMessage::SaveOrSendToLog() {
+void LogMessage::SaveOrSendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   if (data_->outvec_ != NULL) {
     RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
@@ -1175,6 +1251,18 @@ void LogMessage::SaveOrSendToLog() {
   } else {
     SendToLog();
   }
+}
+
+void LogMessage::WriteToStringAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
+  if (data_->message_ != NULL) {
+    RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
+               data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
+    // Omit prefix of message and trailing newline when writing to message_.
+    const char *start = data_->message_text_ + data_->num_prefix_chars_;
+    int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
+    data_->message_->assign(start, len);
+  }
+  SendToLog();
 }
 
 // L >= log_mutex (callers must hold the log_mutex).
@@ -1267,26 +1355,24 @@ string LogSink::ToString(LogSeverity severity, const char* file, int line,
   ostringstream stream(string(message, message_len));
   stream.fill('0');
 
-  if ( is_default_thread() ) {
-    stream << LogSeverityNames[severity][0]
-           << setw(2) << 1+tm_time->tm_mon
-           << setw(2) << tm_time->tm_mday
-           << ' '
-           << setw(2) << tm_time->tm_hour
-           << setw(2) << tm_time->tm_min
-           << setw(2) << tm_time->tm_sec
-           << ' ' << file << ':' << line << "] ";
-  } else {
-    stream << LogSeverityNames[severity][0]
-           << setw(2) << 1+tm_time->tm_mon
-           << setw(2) << tm_time->tm_mday
-           << ' '
-           << setw(2) << tm_time->tm_hour
-           << setw(2) << tm_time->tm_min
-           << setw(2) << tm_time->tm_sec
-           << ' ' << setw(8) << std::hex << pthread_self() << std::dec
-           << ' ' << file << ':' << line << "] ";
-  }
+  // FIXME(jrvb): Updating this to use the correct value for usecs
+  // requires changing the signature for both this method and
+  // LogSink::send().  This change needs to be done in a separate CL
+  // so subclasses of LogSink can be updated at the same time.
+  int usecs = 0;
+
+  stream << LogSeverityNames[severity][0]
+         << setw(2) << 1+tm_time->tm_mon
+         << setw(2) << tm_time->tm_mday
+         << ' '
+         << setw(2) << tm_time->tm_hour << ':'
+         << setw(2) << tm_time->tm_min << ':'
+         << setw(2) << tm_time->tm_sec << '.'
+         << setw(6) << usecs
+         << ' '
+         << setfill(' ') << setw(5) << GetTID() << setfill('0')
+         << ' '
+         << file << ':' << line << "] ";
 
   stream << string(message, message_len);
   return stream.str();
@@ -1316,6 +1402,32 @@ void LogToStderr() {
   LogDestination::LogToStderr();
 }
 
+namespace base {
+namespace internal {
+
+bool GetExitOnDFatal() {
+  MutexLock l(&log_mutex);
+  return exit_on_dfatal;
+}
+
+// Determines whether we exit the program for a LOG(DFATAL) message in
+// debug mode.  It does this by skipping the call to Fail/FailQuietly.
+// This is intended for testing only.
+//
+// This can have some effects on LOG(FATAL) as well.  Failure messages
+// are always allocated (rather than sharing a buffer), the crash
+// reason is not recorded, the "gwq" status message is not updated,
+// and the stack trace is not recorded.  The LOG(FATAL) *will* still
+// exit the program.  Since this function is used only in testing,
+// these differences are acceptable.
+void SetExitOnDFatal(bool value) {
+  MutexLock l(&log_mutex);
+  exit_on_dfatal = value;
+}
+
+}  // namespace internal
+}  // namespace base
+
 // use_logging controls whether the logging functions LOG/VLOG are used
 // to log errors.  It should be set to false when the caller holds the
 // log_mutex.
@@ -1330,8 +1442,8 @@ static bool SendEmailInternal(const char*dest, const char *subject,
               subject, body, dest);
     }
 
-    string cmd(FLAGS_logmailer);
-    cmd = cmd + " -s\"" + string(subject) + "\" " + string(dest);
+    string cmd =
+        FLAGS_logmailer + " -s\"" + subject + "\" " + dest;
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != NULL) {
       // Add the body if we have one
@@ -1489,10 +1601,10 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
     }
     return;
   }
-  
+
   if (fstat(fd, &statbuf) == -1) {
-    PLOG(ERROR) << "Unable to fstat()"; 
-    goto out_close_fd; 
+    PLOG(ERROR) << "Unable to fstat()";
+    goto out_close_fd;
   }
 
   // See if the path refers to a regular file bigger than the
@@ -1503,9 +1615,9 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
 
   // This log file is too large - we need to truncate it
   LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
-  
+
   // Copy the last "keep" bytes of the file to the beginning of the file
-  read_offset = statbuf.st_size - keep; 
+  read_offset = statbuf.st_size - keep;
   write_offset = 0;
   int bytesin, bytesout;
   while ((bytesin = pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
@@ -1520,7 +1632,7 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
     write_offset += bytesout;
   }
   if (bytesin == -1) PLOG(ERROR) << "Unable to read from " << path;
-  
+
   // Truncate the remainder of the file. If someone else writes to the
   // end of the file after our last read() above, we lose their latest
   // data. Too bad ...
@@ -1537,7 +1649,7 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
 
 void TruncateStdoutStderr() {
 #ifdef HAVE_UNISTD_H
-  int64 limit = FLAGS_max_log_size << 20;
+  int64 limit = MaxLogSize() << 20;
   int64 keep = 1 << 20;
   TruncateLogFile("/proc/self/fd/1", limit, keep);
   TruncateLogFile("/proc/self/fd/2", limit, keep);

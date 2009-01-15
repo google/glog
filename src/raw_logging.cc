@@ -7,10 +7,20 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <errno.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>               // for close() and write()
+#endif
+#include <fcntl.h>                 // for open()
 #include <time.h>
 #include "config.h"
 #include "glog/logging.h"          // To pick up flag settings etc.
 #include "glog/raw_logging.h"
+#include "base/commandlineflags.h"
+
+#ifdef HAVE_STACKTRACE
+# include "stacktrace.h"
+#endif
 
 #if defined(HAVE_SYSCALL_H)
 #include <syscall.h>                 // for syscall()
@@ -21,15 +31,24 @@
 # include <unistd.h>
 #endif
 
+#if defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)
+# define safe_write(fd, s, len)  syscall(SYS_write, fd, s, len)
+#else
+  // Not so safe, but what can you do?
+# define safe_write(fd, s, len)  write(fd, s, len)
+#endif
+
 _START_GOOGLE_NAMESPACE_
 
 // Data for RawLog__ below. We simply pick up the latest
 // time data created by a normal log message to avoid calling
 // localtime_r which can allocate memory.
 static struct ::tm last_tm_time_for_raw_log;
+static int last_usecs_for_raw_log;
 
-void RawLog__SetLastTime(const struct ::tm& t) {
+void RawLog__SetLastTime(const struct ::tm& t, int usecs) {
   memcpy(&last_tm_time_for_raw_log, &t, sizeof(last_tm_time_for_raw_log));
+  last_usecs_for_raw_log = usecs;
 }
 
 // CAVEAT: vsnprintf called from *DoRawLog below has some (exotic) code paths
@@ -61,6 +80,11 @@ inline static bool VADoRawLog(char** buf, int* size,
   return true;
 }
 
+static const int kLogBufSize = 3000;
+static bool crashed = false;
+static CrashReason crash_reason;
+static char crash_buf[kLogBufSize + 1] = { 0 };  // Will end in '\0'
+
 void RawLog__(LogSeverity severity, const char* file, int line,
               const char* format, ...) {
   if (!(FLAGS_logtostderr || severity >= FLAGS_stderrthreshold ||
@@ -69,21 +93,22 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   }
   // can't call localtime_r here: it can allocate
   struct ::tm& t = last_tm_time_for_raw_log;
-  char buffer[3000];  // 3000 bytes should be enough for everyone... :-)
+  char buffer[kLogBufSize];
   char* buf = buffer;
   int size = sizeof(buffer);
-  if (is_default_thread()) {
-     DoRawLog(&buf, &size, "%c%02d%02d %02d%02d%02d %s:%d] RAW: ",
-              LogSeverityNames[severity][0],
-              1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
-              const_basename(const_cast<char *>(file)), line);
-  } else {
-    DoRawLog(&buf, &size, "%c%02d%02d %02d%02d%02d %08x %s:%d] RAW: ",
-             LogSeverityNames[severity][0],
-             1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
-             int(pthread_self()),
-             const_basename(const_cast<char *>(file)), line);
-  }
+
+  // NOTE: this format should match the specification in base/logging.h
+  DoRawLog(&buf, &size, "%c%02d%02d %02d:%02d:%02d.%06d %5u %s:%d] RAW: ",
+           LogSeverityNames[severity][0],
+           1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
+           last_usecs_for_raw_log,
+           static_cast<unsigned int>(GetTID()),
+           const_basename(const_cast<char *>(file)), line);
+
+  // Record the position and size of the buffer after the prefix
+  const char* msg_start = buf;
+  const int msg_size = size;
+
   va_list ap;
   va_start(ap, format);
   bool no_chop = VADoRawLog(&buf, &size, format, ap);
@@ -97,12 +122,23 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // avoiding FILE buffering (to avoid invoking malloc()), and bypassing
   // libc (to side-step any libc interception).
   // We write just once to avoid races with other invocations of RawLog__.
-#if defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)
-  syscall(SYS_write, STDERR_FILENO, buffer, strlen(buffer));
+  safe_write(STDERR_FILENO, buffer, strlen(buffer));
+  if (severity == FATAL)  {
+    if (!sync_val_compare_and_swap(&crashed, false, true)) {
+      crash_reason.filename = file;
+      crash_reason.line_number = line;
+      memcpy(crash_buf, msg_start, msg_size);  // Don't include prefix
+      crash_reason.message = crash_buf;
+#ifdef HAVE_STACKTRACE
+      crash_reason.depth =
+          GetStackTrace(crash_reason.stack, ARRAYSIZE(crash_reason.stack), 1);
 #else
-  write(STDERR_FILENO, buffer, strlen(buffer));
+      crash_reason.depth = 0;
 #endif
-  if (severity == FATAL)  LogMessage::Fail();
+      SetCrashReason(&crash_reason);
+    }
+    LogMessage::Fail();  // abort()
+  }
 }
 
 _END_GOOGLE_NAMESPACE_
