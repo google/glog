@@ -79,7 +79,7 @@
 #elif defined(HAVE_PTHREAD)
 # include <pthread.h>
   typedef pthread_mutex_t MutexType;
-#elif defined(OS_WINDOWS)
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 # define WIN32_LEAN_AND_MEAN  // We only need minimal includes
 # ifdef GMUTEX_TRYLOCK
   // We need Windows NT or later for TryEnterCriticalSection().  If you
@@ -91,6 +91,8 @@
 # endif
 // To avoid macro definition of ERROR.
 # define NOGDI
+// To avoid macro definition of min/max.
+# define NOMINMAX
 # include <windows.h>
   typedef CRITICAL_SECTION MutexType;
 #else

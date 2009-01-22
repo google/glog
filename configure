@@ -23786,8 +23786,9 @@ ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
-# To make libglog depend on libpthread on Linux, we need to add
-# -lpthread in addition to -pthread.
+if test x"$acx_pthread_ok" = x"yes"; then
+  # To make libglog depend on libpthread on Linux, we need to add
+  # -lpthread in addition to -pthread.
 
 { echo "$as_me:$LINENO: checking for pthread_self in -lpthread" >&5
 echo $ECHO_N "checking for pthread_self in -lpthread... $ECHO_C" >&6; }
@@ -23859,6 +23860,7 @@ _ACEOF
 
 fi
 
+fi
 
 # Check if there is google-gflags library installed.
 { echo "$as_me:$LINENO: checking for main in -lgflags" >&5

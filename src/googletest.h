@@ -3,6 +3,8 @@
 #endif
 #define GOOGLETEST_H__
 
+#include "utilities.h"
+
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>
@@ -491,7 +493,7 @@ class Thread {
   void Join() {
     pthread_join(th_, NULL);
   }
-#elif defined(OS_WINDOWS)
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
   void Start() {
     handle_ = CreateThread(NULL,
                            0,
@@ -517,9 +519,11 @@ class Thread {
     return NULL;
   }
 
-  pthread_t th_;
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS) || defined(OS_CYGWIN)
   HANDLE handle_;
+  DWORD th_;
+#else
+  pthread_t th_;
 #endif
 };
 
