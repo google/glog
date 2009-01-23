@@ -66,7 +66,8 @@ TEST_BINARIES =
 TESTS += logging_unittest
 logging_unittest_SOURCES = $(gloginclude_HEADERS) \
                            src/logging_unittest.cc \
-                           src/config_for_unittests.h
+                           src/config_for_unittests.h \
+                           src/mock-log.h
 nodist_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
 logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
