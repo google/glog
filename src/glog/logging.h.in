@@ -562,7 +562,7 @@ struct DummyClassToDefineOperator {};
 // This declaration will allow use to use CHECK macros for user
 // defined classes which have operator<< (e.g., stl_logging.h).
 inline std::ostream& operator<<(
-    std::ostream& out, const google::DummyClassToDefineOperator& dummy) {
+    std::ostream& out, const google::DummyClassToDefineOperator&) {
   return out;
 }
 
