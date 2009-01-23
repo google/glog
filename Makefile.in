@@ -445,7 +445,7 @@ glogincludedir = $(includedir)/glog
 gloginclude_HEADERS = src/glog/log_severity.h
 nodist_gloginclude_HEADERS = src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h
 noinst_HEADERS = src/glog/logging.h.in src/glog/raw_logging.h.in src/glog/vlog_is_on.h.in src/glog/stl_logging.h.in
-dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
+dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README README.windows \
                 doc/designstyle.css doc/glog.html
 
 lib_LTLIBRARIES = libglog.la
@@ -563,7 +563,9 @@ libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
 libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 WINDOWS_PROJECTS = google-glog.sln vsprojects/libglog/libglog.vcproj \
-	vsprojects/logging_unittest/logging_unittest.vcproj
+	vsprojects/logging_unittest/logging_unittest.vcproj \
+	vsprojects/libglog_static/libglog_static.vcproj \
+	vsprojects/logging_unittest_static/logging_unittest_static.vcproj
 EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb \
 	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt \
 	src/windows/config.h src/windows/port.h src/windows/port.cc \

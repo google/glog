@@ -38,7 +38,7 @@ docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
 ## This is for HTML and other documentation you want to install.
 ## Add your documentation files (in doc/) in addition to these
 ## top-level boilerplate files.  Also add a TODO file if you have one.
-dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README \
+dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README README.windows \
                 doc/designstyle.css doc/glog.html
 
 ## The libraries (.so's) you want to install
@@ -198,6 +198,8 @@ libglog_la_LIBADD = $(COMMON_LIBS)
 WINDOWS_PROJECTS = google-glog.sln
 WINDOWS_PROJECTS += vsprojects/libglog/libglog.vcproj
 WINDOWS_PROJECTS += vsprojects/logging_unittest/logging_unittest.vcproj
+WINDOWS_PROJECTS += vsprojects/libglog_static/libglog_static.vcproj
+WINDOWS_PROJECTS += vsprojects/logging_unittest_static/logging_unittest_static.vcproj
 
 ## ^^^^ END OF RULES TO MAKE THE LIBRARIES, BINARIES, AND UNITTESTS
 
