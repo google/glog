@@ -1,3 +1,14 @@
+2009-01-23  Google Inc. <opensource@google.com>
+	* google-glog: version 0.2
+	* Add initial Windows VC++ support.
+	* Google testing/mocking frameworks integration.
+	* Link pthread library automatically.
+	* Flush logs in signal handlers.
+	* Add macros LOG_TO_STRING, LOG_AT_LEVEL, DVLOG, and LOG_TO_SINK_ONLY.
+	* Log microseconds.
+	* Add --log_backtrace_at option.
+	* Fix some minor bugs.
+
 2008-11-18  Google Inc. <opensource@google.com>
 	* google-glog: version 0.1.2
 	* Add InstallFailureSignalHandler(). (satorux)
