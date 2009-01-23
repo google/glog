@@ -15,8 +15,6 @@
 #endif
 
 #include "base/googleinit.h"
-#include "stacktrace.h"
-#include "symbolize.h"
 
 using std::string;
 
@@ -24,6 +22,8 @@ _START_GOOGLE_NAMESPACE_
 
 static const char* g_program_invocation_short_name = NULL;
 static pthread_t g_main_thread_id;
+
+_END_GOOGLE_NAMESPACE_
 
 // The following APIs are all internal.
 #ifdef HAVE_STACKTRACE
@@ -34,6 +34,8 @@ static pthread_t g_main_thread_id;
 
 DEFINE_bool(symbolize_stacktrace, true,
             "Symbolize the stack trace in the tombstone");
+
+_START_GOOGLE_NAMESPACE_
 
 typedef void DebugWriter(const char*, void*);
 
@@ -120,7 +122,11 @@ static void DumpStackTraceAndExit() {
   abort();
 }
 
+_END_GOOGLE_NAMESPACE_
+
 #endif  // HAVE_STACKTRACE
+
+_START_GOOGLE_NAMESPACE_
 
 namespace glog_internal_namespace_ {
 
