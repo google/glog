@@ -154,7 +154,7 @@ int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
 
   InitGoogleTest(&argc, argv);
-#ifdef HAVE_LIB_GTEST
+#ifdef HAVE_LIB_GMOCK
   InitGoogleMock(&argc, argv);
 #endif
 
