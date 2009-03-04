@@ -1182,17 +1182,9 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   // someone else can use them (as long as they flush afterwards)
   if (data_->severity_ == FATAL && exit_on_dfatal) {
     if (data_->first_fatal_) {
-      crash_reason.filename = fatal_msg_data_exclusive_.fullname_;
-      crash_reason.line_number = fatal_msg_data_exclusive_.line_;
-      crash_reason.message = fatal_msg_buf_exclusive +
-                             fatal_msg_data_exclusive_.num_prefix_chars_;
-#ifdef HAVE_STACKTRACE
-      crash_reason.depth = GetStackTrace(crash_reason.stack,
-                                         ARRAYSIZE(crash_reason.stack),
-                                         3);
-#else
-      crash_reason.depth = 0;
-#endif
+      // Store crash information so that it is accessible from within signal
+      // handlers that may be invoked later.
+      RecordCrashReason(&crash_reason);
       SetCrashReason(&crash_reason);
 
       // Store shortened fatal message for other logs and GWQ status
@@ -1222,6 +1214,20 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     write(STDERR_FILENO, message, strlen(message));
     Fail();
   }
+}
+
+void LogMessage::RecordCrashReason(
+    glog_internal_namespace_::CrashReason* reason) {
+  reason->filename = fatal_msg_data_exclusive_.fullname_;
+  reason->line_number = fatal_msg_data_exclusive_.line_;
+  reason->message = fatal_msg_buf_exclusive +
+                    fatal_msg_data_exclusive_.num_prefix_chars_;
+#ifdef HAVE_STACKTRACE
+  // Retrieve the stack trace, omitting the logging frames that got us here.
+  reason->depth = GetStackTrace(reason->stack, ARRAYSIZE(reason->stack), 4);
+#else
+  reason->depth = 0;
+#endif
 }
 
 static void logging_fail() {

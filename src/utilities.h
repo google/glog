@@ -201,8 +201,8 @@ struct CrashReason {
   int line_number;
   const char* message;
 
-  // We'll also store a bit of context at the time of crash as it may not be
-  // available later on.
+  // We'll also store a bit of stack trace context at the time of crash as
+  // it may not be available later on.
   void* stack[32];
   int depth;
 };

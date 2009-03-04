@@ -844,6 +844,7 @@ namespace glog_internal_namespace_ {
 template <bool>
 struct CompileAssert {
 };
+class CrashReason;
 }  // namespace glog_internal_namespace_
 
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
@@ -1109,6 +1110,9 @@ private:
 
   void Init(const char* file, int line, LogSeverity severity,
             void (LogMessage::*send_method)());
+
+  // Used to fill in crash information during LOG(FATAL) failures.
+  void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
 
   // Counts of messages sent at each priority:
   static int64 num_messages_[NUM_SEVERITIES];  // under log_mutex
