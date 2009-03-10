@@ -441,8 +441,7 @@ class LineReader {
   void operator=(const LineReader&);
 
   char *FindLineFeed() {
-    return reinterpret_cast<char *>
-      (memchr(reinterpret_cast<const void *>(bol_), '\n', eod_ - bol_));
+    return reinterpret_cast<char *>(memchr(bol_, '\n', eod_ - bol_));
   }
 
   bool BufferIsEmpty() {
@@ -456,7 +455,7 @@ class LineReader {
   const int fd_;
   char * const buf_;
   const int buf_len_;
-  const char *bol_;
+  char *bol_;
   char *eol_;
   const char *eod_;  // End of data in "buf_".
 };
