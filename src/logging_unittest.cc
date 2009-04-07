@@ -1120,10 +1120,12 @@ TEST(TestExitOnDFatal, ToBeOrNotToBe) {
   base::internal::SetExitOnDFatal(true);
   EXPECT_TRUE(base::internal::GetExitOnDFatal());
 
+#ifdef GTEST_HAS_DEATH_TEST
   // Death comes on little cats' feet.
   EXPECT_DEBUG_DEATH({
       LOG(DFATAL) << "This should be fatal in debug mode";
     }, "This should be fatal in debug mode");
+#endif
 }
 
 #ifdef HAVE_STACKTRACE

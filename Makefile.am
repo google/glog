@@ -47,9 +47,9 @@ lib_LTLIBRARIES =
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
 # Compile switches for our unittest.
-TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS)
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS)
 # Libraries for our unittest.
-TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
+TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS) $(GFLAGS_LIBS)
 
 ## unittests you want to run when people type 'make check'.
 ## TESTS is for binary unittests, check_SCRIPTS for script-based unittests.
@@ -94,7 +94,7 @@ TEST_BINARIES += logging_striptest0
 logging_striptest0_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest_main.cc
 nodist_logging_striptest0_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest0_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest0_LDADD = libglog.la $(COMMON_LIBS)
 
@@ -102,7 +102,7 @@ TEST_BINARIES += logging_striptest2
 logging_striptest2_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest2.cc
 nodist_logging_striptest2_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest2_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest2_LDADD = libglog.la $(COMMON_LIBS)
 
@@ -110,7 +110,7 @@ TEST_BINARIES += logging_striptest10
 logging_striptest10_SOURCES = $(gloginclude_HEADERS) \
                               src/logging_striptest10.cc
 nodist_logging_striptest10_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest10_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest10_LDADD = libglog.la $(COMMON_LIBS)
 
@@ -126,7 +126,7 @@ TESTS += stacktrace_unittest
 stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/stacktrace_unittest.cc
 nodist_stacktrace_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 stacktrace_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 stacktrace_unittest_LDADD = libglog.la $(COMMON_LIBS)
 
@@ -142,17 +142,17 @@ TESTS += stl_logging_unittest
 stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/stl_logging_unittest.cc
 nodist_stl_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
+stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 TEST_BINARIES += signalhandler_unittest
 signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/signalhandler_unittest.cc
 nodist_signalhandler_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 signalhandler_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS)
+signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 
 TESTS += utilities_unittest
 utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -191,8 +191,8 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/base/commandlineflags.h src/googletest.h
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
 
-libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
-libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
+libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) -DNDEBUG
+libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_LDFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 
 ## The location of the windows project file for each binary we make

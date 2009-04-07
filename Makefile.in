@@ -115,9 +115,8 @@ am_demangle_unittest_OBJECTS = $(am__objects_1) \
 nodist_demangle_unittest_OBJECTS = $(am__objects_1)
 demangle_unittest_OBJECTS = $(am_demangle_unittest_OBJECTS) \
 	$(nodist_demangle_unittest_OBJECTS)
-am__DEPENDENCIES_3 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 demangle_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_2)
 demangle_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(demangle_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -158,7 +157,7 @@ nodist_logging_unittest_OBJECTS = $(am__objects_1)
 logging_unittest_OBJECTS = $(am_logging_unittest_OBJECTS) \
 	$(nodist_logging_unittest_OBJECTS)
 logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_2)
 logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(logging_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -171,7 +170,7 @@ am__mock_log_test_SOURCES_DIST = src/glog/log_severity.h \
 mock_log_test_OBJECTS = $(am_mock_log_test_OBJECTS) \
 	$(nodist_mock_log_test_OBJECTS)
 @HAVE_GMOCK_TRUE@mock_log_test_DEPENDENCIES = libglog.la \
-@HAVE_GMOCK_TRUE@	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
+@HAVE_GMOCK_TRUE@	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_2)
 mock_log_test_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(mock_log_test_CXXFLAGS) \
 	$(CXXFLAGS) $(mock_log_test_LDFLAGS) $(LDFLAGS) -o $@
@@ -180,7 +179,8 @@ am_signalhandler_unittest_OBJECTS = $(am__objects_1) \
 nodist_signalhandler_unittest_OBJECTS = $(am__objects_1)
 signalhandler_unittest_OBJECTS = $(am_signalhandler_unittest_OBJECTS) \
 	$(nodist_signalhandler_unittest_OBJECTS)
-signalhandler_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+signalhandler_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_2)
 signalhandler_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(signalhandler_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -200,7 +200,8 @@ am_stl_logging_unittest_OBJECTS = $(am__objects_1) \
 nodist_stl_logging_unittest_OBJECTS = $(am__objects_1)
 stl_logging_unittest_OBJECTS = $(am_stl_logging_unittest_OBJECTS) \
 	$(nodist_stl_logging_unittest_OBJECTS)
-stl_logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2)
+stl_logging_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
+	$(am__DEPENDENCIES_2)
 stl_logging_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(stl_logging_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -211,7 +212,7 @@ nodist_symbolize_unittest_OBJECTS = $(am__objects_1)
 symbolize_unittest_OBJECTS = $(am_symbolize_unittest_OBJECTS) \
 	$(nodist_symbolize_unittest_OBJECTS)
 symbolize_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_2)
 symbolize_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(symbolize_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -222,7 +223,7 @@ nodist_utilities_unittest_OBJECTS = $(am__objects_1)
 utilities_unittest_OBJECTS = $(am_utilities_unittest_OBJECTS) \
 	$(nodist_utilities_unittest_OBJECTS)
 utilities_unittest_DEPENDENCIES = libglog.la $(am__DEPENDENCIES_2) \
-	$(am__DEPENDENCIES_3)
+	$(am__DEPENDENCIES_2)
 utilities_unittest_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) \
 	$(utilities_unittest_CXXFLAGS) $(CXXFLAGS) \
@@ -324,6 +325,7 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 F77 = @F77@
 FFLAGS = @FFLAGS@
+GFLAGS_CFLAGS = @GFLAGS_CFLAGS@
 GFLAGS_LIBS = @GFLAGS_LIBS@
 GMOCK_CFLAGS = @GMOCK_CFLAGS@
 GMOCK_CONFIG = @GMOCK_CONFIG@
@@ -453,9 +455,9 @@ lib_LTLIBRARIES = libglog.la
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
 # Compile switches for our unittest.
-TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS)
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS)
 # Libraries for our unittest.
-TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS)
+TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS) $(GFLAGS_LIBS)
 TESTS_ENVIRONMENT = 
 check_SCRIPTS = logging_striplog_test_sh demangle_unittest_sh \
 	signalhandler_unittest_sh
@@ -478,21 +480,21 @@ logging_striptest0_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest_main.cc
 
 nodist_logging_striptest0_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest0_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest0_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest0_LDADD = libglog.la $(COMMON_LIBS)
 logging_striptest2_SOURCES = $(gloginclude_HEADERS) \
                              src/logging_striptest2.cc
 
 nodist_logging_striptest2_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest2_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest2_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest2_LDADD = libglog.la $(COMMON_LIBS)
 logging_striptest10_SOURCES = $(gloginclude_HEADERS) \
                               src/logging_striptest10.cc
 
 nodist_logging_striptest10_SOURCES = $(nodist_gloginclude_HEADERS)
-logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS)
+logging_striptest10_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 logging_striptest10_LDFLAGS = $(PTHREAD_CFLAGS)
 logging_striptest10_LDADD = libglog.la $(COMMON_LIBS)
 demangle_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -506,7 +508,7 @@ stacktrace_unittest_SOURCES = $(gloginclude_HEADERS) \
                               src/stacktrace_unittest.cc
 
 nodist_stacktrace_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stacktrace_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 stacktrace_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
 stacktrace_unittest_LDADD = libglog.la $(COMMON_LIBS)
 symbolize_unittest_SOURCES = $(gloginclude_HEADERS) \
@@ -520,16 +522,16 @@ stl_logging_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/stl_logging_unittest.cc
 
 nodist_stl_logging_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+stl_logging_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 stl_logging_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS)
+stl_logging_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 signalhandler_unittest_SOURCES = $(gloginclude_HEADERS) \
                                src/signalhandler_unittest.cc
 
 nodist_signalhandler_unittest_SOURCES = $(nodist_gloginclude_HEADERS)
-signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS)
+signalhandler_unittest_CXXFLAGS = $(PTHREAD_CFLAGS) $(TEST_CFLAGS)
 signalhandler_unittest_LDFLAGS = $(PTHREAD_CFLAGS)
-signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS)
+signalhandler_unittest_LDADD = libglog.la $(COMMON_LIBS) $(TEST_LIBS)
 utilities_unittest_SOURCES = $(gloginclude_HEADERS) \
                              src/utilities_unittest.cc
 
@@ -560,8 +562,8 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/base/commandlineflags.h src/googletest.h
 
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
-libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) -DNDEBUG
-libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS)
+libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) -DNDEBUG
+libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_LDFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 WINDOWS_PROJECTS = google-glog.sln vsprojects/libglog/libglog.vcproj \
 	vsprojects/logging_unittest/logging_unittest.vcproj \
