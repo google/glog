@@ -23948,8 +23948,8 @@ else
   GFLAGS_CFLAGS=
   GFLAGS_LIBS=
 fi
-#CFLAGS="$SAVE_CFLAGS"
-#LIBS="$SAVE_LIBS"
+CFLAGS="$SAVE_CFLAGS"
+LIBS="$SAVE_LIBS"
 
 # TODO(hamaji): Use official m4 macros provided by testing libraries
 #               once the m4 macro of Google Mocking becomes ready.
