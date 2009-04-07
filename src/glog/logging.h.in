@@ -840,7 +840,7 @@ namespace glog_internal_namespace_ {
 template <bool>
 struct CompileAssert {
 };
-class CrashReason;
+struct CrashReason;
 }  // namespace glog_internal_namespace_
 
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
