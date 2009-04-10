@@ -309,6 +309,8 @@ void SetCrashReason(const CrashReason* r) {
 }  // namespace glog_internal_namespace_
 
 void InitGoogleLogging(const char* argv0) {
+  CHECK(!IsGoogleLoggingInitialized())
+      << "You called InitGoogleLogging() twice!";
   const char* slash = strrchr(argv0, '/');
 #ifdef OS_WINDOWS
   if (!slash)  slash = strrchr(argv0, '\\');

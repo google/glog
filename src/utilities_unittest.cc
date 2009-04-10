@@ -35,11 +35,15 @@
 
 using namespace GOOGLE_NAMESPACE;
 
-TEST(sync_val_compare_and_swap, utilities) {
+TEST(utilities, sync_val_compare_and_swap) {
   bool now_entering = false;
   EXPECT_FALSE(sync_val_compare_and_swap(&now_entering, false, true));
   EXPECT_TRUE(sync_val_compare_and_swap(&now_entering, false, true));
   EXPECT_TRUE(sync_val_compare_and_swap(&now_entering, false, true));
+}
+
+TEST(utilities, InitGoogleLoggingDeathTest) {
+  ASSERT_DEATH(InitGoogleLogging("foobar"), "");
 }
 
 int main(int argc, char **argv) {
