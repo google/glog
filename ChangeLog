@@ -1,3 +1,11 @@
+2009-04-10  Google Inc. <opensource@google.com>
+	* google-glog: version 0.2.1
+	* Fix timestamps of VC++ version.
+	* Add pkg-config support (thanks Tomasz)
+	* Fix build problem when building with gtest (thanks Michael)
+	* Add --with-gflags option for configure (thanks Michael)
+	* Fixes for GCC 4.4 (thanks John)
+
 2009-01-23  Google Inc. <opensource@google.com>
 	* google-glog: version 0.2
 	* Add initial Windows VC++ support.
