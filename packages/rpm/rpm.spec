@@ -69,3 +69,4 @@ rm -rf $RPM_BUILD_ROOT
 %{prefix}/lib/libglog.a
 %{prefix}/lib/libglog.la
 %{prefix}/lib/libglog.so
+%{prefix}/lib/pkgconfig/libglog.pc

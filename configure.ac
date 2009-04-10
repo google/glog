@@ -230,4 +230,4 @@ AC_SUBST(GMOCK_LIBS)
 
 # Write generated configuration file
 AC_CONFIG_FILES([Makefile src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h])
-AC_OUTPUT
+AC_OUTPUT(libglog.pc)

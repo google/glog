@@ -24630,6 +24630,8 @@ fi
 # Write generated configuration file
 ac_config_files="$ac_config_files Makefile src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h"
 
+ac_config_files="$ac_config_files libglog.pc"
+
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
 # tests run on this system so they can be shared between configure
@@ -25249,6 +25251,7 @@ do
     "src/glog/raw_logging.h") CONFIG_FILES="$CONFIG_FILES src/glog/raw_logging.h" ;;
     "src/glog/vlog_is_on.h") CONFIG_FILES="$CONFIG_FILES src/glog/vlog_is_on.h" ;;
     "src/glog/stl_logging.h") CONFIG_FILES="$CONFIG_FILES src/glog/stl_logging.h" ;;
+    "libglog.pc") CONFIG_FILES="$CONFIG_FILES libglog.pc" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

@@ -231,3 +231,7 @@ EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb 
 	src/windows/glog/raw_logging.h src/windows/glog/stl_logging.h \
 	src/windows/glog/vlog_is_on.h \
 	$(WINDOWS_PROJECTS)
+
+# Add pkgconfig file
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libglog.pc

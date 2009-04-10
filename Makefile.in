@@ -52,8 +52,8 @@ noinst_PROGRAMS = $(am__EXEEXT_2) $(am__EXEEXT_3)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
 	$(gloginclude_HEADERS) $(noinst_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure \
-	$(top_srcdir)/src/config.h.in \
+	$(srcdir)/Makefile.in $(srcdir)/libglog.pc.in \
+	$(top_srcdir)/configure $(top_srcdir)/src/config.h.in \
 	$(top_srcdir)/src/glog/logging.h.in \
 	$(top_srcdir)/src/glog/raw_logging.h.in \
 	$(top_srcdir)/src/glog/stl_logging.h.in \
@@ -76,7 +76,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/src/config.h
 CONFIG_CLEAN_FILES = src/glog/logging.h src/glog/raw_logging.h \
-	src/glog/vlog_is_on.h src/glog/stl_logging.h
+	src/glog/vlog_is_on.h src/glog/stl_logging.h libglog.pc
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -84,7 +84,8 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(glogincludedir)" "$(DESTDIR)$(glogincludedir)"
+	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(glogincludedir)" \
+	"$(DESTDIR)$(glogincludedir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
@@ -279,7 +280,8 @@ DIST_SOURCES = $(libglog_la_SOURCES) $(demangle_unittest_SOURCES) \
 	$(stacktrace_unittest_SOURCES) $(stl_logging_unittest_SOURCES) \
 	$(symbolize_unittest_SOURCES) $(utilities_unittest_SOURCES)
 dist_docDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(dist_doc_DATA)
+pkgconfigDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_doc_DATA) $(pkgconfig_DATA)
 glogincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 nodist_glogincludeHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(gloginclude_HEADERS) $(nodist_gloginclude_HEADERS) \
@@ -578,6 +580,10 @@ EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb 
 	src/windows/glog/vlog_is_on.h \
 	$(WINDOWS_PROJECTS)
 
+
+# Add pkgconfig file
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libglog.pc
 all: all-am
 
 .SUFFIXES:
@@ -639,6 +645,8 @@ src/glog/raw_logging.h: $(top_builddir)/config.status $(top_srcdir)/src/glog/raw
 src/glog/vlog_is_on.h: $(top_builddir)/config.status $(top_srcdir)/src/glog/vlog_is_on.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 src/glog/stl_logging.h: $(top_builddir)/config.status $(top_srcdir)/src/glog/stl_logging.h.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+libglog.pc: $(top_builddir)/config.status $(srcdir)/libglog.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -984,6 +992,23 @@ uninstall-dist_docDATA:
 	  echo " rm -f '$(DESTDIR)$(docdir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(docdir)/$$f"; \
 	done
+install-pkgconfigDATA: $(pkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgconfigdir)" || $(MKDIR_P) "$(DESTDIR)$(pkgconfigdir)"
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(pkgconfigDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  $(pkgconfigDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
+
+uninstall-pkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
 install-glogincludeHEADERS: $(gloginclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(glogincludedir)" || $(MKDIR_P) "$(DESTDIR)$(glogincludedir)"
@@ -1280,7 +1305,7 @@ check: check-am
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 		$(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(glogincludedir)" "$(DESTDIR)$(glogincludedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(glogincludedir)" "$(DESTDIR)$(glogincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -1330,7 +1355,7 @@ info: info-am
 info-am:
 
 install-data-am: install-dist_docDATA install-glogincludeHEADERS \
-	install-nodist_glogincludeHEADERS
+	install-nodist_glogincludeHEADERS install-pkgconfigDATA
 
 install-dvi: install-dvi-am
 
@@ -1369,7 +1394,8 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-dist_docDATA uninstall-glogincludeHEADERS \
-	uninstall-libLTLIBRARIES uninstall-nodist_glogincludeHEADERS
+	uninstall-libLTLIBRARIES uninstall-nodist_glogincludeHEADERS \
+	uninstall-pkgconfigDATA
 
 .MAKE: install-am install-strip
 
@@ -1386,13 +1412,13 @@ uninstall-am: uninstall-dist_docDATA uninstall-glogincludeHEADERS \
 	install-html-am install-info install-info-am \
 	install-libLTLIBRARIES install-man \
 	install-nodist_glogincludeHEADERS install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-pkgconfigDATA install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-dist_docDATA \
 	uninstall-glogincludeHEADERS uninstall-libLTLIBRARIES \
-	uninstall-nodist_glogincludeHEADERS
+	uninstall-nodist_glogincludeHEADERS uninstall-pkgconfigDATA
 
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@  # TODO(csilvers): check if -fomit-frame-pointer might be in $(CXXFLAGS),
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@  #                 before setting this.
