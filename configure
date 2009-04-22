@@ -23944,6 +23944,9 @@ cat >>confdefs.h <<\_ACEOF
 #define HAVE_LIB_GFLAGS 1
 _ACEOF
 
+  if test x"$GFLAGS_LIBS" = x""; then
+    GFLAGS_LIBS="-lgflags"
+  fi
 else
   GFLAGS_CFLAGS=
   GFLAGS_LIBS=
