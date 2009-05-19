@@ -31,6 +31,8 @@
 //
 // Unit tests for functions in demangle.c.
 
+#include "utilities.h"
+
 #include <iostream>
 #include <fstream>
 #include <string>

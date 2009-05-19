@@ -27,10 +27,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include "utilities.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "config.h"
-#include "utilities.h"
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
 #include "stacktrace.h"
