@@ -99,6 +99,13 @@
 # error Need to implement mutex.h for your architecture, or #define NO_THREADS
 #endif
 
+// We need to include these header files after defining _XOPEN_SOURCE
+// as they may define the _XOPEN_SOURCE macro.
+#include <assert.h>
+#include <stdlib.h>      // for abort()
+
+namespace {
+
 class Mutex {
  public:
   // Create a Mutex that is not held by anybody.  This constructor is
@@ -149,7 +156,6 @@ class Mutex {
 // In debug mode, we assert these invariants, while in non-debug mode
 // we do nothing, for efficiency.  That's why everything is in an
 // assert.
-#include <assert.h>
 
 Mutex::Mutex() : mutex_(0) { }
 Mutex::~Mutex()            { assert(mutex_ == 0); }
@@ -163,7 +169,6 @@ void Mutex::ReaderUnlock() { assert(mutex_-- > 0); }
 
 #elif defined(HAVE_PTHREAD) && defined(HAVE_RWLOCK)
 
-#include <stdlib.h>      // for abort()
 #define SAFE_PTHREAD(fncall)  do { if ((fncall) != 0) abort(); } while (0)
 
 Mutex::Mutex()             { SAFE_PTHREAD(pthread_rwlock_init(&mutex_, NULL)); }
@@ -179,7 +184,6 @@ void Mutex::ReaderUnlock() { SAFE_PTHREAD(pthread_rwlock_unlock(&mutex_)); }
 
 #elif defined(HAVE_PTHREAD)
 
-#include <stdlib.h>      // for abort()
 #define SAFE_PTHREAD(fncall)  do { if ((fncall) != 0) abort(); } while (0)
 
 Mutex::Mutex()             { SAFE_PTHREAD(pthread_mutex_init(&mutex_, NULL)); }
@@ -250,5 +254,7 @@ class WriterMutexLock {
 #define MutexLock(x) COMPILE_ASSERT(0, mutex_lock_decl_missing_var_name)
 #define ReaderMutexLock(x) COMPILE_ASSERT(0, rmutex_lock_decl_missing_var_name)
 #define WriterMutexLock(x) COMPILE_ASSERT(0, wmutex_lock_decl_missing_var_name)
+
+}  // namespace
 
 #endif  /* #define GOOGLE_MUTEX_H__ */
