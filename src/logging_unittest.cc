@@ -58,6 +58,10 @@
 
 DECLARE_string(log_backtrace_at);  // logging.cc
 
+#ifdef HAVE_LIB_GFLAGS
+#include <gflags/gflags.h>
+#endif
+
 #ifdef HAVE_LIB_GMOCK
 #include <gmock/gmock.h>
 #include "mock-log.h"
@@ -168,6 +172,10 @@ static void BM_vlog(int n) {
 BENCHMARK(BM_vlog);
 
 int main(int argc, char **argv) {
+#ifdef HAVE_LIB_GFLAGS
+  ParseCommandLineFlags(&argc, &argv, true);
+#endif
+
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
   LogWithLevels(FLAGS_v, FLAGS_stderrthreshold,

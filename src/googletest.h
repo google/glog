@@ -92,6 +92,7 @@ static const char TEST_SRC_DIR[] = ".";
 DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
 DEFINE_string(test_srcdir, TEST_SRC_DIR,
               "Source-dir root, needed to find glog_unittest_flagfile");
+DEFINE_bool(run_benchmark, false, "If true, run benchmarks");
 #ifdef NDEBUG
 DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
 #else
@@ -241,6 +242,10 @@ class BenchmarkRegisterer {
 };
 
 static void RunSpecifiedBenchmarks() {
+  if (!FLAGS_run_benchmark) {
+    return;
+  }
+
   int iter_cnt = FLAGS_benchmark_iters;
   puts("Benchmark\tTime(ns)\tIterations");
   for (map<string, void (*)(int)>::const_iterator iter = g_benchlist.begin();
