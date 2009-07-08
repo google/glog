@@ -67,6 +67,7 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ac_have_attribute.m4 \
 	$(top_srcdir)/m4/ac_rwlock.m4 $(top_srcdir)/m4/acx_pthread.m4 \
 	$(top_srcdir)/m4/google_namespace.m4 \
 	$(top_srcdir)/m4/namespaces.m4 \
+	$(top_srcdir)/m4/pc_from_ucontext.m4 \
 	$(top_srcdir)/m4/stl_namespace.m4 \
 	$(top_srcdir)/m4/using_operator.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \

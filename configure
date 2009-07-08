@@ -23526,50 +23526,97 @@ test -n "$PTHREAD_CC" || PTHREAD_CC="${CC}"
           PTHREAD_CC=$CC
 	fi
 
-   # The next part tries to detect GCC inconsistency with -shared on some
-   # architectures and systems. The problem is that in certain
-   # configurations, when -shared is specified, GCC "forgets" to
-   # internally use various flags which are still necessary.
+	# The next part tries to detect GCC inconsistency with -shared on some
+	# architectures and systems. The problem is that in certain
+	# configurations, when -shared is specified, GCC "forgets" to
+	# internally use various flags which are still necessary.
 
-   { echo "$as_me:$LINENO: checking whether to check for GCC pthread/shared inconsistencies" >&5
+	#
+	# Prepare the flags
+	#
+	save_CFLAGS="$CFLAGS"
+	save_LIBS="$LIBS"
+	save_CC="$CC"
+
+	# Try with the flags determined by the earlier checks.
+	#
+	# -Wl,-z,defs forces link-time symbol resolution, so that the
+	# linking checks with -shared actually have any value
+	#
+	# FIXME: -fPIC is required for -shared on many architectures,
+	# so we specify it here, but the right way would probably be to
+	# properly detect whether it is actually required.
+	CFLAGS="-shared -fPIC -Wl,-z,defs $CFLAGS $PTHREAD_CFLAGS"
+	LIBS="$PTHREAD_LIBS $LIBS"
+	CC="$PTHREAD_CC"
+
+	# In order not to create several levels of indentation, we test
+	# the value of "$done" until we find the cure or run out of ideas.
+	done="no"
+
+	# First, make sure the CFLAGS we added are actually accepted by our
+	# compiler.  If not (and OS X's ld, for instance, does not accept -z),
+	# then we can't do this test.
+	if test x"$done" = xno; then
+	   { echo "$as_me:$LINENO: checking whether to check for GCC pthread/shared inconsistencies" >&5
 echo $ECHO_N "checking whether to check for GCC pthread/shared inconsistencies... $ECHO_C" >&6; }
-   check_inconsistencies=yes
-   case "${host_cpu}-${host_os}" in
-     *-darwin*) check_inconsistencies=no ;;
-   esac
-   if test x"$GCC" != xyes -o "x$check_inconsistencies" != xyes ; then
-      { echo "$as_me:$LINENO: result: no" >&5
+	   cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	done=yes
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+
+	   if test "x$done" = xyes ; then
+	      { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-   else
-      { echo "$as_me:$LINENO: result: yes" >&5
+	   else
+	      { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
+	   fi
+	fi
 
-      # In order not to create several levels of indentation, we test
-      # the value of "$ok" until we find out the cure or run out of
-      # ideas.
-      ok="no"
-
-      #
-      # Prepare the flags
-      #
-      save_CFLAGS="$CFLAGS"
-      save_LIBS="$LIBS"
-      save_CC="$CC"
-      # Try with the flags determined by the earlier checks.
-      #
-      # -Wl,-z,defs forces link-time symbol resolution, so that the
-      # linking checks with -shared actually have any value
-      #
-      # FIXME: -fPIC is required for -shared on many architectures,
-      # so we specify it here, but the right way would probably be to
-      # properly detect whether it is actually required.
-      CFLAGS="-shared -fPIC -Wl,-z,defs $CFLAGS $PTHREAD_CFLAGS"
-      LIBS="$PTHREAD_LIBS $LIBS"
-      CC="$PTHREAD_CC"
-
-      { echo "$as_me:$LINENO: checking whether -pthread is sufficient with -shared" >&5
+	if test x"$done" = xno; then
+	   { echo "$as_me:$LINENO: checking whether -pthread is sufficient with -shared" >&5
 echo $ECHO_N "checking whether -pthread is sufficient with -shared... $ECHO_C" >&6; }
-      cat >conftest.$ac_ext <<_ACEOF
+	   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -23580,8 +23627,8 @@ int
 main ()
 {
 pthread_t th; pthread_join(th, 0);
-         pthread_attr_init(0); pthread_cleanup_push(0, 0);
-         pthread_create(0,0,0,0); pthread_cleanup_pop(0);
+	      pthread_attr_init(0); pthread_cleanup_push(0, 0);
+	      pthread_create(0,0,0,0); pthread_cleanup_pop(0);
   ;
   return 0;
 }
@@ -23604,7 +23651,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext &&
        $as_test_x conftest$ac_exeext; then
-  ok=yes
+  done=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -23615,23 +23662,24 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
 
-      if test "x$ok" = xyes; then
-         { echo "$as_me:$LINENO: result: yes" >&5
+	   if test "x$done" = xyes; then
+	      { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
-      else
-         { echo "$as_me:$LINENO: result: no" >&5
+	   else
+	      { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-      fi
+	   fi
+	fi
 
-      #
-      # Linux gcc on some architectures such as mips/mipsel forgets
-      # about -lpthread
-      #
-      if test x"$ok" = xno; then
-         { echo "$as_me:$LINENO: checking whether -lpthread fixes that" >&5
+	#
+	# Linux gcc on some architectures such as mips/mipsel forgets
+	# about -lpthread
+	#
+	if test x"$done" = xno; then
+	   { echo "$as_me:$LINENO: checking whether -lpthread fixes that" >&5
 echo $ECHO_N "checking whether -lpthread fixes that... $ECHO_C" >&6; }
-         LIBS="-lpthread $PTHREAD_LIBS $save_LIBS"
-         cat >conftest.$ac_ext <<_ACEOF
+	   LIBS="-lpthread $PTHREAD_LIBS $save_LIBS"
+	   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -23642,8 +23690,8 @@ int
 main ()
 {
 pthread_t th; pthread_join(th, 0);
-            pthread_attr_init(0); pthread_cleanup_push(0, 0);
-            pthread_create(0,0,0,0); pthread_cleanup_pop(0);
+	      pthread_attr_init(0); pthread_cleanup_push(0, 0);
+	      pthread_create(0,0,0,0); pthread_cleanup_pop(0);
   ;
   return 0;
 }
@@ -23666,7 +23714,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext &&
        $as_test_x conftest$ac_exeext; then
-  ok=yes
+  done=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -23677,23 +23725,23 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
 
-         if test "x$ok" = xyes; then
-            { echo "$as_me:$LINENO: result: yes" >&5
+	   if test "x$done" = xyes; then
+	      { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
-            PTHREAD_LIBS="-lpthread $PTHREAD_LIBS"
-         else
-            { echo "$as_me:$LINENO: result: no" >&5
+	      PTHREAD_LIBS="-lpthread $PTHREAD_LIBS"
+	   else
+	      { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-         fi
-      fi
-      #
-      # FreeBSD 4.10 gcc forgets to use -lc_r instead of -lc
-      #
-      if test x"$ok" = xno; then
-         { echo "$as_me:$LINENO: checking whether -lc_r fixes that" >&5
+	   fi
+	fi
+	#
+	# FreeBSD 4.10 gcc forgets to use -lc_r instead of -lc
+	#
+	if test x"$done" = xno; then
+	   { echo "$as_me:$LINENO: checking whether -lc_r fixes that" >&5
 echo $ECHO_N "checking whether -lc_r fixes that... $ECHO_C" >&6; }
-         LIBS="-lc_r $PTHREAD_LIBS $save_LIBS"
-         cat >conftest.$ac_ext <<_ACEOF
+	   LIBS="-lc_r $PTHREAD_LIBS $save_LIBS"
+	   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
@@ -23704,8 +23752,8 @@ int
 main ()
 {
 pthread_t th; pthread_join(th, 0);
-              pthread_attr_init(0); pthread_cleanup_push(0, 0);
-              pthread_create(0,0,0,0); pthread_cleanup_pop(0);
+	        pthread_attr_init(0); pthread_cleanup_push(0, 0);
+	        pthread_create(0,0,0,0); pthread_cleanup_pop(0);
   ;
   return 0;
 }
@@ -23728,7 +23776,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext &&
        $as_test_x conftest$ac_exeext; then
-  ok=yes
+  done=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -23739,28 +23787,27 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
 
-         if test "x$ok" = xyes; then
-            { echo "$as_me:$LINENO: result: yes" >&5
+	   if test "x$done" = xyes; then
+	      { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
-            PTHREAD_LIBS="-lc_r $PTHREAD_LIBS"
-         else
-            { echo "$as_me:$LINENO: result: no" >&5
+	      PTHREAD_LIBS="-lc_r $PTHREAD_LIBS"
+	   else
+	      { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-         fi
-      fi
-      if test x"$ok" = xno; then
-         # OK, we have run out of ideas
-         { echo "$as_me:$LINENO: WARNING: Impossible to determine how to use pthreads with shared libraries" >&5
+	   fi
+	fi
+	if test x"$done" = xno; then
+	   # OK, we have run out of ideas
+	   { echo "$as_me:$LINENO: WARNING: Impossible to determine how to use pthreads with shared libraries" >&5
 echo "$as_me: WARNING: Impossible to determine how to use pthreads with shared libraries" >&2;}
 
-         # so it's not safe to assume that we may use pthreads
-         acx_pthread_ok=no
-      fi
+	   # so it's not safe to assume that we may use pthreads
+	   acx_pthread_ok=no
+	fi
 
-      CFLAGS="$save_CFLAGS"
-      LIBS="$save_LIBS"
-      CC="$save_CC"
-   fi
+	CFLAGS="$save_CFLAGS"
+	LIBS="$save_LIBS"
+	CC="$save_CC"
 else
         PTHREAD_CC="$CC"
 fi
@@ -24527,38 +24574,36 @@ _ACEOF
 
   fi
 
-# We want to access the "PC" (Program Counter) register from a struct
-# ucontext.  Every system has its own way of doing that.  We try all the
-# possibilities we know about.  Note REG_PC should come first (REG_RIP
-# is also defined on solaris, but does the wrong thing).
 { echo "$as_me:$LINENO: checking how to access the program counter from a struct ucontext" >&5
 echo $ECHO_N "checking how to access the program counter from a struct ucontext... $ECHO_C" >&6; }
-pc_fields="           uc_mcontext.gregs[REG_PC]"  # Solaris x86 (32 + 64 bit)
-pc_fields="$pc_fields uc_mcontext.gregs[REG_EIP]" # Linux (i386)
-pc_fields="$pc_fields uc_mcontext.gregs[REG_RIP]" # Linux (x86_64)
-pc_fields="$pc_fields uc_mcontext.sc_ip"            # Linux (ia64)
-pc_fields="$pc_fields uc_mcontext.uc_regs->gregs[PT_NIP]" # Linux (ppc)
-pc_fields="$pc_fields uc_mcontext.gregs[R15]"     # Linux (arm old [untested])
-pc_fields="$pc_fields uc_mcontext.arm_pc"           # Linux (arm new [untested])
-pc_fields="$pc_fields uc_mcontext.mc_eip"           # FreeBSD (i386)
-pc_fields="$pc_fields uc_mcontext.mc_rip"           # FreeBSD (x86_64 [untested])
-pc_fields="$pc_fields uc_mcontext->ss.eip"          # OS X (i386, <=10.4)
-pc_fields="$pc_fields uc_mcontext->__ss.__eip"      # OS X (i386, >=10.5)
-pc_fields="$pc_fields uc_mcontext->ss.rip"          # OS X (x86_64)
-pc_fields="$pc_fields uc_mcontext->__ss.__rip"      # OS X (>=10.5 [untested])
-pc_fields="$pc_fields uc_mcontext->ss.srr0"         # OS X (ppc, ppc64 [untested])
-pc_fields="$pc_fields uc_mcontext->__ss.__srr0"     # OS X (>=10.5 [untested])
-pc_field_found=false
-for pc_field in $pc_fields; do
-  if ! $pc_field_found; then
-    cat >conftest.$ac_ext <<_ACEOF
+   pc_fields="           uc_mcontext.gregs[REG_PC]"  # Solaris x86 (32 + 64 bit)
+   pc_fields="$pc_fields uc_mcontext.gregs[REG_EIP]" # Linux (i386)
+   pc_fields="$pc_fields uc_mcontext.gregs[REG_RIP]" # Linux (x86_64)
+   pc_fields="$pc_fields uc_mcontext.sc_ip"            # Linux (ia64)
+   pc_fields="$pc_fields uc_mcontext.uc_regs->gregs[PT_NIP]" # Linux (ppc)
+   pc_fields="$pc_fields uc_mcontext.gregs[R15]"     # Linux (arm old [untested])
+   pc_fields="$pc_fields uc_mcontext.arm_pc"           # Linux (arm new [untested])
+   pc_fields="$pc_fields uc_mcontext.mc_eip"           # FreeBSD (i386)
+   pc_fields="$pc_fields uc_mcontext.mc_rip"           # FreeBSD (x86_64 [untested])
+   pc_fields="$pc_fields uc_mcontext.__gregs[_REG_EIP]"  # NetBSD (i386)
+   pc_fields="$pc_fields uc_mcontext.__gregs[_REG_RIP]"  # NetBSD (x86_64)
+   pc_fields="$pc_fields uc_mcontext->ss.eip"          # OS X (i386, <=10.4)
+   pc_fields="$pc_fields uc_mcontext->__ss.__eip"      # OS X (i386, >=10.5)
+   pc_fields="$pc_fields uc_mcontext->ss.rip"          # OS X (x86_64)
+   pc_fields="$pc_fields uc_mcontext->__ss.__rip"      # OS X (>=10.5 [untested])
+   pc_fields="$pc_fields uc_mcontext->ss.srr0"         # OS X (ppc, ppc64 [untested])
+   pc_fields="$pc_fields uc_mcontext->__ss.__srr0"     # OS X (>=10.5 [untested])
+   pc_field_found=false
+   for pc_field in $pc_fields; do
+     if ! $pc_field_found; then
+       cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
 cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 #define _GNU_SOURCE 1
-                    #include <ucontext.h>
+                       #include <ucontext.h>
 int
 main ()
 {
@@ -24589,9 +24634,9 @@ cat >>confdefs.h <<_ACEOF
 #define PC_FROM_UCONTEXT $pc_field
 _ACEOF
 
-                   { echo "$as_me:$LINENO: result: $pc_field" >&5
+                      { echo "$as_me:$LINENO: result: $pc_field" >&5
 echo "${ECHO_T}$pc_field" >&6; }
-  		 pc_field_found=true
+                      pc_field_found=true
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -24600,12 +24645,68 @@ sed 's/^/| /' conftest.$ac_ext >&5
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
-  fi
-done
-if ! $pc_field_found; then
-  { echo "$as_me:$LINENO: WARNING: Could not find the PC.  Will not output failed addresses..." >&5
-echo "$as_me: WARNING: Could not find the PC.  Will not output failed addresses..." >&2;}
+     fi
+   done
+   if ! $pc_field_found; then
+     pc_fields="           sc_eip"  # OpenBSD (i386)
+     pc_fields="$pc_fields sc_rip"  # OpenBSD (x86_64)
+     for pc_field in $pc_fields; do
+       if ! $pc_field_found; then
+         cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <signal.h>
+int
+main ()
+{
+ucontext_t u; return u.$pc_field == 0;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+
+cat >>confdefs.h <<_ACEOF
+#define PC_FROM_UCONTEXT $pc_field
+_ACEOF
+
+                        { echo "$as_me:$LINENO: result: $pc_field" >&5
+echo "${ECHO_T}$pc_field" >&6; }
+                        pc_field_found=true
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
 fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+       fi
+     done
+   fi
+   if ! $pc_field_found; then
+     { echo "$as_me:$LINENO: WARNING: Could not find the PC.  Will not output failed addresses..." >&5
+echo "$as_me: WARNING: Could not find the PC.  Will not output failed addresses..." >&2;}
+   fi
 
 # These are what's needed by logging.h.in and raw_logging.h.in
 
