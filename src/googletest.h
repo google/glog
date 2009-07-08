@@ -71,7 +71,7 @@ _END_GOOGLE_NAMESPACE_
 #undef GOOGLE_GLOG_DLL_DECL
 #define GOOGLE_GLOG_DLL_DECL
 
-static string GetTempDir() {
+static inline string GetTempDir() {
 #ifndef OS_WINDOWS
   return "/tmp";
 #else
@@ -180,7 +180,7 @@ vector<void (*)()> g_testlist;  // the tests to run
   void Test_##a##_##b::RunTest()
 
 
-static int RUN_ALL_TESTS() {
+static inline int RUN_ALL_TESTS() {
   vector<void (*)()>::const_iterator it;
   for (it = g_testlist.begin(); it != g_testlist.end(); ++it) {
     (*it)();
@@ -197,7 +197,7 @@ _START_GOOGLE_NAMESPACE_
 
 static bool g_called_abort;
 static jmp_buf g_jmp_buf;
-static void CalledAbort() {
+static inline void CalledAbort() {
   g_called_abort = true;
   longjmp(g_jmp_buf, 1);
 }
@@ -241,7 +241,7 @@ class BenchmarkRegisterer {
   }
 };
 
-static void RunSpecifiedBenchmarks() {
+static inline void RunSpecifiedBenchmarks() {
   if (!FLAGS_run_benchmark) {
     return;
   }
@@ -319,21 +319,21 @@ static CapturedStream * s_captured_streams[STDERR_FILENO+1];
 // Redirect a file descriptor to a file.
 //   fd       - Should be STDOUT_FILENO or STDERR_FILENO
 //   filename - File where output should be stored
-static void CaptureTestOutput(int fd, const string & filename) {
+static inline void CaptureTestOutput(int fd, const string & filename) {
   CHECK((fd == STDOUT_FILENO) || (fd == STDERR_FILENO));
   CHECK(s_captured_streams[fd] == NULL);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
 }
-static void CaptureTestStderr() {
+static inline void CaptureTestStderr() {
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
 }
 // Return the size (in bytes) of a file
-static size_t GetFileSize(FILE * file) {
+static inline size_t GetFileSize(FILE * file) {
   fseek(file, 0, SEEK_END);
   return static_cast<size_t>(ftell(file));
 }
 // Read the entire content of a file as a string
-static string ReadEntireFile(FILE * file) {
+static inline string ReadEntireFile(FILE * file) {
   const size_t file_size = GetFileSize(file);
   char * const buffer = new char[file_size];
 
@@ -356,7 +356,7 @@ static string ReadEntireFile(FILE * file) {
 }
 // Get the captured stdout (when fd is STDOUT_FILENO) or stderr (when
 // fd is STDERR_FILENO) as a string
-static string GetCapturedTestOutput(int fd) {
+static inline string GetCapturedTestOutput(int fd) {
   CHECK(fd == STDOUT_FILENO || fd == STDERR_FILENO);
   CapturedStream * const cap = s_captured_streams[fd];
   CHECK(cap)
@@ -376,12 +376,12 @@ static string GetCapturedTestOutput(int fd) {
   return content;
 }
 // Get the captured stderr of a test as a string.
-static string GetCapturedTestStderr() {
+static inline string GetCapturedTestStderr() {
   return GetCapturedTestOutput(STDERR_FILENO);
 }
 
 // Check if the string is [IWEF](\d{4}|DATE)
-static bool IsLoggingPrefix(const string& s) {
+static inline bool IsLoggingPrefix(const string& s) {
   if (s.size() != 5) return false;
   if (!strchr("IWEF", s[0])) return false;
   for (int i = 1; i <= 4; ++i) {
@@ -395,7 +395,7 @@ static bool IsLoggingPrefix(const string& s) {
 // Example:
 //     I0102 030405 logging_unittest.cc:345] RAW: vlog -1
 //  => IDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
-static string MungeLine(const string& line) {
+static inline string MungeLine(const string& line) {
   std::istringstream iss(line);
   string before, logcode_date, time, thread_lineinfo;
   iss >> logcode_date;
@@ -427,7 +427,7 @@ static string MungeLine(const string& line) {
           MungeLine(rest));
 }
 
-static void StringReplace(string* str,
+static inline void StringReplace(string* str,
                           const string& oldsub,
                           const string& newsub) {
   size_t pos = str->find(oldsub);
@@ -436,7 +436,7 @@ static void StringReplace(string* str,
   }
 }
 
-static string Munge(const string& filename) {
+static inline string Munge(const string& filename) {
   FILE* fp = fopen(filename.c_str(), "rb");
   CHECK(fp != NULL) << filename << ": couldn't open";
   char buf[4096];
@@ -444,7 +444,7 @@ static string Munge(const string& filename) {
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
     char null_str[256];
-    sprintf(null_str, "%p", NULL);
+    sprintf(null_str, "%p", static_cast<void*>(NULL));
     StringReplace(&line, "__NULLP__", null_str);
     // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
     StringReplace(&line, " 0x", " ");
@@ -468,13 +468,13 @@ static string Munge(const string& filename) {
   return result;
 }
 
-static void WriteToFile(const string& body, const string& file) {
+static inline void WriteToFile(const string& body, const string& file) {
   FILE* fp = fopen(file.c_str(), "wb");
   fwrite(body.data(), 1, body.size(), fp);
   fclose(fp);
 }
 
-static bool MungeAndDiffTestStderr(const string& golden_filename) {
+static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
   CapturedStream* cap = s_captured_streams[STDERR_FILENO];
   CHECK(cap) << ": did you forget CaptureTestStderr()?";
 
@@ -567,7 +567,7 @@ class Thread {
 #endif
 };
 
-static void SleepForMilliseconds(int t) {
+static inline void SleepForMilliseconds(int t) {
 #ifndef OS_WINDOWS
   usleep(t * 1000);
 #else

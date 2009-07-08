@@ -232,7 +232,8 @@ void DumpStackFrameInfo(const char* prefix, void* pc) {
 
 // Invoke the default signal handler.
 void InvokeDefaultSignalHandler(int signal_number) {
-  struct sigaction sig_action = {};  // Zero-clear.
+  struct sigaction sig_action;
+  memset(&sig_action, 0, sizeof(sig_action));
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(signal_number, &sig_action, NULL);
@@ -326,7 +327,8 @@ void FailureSignalHandler(int signal_number,
 
 void InstallFailureSignalHandler() {
   // Build the sigaction struct.
-  struct sigaction sig_action = {};  // Zero-clear.
+  struct sigaction sig_action;
+  memset(&sig_action, 0, sizeof(sig_action));
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_flags |= SA_SIGINFO;
   sig_action.sa_sigaction = &FailureSignalHandler;

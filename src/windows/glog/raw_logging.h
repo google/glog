@@ -40,6 +40,8 @@
 #ifndef BASE_RAW_LOGGING_H_
 #define BASE_RAW_LOGGING_H_
 
+#include <time.h>
+
 namespace google {
 
 #include "glog/log_severity.h"
@@ -180,8 +182,7 @@ GOOGLE_GLOG_DLL_DECL void RawLog__(LogSeverity severity,
 // Hack to propagate time information into this module so that
 // this module does not have to directly call localtime_r(),
 // which could allocate memory.
-extern "C" struct ::tm;
-GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct ::tm& t, int usecs);
+GOOGLE_GLOG_DLL_DECL void RawLog__SetLastTime(const struct tm& t, int usecs);
 
 }
 

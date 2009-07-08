@@ -193,7 +193,8 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   memset(altstack, kAlternateStackFillValue, kAlternateStackSize);
 
   // Set up the alt-signal-stack (and save the older one).
-  stack_t sigstk = {};  // Zero-clear.
+  stack_t sigstk;
+  memset(&sigstk, 0, sizeof(stack_t));
   stack_t old_sigstk;
   sigstk.ss_sp = altstack;
   sigstk.ss_size = kAlternateStackSize;
@@ -201,7 +202,8 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   CHECK_ERR(sigaltstack(&sigstk, &old_sigstk));
 
   // Set up SIGUSR1 and SIGUSR2 signal handlers (and save the older ones).
-  struct sigaction sa = {};  // Zero-clear;
+  struct sigaction sa;
+  memset(&sa, 0, sizeof(struct sigaction));
   struct sigaction old_sa1, old_sa2;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_ONSTACK;

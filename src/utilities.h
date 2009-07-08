@@ -44,6 +44,8 @@
 # define OS_MACOSX
 #elif defined(__FreeBSD__)
 # define OS_FREEBSD
+#elif defined(__OpenBSD__)
+# define OS_OPENBSD
 #else
 // TODO(hamaji): Add other platforms.
 #endif
