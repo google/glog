@@ -525,6 +525,8 @@ struct FlagSaver {
 
 class Thread {
  public:
+  virtual ~Thread() {}
+
   void SetJoinable(bool joinable) {}
 #if defined(HAVE_PTHREAD)
   void Start() {
