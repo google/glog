@@ -116,6 +116,10 @@
 #     define _WIN32_WINNT 0x0400
 #   endif
 # endif
+// To avoid macro definition of ERROR.
+# define NOGDI
+// To avoid macro definition of min/max.
+# define NOMINMAX
 # include <windows.h>
   typedef CRITICAL_SECTION MutexType;
 #elif defined(HAVE_PTHREAD) && defined(HAVE_RWLOCK)
