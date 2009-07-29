@@ -100,20 +100,6 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
   writerfn(buf, arg);
 }
 
-// Print a program counter and the corresponding stack frame size.
-static void DumpPCAndFrameSize(DebugWriter *writerfn, void *arg, void *pc,
-                               int framesize, const char * const prefix) {
-  char buf[100];
-  if (framesize <= 0) {
-    snprintf(buf, sizeof(buf), "%s@ %*p  (unknown)\n",
-             prefix, kPrintfPointerFieldWidth, pc);
-  } else {
-    snprintf(buf, sizeof(buf), "%s@ %*p  %9d\n",
-             prefix, kPrintfPointerFieldWidth, pc, framesize);
-  }
-  writerfn(buf, arg);
-}
-
 static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
                    const char * const prefix) {
   char buf[100];
@@ -145,7 +131,8 @@ static void DumpStackTraceAndExit() {
 
   // Set the default signal handler for SIGABRT, to avoid invoking our
   // own signal handler installed by InstallFailedSignalHandler().
-  struct sigaction sig_action = {};  // Zero-clear.
+  struct sigaction sig_action;
+  memset(&sig_action, 0, sizeof(sig_action));
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(SIGABRT, &sig_action, NULL);
