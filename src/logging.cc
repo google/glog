@@ -177,8 +177,8 @@ static void GetHostName(string* hostname) {
   }
   *hostname = buf.nodename;
 #elif defined(OS_WINDOWS)
-  char buf[256];
-  DWORD len;
+  char buf[MAX_COMPUTERNAME_LENGTH + 1];
+  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   if (GetComputerNameA(buf, &len)) {
     *hostname = buf;
   } else {
