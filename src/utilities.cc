@@ -268,7 +268,11 @@ const string& MyUserName() {
 }
 static void MyUserNameInitializer() {
   // TODO(hamaji): Probably this is not portable.
+#if defined(OS_WINDOWS)
+  const char* user = getenv("USERNAME");
+#else
   const char* user = getenv("USER");
+#endif
   if (user != NULL) {
     g_my_user_name = user;
   } else {
