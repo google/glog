@@ -83,6 +83,7 @@ void DebugWriteToString(const char* data, void *arg) {
   reinterpret_cast<string*>(arg)->append(data);
 }
 
+#ifdef HAVE_SYMBOLIZE
 // Print a program counter and its symbol name.
 static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
                             const char * const prefix) {
@@ -99,6 +100,7 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
            prefix, kPrintfPointerFieldWidth, pc, symbol);
   writerfn(buf, arg);
 }
+#endif
 
 static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
                    const char * const prefix) {
