@@ -1752,7 +1752,7 @@ int posix_strerror_r(int err, char *buf, size_t len) {
       return 0;
     } else {
       buf[0] = '\000';
-#if defined(OS_MACOSX) || defined(OS_FREEBSD)
+#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
       if (reinterpret_cast<int>(rc) < sys_nerr) {
         // This means an error on MacOSX or FreeBSD.
         return -1;

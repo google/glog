@@ -1036,7 +1036,7 @@ TEST(Strerror, logging) {
   CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
   CHECK_EQ(buf[0], 'A');
   CHECK_EQ(posix_strerror_r(errcode, NULL, buf_size), -1);
-#if defined(OS_MACOSX) || defined(OS_FREEBSD)
+#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.
   CHECK_EQ(posix_strerror_r(errcode, buf, 1), -1);
