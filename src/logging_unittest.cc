@@ -586,10 +586,10 @@ TEST(CheckNOTNULL, Simple) {
   void *ptr = static_cast<void *>(&t);
   void *ref = CHECK_NOTNULL(ptr);
   EXPECT_EQ(ptr, ref);
-  CHECK_NOTNULL(reinterpret_cast<char *>(&t));
-  CHECK_NOTNULL(reinterpret_cast<unsigned char *>(&t));
-  CHECK_NOTNULL(reinterpret_cast<int *>(&t));
-  CHECK_NOTNULL(reinterpret_cast<int64 *>(&t));
+  CHECK_NOTNULL(reinterpret_cast<char *>(ptr));
+  CHECK_NOTNULL(reinterpret_cast<unsigned char *>(ptr));
+  CHECK_NOTNULL(reinterpret_cast<int *>(ptr));
+  CHECK_NOTNULL(reinterpret_cast<int64 *>(ptr));
 }
 
 TEST(DeathCheckNN, Simple) {
