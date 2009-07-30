@@ -530,7 +530,7 @@ inline void LogDestination::MaybeLogToEmail(LogSeverity severity,
       to += addresses_;
     }
     const string subject(string("[LOG] ") + LogSeverityNames[severity] + ": " +
-                         ProgramInvocationShortName());
+                         glog_internal_namespace_::ProgramInvocationShortName());
     string body(hostname());
     body += "\n\n";
     body.append(message, len);
@@ -613,7 +613,7 @@ LogFileObject::LogFileObject(LogSeverity severity,
                              const char* base_filename)
   : base_filename_selected_(base_filename != NULL),
     base_filename_((base_filename != NULL) ? base_filename : ""),
-    symlink_basename_(ProgramInvocationShortName()),
+    symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
     filename_extension_(),
     file_(NULL),
     severity_(severity),
@@ -796,7 +796,8 @@ void LogFileObject::Write(bool force_flush,
       //
       // Where does the file get put?  Successively try the directories
       // "/tmp", and "."
-      string stripped_filename(ProgramInvocationShortName());  // in cmdlineflag
+      string stripped_filename(
+          glog_internal_namespace_::ProgramInvocationShortName());
       string hostname;
       GetHostName(&hostname);
 
@@ -1306,7 +1307,8 @@ void LogMessage::SendToSyslogAndLog() {
   // Before any calls to syslog(), make a single call to openlog()
   static bool openlog_already_called = false;
   if (!openlog_already_called) {
-    openlog(ProgramInvocationShortName(), LOG_CONS | LOG_NDELAY | LOG_PID,
+    openlog(glog_internal_namespace_::ProgramInvocationShortName(),
+            LOG_CONS | LOG_NDELAY | LOG_PID,
             LOG_USER);
     openlog_already_called = true;
   }
