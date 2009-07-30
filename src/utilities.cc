@@ -251,7 +251,7 @@ pid_t GetTID() {
   return GetCurrentThreadId();
 #else
   // If none of the techniques above worked, we use pthread_self().
-  return (pid_t)pthread_self();
+  return (pid_t)(uintptr_t)pthread_self();
 #endif
 }
 
