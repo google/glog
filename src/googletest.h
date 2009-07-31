@@ -528,14 +528,7 @@ class Thread {
   virtual ~Thread() {}
 
   void SetJoinable(bool joinable) {}
-#if defined(HAVE_PTHREAD)
-  void Start() {
-    pthread_create(&th_, NULL, &Thread::InvokeThread, this);
-  }
-  void Join() {
-    pthread_join(th_, NULL);
-  }
-#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
+#if defined(OS_WINDOWS) || defined(OS_CYGWIN)
   void Start() {
     handle_ = CreateThread(NULL,
                            0,
@@ -547,6 +540,13 @@ class Thread {
   }
   void Join() {
     WaitForSingleObject(handle_, INFINITE);
+  }
+#elif defined(HAVE_PTHREAD)
+  void Start() {
+    pthread_create(&th_, NULL, &Thread::InvokeThread, this);
+  }
+  void Join() {
+    pthread_join(th_, NULL);
   }
 #else
 # error No thread implementation.
