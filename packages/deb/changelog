@@ -1,3 +1,9 @@
+google-glog (0.3-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Google Inc. <opensource@google.com>  Thu, 30 Jul 2009 21:31:35 +0900
+
 google-glog (0.2.1-1) unstable; urgency=low
 
   * New upstream release.

@@ -1,3 +1,13 @@
+2009-07-30  Google Inc. <opensource@google.com>
+
+	* google-glog: version 0.3.0
+	* Fix a deadlock happened when user uses glog with recent gflags.
+	* Suppress several unnecessary warnings (thanks keir).
+	* NetBSD and OpenBSD support.
+	* Use Win32API GetComputeNameA properly (thanks magila).
+	* Fix user name detection for Windows (thanks ademin).
+	* Fix several minor bugs.
+
 2009-04-10  Google Inc. <opensource@google.com>
 	* google-glog: version 0.2.1
 	* Fix timestamps of VC++ version.
