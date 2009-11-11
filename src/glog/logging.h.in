@@ -652,7 +652,7 @@ DEFINE_CHECK_OP_IMPL(_GT, > )
 // file is included).  Save the current meaning now and use it 
 // in the macro.
 typedef std::string _Check_string;
-#define CHECK_OP_LOG(name, op, val1, val2, log) \
+#define CHECK_OP_LOG(name, op, val1, val2, log)                         \
   while (@ac_google_namespace@::_Check_string* _result =                \
          @ac_google_namespace@::Check##name##Impl(                      \
              @ac_google_namespace@::GetReferenceableValue(val1),        \
@@ -663,11 +663,12 @@ typedef std::string _Check_string;
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
-#define CHECK_OP_LOG(name, op, val1, val2, log) \
-  while (@ac_google_namespace@::CheckOpString _result = \
-         @ac_google_namespace@::Check##name##Impl(GetReferenceableValue(val1), \
-                           GetReferenceableValue(val2), \
-                           #val1 " " #op " " #val2)) \
+#define CHECK_OP_LOG(name, op, val1, val2, log)                         \
+  while (@ac_google_namespace@::CheckOpString _result =                 \
+         @ac_google_namespace@::Check##name##Impl(                      \
+             @ac_google_namespace@::GetReferenceableValue(val1),        \
+             @ac_google_namespace@::GetReferenceableValue(val2),        \
+             #val1 " " #op " " #val2))                                  \
     log(__FILE__, __LINE__, _result).stream()
 #endif  // STATIC_ANALYSIS, !NDEBUG
 
