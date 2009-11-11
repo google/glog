@@ -50,6 +50,8 @@
 
 #if defined(HAVE_SYMBOLIZE)
 
+#include <limits>
+
 #include "symbolize.h"
 #include "demangle.h"
 
@@ -121,7 +123,7 @@ _START_GOOGLE_NAMESPACE_
 // success, return the number of bytes read.  Otherwise, return -1.
 static ssize_t ReadPersistent(const int fd, void *buf, const size_t count) {
   SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count >= 0 && count <= SSIZE_MAX);
+  SAFE_ASSERT(count >= 0 && count <= std::numeric_limits<ssize_t>::max());
   char *buf0 = reinterpret_cast<char *>(buf);
   ssize_t num_bytes = 0;
   while (num_bytes < count) {
