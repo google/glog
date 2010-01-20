@@ -77,14 +77,13 @@
 #define DECLARE_bool(name) \
   DECLARE_VARIABLE(bool, name, bool)
 #define DEFINE_bool(name, value, meaning) \
-  DEFINE_VARIABLE(bool, name, EnvToBool("GLOG_" #name, value), meaning, bool)
+  DEFINE_VARIABLE(bool, name, value, meaning, bool)
 
 // int32 specialization
 #define DECLARE_int32(name) \
   DECLARE_VARIABLE(GOOGLE_NAMESPACE::int32, name, int32)
 #define DEFINE_int32(name, value, meaning) \
-  DEFINE_VARIABLE(GOOGLE_NAMESPACE::int32, name, \
-                  EnvToInt("GLOG_" #name, value), meaning, int32)
+  DEFINE_VARIABLE(GOOGLE_NAMESPACE::int32, name, value, meaning, int32)
 
 // Special case for string, because we have to specify the namespace
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
@@ -93,13 +92,30 @@
   extern GOOGLE_GLOG_DLL_DECL std::string FLAGS_##name;                       \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead::FLAGS_##name
-#define DEFINE_string(name, value, meaning) \
+#define DEFINE_string(name, value, meaning)                                   \
   namespace FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead {  \
-  GOOGLE_GLOG_DLL_DECL std::string                                            \
-      FLAGS_##name(EnvToString("GLOG_" #name, value));                        \
+  GOOGLE_GLOG_DLL_DECL std::string FLAGS_##name(value);                       \
   char FLAGS_no##name;                                                        \
   }                                                                           \
   using FLAG__namespace_do_not_use_directly_use_DECLARE_string_instead::FLAGS_##name
+
+#endif  // HAVE_LIB_GFLAGS
+
+// Define GLOG_DEFINE_* using DEFINE_* . By using these macros, we
+// have GLOG_* environ variables even if we have gflags installed.
+//
+// If both an environment variable and a flag are specified, the value
+// specified by a flag wins. E.g., if GLOG_v=0 and --v=1, the
+// verbosity will be 1, not 0.
+
+#define GLOG_DEFINE_bool(name, value, meaning) \
+  DEFINE_bool(name, EnvToBool("GLOG_" #name, value), meaning)
+
+#define GLOG_DEFINE_int32(name, value, meaning) \
+  DEFINE_int32(name, EnvToInt("GLOG_" #name, value), meaning)
+
+#define GLOG_DEFINE_string(name, value, meaning) \
+  DEFINE_string(name, EnvToString("GLOG_" #name, value), meaning)
 
 // These macros (could be functions, but I don't want to bother with a .cc
 // file), make it easier to initialize flags from the environment.
@@ -112,7 +128,5 @@
 
 #define EnvToInt(envname, dflt)  \
   (!getenv(envname) ? (dflt) : strtol(getenv(envname), NULL, 10))
-
-#endif  // HAVE_LIB_GFLAGS
 
 #endif  // BASE_COMMANDLINEFLAGS_H__

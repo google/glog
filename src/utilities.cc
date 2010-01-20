@@ -63,8 +63,8 @@ _END_GOOGLE_NAMESPACE_
 #include "symbolize.h"
 #include "base/commandlineflags.h"
 
-DEFINE_bool(symbolize_stacktrace, true,
-            "Symbolize the stack trace in the tombstone");
+GLOG_DEFINE_bool(symbolize_stacktrace, true,
+                 "Symbolize the stack trace in the tombstone");
 
 _START_GOOGLE_NAMESPACE_
 

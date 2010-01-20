@@ -116,6 +116,13 @@ environment variables, prefixing the flag name with "GLOG_", e.g.
    GLOG_logtostderr=1 ./your_application
 </pre>
 
+<!-- TODO(hamaji): Fill the version number
+<p>By glog version 0.x.x, you can use GLOG_* environment variables
+even if you have gflags. If both an environment variable and a flag
+are specified, the value specified by a flag wins. E.g., if GLOG_v=0
+and --v=1, the verbosity will be 1, not 0.
+-->
+
 <p>The following flags are most commonly used:
 
 <dl>
