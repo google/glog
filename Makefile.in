@@ -1426,10 +1426,10 @@ uninstall-am: uninstall-dist_docDATA uninstall-glogincludeHEADERS \
 logging_striplog_test_sh: logging_striptest0 logging_striptest2 logging_striptest10
 	$(top_srcdir)/src/logging_striplog_test.sh
 demangle_unittest_sh: demangle_unittest
-	$(top_srcdir)/demangle_unittest  # force to create lt-demangle_unittest
+	$(builddir)/demangle_unittest  # force to create lt-demangle_unittest
 	$(top_srcdir)/src/demangle_unittest.sh
 signalhandler_unittest_sh: signalhandler_unittest
-	$(top_srcdir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
+	$(builddir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
 	$(top_srcdir)/src/signalhandler_unittest.sh
 
 rpm: dist-gzip packages/rpm.sh packages/rpm/rpm.spec

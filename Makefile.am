@@ -81,13 +81,13 @@ logging_striplog_test_sh: logging_striptest0 logging_striptest2 logging_striptes
 check_SCRIPTS += demangle_unittest_sh
 noinst_SCRIPTS += src/demangle_unittest.sh
 demangle_unittest_sh: demangle_unittest
-	$(top_srcdir)/demangle_unittest  # force to create lt-demangle_unittest
+	$(builddir)/demangle_unittest  # force to create lt-demangle_unittest
 	$(top_srcdir)/src/demangle_unittest.sh
 
 check_SCRIPTS += signalhandler_unittest_sh
 noinst_SCRIPTS += src/signalhandler_unittest.sh
 signalhandler_unittest_sh: signalhandler_unittest
-	$(top_srcdir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
+	$(builddir)/signalhandler_unittest  # force to create lt-signalhandler_unittest
 	$(top_srcdir)/src/signalhandler_unittest.sh
 
 TEST_BINARIES += logging_striptest0
