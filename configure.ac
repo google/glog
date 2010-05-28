@@ -85,7 +85,7 @@ AX_C___SYNC_VAL_COMPARE_AND_SWAP
 # (This isn't needed on i386, where -fno-omit-frame-pointer is the default).
 AC_ARG_ENABLE(frame_pointers,
               AS_HELP_STRING([--enable-frame-pointers],
-                             [On x86_64 systems, compile with -fno-omit-frame-pointer (see INSTALL)]),
+                             [On x86_64 systems, compile with -fno-omit-frame-pointer (see INSTALL)]),,
               enable_frame_pointers=no)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(, [return __x86_64__ == 1 ? 0 : 1])],
                   [is_x86_64=yes], [is_x86_64=no])

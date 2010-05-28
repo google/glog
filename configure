@@ -23070,7 +23070,9 @@ echo "${ECHO_T}$ac_cv___sync_val_compare_and_swap" >&6; }
 # (This isn't needed on i386, where -fno-omit-frame-pointer is the default).
 # Check whether --enable-frame_pointers was given.
 if test "${enable_frame_pointers+set}" = set; then
-  enableval=$enable_frame_pointers; enable_frame_pointers=no
+  enableval=$enable_frame_pointers;
+else
+  enable_frame_pointers=no
 fi
 
 cat >conftest.$ac_ext <<_ACEOF
