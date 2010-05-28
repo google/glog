@@ -36,7 +36,7 @@ AC_CHECK_HEADERS(sys/syscall.h)
 # For backtrace with glibc.
 AC_CHECK_HEADERS(execinfo.h)
 # For backtrace with libunwind.
-AC_CHECK_HEADERS(libunwind.h)
+AC_CHECK_HEADERS(libunwind.h, ac_cv_have_libunwind_h=1, ac_cv_have_libunwind_h=0)
 AC_CHECK_HEADERS(ucontext.h)
 AC_CHECK_HEADERS(sys/utsname.h)
 AC_CHECK_HEADERS(pwd.h)

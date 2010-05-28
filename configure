@@ -21133,7 +21133,9 @@ if test `eval echo '${'$as_ac_Header'}'` = yes; then
   cat >>confdefs.h <<_ACEOF
 #define `echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
-
+ ac_cv_have_libunwind_h=1
+else
+  ac_cv_have_libunwind_h=0
 fi
 
 done
