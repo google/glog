@@ -176,6 +176,8 @@ AC_CXX_USING_OPERATOR
 
 AC_PC_FROM_UCONTEXT(AC_MSG_WARN(Could not find the PC.  Will not output failed addresses...))
 
+AC_DEFINE_UNQUOTED(TEST_SRC_DIR, "$srcdir", [location of source code])
+
 # These are what's needed by logging.h.in and raw_logging.h.in
 AC_SUBST(ac_google_start_namespace)
 AC_SUBST(ac_google_end_namespace)

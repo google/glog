@@ -25062,6 +25062,12 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 echo "$as_me: WARNING: Could not find the PC.  Will not output failed addresses..." >&2;}
    fi
 
+
+cat >>confdefs.h <<_ACEOF
+#define TEST_SRC_DIR "$srcdir"
+_ACEOF
+
+
 # These are what's needed by logging.h.in and raw_logging.h.in
 
 

@@ -145,6 +145,9 @@
 /* the namespace where STL code like vector<> is defined */
 #undef STL_NAMESPACE
 
+/* location of source code */
+#undef TEST_SRC_DIR
+
 /* Version number of package */
 #undef VERSION
 
