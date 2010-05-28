@@ -43,6 +43,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -555,6 +556,10 @@ void TestDCHECK() {
   DCHECK_LE(1, 2);
   DCHECK_GT(2, 1);
   DCHECK_LT(1, 2);
+
+  auto_ptr<int64> sptr(new int64);
+  int64* ptr = DCHECK_NOTNULL(sptr.get());
+  ASSERT_EQ(ptr, sptr.get());
 }
 
 void TestSTREQ() {

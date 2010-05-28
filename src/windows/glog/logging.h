@@ -893,6 +893,7 @@ enum PRIVATE_Counter {COUNTER};
 #define DCHECK_LT(val1, val2) CHECK_LT(val1, val2)
 #define DCHECK_GE(val1, val2) CHECK_GE(val1, val2)
 #define DCHECK_GT(val1, val2) CHECK_GT(val1, val2)
+#define DCHECK_NOTNULL(val) CHECK_NOTNULL(val)
 #define DCHECK_STREQ(str1, str2) CHECK_STREQ(str1, str2)
 #define DCHECK_STRCASEEQ(str1, str2) CHECK_STRCASEEQ(str1, str2)
 #define DCHECK_STRNE(str1, str2) CHECK_STRNE(str1, str2)
@@ -946,6 +947,8 @@ enum PRIVATE_Counter {COUNTER};
 #define DCHECK_GT(val1, val2) \
   while (false) \
     CHECK_GT(val1, val2)
+
+#define DCHECK_NOTNULL(val) (val)
 
 #define DCHECK_STREQ(str1, str2) \
   while (false) \
