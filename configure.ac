@@ -12,6 +12,8 @@ AC_CONFIG_SRCDIR(README)
 AM_INIT_AUTOMAKE
 AM_CONFIG_HEADER(src/config.h)
 
+AC_LANG(C++)
+
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CPP
