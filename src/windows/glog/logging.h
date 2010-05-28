@@ -413,7 +413,7 @@ DECLARE_bool(stop_logging_if_full_disk);
 #ifdef NDEBUG
 #define COMPACT_GOOGLE_LOG_DFATAL COMPACT_GOOGLE_LOG_ERROR
 #elif GOOGLE_STRIP_LOG <= 3
-#define COMPACT_GOOGLE_LOG_DFATAL LogMessage( \
+#define COMPACT_GOOGLE_LOG_DFATAL google::LogMessage( \
       __FILE__, __LINE__, google::FATAL)
 #else
 #define COMPACT_GOOGLE_LOG_DFATAL google::NullStreamFatal()
@@ -1184,7 +1184,7 @@ inline void LogAtLevel(int const severity, std::string const &msg) {
 // version since there are two advantages: 1. this version outputs the
 // file name and the line number where this macro is put like other
 // LOG macros, 2. this macro can be used as C++ stream.
-#define LOG_AT_LEVEL(severity) LogMessage(__FILE__, __LINE__, severity).stream()
+#define LOG_AT_LEVEL(severity) google::LogMessage(__FILE__, __LINE__, severity).stream()
 
 // A small helper for CHECK_NOTNULL().
 template <typename T>
