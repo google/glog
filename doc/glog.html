@@ -524,6 +524,22 @@ setting <code>GOOGLE_STRIP_LOG</code> to 1 or greater removes
 all log messages associated with <code>VLOG</code>s as well as
 <code>INFO</code> log statements.
 
+<h3><A NAME=windows>Notes for Windows users</A></h3>
+
+<p>Google glog defines a severity level <code>ERROR</code>, which is
+also defined in <code>windows.h</code>
+There are two known workarounds to avoid this conflict:
+
+<ul>
+  <li>#define <code>WIN32_LEAN_AND_MEAN</code> or <code>NOGDI</code>
+      <strong>before</strong> you #include <code>windows.h</code> .
+  <li>#undef <code>ERROR</code> <strong>after</strong> you #include
+      <code>windows.h</code> .
+</ul>
+
+<p>See <a href="http://code.google.com/p/google-glog/issues/detail?id=33">
+this issue</a> for more detail.
+
 <hr>
 <address>
 Shinichiro Hamaji<br>
