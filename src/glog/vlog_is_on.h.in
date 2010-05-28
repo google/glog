@@ -80,6 +80,7 @@
 // matching the current source file that represents results of
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
 #define VLOG_IS_ON(verboselevel)                                \
+  __extension__  \
   ({ static @ac_google_namespace@::int32* vlocal__ = &@ac_google_namespace@::kLogSiteUninitialized;           \
      @ac_google_namespace@::int32 verbose_level__ = (verboselevel);                    \
      (*vlocal__ >= verbose_level__) &&                          \

@@ -84,6 +84,7 @@
 // matching the current source file that represents results of
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
 #define VLOG_IS_ON(verboselevel)                                \
+  __extension__  \
   ({ static google::int32* vlocal__ = &google::kLogSiteUninitialized;           \
      google::int32 verbose_level__ = (verboselevel);                    \
      (*vlocal__ >= verbose_level__) &&                          \
