@@ -321,7 +321,7 @@ void InitGoogleLogging(const char* argv0) {
 
 void ShutdownGoogleLogging() {
   CHECK(IsGoogleLoggingInitialized())
-      << "You called ShutdownGoogleLogging() without InitGoogleLogging() first!";
+      << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
 #ifdef HAVE_SYSLOG_H
   closelog();
 #endif
