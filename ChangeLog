@@ -1,3 +1,14 @@
+2010-06-15  Google Inc. <opensource@google.com>
+
+	* google-glog: version 0.3.1
+	* GLOG_* environment variables now work even when gflags is installed.
+	* Snow leopard support.
+	* Now we can build and test from out side tree.
+	* Add DCHECK_NOTNULL.
+	* Add ShutdownGoogleLogging to close syslog (thanks DGunchev)
+	* Fix --enable-frame-pointers option (thanks kazuki.ohta)
+	* Fix libunwind detection (thanks giantchen)
+
 2009-07-30  Google Inc. <opensource@google.com>
 
 	* google-glog: version 0.3.0
