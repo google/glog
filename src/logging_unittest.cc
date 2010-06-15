@@ -559,7 +559,7 @@ void TestDCHECK() {
 
   auto_ptr<int64> sptr(new int64);
   int64* ptr = DCHECK_NOTNULL(sptr.get());
-  ASSERT_EQ(ptr, sptr.get());
+  CHECK_EQ(ptr, sptr.get());
 }
 
 void TestSTREQ() {
