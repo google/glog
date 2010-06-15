@@ -486,6 +486,9 @@ namespace google {
 // specified by argv0 in log outputs.
 GOOGLE_GLOG_DLL_DECL void InitGoogleLogging(const char* argv0);
 
+// Shutdown google's logging library.
+GOOGLE_GLOG_DLL_DECL void ShutdownGoogleLogging();
+
 // Install a function which will be called after LOG(FATAL).
 GOOGLE_GLOG_DLL_DECL void InstallFailureFunction(void (*fail_func)());
 

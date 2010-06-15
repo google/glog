@@ -227,6 +227,8 @@ int main(int argc, char **argv) {
   TestErrno();
   TestTruncate();
 
+  ShutdownGoogleLogging();
+
   fprintf(stdout, "PASS\n");
   return 0;
 }

@@ -44,6 +44,9 @@
 #elif defined(HAVE_SYS_SYSCALL_H)
 #include <sys/syscall.h>                 // for syscall()
 #endif
+#ifdef HAVE_SYSLOG_H
+# include <syslog.h>
+#endif
 
 #include "base/googleinit.h"
 
@@ -313,6 +316,14 @@ void InitGoogleLogging(const char* argv0) {
 
 #ifdef HAVE_STACKTRACE
   InstallFailureFunction(&DumpStackTraceAndExit);
+#endif
+}
+
+void ShutdownGoogleLogging() {
+  CHECK(IsGoogleLoggingInitialized())
+      << "You called ShutdownGoogleLogging() without InitGoogleLogging() first!";
+#ifdef HAVE_SYSLOG_H
+  closelog();
 #endif
 }
 
