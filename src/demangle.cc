@@ -28,6 +28,11 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: Satoru Takabayashi
+//
+// For reference check out:
+// http://www.codesourcery.com/public/cxx-abi/abi.html#mangling
+//
+// Note that we only have partial C++0x support yet.
 
 #include <stdio.h>  // for NULL
 #include "demangle.h"
@@ -245,6 +250,15 @@ static bool OneOrMore(ParseFunc parse_func, State *state) {
   return false;
 }
 
+// This function is used for handling <non-terminal>* syntax. The function
+// always returns true and must be followed by a termination symbol or a
+// terminating sequence not handled by parse_func (e.g. ParseChar(state, 'E')).
+static bool ZeroOrMore(ParseFunc parse_func, State *state) {
+  while (parse_func(state)) {
+  }
+  return true;
+}
+
 // Append "str" at "out_cur".  If there is an overflow, "overflowed"
 // is set to true for later use.  The output string is ensured to
 // always terminate with '\0' as long as there is no overflow.
@@ -271,6 +285,36 @@ static bool IsLower(char c) {
 
 static bool IsAlpha(char c) {
   return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}
+
+static bool IsDigit(char c) {
+  return c >= '0' && c <= '9';
+}
+
+// Returns true if "str" is a function clone suffix.  These suffixes are used
+// by GCC 4.5.x and later versions to indicate functions which have been
+// cloned during optimization.  We treat any sequence (.<alpha>+.<digit>+)+ as
+// a function clone suffix.
+static bool IsFunctionCloneSuffix(const char *str) {
+  size_t i = 0;
+  while (str[i] != '\0') {
+    // Consume a single .<alpha>+.<digit>+ sequence.
+    if (str[i] != '.' || !IsAlpha(str[i + 1])) {
+      return false;
+    }
+    i += 2;
+    while (IsAlpha(str[i])) {
+      ++i;
+    }
+    if (str[i] != '.' || !IsDigit(str[i + 1])) {
+      return false;
+    }
+    i += 2;
+    while (IsDigit(str[i])) {
+      ++i;
+    }
+  }
+  return true;  // Consumed everything in "str".
 }
 
 // Append "str" with some tweaks, iff "append" state is true.
@@ -429,6 +473,10 @@ static bool ParseSubstitution(State *state);
 // <mangled-name> ::= _Z <encoding>
 static bool ParseMangledName(State *state) {
   if (ParseTwoChar(state, "_Z") && ParseEncoding(state)) {
+    // Drop trailing function clone suffix, if any.
+    if (IsFunctionCloneSuffix(state->mangled_cur)) {
+      state->mangled_cur = state->mangled_end;
+    }
     // Append trailing version suffix if any.
     // ex. _Z3foo@@GLIBCXX_3.4
     if (state->mangled_cur < state->mangled_end &&
@@ -596,7 +644,7 @@ static bool ParseNumber(State *state) {
   const char *p = state->mangled_cur;
   int number = 0;
   for (;p < state->mangled_end; ++p) {
-    if ((*p >= '0' && *p <= '9')) {
+    if (IsDigit(*p)) {
       number = number * 10 + (*p - '0');
     } else {
       break;
@@ -616,7 +664,7 @@ static bool ParseFloatNumber(State *state) {
   const char *p = state->mangled_cur;
   int number = 0;
   for (;p < state->mangled_end; ++p) {
-    if ((*p >= '0' && *p <= '9')) {
+    if (IsDigit(*p)) {
       number = number * 16 + (*p - '0');
     } else if (*p >= 'a' && *p <= 'f') {
       number = number * 16 + (*p - 'a' + 10);
@@ -638,7 +686,7 @@ static bool ParseSeqId(State *state) {
   const char *p = state->mangled_cur;
   int number = 0;
   for (;p < state->mangled_end; ++p) {
-    if ((*p >= '0' && *p <= '9')) {
+    if (IsDigit(*p)) {
       number = number * 36 + (*p - '0');
     } else if (*p >= 'A' && *p <= 'Z') {
       number = number * 36 + (*p - 'A' + 10);
@@ -858,11 +906,12 @@ static bool ParseCtorDtorName(State *state) {
 }
 
 // <type> ::= <CV-qualifiers> <type>
-//        ::= P <type>
-//        ::= R <type>
-//        ::= C <type>
-//        ::= G <type>
-//        ::= U <source-name> <type>
+//        ::= P <type>   # pointer-to
+//        ::= R <type>   # reference-to
+//        ::= O <type>   # rvalue reference-to (C++0x)
+//        ::= C <type>   # complex pair (C 2000)
+//        ::= G <type>   # imaginary (C 2000)
+//        ::= U <source-name> <type>  # vendor extended type qualifier
 //        ::= <builtin-type>
 //        ::= <function-type>
 //        ::= <class-enum-type>
@@ -871,6 +920,11 @@ static bool ParseCtorDtorName(State *state) {
 //        ::= <template-template-param> <template-args>
 //        ::= <template-param>
 //        ::= <substitution>
+//        ::= Dp <type>          # pack expansion of (C++0x)
+//        ::= Dt <expression> E  # decltype of an id-expression or class
+//                               # member access (C++0x)
+//        ::= DT <expression> E  # decltype of an expression (C++0x)
+//
 static bool ParseType(State *state) {
   // We should check CV-qualifers, and PRGC things first.
   State copy = *state;
@@ -879,7 +933,18 @@ static bool ParseType(State *state) {
   }
   *state = copy;
 
-  if (ParseCharClass(state, "PRCG") && ParseType(state)) {
+  if (ParseCharClass(state, "OPRCG") && ParseType(state)) {
+    return true;
+  }
+  *state = copy;
+
+  if (ParseTwoChar(state, "Dp") && ParseType(state)) {
+    return true;
+  }
+  *state = copy;
+
+  if (ParseChar(state, 'D') && ParseCharClass(state, "tT") &&
+      ParseExpression(state) && ParseChar(state, 'E')) {
     return true;
   }
   *state = copy;
@@ -1045,14 +1110,23 @@ static bool ParseTemplateArgs(State *state) {
 
 // <template-arg>  ::= <type>
 //                 ::= <expr-primary>
+//                 ::= I <template-arg>* E        # argument pack
 //                 ::= X <expression> E
 static bool ParseTemplateArg(State *state) {
+  State copy = *state;
+  if (ParseChar(state, 'I') &&
+      ZeroOrMore(ParseTemplateArg, state) &&
+      ParseChar(state, 'E')) {
+    return true;
+  }
+  *state = copy;
+
   if (ParseType(state) ||
       ParseExprPrimary(state)) {
     return true;
   }
+  *state = copy;
 
-  State copy = *state;
   if (ParseChar(state, 'X') && ParseExpression(state) &&
       ParseChar(state, 'E')) {
     return true;

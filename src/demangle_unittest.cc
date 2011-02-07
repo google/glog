@@ -71,6 +71,32 @@ TEST(Demangle, CornerCases) {
   EXPECT_FALSE(Demangle("_Z6foobarv", NULL, 0));  // Should not cause SEGV.
 }
 
+// Test handling of functions suffixed with .clone.N, which is used by GCC
+// 4.5.x, and .constprop.N and .isra.N, which are used by GCC 4.6.x.  These
+// suffixes are used to indicate functions which have been cloned during
+// optimization.  We ignore these suffixes.
+TEST(Demangle, Clones) {
+  char tmp[20];
+  EXPECT_TRUE(Demangle("_ZL3Foov", tmp, sizeof(tmp)));
+  EXPECT_STREQ("Foo()", tmp);
+  EXPECT_TRUE(Demangle("_ZL3Foov.clone.3", tmp, sizeof(tmp)));
+  EXPECT_STREQ("Foo()", tmp);
+  EXPECT_TRUE(Demangle("_ZL3Foov.constprop.80", tmp, sizeof(tmp)));
+  EXPECT_STREQ("Foo()", tmp);
+  EXPECT_TRUE(Demangle("_ZL3Foov.isra.18", tmp, sizeof(tmp)));
+  EXPECT_STREQ("Foo()", tmp);
+  EXPECT_TRUE(Demangle("_ZL3Foov.isra.2.constprop.18", tmp, sizeof(tmp)));
+  EXPECT_STREQ("Foo()", tmp);
+  // Invalid (truncated), should not demangle.
+  EXPECT_FALSE(Demangle("_ZL3Foov.clo", tmp, sizeof(tmp)));
+  // Invalid (.clone. not followed by number), should not demangle.
+  EXPECT_FALSE(Demangle("_ZL3Foov.clone.", tmp, sizeof(tmp)));
+  // Invalid (.clone. followed by non-number), should not demangle.
+  EXPECT_FALSE(Demangle("_ZL3Foov.clone.foo", tmp, sizeof(tmp)));
+  // Invalid (.constprop. not followed by number), should not demangle.
+  EXPECT_FALSE(Demangle("_ZL3Foov.isra.2.constprop.", tmp, sizeof(tmp)));
+}
+
 TEST(Demangle, FromFile) {
   string test_file = FLAGS_test_srcdir + "/src/demangle_unittest.txt";
   ifstream f(test_file.c_str());  // The file should exist.

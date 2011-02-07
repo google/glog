@@ -84,7 +84,10 @@ fi
 
 # Check if mangled symbols exist.  They must not exist.
 if grep --quiet '^_Z' "$DM_OUTPUT"; then
-    die "Mangled symbols found in $DM_OUTPUT"
+    MANGLED=`grep '^_Z' "$DM_OUTPUT" | wc -l | awk '{ print \$1 }'`
+    echo "Mangled symbols ($MANGLED out of $NM_LINES) found in $DM_OUTPUT:"
+    grep '^_Z' "$DM_OUTPUT"
+    die "Mangled symbols ($MANGLED out of $NM_LINES) found in $DM_OUTPUT"
 fi
 
 # All C++ symbols are demangled successfully.
