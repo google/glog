@@ -232,6 +232,9 @@ EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb 
 	src/windows/glog/vlog_is_on.h \
 	$(WINDOWS_PROJECTS)
 
+CLEANFILES = core demangle.dm demangle.nm signalhandler.out* \
+	signalhandler_unittest.*.log.INFO.*
+
 # Add pkgconfig file
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libglog.pc
