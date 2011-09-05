@@ -221,6 +221,15 @@ int32 GetMainThreadPid() {
   return g_main_thread_pid;
 }
 
+bool PidHasChanged() {
+  int32 pid = getpid();
+  if (g_main_thread_pid == pid) {
+    return false;
+  }
+  g_main_thread_pid = pid;
+  return true;
+}
+
 pid_t GetTID() {
   // On Linux and FreeBSD, we try to use gettid().
 #if defined OS_LINUX || defined OS_FREEBSD || defined OS_MACOSX

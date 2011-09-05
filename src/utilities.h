@@ -159,6 +159,7 @@ typedef double WallTime;
 WallTime WallTime_Now();
 
 int32 GetMainThreadPid();
+bool PidHasChanged();
 
 pid_t GetTID();
 
