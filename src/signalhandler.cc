@@ -142,7 +142,9 @@ class MinimalFormatter {
 
 // Writes the given data with the size to the standard error.
 void WriteToStderr(const char* data, int size) {
-  write(STDERR_FILENO, data, size);
+  if (write(STDERR_FILENO, data, size) < 0) {
+    // Ignore errors.
+  }
 }
 
 // The writer function can be changed by InstallFailureWriter().

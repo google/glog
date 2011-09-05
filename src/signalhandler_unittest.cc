@@ -58,7 +58,9 @@ void* DieInThread(void*) {
 }
 
 void WriteToStdout(const char* data, int size) {
-  write(STDOUT_FILENO, data, size);
+  if (write(STDOUT_FILENO, data, size) < 0) {
+    // Ignore errors.
+  }
 }
 
 int main(int argc, char **argv) {

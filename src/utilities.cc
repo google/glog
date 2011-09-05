@@ -79,7 +79,9 @@ static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
 static void DebugWriteToStderr(const char* data, void *unused) {
   // This one is signal-safe.
-  write(STDERR_FILENO, data, strlen(data));
+  if (write(STDERR_FILENO, data, strlen(data)) < 0) {
+    // Ignore errors.
+  }
 }
 
 void DebugWriteToString(const char* data, void *arg) {

@@ -505,7 +505,7 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
 static void WriteToStderr(const char* message, size_t len) {
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
-  write(STDERR_FILENO, message, len);
+  fwrite(message, len, 1, stderr);
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
@@ -728,14 +728,18 @@ bool LogFileObject::CreateLogfile(const char* time_pid_string) {
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
     const char *linkdest = slash ? (slash + 1) : filename;
-    symlink(linkdest, linkpath.c_str());         // silently ignore failures
+    if (symlink(linkdest, linkpath.c_str()) != 0) {
+      // silently ignore failures
+    }
 
     // Make an additional link to the log file in a place specified by
     // FLAGS_log_link, if indicated
     if (!FLAGS_log_link.empty()) {
       linkpath = FLAGS_log_link + "/" + linkname;
       unlink(linkpath.c_str());                  // delete old one if it exists
-      symlink(filename, linkpath.c_str());       // silently ignore failures
+      if (symlink(filename, linkpath.c_str()) != 0) {
+        // silently ignore failures
+      }
     }
 #endif
   }
@@ -1222,7 +1226,9 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     LogDestination::WaitForSinks(data_);
 
     const char* message = "*** Check failure stack trace: ***\n";
-    write(STDERR_FILENO, message, strlen(message));
+    if (write(STDERR_FILENO, message, strlen(message)) < 0) {
+      // Ignore errors.
+    }
     Fail();
   }
 }
