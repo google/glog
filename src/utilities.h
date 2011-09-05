@@ -214,6 +214,9 @@ struct CrashReason {
 
 void SetCrashReason(const CrashReason* r);
 
+void InitGoogleLoggingUtilities(const char* argv0);
+void ShutdownGoogleLoggingUtilities();
+
 }  // namespace glog_internal_namespace_
 
 _END_GOOGLE_NAMESPACE_

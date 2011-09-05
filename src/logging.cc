@@ -311,8 +311,10 @@ class LogDestination {
   static const int kNetworkBytes = 1400;
 
   static const string& hostname();
- private:
 
+  static void DeleteLogDestinations();
+
+ private:
   LogDestination(LogSeverity severity, const char* base_filename);
   ~LogDestination() { }
 
@@ -605,6 +607,13 @@ inline LogDestination* LogDestination::log_destination(LogSeverity severity) {
     log_destinations_[severity] = new LogDestination(severity, NULL);
   }
   return log_destinations_[severity];
+}
+
+void LogDestination::DeleteLogDestinations() {
+  for (int severity = 0; severity < NUM_SEVERITIES; ++severity) {
+    delete log_destinations_[severity];
+    log_destinations_[severity] = NULL;
+  }
 }
 
 namespace {
@@ -1777,6 +1786,17 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
 LogMessageFatal::~LogMessageFatal() {
     Flush();
     LogMessage::Fail();
+}
+
+void InitGoogleLogging(const char* argv0) {
+  glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
+}
+
+void ShutdownGoogleLogging() {
+  glog_internal_namespace_::ShutdownGoogleLoggingUtilities();
+  LogDestination::DeleteLogDestinations();
+  delete logging_directories_list;
+  logging_directories_list = NULL;
 }
 
 _END_GOOGLE_NAMESPACE_

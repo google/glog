@@ -311,9 +311,7 @@ void SetCrashReason(const CrashReason* r) {
                             r);
 }
 
-}  // namespace glog_internal_namespace_
-
-void InitGoogleLogging(const char* argv0) {
+void InitGoogleLoggingUtilities(const char* argv0) {
   CHECK(!IsGoogleLoggingInitialized())
       << "You called InitGoogleLogging() twice!";
   const char* slash = strrchr(argv0, '/');
@@ -328,13 +326,15 @@ void InitGoogleLogging(const char* argv0) {
 #endif
 }
 
-void ShutdownGoogleLogging() {
+void ShutdownGoogleLoggingUtilities() {
   CHECK(IsGoogleLoggingInitialized())
       << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
 #ifdef HAVE_SYSLOG_H
   closelog();
 #endif
 }
+
+}  // namespace glog_internal_namespace_
 
 _END_GOOGLE_NAMESPACE_
 
