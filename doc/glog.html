@@ -186,19 +186,19 @@ a message at certain intervals.  This kind of logging is most useful
 for informational messages.
 
 <pre>
-   LOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; COUNTER &lt;&lt; "th cookie";
+   LOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; google::COUNTER &lt;&lt; "th cookie";
 </pre>
 
 <p>The above line outputs a log messages on the 1st, 11th,
 21st, ... times it is executed.  Note that the special
-<code>COUNTER</code> value is used to identify which repetition is
+<code>google::COUNTER</code> value is used to identify which repetition is
 happening.
 
 <p>You can combine conditional and occasional logging with the
 following macro.
 
 <pre>
-   LOG_IF_EVERY_N(INFO, (size &gt; 1024), 10) &lt;&lt; "Got the " &lt;&lt; COUNTER
+   LOG_IF_EVERY_N(INFO, (size &gt; 1024), 10) &lt;&lt; "Got the " &lt;&lt; google::COUNTER
                                            &lt;&lt; "th big cookie";
 </pre>
 
@@ -206,11 +206,11 @@ following macro.
 the output to the first n occurrences:
 
 <pre>
-   LOG_FIRST_N(INFO, 20) &lt;&lt; "Got the " &lt;&lt; COUNTER &lt;&lt; "th cookie";
+   LOG_FIRST_N(INFO, 20) &lt;&lt; "Got the " &lt;&lt; google::COUNTER &lt;&lt; "th cookie";
 </pre>
 
 <p>Outputs log messages for the first 20 times it is executed.  Again,
-the <code>COUNTER</code> identifier indicates which repetition is
+the <code>google::COUNTER</code> identifier indicates which repetition is
 happening.
 
 <h2><A NAME=debug>Debug Mode Support</A></h2>
@@ -225,7 +225,7 @@ application due to excessive logging.
 
    DLOG_IF(INFO, num_cookies &gt; 10) &lt;&lt; "Got lots of cookies";
 
-   DLOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; COUNTER &lt;&lt; "th cookie";
+   DLOG_EVERY_N(INFO, 10) &lt;&lt; "Got the " &lt;&lt; google::COUNTER &lt;&lt; "th cookie";
 </pre>
 
 <h2><A NAME=check>CHECK Macros</A></h2>
@@ -392,11 +392,11 @@ opposed to a severity level.
          "program with --v=1 or more";
    VLOG_EVERY_N(1, 10)
       &lt;&lt; "I'm printed every 10th occurrence, and when you run the program "
-         "with --v=1 or more. Present occurence is " &lt;&lt; COUNTER;
+         "with --v=1 or more. Present occurence is " &lt;&lt; google::COUNTER;
    VLOG_IF_EVERY_N(1, (size &gt; 1024), 10)
       &lt;&lt; "I'm printed on every 10th occurence of case when size is more "
          " than 1024, when you run the program with --v=1 or more. ";
-         "Present occurence is " &lt;&lt; COUNTER;
+         "Present occurence is " &lt;&lt; google::COUNTER;
 </pre>
 
 <h2> <A name="signal">Failure Signal Handler</A> </h2>
