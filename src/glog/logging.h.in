@@ -1015,14 +1015,14 @@ public:
 # pragma warning(default: 4275)
 #endif
   public:
-    LogStream(char *buf, int len, int ctr)
+    LogStream(char *buf, int len, int ctr_in)
       : ostrstream(buf, len),
-        ctr_(ctr) {
+        ctr_(ctr_in) {
       self_ = this;
     }
 
     int ctr() const { return ctr_; }
-    void set_ctr(int ctr) { ctr_ = ctr; }
+    void set_ctr(int ctr_in) { ctr_ = ctr_in; }
     LogStream* self() const { return self_; }
 
   private:

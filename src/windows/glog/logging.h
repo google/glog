@@ -156,21 +156,21 @@ typedef unsigned __int64 uint64;
 // You can also do occasional logging (log every n'th occurrence of an
 // event):
 //
-//   LOG_EVERY_N(INFO, 10) << "Got the " << COUNTER << "th cookie";
+//   LOG_EVERY_N(INFO, 10) << "Got the " << google::COUNTER << "th cookie";
 //
 // The above will cause log messages to be output on the 1st, 11th, 21st, ...
-// times it is executed.  Note that the special COUNTER value is used to
-// identify which repetition is happening.
+// times it is executed.  Note that the special google::COUNTER value is used
+// to identify which repetition is happening.
 //
 // You can also do occasional conditional logging (log every n'th
 // occurrence of an event, when condition is satisfied):
 //
-//   LOG_IF_EVERY_N(INFO, (size > 1024), 10) << "Got the " << COUNTER
+//   LOG_IF_EVERY_N(INFO, (size > 1024), 10) << "Got the " << google::COUNTER
 //                                           << "th big cookie";
 //
 // You can log messages the first N times your code executes a line. E.g.
 //
-//   LOG_FIRST_N(INFO, 20) << "Got the " << COUNTER << "th cookie";
+//   LOG_FIRST_N(INFO, 20) << "Got the " << google::COUNTER << "th cookie";
 //
 // Outputs log messages for the first 20 times it is executed.
 //
@@ -187,7 +187,7 @@ typedef unsigned __int64 uint64;
 //
 //   DLOG_IF(INFO, num_cookies > 10) << "Got lots of cookies";
 //
-//   DLOG_EVERY_N(INFO, 10) << "Got the " << COUNTER << "th cookie";
+//   DLOG_EVERY_N(INFO, 10) << "Got the " << google::COUNTER << "th cookie";
 //
 // All "debug mode" logging is compiled away to nothing for non-debug mode
 // compiles.
@@ -231,11 +231,11 @@ typedef unsigned __int64 uint64;
 //         "program with --v=1 or more";
 //   VLOG_EVERY_N(1, 10)
 //      << "I'm printed every 10th occurrence, and when you run the program "
-//         "with --v=1 or more. Present occurence is " << COUNTER;
+//         "with --v=1 or more. Present occurence is " << google::COUNTER;
 //   VLOG_IF_EVERY_N(1, (size > 1024), 10)
 //      << "I'm printed on every 10th occurence of case when size is more "
 //         " than 1024, when you run the program with --v=1 or more. ";
-//         "Present occurence is " << COUNTER;
+//         "Present occurence is " << google::COUNTER;
 //
 // The supported severity levels for macros that allow you to specify one
 // are (in increasing order of severity) INFO, WARNING, ERROR, and FATAL.
@@ -1019,14 +1019,14 @@ public:
 # pragma warning(default: 4275)
 #endif
   public:
-    LogStream(char *buf, int len, int ctr)
+    LogStream(char *buf, int len, int ctr_in)
       : ostrstream(buf, len),
-        ctr_(ctr) {
+        ctr_(ctr_in) {
       self_ = this;
     }
 
     int ctr() const { return ctr_; }
-    void set_ctr(int ctr) { ctr_ = ctr; }
+    void set_ctr(int ctr_in) { ctr_ = ctr_in; }
     LogStream* self() const { return self_; }
 
   private:

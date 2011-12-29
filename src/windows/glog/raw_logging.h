@@ -166,7 +166,7 @@ namespace google {
 
 // Stub log function used to work around for unused variable warnings when
 // building with STRIP_LOG > 0.
-static inline void RawLogStub__(int ignored, ...) {
+static inline void RawLogStub__(int /* ignored */, ...) {
 }
 
 // Helper function to implement RAW_LOG and RAW_VLOG
