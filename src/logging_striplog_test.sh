@@ -60,9 +60,16 @@ die () {
 # Check that the string literals are appropriately stripped. This will
 # not be the case in debug mode.
 
-check_eq "`get_strings logging_striptest0`" "COND ERROR FATAL INFO WARNING "
-check_eq "`get_strings logging_striptest2`" "COND ERROR FATAL "
-check_eq "`get_strings logging_striptest10`" ""
+mode=`GLOG_check_mode=1 ./logging_striptest0 2> /dev/null`
+if [ "$mode" = "opt" ];
+then
+    echo "In OPT mode"
+    check_eq "`get_strings logging_striptest0`" "COND ERROR FATAL INFO USAGE WARNING "
+    check_eq "`get_strings logging_striptest2`" "COND ERROR FATAL USAGE "
+    check_eq "`get_strings logging_striptest10`" "" 
+else
+    echo "In DBG mode; not checking strings"
+fi
 
 # Check that LOG(FATAL) aborts even for large STRIP_LOG
 
