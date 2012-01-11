@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
   CaptureTestStderr();
 
   // re-emit early_stderr
-  LogMessage("dummy", LogMessage::kNoLogPrefix, INFO).stream() << early_stderr;
+  LogMessage("dummy", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << early_stderr;
 
   TestLogging(true);
   TestRawLogging();
@@ -234,9 +234,9 @@ int main(int argc, char **argv) {
 }
 
 void TestLogging(bool check_counts) {
-  int64 base_num_infos   = LogMessage::num_messages(INFO);
-  int64 base_num_warning = LogMessage::num_messages(WARNING);
-  int64 base_num_errors  = LogMessage::num_messages(ERROR);
+  int64 base_num_infos   = LogMessage::num_messages(GLOG_INFO);
+  int64 base_num_warning = LogMessage::num_messages(GLOG_WARNING);
+  int64 base_num_errors  = LogMessage::num_messages(GLOG_ERROR);
 
   LOG(INFO) << string("foo ") << "bar " << 10 << ' ' << 3.4;
   for ( int i = 0; i < 10; ++i ) {
@@ -266,12 +266,12 @@ void TestLogging(bool check_counts) {
   LOG(ERROR) << string("foo") << ' '<< j << ' ' << setw(10) << j << " "
              << setw(1) << hex << j;
 
-  LogMessage("foo", LogMessage::kNoLogPrefix, INFO).stream() << "no prefix";
+  LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << "no prefix";
 
   if (check_counts) {
-    CHECK_EQ(base_num_infos   + 14, LogMessage::num_messages(INFO));
-    CHECK_EQ(base_num_warning + 3,  LogMessage::num_messages(WARNING));
-    CHECK_EQ(base_num_errors  + 15, LogMessage::num_messages(ERROR));
+    CHECK_EQ(base_num_infos   + 14, LogMessage::num_messages(GLOG_INFO));
+    CHECK_EQ(base_num_warning + 3,  LogMessage::num_messages(GLOG_WARNING));
+    CHECK_EQ(base_num_errors  + 15, LogMessage::num_messages(GLOG_ERROR));
   }
 }
 
@@ -416,16 +416,16 @@ void LogWithLevels(int v, int severity, bool err, bool alsoerr) {
 }
 
 void TestLoggingLevels() {
-  LogWithLevels(0, INFO, false, false);
-  LogWithLevels(1, INFO, false, false);
-  LogWithLevels(-1, INFO, false, false);
-  LogWithLevels(0, WARNING, false, false);
-  LogWithLevels(0, ERROR, false, false);
-  LogWithLevels(0, FATAL, false, false);
-  LogWithLevels(0, FATAL, true, false);
-  LogWithLevels(0, FATAL, false, true);
-  LogWithLevels(1, WARNING, false, false);
-  LogWithLevels(1, FATAL, false, true);
+  LogWithLevels(0, GLOG_INFO, false, false);
+  LogWithLevels(1, GLOG_INFO, false, false);
+  LogWithLevels(-1, GLOG_INFO, false, false);
+  LogWithLevels(0, GLOG_WARNING, false, false);
+  LogWithLevels(0, GLOG_ERROR, false, false);
+  LogWithLevels(0, GLOG_FATAL, false, false);
+  LogWithLevels(0, GLOG_FATAL, true, false);
+  LogWithLevels(0, GLOG_FATAL, false, true);
+  LogWithLevels(1, GLOG_WARNING, false, false);
+  LogWithLevels(1, GLOG_FATAL, false, true);
 }
 
 TEST(DeathRawCHECK, logging) {
@@ -508,7 +508,7 @@ void TestLogSink() {
 
   LOG(INFO) << "Captured by LOG_TO_SINK:";
   for (size_t i = 0; i < sink.errors.size(); ++i) {
-    LogMessage("foo", LogMessage::kNoLogPrefix, INFO).stream()
+    LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream()
       << sink.errors[i];
   }
 }
@@ -667,9 +667,9 @@ static void TestBasename() {
   const string dest = FLAGS_test_tmpdir + "/logging_test_basename";
   DeleteFiles(dest + "*");
 
-  SetLogDestination(INFO, dest.c_str());
+  SetLogDestination(GLOG_INFO, dest.c_str());
   LOG(INFO) << "message to new base";
-  FlushLogFiles(INFO);
+  FlushLogFiles(GLOG_INFO);
 
   CheckFile(dest, "message to new base");
 
@@ -686,10 +686,10 @@ static void TestSymlink() {
   DeleteFiles(dest + "*");
   DeleteFiles(sym + "*");
 
-  SetLogSymlink(INFO, "symlinkbase");
-  SetLogDestination(INFO, dest.c_str());
+  SetLogSymlink(GLOG_INFO, "symlinkbase");
+  SetLogDestination(GLOG_INFO, dest.c_str());
   LOG(INFO) << "message to new symlink";
-  FlushLogFiles(INFO);
+  FlushLogFiles(GLOG_INFO);
   CheckFile(sym, "message to new symlink");
 
   DeleteFiles(dest + "*");
@@ -702,10 +702,10 @@ static void TestExtension() {
   string dest = FLAGS_test_tmpdir + "/logging_test_extension";
   DeleteFiles(dest + "*");
 
-  SetLogDestination(INFO, dest.c_str());
+  SetLogDestination(GLOG_INFO, dest.c_str());
   SetLogFilenameExtension("specialextension");
   LOG(INFO) << "message to new extension";
-  FlushLogFiles(INFO);
+  FlushLogFiles(GLOG_INFO);
   CheckFile(dest, "message to new extension");
 
   // Check that file name ends with extension
@@ -738,11 +738,11 @@ static void TestWrapper() {
   fprintf(stderr, "==== Test log wrapper\n");
 
   MyLogger my_logger;
-  base::Logger* old_logger = base::GetLogger(INFO);
-  base::SetLogger(INFO, &my_logger);
+  base::Logger* old_logger = base::GetLogger(GLOG_INFO);
+  base::SetLogger(GLOG_INFO, &my_logger);
   LOG(INFO) << "Send to wrapped logger";
-  FlushLogFiles(INFO);
-  base::SetLogger(INFO, old_logger);
+  FlushLogFiles(GLOG_INFO);
+  base::SetLogger(GLOG_INFO, old_logger);
 
   CHECK(strstr(my_logger.data.c_str(), "Send to wrapped logger") != NULL);
 }

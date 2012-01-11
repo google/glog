@@ -72,7 +72,7 @@ namespace google {
 //   I0821 211317 file.cc:142] RAW: status is 20
 #define RAW_LOG(severity, ...) \
   do { \
-    switch (google::severity) {  \
+    switch (google::GLOG_ ## severity) {  \
       case 0: \
         RAW_LOG_INFO(__VA_ARGS__); \
         break; \
@@ -104,28 +104,28 @@ namespace google {
 #endif // STRIP_LOG == 0
 
 #if STRIP_LOG == 0
-#define RAW_LOG_INFO(...) google::RawLog__(google::INFO, \
+#define RAW_LOG_INFO(...) google::RawLog__(google::GLOG_INFO, \
                                    __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_INFO(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG == 0
 
 #if STRIP_LOG <= 1
-#define RAW_LOG_WARNING(...) google::RawLog__(google::WARNING,   \
+#define RAW_LOG_WARNING(...) google::RawLog__(google::GLOG_WARNING,   \
                                       __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_WARNING(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG <= 1
 
 #if STRIP_LOG <= 2
-#define RAW_LOG_ERROR(...) google::RawLog__(google::ERROR,       \
+#define RAW_LOG_ERROR(...) google::RawLog__(google::GLOG_ERROR,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_ERROR(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG <= 2
 
 #if STRIP_LOG <= 3
-#define RAW_LOG_FATAL(...) google::RawLog__(google::FATAL,       \
+#define RAW_LOG_FATAL(...) google::RawLog__(google::GLOG_FATAL,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_FATAL(...) \

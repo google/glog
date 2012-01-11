@@ -111,7 +111,7 @@ _END_GOOGLE_NAMESPACE_
 // The default is ERROR instead of FATAL so that users can see problems
 // when they run a program without having to look in another file.
 DEFINE_int32(stderrthreshold,
-             GOOGLE_NAMESPACE::ERROR,
+             GOOGLE_NAMESPACE::GLOG_ERROR,
              "log messages at or above this level are copied to stderr in "
              "addition to logfiles.  This flag obsoletes --alsologtostderr.");
 
@@ -950,12 +950,12 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
 
 LogMessage::LogMessage(const char* file, int line,
                        const CheckOpString& result) {
-  Init(file, line, FATAL, &LogMessage::SendToLog);
+  Init(file, line, GLOG_FATAL, &LogMessage::SendToLog);
   stream() << "Check failed: " << (*result.str_) << " ";
 }
 
 LogMessage::LogMessage(const char* file, int line) {
-  Init(file, line, INFO, &LogMessage::SendToLog);
+  Init(file, line, GLOG_INFO, &LogMessage::SendToLog);
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity) {
@@ -986,7 +986,7 @@ void LogMessage::Init(const char* file,
                       LogSeverity severity,
                       void (LogMessage::*send_method)()) {
   allocated_ = NULL;
-  if (severity != FATAL || !exit_on_dfatal) {
+  if (severity != GLOG_FATAL || !exit_on_dfatal) {
     allocated_ = new LogMessageData();
     data_ = allocated_;
     data_->buf_ = new char[kMaxLogMessageLen+1];
@@ -1137,7 +1137,7 @@ void ReprintFatalMessage() {
       // Also write to stderr
       WriteToStderr(fatal_message, n);
     }
-    LogDestination::LogToAllLogfiles(ERROR, fatal_time, fatal_message, n);
+    LogDestination::LogToAllLogfiles(GLOG_ERROR, fatal_time, fatal_message, n);
   }
 }
 
@@ -1195,7 +1195,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   // If we log a FATAL message, flush all the log destinations, then toss
   // a signal for others to catch. We leave the logs in a state that
   // someone else can use them (as long as they flush afterwards)
-  if (data_->severity_ == FATAL && exit_on_dfatal) {
+  if (data_->severity_ == GLOG_FATAL && exit_on_dfatal) {
     if (data_->first_fatal_) {
       // Store crash information so that it is accessible from within signal
       // handlers that may be invoked later.
@@ -1645,9 +1645,9 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
       // rather scary.
       // Instead just truncate the file to something we can manage
       if (truncate(path, 0) == -1) {
-	PLOG(ERROR) << "Unable to truncate " << path;
+        PLOG(ERROR) << "Unable to truncate " << path;
       } else {
-	LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
+        LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
       }
     } else {
       PLOG(ERROR) << "Unable to open " << path;
@@ -1783,7 +1783,7 @@ int posix_strerror_r(int err, char *buf, size_t len) {
 }
 
 LogMessageFatal::LogMessageFatal(const char* file, int line) :
-    LogMessage(file, line, FATAL) {}
+    LogMessage(file, line, GLOG_FATAL) {}
 
 LogMessageFatal::LogMessageFatal(const char* file, int line,
                                  const CheckOpString& result) :

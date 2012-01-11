@@ -68,7 +68,7 @@
 //   I0821 211317 file.cc:142] RAW: status is 20
 #define RAW_LOG(severity, ...) \
   do { \
-    switch (@ac_google_namespace@::severity) {  \
+    switch (@ac_google_namespace@::GLOG_ ## severity) {  \
       case 0: \
         RAW_LOG_INFO(__VA_ARGS__); \
         break; \
@@ -100,28 +100,28 @@
 #endif // STRIP_LOG == 0
 
 #if STRIP_LOG == 0
-#define RAW_LOG_INFO(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::INFO, \
+#define RAW_LOG_INFO(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_INFO, \
                                    __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_INFO(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG == 0
 
 #if STRIP_LOG <= 1
-#define RAW_LOG_WARNING(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::WARNING,   \
+#define RAW_LOG_WARNING(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_WARNING,   \
                                       __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_WARNING(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG <= 1
 
 #if STRIP_LOG <= 2
-#define RAW_LOG_ERROR(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::ERROR,       \
+#define RAW_LOG_ERROR(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_ERROR,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_ERROR(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
 #endif // STRIP_LOG <= 2
 
 #if STRIP_LOG <= 3
-#define RAW_LOG_FATAL(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::FATAL,       \
+#define RAW_LOG_FATAL(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_FATAL,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_FATAL(...) \

@@ -527,8 +527,48 @@ all log messages associated with <code>VLOG</code>s as well as
 <h3><A NAME=windows>Notes for Windows users</A></h3>
 
 <p>Google glog defines a severity level <code>ERROR</code>, which is
-also defined in <code>windows.h</code>
-There are two known workarounds to avoid this conflict:
+also defined in <code>windows.h</code> . You can make glog not define
+<code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>,
+and <code>FATAL</code> by defining
+<code>GLOG_NO_ABBREVIATED_SEVERITIES</code> before
+including <code>glog/logging.h</code> . Even with this macro, you can
+still use the iostream like logging facilities:
+
+<pre>
+  #define GLOG_NO_ABBREVIATED_SEVERITIES
+  #include &lt;windows.h&gt;
+  #include &lt;glog/logging.h&gt;
+
+  // ...
+
+  LOG(ERROR) &lt;&lt; "This should work";
+  LOG_IF(ERROR, x &gt; y) &lt;&lt; "This should be also OK";
+</pre>
+
+<p>
+However, you cannot
+use <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>,
+and <code>FATAL</code> anymore for functions defined
+in <code>glog/logging.h</code> .
+
+<pre>
+  #define GLOG_NO_ABBREVIATED_SEVERITIES
+  #include &lt;windows.h&gt;
+  #include &lt;glog/logging.h&gt;
+
+  // ...
+
+  // This won't work.
+  // google::FlushLogFiles(google::ERROR);
+
+  // Use this instead.
+  google::FlushLogFiles(google::GLOG_ERROR);
+</pre>
+
+<p>
+If you don't need <code>ERROR</code> defined
+by <code>windows.h</code>, there are a couple of more workarounds
+which sometimes don't work:
 
 <ul>
   <li>#define <code>WIN32_LEAN_AND_MEAN</code> or <code>NOGDI</code>
