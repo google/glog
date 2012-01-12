@@ -47,6 +47,18 @@
 //   using ::operator<<;
 //
 // to fix these errors.
+//
+//
+// Notice for clang users: you should include stl_logging.h BEFORE you
+// include logging.h. Otherwise, you will see some errors when you use
+// CHECK with STL containers.
+//
+// Clang's "using ::operator<<" incorporate symbols which are declared
+// before the using keyword. With GCC, symbols defined after the using
+// keyword are incorporated as well. The CHECK macro defined in
+// logging.h uses the using keyword so you need to include logging.h
+// after including stl_logging.h.
+//
 
 #ifndef UTIL_GTL_STL_LOGGING_INL_H_
 #define UTIL_GTL_STL_LOGGING_INL_H_
