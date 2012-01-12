@@ -237,7 +237,7 @@ static bool ParseCharClass(State *state, const char *char_class) {
 }
 
 // This function is used for handling an optional non-terminal.
-static bool Optional(bool status) {
+static bool Optional(bool) {
   return true;
 }
 
@@ -400,7 +400,7 @@ static void MaybeCancelLastSeparator(State *state) {
 // "mangled_cur" is anonymous namespace.
 static bool IdentifierIsAnonymousNamespace(State *state, int length) {
   static const char anon_prefix[] = "_GLOBAL__N_";
-  return (length > sizeof(anon_prefix) - 1 &&  // Should be longer.
+  return (length > (int)sizeof(anon_prefix) - 1 &&  // Should be longer.
           StrPrefix(state->mangled_cur, anon_prefix));
 }
 

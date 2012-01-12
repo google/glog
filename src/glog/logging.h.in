@@ -1485,7 +1485,7 @@ class GOOGLE_GLOG_DLL_DECL NullStream : public LogMessage::LogStream {
 // converted to LogStream and the message will be computed and then
 // quietly discarded.
 template<class T>
-inline NullStream& operator<<(NullStream &str, const T &value) { return str; }
+inline NullStream& operator<<(NullStream &str, const T &) { return str; }
 
 // Similar to NullStream, but aborts the program (without stack
 // trace), like LogMessageFatal.

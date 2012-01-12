@@ -190,7 +190,7 @@ void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
 
 //-----------------------------------------------------------------------//
 
-int main(int argc, char ** argv) {
+int main(int, char ** argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
 

@@ -56,7 +56,7 @@ int CheckNoReturn(bool b) {
 struct A { };
 std::ostream &operator<<(std::ostream &str, const A&) {return str;}
 
-int main(int argc, char* argv[]) {
+int main(int, char* argv[]) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   if (FLAGS_check_mode) {

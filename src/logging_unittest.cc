@@ -155,7 +155,8 @@ static void BM_Check2(int n) {
 }
 BENCHMARK(BM_Check2);
 
-static void CheckFailure(int a, int b, const char* file, int line, const char* msg) {
+static void CheckFailure(int, int, const char* /* file */, int /* line */,
+                         const char* /* msg */) {
 }
 
 static void BM_logspeed(int n) {
@@ -471,7 +472,7 @@ void TestLogToString() {
 class TestLogSinkImpl : public LogSink {
  public:
   vector<string> errors;
-  virtual void send(LogSeverity severity, const char* full_filename,
+  virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
@@ -610,7 +611,7 @@ static void GetFiles(const string& pattern, vector<string>* files) {
   glob_t g;
   const int r = glob(pattern.c_str(), 0, NULL, &g);
   CHECK((r == 0) || (r == GLOB_NOMATCH)) << ": error matching " << pattern;
-  for (int i = 0; i < g.gl_pathc; i++) {
+  for (size_t i = 0; i < g.gl_pathc; i++) {
     files->push_back(string(g.gl_pathv[i]));
   }
   globfree(&g);
@@ -647,7 +648,7 @@ static void DeleteFiles(const string& pattern) {
 static void CheckFile(const string& name, const string& expected_string) {
   vector<string> files;
   GetFiles(name + "*", &files);
-  CHECK_EQ(files.size(), 1);
+  CHECK_EQ(files.size(), 1UL);
 
   FILE* file = fopen(files[0].c_str(), "r");
   CHECK(file != NULL) << ": could not open " << files[0];
@@ -711,7 +712,7 @@ static void TestExtension() {
   // Check that file name ends with extension
   vector<string> filenames;
   GetFiles(dest + "*", &filenames);
-  CHECK_EQ(filenames.size(), 1);
+  CHECK_EQ(filenames.size(), 1UL);
   CHECK(strstr(filenames[0].c_str(), "specialextension") != NULL);
 
   // Release file handle for the destination file to unlock the file in Windows.
@@ -722,8 +723,8 @@ static void TestExtension() {
 struct MyLogger : public base::Logger {
   string data;
 
-  virtual void Write(bool should_flush,
-                     time_t timestamp,
+  virtual void Write(bool /* should_flush */,
+                     time_t /* timestamp */,
                      const char* message,
                      int length) {
     data.append(message, length);
@@ -991,7 +992,7 @@ class TestWaitingLogSink : public LogSink {
 
   // (re)define LogSink interface
 
-  virtual void send(LogSeverity severity, const char* full_filename,
+  virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
@@ -1030,7 +1031,7 @@ static void TestLogSinkWaitTillSent() {
   for (size_t i = 0; i < global_messages.size(); ++i) {
     LOG(INFO) << "Sink capture: " << global_messages[i];
   }
-  CHECK_EQ(global_messages.size(), 3);
+  CHECK_EQ(global_messages.size(), 3UL);
 }
 
 TEST(Strerror, logging) {
@@ -1190,10 +1191,10 @@ TEST(LogBacktraceAt, DoesBacktraceAtRightLineWhenEnabled) {
 #endif // HAVE_LIB_GMOCK
 
 struct UserDefinedClass {
-  bool operator==(const UserDefinedClass& rhs) const { return true; }
+  bool operator==(const UserDefinedClass&) const { return true; }
 };
 
-inline ostream& operator<<(ostream& out, const UserDefinedClass& u) {
+inline ostream& operator<<(ostream& out, const UserDefinedClass&) {
   out << "OK";
   return out;
 }
@@ -1202,7 +1203,7 @@ TEST(UserDefinedClass, logging) {
   UserDefinedClass u;
   vector<string> buf;
   LOG_STRING(INFO, &buf) << u;
-  CHECK_EQ(1, buf.size());
+  CHECK_EQ(1UL, buf.size());
   CHECK(buf[0].find("OK") != string::npos);
 
   // We must be able to compile this.

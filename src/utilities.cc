@@ -77,7 +77,7 @@ typedef void DebugWriter(const char*, void*);
 // For some environments, add two extra bytes for the leading "0x".
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
-static void DebugWriteToStderr(const char* data, void *unused) {
+static void DebugWriteToStderr(const char* data, void *) {
   // This one is signal-safe.
   if (write(STDERR_FILENO, data, strlen(data)) < 0) {
     // Ignore errors.
