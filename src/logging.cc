@@ -1247,6 +1247,14 @@ void LogMessage::RecordCrashReason(
 #endif
 }
 
+#ifdef HAVE___ATTRIBUTE__
+# define ATTRIBUTE_NORETURN __attribute__((noreturn))
+#else
+# define ATTRIBUTE_NORETURN
+#endif
+
+static void logging_fail() ATTRIBUTE_NORETURN;
+
 static void logging_fail() {
 #if defined(_DEBUG) && defined(_MSC_VER)
   // When debugging on windows, avoid the obnoxious dialog and make
@@ -1257,15 +1265,13 @@ static void logging_fail() {
 #endif
 }
 
-#ifdef HAVE___ATTRIBUTE__
+typedef void (*logging_fail_func_t)() ATTRIBUTE_NORETURN;
+
 GOOGLE_GLOG_DLL_DECL
-void (*g_logging_fail_func)() __attribute__((noreturn)) = &logging_fail;
-#else
-GOOGLE_GLOG_DLL_DECL void (*g_logging_fail_func)() = &logging_fail;
-#endif
+logging_fail_func_t g_logging_fail_func = &logging_fail;
 
 void InstallFailureFunction(void (*fail_func)()) {
-  g_logging_fail_func = fail_func;
+  g_logging_fail_func = (logging_fail_func_t)fail_func;
 }
 
 void LogMessage::Fail() {
