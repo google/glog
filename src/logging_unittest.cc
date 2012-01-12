@@ -785,9 +785,9 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   CHECK_ERR(lseek(fd, 0, SEEK_SET));
 
   // File should contain the suffix of the original file
-  int buf_size = statbuf.st_size + 1;
+  const size_t buf_size = statbuf.st_size + 1;
   char* buf = new char[buf_size];
-  memset(buf, 0, sizeof(buf));
+  memset(buf, 0, buf_size);
   CHECK_ERR(read(fd, buf, buf_size));
 
   const char *p = buf;
@@ -1036,7 +1036,7 @@ static void TestLogSinkWaitTillSent() {
 TEST(Strerror, logging) {
   int errcode = EINTR;
   char *msg = strdup(strerror(errcode));
-  int buf_size = strlen(msg) + 1;
+  const size_t buf_size = strlen(msg) + 1;
   char *buf = new char[buf_size];
   CHECK_EQ(posix_strerror_r(errcode, NULL, 0), -1);
   buf[0] = 'A';
