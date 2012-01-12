@@ -15172,11 +15172,11 @@ else
 
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-int main() { int a; if (__sync_val_compare_and_swap(&a, 0, 1)) return 1; return 0; }
+
 int
 main ()
 {
-
+int a; if (__sync_val_compare_and_swap(&a, 0, 1)) return 1; return 0;
   ;
   return 0;
 }
