@@ -45,11 +45,12 @@ host_triplet = @host@
 # These are x86-specific, having to do with frame-pointers
 @ENABLE_FRAME_POINTERS_TRUE@@X86_64_TRUE@am__append_2 = -fno-omit-frame-pointer
 @ENABLE_FRAME_POINTERS_FALSE@@X86_64_TRUE@am__append_3 = -DNO_FRAME_POINTER
+@DISABLE_RTTI_TRUE@am__append_4 = -fno-rtti
 TESTS = logging_unittest$(EXEEXT) demangle_unittest$(EXEEXT) \
 	stacktrace_unittest$(EXEEXT) symbolize_unittest$(EXEEXT) \
 	stl_logging_unittest$(EXEEXT) utilities_unittest$(EXEEXT) \
 	$(am__EXEEXT_1)
-@HAVE_GMOCK_TRUE@am__append_4 = mock_log_test
+@HAVE_GMOCK_TRUE@am__append_5 = mock_log_test
 noinst_PROGRAMS = $(am__EXEEXT_2) $(am__EXEEXT_3)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
@@ -471,7 +472,8 @@ ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 # This is mostly based on configure options
-AM_CXXFLAGS = $(am__append_1) $(am__append_2) $(am__append_3)
+AM_CXXFLAGS = $(am__append_1) $(am__append_2) $(am__append_3) \
+	$(am__append_4)
 glogincludedir = $(includedir)/glog
 gloginclude_HEADERS = src/glog/log_severity.h
 nodist_gloginclude_HEADERS = src/glog/logging.h src/glog/raw_logging.h src/glog/vlog_is_on.h src/glog/stl_logging.h

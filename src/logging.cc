@@ -1365,8 +1365,13 @@ int64 LogMessage::num_messages(int severity) {
 // Output the COUNTER value. This is only valid if ostream is a
 // LogStream.
 ostream& operator<<(ostream &os, const PRIVATE_Counter&) {
+#ifdef DISABLE_RTTI
+  LogMessage::LogStream *log = static_cast<LogMessage::LogStream*>(&os);
+#else
   LogMessage::LogStream *log = dynamic_cast<LogMessage::LogStream*>(&os);
-  CHECK(log == log->self());
+#endif
+  CHECK(log && log == log->self())
+      << "You must not use COUNTER with non-glog ostream";
   os << log->ctr();
   return os;
 }

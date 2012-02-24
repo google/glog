@@ -25,6 +25,10 @@ else
 endif
 endif
 
+if DISABLE_RTTI
+  AM_CXXFLAGS += -fno-rtti
+endif
+
 glogincludedir = $(includedir)/glog
 ## The .h files you want to install (that is, .h files that people
 ## who install this package can include in their own applications.)

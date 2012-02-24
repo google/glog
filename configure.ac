@@ -93,6 +93,14 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(, [return __x86_64__ == 1 ? 0 : 1])],
 AM_CONDITIONAL(ENABLE_FRAME_POINTERS, test "$enable_frame_pointers" = yes)
 AM_CONDITIONAL(X86_64, test "$is_x86_64" = yes)
 
+AC_ARG_ENABLE(rtti,
+              AS_HELP_STRING([--disable-rtti],
+                             [Disable RTTI in glog]))
+AM_CONDITIONAL(DISABLE_RTTI, test x"$enable_rtti" = x"no")
+if test x"$enable_rtti" = x"no"; then
+  AC_DEFINE(DISABLE_RTTI, 1, [define if glog doesn't use RTTI])
+fi
+
 # Some of the code in this directory depends on pthreads
 ACX_PTHREAD
 if test x"$acx_pthread_ok" = x"yes"; then
