@@ -78,6 +78,17 @@ using std::ostream;
 using std::ostringstream;
 using std::strstream;
 
+using std::FILE;
+using std::fwrite;
+using std::fclose;
+using std::fflush;
+using std::fprintf;
+using std::perror;
+
+#ifdef __QNX__
+using std::fdopen;
+#endif
+
 // There is no thread annotation support.
 #define EXCLUSIVE_LOCKS_REQUIRED(mu)
 
