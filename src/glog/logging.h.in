@@ -608,7 +608,7 @@ std::string* MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
 #endif
   std::strstream ss;
   ss << names << " (" << v1 << " vs. " << v2 << ")";
-  return new std::string(ss.str(), ss.pcount());
+  return new std::string(ss.str(), static_cast<unsigned int>(ss.pcount()));
 }
 
 // Helper functions for CHECK_OP macro.
