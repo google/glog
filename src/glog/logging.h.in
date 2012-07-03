@@ -447,15 +447,16 @@ DECLARE_bool(stop_logging_if_full_disk);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__CYGWIN__) || defined(__CYGWIN32__)
 // A very useful logging macro to log windows errors:
 #define LOG_SYSRESULT(result) \
-  if (FAILED(result)) { \
-    LPTSTR message = NULL; \
-    LPTSTR msg = reinterpret_cast<LPTSTR>(&message); \
-    DWORD message_length = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | \
+  if (FAILED(HRESULT_FROM_WIN32(result))) { \
+    LPSTR message = NULL; \
+    LPSTR msg = reinterpret_cast<LPSTR>(&message); \
+    DWORD message_length = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | \
                          FORMAT_MESSAGE_FROM_SYSTEM, \
                          0, result, 0, msg, 100, NULL); \
     if (message_length > 0) { \
       @ac_google_namespace@::LogMessage(__FILE__, __LINE__, @ac_google_namespace@::GLOG_ERROR, 0, \
-          &@ac_google_namespace@::LogMessage::SendToLog).stream() << message; \
+          &@ac_google_namespace@::LogMessage::SendToLog).stream() \
+          << reinterpret_cast<const char*>(message); \
       LocalFree(message); \
     } \
   }
