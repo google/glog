@@ -45,7 +45,10 @@
 
 #ifdef _WIN32
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN  /* We always want minimal includes */
+#endif
+
 #include <windows.h>
 #include <winsock.h>         /* for gethostname */
 #include <io.h>              /* because we so often use open/close/etc */

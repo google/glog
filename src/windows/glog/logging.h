@@ -65,6 +65,14 @@
 #   define GOOGLE_GLOG_DLL_DECL
 # endif
 #endif
+#if defined(_MSC_VER)
+#define GLOG_MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) \
+                                     __pragma(warning(disable:n))
+#define GLOG_MSVC_POP_WARNING() __pragma(warning(pop))
+#else
+#define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
+#define GLOG_MSVC_POP_WARNING()
+#endif
 
 // We care a lot about number of bits things take up.  Unfortunately,
 // systems define their bit-specific ints in a lot of different ways.
@@ -945,52 +953,63 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 #define DLOG_ASSERT(condition) \
   true ? (void) 0 : LOG_ASSERT(condition)
 
+// MSVC warning C4127: conditional expression is constant
 #define DCHECK(condition) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK(condition)
+    GLOG_MSVC_POP_WARNING() CHECK(condition)
 
 #define DCHECK_EQ(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_EQ(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_EQ(val1, val2)
 
 #define DCHECK_NE(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_NE(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_NE(val1, val2)
 
 #define DCHECK_LE(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_LE(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_LE(val1, val2)
 
 #define DCHECK_LT(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_LT(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_LT(val1, val2)
 
 #define DCHECK_GE(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_GE(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_GE(val1, val2)
 
 #define DCHECK_GT(val1, val2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_GT(val1, val2)
+    GLOG_MSVC_POP_WARNING() CHECK_GT(val1, val2)
 
 #define DCHECK_NOTNULL(val) (val)
 
 #define DCHECK_STREQ(str1, str2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_STREQ(str1, str2)
+    GLOG_MSVC_POP_WARNING() CHECK_STREQ(str1, str2)
 
 #define DCHECK_STRCASEEQ(str1, str2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_STRCASEEQ(str1, str2)
+    GLOG_MSVC_POP_WARNING() CHECK_STRCASEEQ(str1, str2)
 
 #define DCHECK_STRNE(str1, str2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_STRNE(str1, str2)
+    GLOG_MSVC_POP_WARNING() CHECK_STRNE(str1, str2)
 
 #define DCHECK_STRCASENE(str1, str2) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
-    CHECK_STRCASENE(str1, str2)
-
+    GLOG_MSVC_POP_WARNING() CHECK_STRCASENE(str1, str2)
 
 #endif  // NDEBUG
 
@@ -1528,5 +1547,8 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureWriter(
     void (*writer)(const char* data, int size));
 
 }
+
+#undef GLOG_MSVC_PUSH_DISABLE_WARNING
+#undef GLOG_MSVC_POP_WARNING
 
 #endif // _LOGGING_H_

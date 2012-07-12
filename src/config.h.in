@@ -162,7 +162,11 @@
 #undef VERSION
 
 /* Stops putting the code inside the Google namespace */
+#ifndef _END_GOOGLE_NAMESPACE_
 #undef _END_GOOGLE_NAMESPACE_
+#endif
 
 /* Puts following code inside the Google namespace */
+#ifndef _START_GOOGLE_NAMESPACE_
 #undef _START_GOOGLE_NAMESPACE_
+#endif
