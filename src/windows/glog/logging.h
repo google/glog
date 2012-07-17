@@ -1548,7 +1548,4 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureWriter(
 
 }
 
-#undef GLOG_MSVC_PUSH_DISABLE_WARNING
-#undef GLOG_MSVC_POP_WARNING
-
 #endif // _LOGGING_H_
