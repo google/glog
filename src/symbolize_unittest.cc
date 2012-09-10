@@ -65,9 +65,7 @@ using namespace GOOGLE_NAMESPACE;
 #    endif  // __i386__
 #  else
 #  endif  // __GNUC__ >= 4
-#  if defined(__i386__) || defined(__x86_64__)
-#    define TEST_X86_32_AND_64 1
-#  endif  // defined(__i386__) || defined(__x86_64__)
+#  define TEST_WITH_LABEL_ADDRESSES
 #endif
 
 // A wrapper function for Symbolize() to make the unit test simple.
@@ -294,22 +292,24 @@ TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
 extern "C" {
 inline void* always_inline inline_func() {
   register void *pc = NULL;
-#ifdef TEST_X86_32_AND_64
-  __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
+#ifdef TEST_WITH_LABEL_ADDRESSES
+  pc = &&curr_pc;
+  curr_pc:
 #endif
   return pc;
 }
 
 void* ATTRIBUTE_NOINLINE non_inline_func() {
   register void *pc = NULL;
-#ifdef TEST_X86_32_AND_64
-  __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
+#ifdef TEST_WITH_LABEL_ADDRESSES
+  pc = &&curr_pc;
+  curr_pc:
 #endif
   return pc;
 }
 
 void ATTRIBUTE_NOINLINE TestWithPCInsideNonInlineFunction() {
-#if defined(TEST_X86_32_AND_64) && defined(HAVE_ATTRIBUTE_NOINLINE)
+#if defined(TEST_WITH_LABEL_ADDRESSES) && defined(HAVE_ATTRIBUTE_NOINLINE)
   void *pc = non_inline_func();
   const char *symbol = TrySymbolize(pc);
   CHECK(symbol != NULL);
@@ -319,7 +319,7 @@ void ATTRIBUTE_NOINLINE TestWithPCInsideNonInlineFunction() {
 }
 
 void ATTRIBUTE_NOINLINE TestWithPCInsideInlineFunction() {
-#if defined(TEST_X86_32_AND_64) && defined(HAVE_ALWAYS_INLINE)
+#if defined(TEST_WITH_LABEL_ADDRESSES) && defined(HAVE_ALWAYS_INLINE)
   void *pc = inline_func();  // Must be inlined.
   const char *symbol = TrySymbolize(pc);
   CHECK(symbol != NULL);
