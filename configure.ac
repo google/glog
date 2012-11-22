@@ -44,6 +44,8 @@ AC_CHECK_HEADERS(pwd.h)
 AC_CHECK_HEADERS(syslog.h)
 AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(glob.h)
+# For backtrace with gcc.
+AC_CHECK_HEADERS(unwind.h)
 
 AC_CHECK_SIZEOF(void *)
 
