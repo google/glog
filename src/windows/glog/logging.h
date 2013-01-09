@@ -43,17 +43,12 @@
 #include <errno.h>
 #include <string.h>
 #include <time.h>
+#include <iosfwd>
+#include <ostream>
+#include <sstream>
 #include <string>
 #if 0
 # include <unistd.h>
-#endif
-#ifdef __DEPRECATED
-// Make GCC quiet.
-# undef __DEPRECATED
-# include <strstream>
-# define __DEPRECATED
-#else
-# include <strstream>
 #endif
 #include <vector>
 
@@ -138,8 +133,12 @@ typedef unsigned __int64 uint64;
 #ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
 #if 0
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) (__builtin_expect(x, 0))
+#define GOOGLE_PREDICT_FALSE(x) (__builtin_expect(x, 0))
+#define GOOGLE_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
 #else
 #define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) x
+#define GOOGLE_PREDICT_FALSE(x) x
+#define GOOGLE_PREDICT_TRUE(x) x
 #endif
 #endif
 
@@ -610,18 +609,68 @@ inline std::ostream& operator<<(
 
 namespace google {
 
-// Build the error message string.
-template<class t1, class t2>
-std::string* MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
-  // It means that we cannot use stl_logging if compiler doesn't
-  // support using expression for operator.
-  // TODO(hamaji): Figure out a way to fix.
-#if 1
-  using ::operator<<;
-#endif
-  std::strstream ss;
-  ss << names << " (" << v1 << " vs. " << v2 << ")";
-  return new std::string(ss.str(), static_cast<unsigned int>(ss.pcount()));
+// This formats a value for a failing CHECK_XX statement.  Ordinarily,
+// it uses the definition for operator<<, with a few special cases below.
+template <typename T>
+inline void MakeCheckOpValueString(std::ostream* os, const T& v) {
+  (*os) << v;
+}
+
+// Overrides for char types provide readable values for unprintable
+// characters.
+template <>
+void MakeCheckOpValueString(std::ostream* os, const char& v);
+template <>
+void MakeCheckOpValueString(std::ostream* os, const signed char& v);
+template <>
+void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
+
+// Build the error message string. Specify no inlining for code size.
+template <typename T1, typename T2>
+std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
+    ;
+
+namespace base {
+namespace internal {
+
+// If "s" is less than base_logging::INFO, returns base_logging::INFO.
+// If "s" is greater than base_logging::FATAL, returns
+// base_logging::ERROR.  Otherwise, returns "s".
+LogSeverity NormalizeSeverity(LogSeverity s);
+
+}  // namespace internal
+
+// A helper class for formatting "expr (V1 vs. V2)" in a CHECK_XX
+// statement.  See MakeCheckOpString for sample usage.  Other
+// approaches were considered: use of a template method (e.g.,
+// base::BuildCheckOpString(exprtext, base::Print<T1>, &v1,
+// base::Print<T2>, &v2), however this approach has complications
+// related to volatile arguments and function-pointer arguments).
+class CheckOpMessageBuilder {
+ public:
+  // Inserts "exprtext" and " (" to the stream.
+  explicit CheckOpMessageBuilder(const char *exprtext);
+  // Deletes "stream_".
+  ~CheckOpMessageBuilder();
+  // For inserting the first variable.
+  std::ostream* ForVar1() { return stream_; }
+  // For inserting the second variable (adds an intermediate " vs. ").
+  std::ostream* ForVar2();
+  // Get the result (inserts the closing ")").
+  std::string* NewString();
+
+ private:
+  std::ostringstream *stream_;
+};
+
+}  // namespace base
+
+template <typename T1, typename T2>
+std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext) {
+  base::CheckOpMessageBuilder comb(exprtext);
+  MakeCheckOpValueString(comb.ForVar1(), v1);
+  MakeCheckOpValueString(comb.ForVar2(), v2);
+  return comb.NewString();
 }
 
 // Helper functions for CHECK_OP macro.
@@ -629,26 +678,26 @@ std::string* MakeCheckOpString(const t1& v1, const t2& v2, const char* names) {
 // will not instantiate the template version of the function on values of
 // unnamed enum type - see comment below.
 #define DEFINE_CHECK_OP_IMPL(name, op) \
-  template <class t1, class t2> \
-  inline std::string* Check##name##Impl(const t1& v1, const t2& v2, \
-                                        const char* names) { \
-    if (v1 op v2) return NULL; \
-    else return MakeCheckOpString(v1, v2, names); \
+  template <typename T1, typename T2> \
+  inline std::string* name##Impl(const T1& v1, const T2& v2,    \
+                            const char* exprtext) { \
+    if (GOOGLE_PREDICT_TRUE(v1 op v2)) return NULL; \
+    else return MakeCheckOpString(v1, v2, exprtext); \
   } \
-  inline std::string* Check##name##Impl(int v1, int v2, const char* names) { \
-    return Check##name##Impl<int, int>(v1, v2, names); \
+  inline std::string* name##Impl(int v1, int v2, const char* exprtext) { \
+    return name##Impl<int, int>(v1, v2, exprtext); \
   }
 
-// Use _EQ, _NE, _LE, etc. in case the file including base/logging.h
-// provides its own #defines for the simpler names EQ, NE, LE, etc.
+// We use the full name Check_EQ, Check_NE, etc. in case the file including
+// base/logging.h provides its own #defines for the simpler names EQ, NE, etc.
 // This happens if, for example, those are used as token names in a
 // yacc grammar.
-DEFINE_CHECK_OP_IMPL(_EQ, ==)
-DEFINE_CHECK_OP_IMPL(_NE, !=)
-DEFINE_CHECK_OP_IMPL(_LE, <=)
-DEFINE_CHECK_OP_IMPL(_LT, < )
-DEFINE_CHECK_OP_IMPL(_GE, >=)
-DEFINE_CHECK_OP_IMPL(_GT, > )
+DEFINE_CHECK_OP_IMPL(Check_EQ, ==)  // Compilation error with CHECK_EQ(NULL, x)?
+DEFINE_CHECK_OP_IMPL(Check_NE, !=)  // Use CHECK(x == NULL) instead.
+DEFINE_CHECK_OP_IMPL(Check_LE, <=)
+DEFINE_CHECK_OP_IMPL(Check_LT, < )
+DEFINE_CHECK_OP_IMPL(Check_GE, >=)
+DEFINE_CHECK_OP_IMPL(Check_GT, > )
 #undef DEFINE_CHECK_OP_IMPL
 
 // Helper macro for binary operators.
@@ -1026,6 +1075,29 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 #define VLOG_IF_EVERY_N(verboselevel, condition, n) \
   LOG_IF_EVERY_N(INFO, (condition) && VLOG_IS_ON(verboselevel), n)
 
+namespace base_logging {
+
+// LogMessage::LogStream is a std::ostream backed by this streambuf.
+// This class ignores overflow and leaves two bytes at the end of the
+// buffer to allow for a '\n' and '\0'.
+class LogStreamBuf : public std::streambuf {
+ public:
+  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\n'.
+  LogStreamBuf(char *buf, int len) {
+    setp(buf, buf + len - 2);
+  }
+  // This effectively ignores overflow.
+  virtual int_type overflow(int_type ch) {
+    return ch;
+  }
+
+  // Legacy public ostrstream method.
+  size_t pcount() const { return pptr() - pbase(); }
+  char* pbase() const { return std::streambuf::pbase(); }
+};
+
+}  // namespace base_logging
+
 //
 // This class more or less represents a particular log message.  You
 // create an instance of LogMessage and then stream stuff to it.
@@ -1055,22 +1127,30 @@ public:
 #ifdef _MSC_VER
 # pragma warning(disable: 4275)
 #endif
-  class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostrstream {
+  class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostream {
 #ifdef _MSC_VER
 # pragma warning(default: 4275)
 #endif
   public:
-    LogStream(char *buf, int len, int ctr_in)
-      : ostrstream(buf, len),
-        ctr_(ctr_in) {
-      self_ = this;
+    LogStream(char *buf, int len, int ctr)
+        : std::ostream(NULL),
+          streambuf_(buf, len),
+          ctr_(ctr),
+          self_(this) {
+      rdbuf(&streambuf_);
     }
 
     int ctr() const { return ctr_; }
-    void set_ctr(int ctr_in) { ctr_ = ctr_in; }
+    void set_ctr(int ctr) { ctr_ = ctr; }
     LogStream* self() const { return self_; }
 
+    // Legacy std::streambuf methods.
+    size_t pcount() const { return streambuf_.pcount(); }
+    char* pbase() const { return streambuf_.pbase(); }
+    char* str() const { return pbase(); }
+
   private:
+    base_logging::LogStreamBuf streambuf_;
     int ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
   };

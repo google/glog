@@ -415,6 +415,7 @@ ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
+ac_cv___attribute___noinline = @ac_cv___attribute___noinline@
 ac_cv___attribute___noreturn = @ac_cv___attribute___noreturn@
 ac_cv___attribute___printf_4_5 = @ac_cv___attribute___printf_4_5@
 ac_cv_cxx_using_operator = @ac_cv_cxx_using_operator@

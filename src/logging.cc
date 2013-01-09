@@ -68,7 +68,6 @@
 
 using std::string;
 using std::vector;
-using std::ostrstream;
 using std::setw;
 using std::setfill;
 using std::hex;
@@ -76,7 +75,6 @@ using std::dec;
 using std::min;
 using std::ostream;
 using std::ostringstream;
-using std::strstream;
 
 using std::FILE;
 using std::fwrite;
@@ -289,7 +287,7 @@ class LogFileObject : public base::Logger {
   // Actually create a logfile using the value of base_filename_ and the
   // supplied argument time_pid_string
   // REQUIRES: lock_ is held
-  bool CreateLogfile(const char* time_pid_string);
+  bool CreateLogfile(const string& time_pid_string);
 };
 
 }  // namespace
@@ -701,7 +699,7 @@ void LogFileObject::FlushUnlocked(){
   next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
 }
 
-bool LogFileObject::CreateLogfile(const char* time_pid_string) {
+bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   string string_filename = base_filename_+filename_extension_+
                            time_pid_string;
   const char* filename = string_filename.c_str();
@@ -789,24 +787,24 @@ void LogFileObject::Write(bool force_flush,
     localtime_r(&timestamp, &tm_time);
 
     // The logfile's filename will have the date/time & pid in it
-    char time_pid_string[256];  // More than enough chars for time, pid, \0
-    ostrstream time_pid_stream(time_pid_string, sizeof(time_pid_string));
+    ostringstream time_pid_stream;
     time_pid_stream.fill('0');
     time_pid_stream << 1900+tm_time.tm_year
-		    << setw(2) << 1+tm_time.tm_mon
-		    << setw(2) << tm_time.tm_mday
-		    << '-'
-		    << setw(2) << tm_time.tm_hour
-		    << setw(2) << tm_time.tm_min
-		    << setw(2) << tm_time.tm_sec
-		    << '.'
-		    << GetMainThreadPid()
-		    << '\0';
+                    << setw(2) << 1+tm_time.tm_mon
+                    << setw(2) << tm_time.tm_mday
+                    << '-'
+                    << setw(2) << tm_time.tm_hour
+                    << setw(2) << tm_time.tm_min
+                    << setw(2) << tm_time.tm_sec
+                    << '.'
+                    << GetMainThreadPid();
+    const string& time_pid_string = time_pid_stream.str();
 
     if (base_filename_selected_) {
       if (!CreateLogfile(time_pid_string)) {
         perror("Could not create log file");
-        fprintf(stderr, "COULD NOT CREATE LOGFILE '%s'!\n", time_pid_string);
+        fprintf(stderr, "COULD NOT CREATE LOGFILE '%s'!\n",
+                time_pid_string.c_str());
         return;
       }
     } else {
@@ -854,15 +852,14 @@ void LogFileObject::Write(bool force_flush,
       // If we never succeeded, we have to give up
       if ( success == false ) {
         perror("Could not create logging file");
-        fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE %s!", time_pid_string);
+        fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE %s!",
+                time_pid_string.c_str());
         return;
       }
     }
 
     // Write a header message into the log file
-    char file_header_string[512];  // Enough chars for time and binary info
-    ostrstream file_header_stream(file_header_string,
-                                  sizeof(file_header_string));
+    ostringstream file_header_stream;
     file_header_stream.fill('0');
     file_header_stream << "Log file created at: "
                        << 1900+tm_time.tm_year << '/'
@@ -875,10 +872,11 @@ void LogFileObject::Write(bool force_flush,
                        << "Running on machine: "
                        << LogDestination::hostname() << '\n'
                        << "Log line format: [IWEF]mmdd hh:mm:ss.uuuuuu "
-                       << "threadid file:line] msg" << '\n'
-                       << '\0';
-    int header_len = strlen(file_header_string);
-    fwrite(file_header_string, 1, header_len, file_);
+                       << "threadid file:line] msg" << '\n';
+    const string& file_header_string = file_header_stream.str();
+
+    const int header_len = file_header_string.size();
+    fwrite(file_header_string.data(), 1, header_len, file_);
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
   }
@@ -1741,11 +1739,11 @@ void TruncateStdoutStderr() {
     bool equal = s1 == s2 || (s1 && s2 && !func(s1, s2));               \
     if (equal == expected) return NULL;                                 \
     else {                                                              \
-      strstream ss;                                                     \
+      ostringstream ss;                                                 \
       if (!s1) s1 = "";                                                 \
       if (!s2) s2 = "";                                                 \
       ss << #name " failed: " << names << " (" << s1 << " vs. " << s2 << ")"; \
-      return new string(ss.str(), ss.pcount());                         \
+      return new string(ss.str());                                      \
     }                                                                   \
   }
 DEFINE_CHECK_STROP_IMPL(CHECK_STREQ, strcmp, true)
@@ -1814,6 +1812,56 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
 LogMessageFatal::~LogMessageFatal() {
     Flush();
     LogMessage::Fail();
+}
+
+namespace base {
+
+CheckOpMessageBuilder::CheckOpMessageBuilder(const char *exprtext)
+    : stream_(new ostringstream) {
+  *stream_ << exprtext << " (";
+}
+
+CheckOpMessageBuilder::~CheckOpMessageBuilder() {
+  delete stream_;
+}
+
+ostream* CheckOpMessageBuilder::ForVar2() {
+  *stream_ << " vs. ";
+  return stream_;
+}
+
+string* CheckOpMessageBuilder::NewString() {
+  *stream_ << ")";
+  return new string(stream_->str());
+}
+
+}  // namespace base
+
+template <>
+void MakeCheckOpValueString(std::ostream* os, const char& v) {
+  if (v >= 32 && v <= 126) {
+    (*os) << "'" << v << "'";
+  } else {
+    (*os) << "char value " << (short)v;
+  }
+}
+
+template <>
+void MakeCheckOpValueString(std::ostream* os, const signed char& v) {
+  if (v >= 32 && v <= 126) {
+    (*os) << "'" << v << "'";
+  } else {
+    (*os) << "signed char value " << (short)v;
+  }
+}
+
+template <>
+void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
+  if (v >= 32 && v <= 126) {
+    (*os) << "'" << v << "'";
+  } else {
+    (*os) << "unsigned char value " << (unsigned short)v;
+  }
 }
 
 void InitGoogleLogging(const char* argv0) {
