@@ -102,6 +102,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <unwind.h> header file. */
+#undef HAVE_UNWIND_H
+
 /* define if the compiler supports using expression for operator */
 #undef HAVE_USING_OPERATOR
 
@@ -162,11 +165,7 @@
 #undef VERSION
 
 /* Stops putting the code inside the Google namespace */
-#ifndef _END_GOOGLE_NAMESPACE_
 #undef _END_GOOGLE_NAMESPACE_
-#endif
 
 /* Puts following code inside the Google namespace */
-#ifndef _START_GOOGLE_NAMESPACE_
 #undef _START_GOOGLE_NAMESPACE_
-#endif
