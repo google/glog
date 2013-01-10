@@ -1215,12 +1215,14 @@ public:
   // Call abort() or similar to perform LOG(FATAL) crash.
   static void Fail() @ac_cv___attribute___noreturn@;
 
-  std::ostream& stream() { return *(data_->stream_); }
+  std::ostream& stream();
 
-  int preserved_errno() const { return data_->preserved_errno_; }
+  int preserved_errno() const;
 
   // Must be called without the log_mutex held.  (L < log_mutex)
   static int64 num_messages(int severity);
+
+  struct LogMessageData;
 
 private:
   // Fully internal SendMethod cases:
@@ -1243,41 +1245,6 @@ private:
 
   // We keep the data in a separate struct so that each instance of
   // LogMessage uses less stack space.
-  struct GOOGLE_GLOG_DLL_DECL LogMessageData {
-    LogMessageData() {};
-
-    int preserved_errno_;      // preserved errno
-    char* buf_;
-    char* message_text_;  // Complete message text (points to selected buffer)
-    LogStream* stream_alloc_;
-    LogStream* stream_;
-    char severity_;      // What level is this LogMessage logged at?
-    int line_;                 // line number where logging call is.
-    void (LogMessage::*send_method_)();  // Call this in destructor to send
-    union {  // At most one of these is used: union to keep the size low.
-      LogSink* sink_;             // NULL or sink to send message to
-      std::vector<std::string>* outvec_; // NULL or vector to push message onto
-      std::string* message_;             // NULL or string to write message into
-    };
-    time_t timestamp_;            // Time of creation of LogMessage
-    struct ::tm tm_time_;         // Time of creation of LogMessage
-    size_t num_prefix_chars_;     // # of chars of prefix in this message
-    size_t num_chars_to_log_;     // # of chars of msg to send to log
-    size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
-    const char* basename_;        // basename of file that called LOG
-    const char* fullname_;        // fullname of file that called LOG
-    bool has_been_flushed_;       // false => data has not been flushed
-    bool first_fatal_;            // true => this was first fatal msg
-
-    ~LogMessageData();
-   private:
-    LogMessageData(const LogMessageData&);
-    void operator=(const LogMessageData&);
-  };
-
-  static LogMessageData fatal_msg_data_exclusive_;
-  static LogMessageData fatal_msg_data_shared_;
-
   LogMessageData* allocated_;
   LogMessageData* data_;
 

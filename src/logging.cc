@@ -206,6 +206,39 @@ static int32 MaxLogSize() {
   return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
 }
 
+struct LogMessage::LogMessageData  {
+  LogMessageData() {};
+
+  int preserved_errno_;      // preserved errno
+  char* buf_;                   // buffer space for non FATAL messages
+  char* message_text_;  // Complete message text (points to selected buffer)
+  LogStream* stream_alloc_;
+  LogStream* stream_;
+  char severity_;      // What level is this LogMessage logged at?
+  int line_;                 // line number where logging call is.
+  void (LogMessage::*send_method_)();  // Call this in destructor to send
+  union {  // At most one of these is used: union to keep the size low.
+    LogSink* sink_;             // NULL or sink to send message to
+    std::vector<std::string>* outvec_; // NULL or vector to push message onto
+    std::string* message_;             // NULL or string to write message into
+  };
+  time_t timestamp_;            // Time of creation of LogMessage
+  struct ::tm tm_time_;         // Time of creation of LogMessage
+  size_t num_prefix_chars_;     // # of chars of prefix in this message
+  size_t num_chars_to_log_;     // # of chars of msg to send to log
+  size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
+  const char* basename_;        // basename of file that called LOG
+  const char* fullname_;        // fullname of file that called LOG
+  bool has_been_flushed_;       // false => data has not been flushed
+  bool first_fatal_;            // true => this was first fatal msg
+
+  ~LogMessageData();
+
+ private:
+  LogMessageData(const LogMessageData&);
+  void operator=(const LogMessageData&);
+};
+
 // A mutex that allows only one thread to log at a time, to keep things from
 // getting jumbled.  Some other very uncommon logging operations (like
 // changing the destination file for log messages of a given severity) also
@@ -943,8 +976,8 @@ static LogMessage::LogStream fatal_msg_stream_exclusive(
     fatal_msg_buf_exclusive, LogMessage::kMaxLogMessageLen, 0);
 static LogMessage::LogStream fatal_msg_stream_shared(
     fatal_msg_buf_shared, LogMessage::kMaxLogMessageLen, 0);
-LogMessage::LogMessageData LogMessage::fatal_msg_data_exclusive_;
-LogMessage::LogMessageData LogMessage::fatal_msg_data_shared_;
+static LogMessage::LogMessageData fatal_msg_data_exclusive;
+static LogMessage::LogMessageData fatal_msg_data_shared;
 
 LogMessage::LogMessageData::~LogMessageData() {
   delete[] buf_;
@@ -952,40 +985,47 @@ LogMessage::LogMessageData::~LogMessageData() {
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-		       int ctr, void (LogMessage::*send_method)()) {
+                       int ctr, void (LogMessage::*send_method)())
+    : allocated_(NULL) {
   Init(file, line, severity, send_method);
   data_->stream_->set_ctr(ctr);
 }
 
 LogMessage::LogMessage(const char* file, int line,
-                       const CheckOpString& result) {
+                       const CheckOpString& result)
+    : allocated_(NULL) {
   Init(file, line, GLOG_FATAL, &LogMessage::SendToLog);
   stream() << "Check failed: " << (*result.str_) << " ";
 }
 
-LogMessage::LogMessage(const char* file, int line) {
+LogMessage::LogMessage(const char* file, int line)
+    : allocated_(NULL) {
   Init(file, line, GLOG_INFO, &LogMessage::SendToLog);
 }
 
-LogMessage::LogMessage(const char* file, int line, LogSeverity severity) {
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity)
+    : allocated_(NULL) {
   Init(file, line, severity, &LogMessage::SendToLog);
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       LogSink* sink, bool also_send_to_log) {
+                       LogSink* sink, bool also_send_to_log)
+    : allocated_(NULL) {
   Init(file, line, severity, also_send_to_log ? &LogMessage::SendToSinkAndLog :
                                                 &LogMessage::SendToSink);
   data_->sink_ = sink;  // override Init()'s setting to NULL
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       vector<string> *outvec) {
+                       vector<string> *outvec)
+    : allocated_(NULL) {
   Init(file, line, severity, &LogMessage::SaveOrSendToLog);
   data_->outvec_ = outvec; // override Init()'s setting to NULL
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       string *message) {
+                       string *message)
+    : allocated_(NULL) {
   Init(file, line, severity, &LogMessage::WriteToStringAndLog);
   data_->message_ = message;  // override Init()'s setting to NULL
 }
@@ -1008,12 +1048,12 @@ void LogMessage::Init(const char* file,
     MutexLock l(&fatal_msg_lock);
     if (fatal_msg_exclusive) {
       fatal_msg_exclusive = false;
-      data_ = &fatal_msg_data_exclusive_;
+      data_ = &fatal_msg_data_exclusive;
       data_->message_text_ = fatal_msg_buf_exclusive;
       data_->stream_ = &fatal_msg_stream_exclusive;
       data_->first_fatal_ = true;
     } else {
-      data_ = &fatal_msg_data_shared_;
+      data_ = &fatal_msg_data_shared;
       data_->message_text_ = fatal_msg_buf_shared;
       data_->stream_ = &fatal_msg_stream_shared;
       data_->first_fatal_ = false;
@@ -1077,6 +1117,14 @@ void LogMessage::Init(const char* file,
 LogMessage::~LogMessage() {
   Flush();
   delete allocated_;
+}
+
+int LogMessage::preserved_errno() const {
+  return data_->preserved_errno_;
+}
+
+ostream& LogMessage::stream() {
+  return *(data_->stream_);
 }
 
 // Flush buffered message, called by the destructor, or any other function
@@ -1244,10 +1292,10 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
 
 void LogMessage::RecordCrashReason(
     glog_internal_namespace_::CrashReason* reason) {
-  reason->filename = fatal_msg_data_exclusive_.fullname_;
-  reason->line_number = fatal_msg_data_exclusive_.line_;
+  reason->filename = fatal_msg_data_exclusive.fullname_;
+  reason->line_number = fatal_msg_data_exclusive.line_;
   reason->message = fatal_msg_buf_exclusive +
-                    fatal_msg_data_exclusive_.num_prefix_chars_;
+                    fatal_msg_data_exclusive.num_prefix_chars_;
 #ifdef HAVE_STACKTRACE
   // Retrieve the stack trace, omitting the logging frames that got us here.
   reason->depth = GetStackTrace(reason->stack, ARRAYSIZE(reason->stack), 4);
