@@ -102,6 +102,8 @@ GLOG_DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
                  "log messages go to stderr instead of logfiles");
 GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
                  "log messages go to stderr in addition to logfiles");
+GLOG_DEFINE_bool(colorstderr, false,
+                 "color messages logged to stderr (if supported by terminal)");
 #ifdef OS_LINUX
 GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
                  "Logs can grow very quickly and they are rarely read before they "
@@ -199,7 +201,85 @@ static void GetHostName(string* hostname) {
 #endif
 }
 
+// Returns true iff terminal supports using colors in output.
+static bool TerminalSupportsColor() {
+  bool term_supports_color = false;
+#ifdef OS_WINDOWS
+  // on Windows TERM variable is usually not set, but the console does
+  // support colors.
+  term_supports_color = true;
+#else
+  // On non-Windows platforms, we rely on the TERM variable.
+  const char* const term = getenv("TERM");
+  if (term != NULL && term[0] != '\0') {
+    term_supports_color =
+      !strcmp(term, "xterm") ||
+      !strcmp(term, "xterm-color") ||
+      !strcmp(term, "xterm-256color") ||
+      !strcmp(term, "screen") ||
+      !strcmp(term, "linux") ||
+      !strcmp(term, "cygwin");
+  }
+#endif
+  return term_supports_color;
+}
+
 _START_GOOGLE_NAMESPACE_
+
+enum GLogColor {
+  COLOR_DEFAULT,
+  COLOR_RED,
+  COLOR_GREEN,
+  COLOR_YELLOW
+};
+
+static GLogColor SeverityToColor(LogSeverity severity) {
+  assert(severity >= 0 && severity < NUM_SEVERITIES);
+  GLogColor color = COLOR_DEFAULT;
+  switch (severity) {
+  case GLOG_INFO:
+    color = COLOR_DEFAULT;
+    break;
+  case GLOG_WARNING:
+    color = COLOR_YELLOW;
+    break;
+  case GLOG_ERROR:
+  case GLOG_FATAL:
+    color = COLOR_RED;
+    break;
+  default:
+    // should never get here.
+    assert(false);
+  }
+  return color;
+}
+
+#ifdef OS_WINDOWS
+
+// Returns the character attribute for the given color.
+WORD GetColorAttribute(GLogColor color) {
+  switch (color) {
+    case COLOR_RED:    return FOREGROUND_RED;
+    case COLOR_GREEN:  return FOREGROUND_GREEN;
+    case COLOR_YELLOW: return FOREGROUND_RED | FOREGROUND_GREEN;
+    default:           return 0;
+  }
+}
+
+#else
+
+// Returns the ANSI color code for the given color.
+const char* GetAnsiColorCode(GLogColor color) {
+  switch (color) {
+  case COLOR_RED:     return "1";
+  case COLOR_GREEN:   return "2";
+  case COLOR_YELLOW:  return "3";
+  case COLOR_DEFAULT:  return "";
+  };
+  return NULL; // stop warning about return type.
+}
+
+#endif  // OS_WINDOWS
 
 // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
 static int32 MaxLogSize() {
@@ -353,6 +433,9 @@ class LogDestination {
   static const int kNetworkBytes = 1400;
 
   static const string& hostname();
+  static const bool& terminal_supports_color() {
+    return terminal_supports_color_;
+  }
 
   static void DeleteLogDestinations();
 
@@ -403,6 +486,7 @@ class LogDestination {
   static LogSeverity email_logging_severity_;
   static string addresses_;
   static string hostname_;
+  static bool terminal_supports_color_;
 
   // arbitrary global logging destinations.
   static vector<LogSink*>* sinks_;
@@ -424,6 +508,7 @@ string LogDestination::hostname_;
 
 vector<LogSink*>* LogDestination::sinks_ = NULL;
 Mutex LogDestination::sink_mutex_;
+bool LogDestination::terminal_supports_color_ = TerminalSupportsColor();
 
 /* static */
 const string& LogDestination::hostname() {
@@ -544,6 +629,38 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
   LogDestination::addresses_ = addresses;
 }
 
+static void ColoredWriteToStderr(const char* message, size_t len, GLogColor color) {
+  // Avoid using cerr from this module since we may get called during
+  // exit code, and cerr may be partially or fully destroyed by then.
+  if ( COLOR_DEFAULT == color ) {
+    fwrite(message, len, 1, stderr);
+    return;
+  }
+#ifdef OS_WINDOWS
+  const HANDLE stderr_handle = GetStdHandle(STD_ERROR_HANDLE);
+
+  // Gets the current text color.
+  CONSOLE_SCREEN_BUFFER_INFO buffer_info;
+  GetConsoleScreenBufferInfo(stderr_handle, &buffer_info);
+  const WORD old_color_attrs = buffer_info.wAttributes;
+
+  // We need to flush the stream buffers into the console before each
+  // SetConsoleTextAttribute call lest it affect the text that is already
+  // printed but has not yet reached the console.
+  fflush(stderr);
+  SetConsoleTextAttribute(stderr_handle,
+                          GetColorAttribute(color) | FOREGROUND_INTENSITY);
+  fwrite(message, len, 1, stderr);
+  fflush(stderr);
+  // Restores the text color.
+  SetConsoleTextAttribute(stderr_handle, old_color_attrs);
+#else
+  fprintf(stderr, "\033[0;3%sm", GetAnsiColorCode(color));
+  fwrite(message, len, 1, stderr);
+  fprintf(stderr, "\033[m");  // Resets the terminal to default.
+#endif  // OS_WINDOWS
+}
+
 static void WriteToStderr(const char* message, size_t len) {
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
@@ -553,7 +670,10 @@ static void WriteToStderr(const char* message, size_t len) {
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
 					     const char* message, size_t len) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
-    WriteToStderr(message, len);
+    const GLogColor color =
+      (terminal_supports_color_ && FLAGS_colorstderr) ?
+      SeverityToColor(severity) : COLOR_DEFAULT;
+    ColoredWriteToStderr(message, len, color);
 #ifdef OS_WINDOWS
     // On Windows, also output to the debugger
     ::OutputDebugStringA(string(message,len).c_str());
@@ -602,12 +722,15 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
                                              const char* message,
                                              size_t len) {
 
-  if ( FLAGS_logtostderr )            // global flag: never log to file
-    WriteToStderr(message, len);
-  else
+  if ( FLAGS_logtostderr ) {           // global flag: never log to file
+    const GLogColor color =
+      (terminal_supports_color_ && FLAGS_colorstderr) ?
+      SeverityToColor(severity) : COLOR_DEFAULT;
+    ColoredWriteToStderr(message, len, color);
+  } else {
     for (int i = severity; i >= 0; --i)
       LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
-
+  }
 }
 
 inline void LogDestination::LogToSinks(LogSeverity severity,
@@ -1191,7 +1314,7 @@ void ReprintFatalMessage() {
   if (fatal_message[0]) {
     const int n = strlen(fatal_message);
     if (!FLAGS_logtostderr) {
-      // Also write to stderr
+      // Also write to stderr (don't color to avoid terminal checks)
       WriteToStderr(fatal_message, n);
     }
     LogDestination::LogToAllLogfiles(GLOG_ERROR, fatal_time, fatal_message, n);
@@ -1220,7 +1343,10 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   // file if we haven't parsed the command line flags to get the
   // program name.
   if (FLAGS_logtostderr || !IsGoogleLoggingInitialized()) {
-    WriteToStderr(data_->message_text_, data_->num_chars_to_log_);
+    const GLogColor color =
+      (LogDestination::terminal_supports_color() && FLAGS_colorstderr) ?
+      SeverityToColor(data_->severity_) : COLOR_DEFAULT;
+    ColoredWriteToStderr(data_->message_text_, data_->num_chars_to_log_, color);
 
     // this could be protected by a flag if necessary.
     LogDestination::LogToSinks(data_->severity_,
