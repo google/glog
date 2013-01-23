@@ -102,7 +102,7 @@ GLOG_DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
                  "log messages go to stderr instead of logfiles");
 GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
                  "log messages go to stderr in addition to logfiles");
-GLOG_DEFINE_bool(colorstderr, false,
+GLOG_DEFINE_bool(colorlogtostderr, false,
                  "color messages logged to stderr (if supported by terminal)");
 #ifdef OS_LINUX
 GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
@@ -629,10 +629,15 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
   LogDestination::addresses_ = addresses;
 }
 
-static void ColoredWriteToStderr(const char* message, size_t len, GLogColor color) {
+static void ColoredWriteToStderr(LogSeverity severity,
+                                 const char* message, size_t len) {
+  const GLogColor color =
+      (LogDestination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
+      SeverityToColor(severity) : COLOR_DEFAULT;
+
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
-  if ( COLOR_DEFAULT == color ) {
+  if (COLOR_DEFAULT == color) {
     fwrite(message, len, 1, stderr);
     return;
   }
@@ -670,10 +675,7 @@ static void WriteToStderr(const char* message, size_t len) {
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
 					     const char* message, size_t len) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
-    const GLogColor color =
-      (terminal_supports_color_ && FLAGS_colorstderr) ?
-      SeverityToColor(severity) : COLOR_DEFAULT;
-    ColoredWriteToStderr(message, len, color);
+    ColoredWriteToStderr(severity, message, len);
 #ifdef OS_WINDOWS
     // On Windows, also output to the debugger
     ::OutputDebugStringA(string(message,len).c_str());
@@ -723,10 +725,7 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
                                              size_t len) {
 
   if ( FLAGS_logtostderr ) {           // global flag: never log to file
-    const GLogColor color =
-      (terminal_supports_color_ && FLAGS_colorstderr) ?
-      SeverityToColor(severity) : COLOR_DEFAULT;
-    ColoredWriteToStderr(message, len, color);
+    ColoredWriteToStderr(severity, message, len);
   } else {
     for (int i = severity; i >= 0; --i)
       LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
@@ -1343,10 +1342,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   // file if we haven't parsed the command line flags to get the
   // program name.
   if (FLAGS_logtostderr || !IsGoogleLoggingInitialized()) {
-    const GLogColor color =
-      (LogDestination::terminal_supports_color() && FLAGS_colorstderr) ?
-      SeverityToColor(data_->severity_) : COLOR_DEFAULT;
-    ColoredWriteToStderr(data_->message_text_, data_->num_chars_to_log_, color);
+    ColoredWriteToStderr(data_->severity_,
+                         data_->message_text_, data_->num_chars_to_log_);
 
     // this could be protected by a flag if necessary.
     LogDestination::LogToSinks(data_->severity_,

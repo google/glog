@@ -326,6 +326,9 @@ DECLARE_bool(logtostderr);
 // Set whether log messages go to stderr in addition to logfiles.
 DECLARE_bool(alsologtostderr);
 
+// Set color messages logged to stderr (if supported by terminal).
+DECLARE_bool(colorlogtostderr);
+
 // Log messages at a level >= this flag are automatically sent to
 // stderr in addition to log files.
 DECLARE_int32(stderrthreshold);
