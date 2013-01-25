@@ -168,6 +168,25 @@ See also <a href="#verbose">the section about verbose logging</a>.
 <p>There are some other flags defined in logging.cc.  Please grep the
 source code for "DEFINE_" to see a complete list of all flags.
 
+<p>You can also modify flag values in your program by modifying global
+variables <code>FLAGS_*</code> . Most settings start working
+immediately after you update <code>FLAGS_*</code> . The exceptions are
+the flags related to destination files. For example, you might want to
+set <code>FLAGS_log_dir</code> before
+calling <code>google::InitGoogleLogging</code> . Here is an example:
+
+<pre>
+   LOG(INFO) << "file";
+   // Most flags work immediately after updating values.
+   FLAGS_logtostderr = 1;
+   LOG(INFO) << "stderr";
+   FLAGS_logtostderr = 0;
+   // This won't change the log destination. If you want to set this
+   // value, you should do this before google::InitGoogleLogging .
+   FLAGS_log_dir = "/some/log/directory";
+   LOG(INFO) << "the same file";
+</pre>
+
 <h2><A NAME=conditional>Conditional / Occasional Logging</A></h2>
 
 <p>Sometimes, you may only want to log a message under certain
