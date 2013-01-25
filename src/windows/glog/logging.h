@@ -1041,7 +1041,7 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
   while (false) \
     GLOG_MSVC_POP_WARNING() CHECK_GT(val1, val2)
 
-#define DCHECK_NOTNULL(val) (val)
+#define DCHECK_NOTNULL(val) (void)(val)
 
 #define DCHECK_STREQ(str1, str2) \
   GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
