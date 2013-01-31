@@ -621,11 +621,11 @@ inline void MakeCheckOpValueString(std::ostream* os, const T& v) {
 
 // Overrides for char types provide readable values for unprintable
 // characters.
-template <>
+template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const char& v);
-template <>
+template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const signed char& v);
-template <>
+template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
 
 // Build the error message string. Specify no inlining for code size.
@@ -649,7 +649,7 @@ LogSeverity NormalizeSeverity(LogSeverity s);
 // base::BuildCheckOpString(exprtext, base::Print<T1>, &v1,
 // base::Print<T2>, &v2), however this approach has complications
 // related to volatile arguments and function-pointer arguments).
-class CheckOpMessageBuilder {
+class GOOGLE_GLOG_DLL_DECL CheckOpMessageBuilder {
  public:
   // Inserts "exprtext" and " (" to the stream.
   explicit CheckOpMessageBuilder(const char *exprtext);
