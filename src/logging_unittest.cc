@@ -178,6 +178,9 @@ int main(int argc, char **argv) {
 #ifdef HAVE_LIB_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
+  // Make sure stderr is not buffered as stderr seems to be buffered
+  // on recent windows.
+  setbuf(stderr, NULL);
 
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
