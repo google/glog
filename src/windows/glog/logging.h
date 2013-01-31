@@ -1041,7 +1041,9 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
   while (false) \
     GLOG_MSVC_POP_WARNING() CHECK_GT(val1, val2)
 
-#define DCHECK_NOTNULL(val) (void)(val)
+// You may see warnings in release mode if you don't use the return
+// value of DCHECK_NOTNULL. Please just use DCHECK for such cases.
+#define DCHECK_NOTNULL(val) (val)
 
 #define DCHECK_STREQ(str1, str2) \
   GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
