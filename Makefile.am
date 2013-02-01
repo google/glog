@@ -227,7 +227,8 @@ dist-hook:
 libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
-EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec packages/deb.sh packages/deb \
+EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec \
+	packages/deb.sh packages/deb/* \
 	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt \
 	src/windows/config.h src/windows/port.h src/windows/port.cc \
 	src/windows/preprocess.sh \
