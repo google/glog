@@ -111,7 +111,7 @@ done
 
 # Test for a case the program dies in a non-main thread.
 $BINARY die_in_thread 2> signalhandler.out3
-EXPECTED_TID="`sed 's/ .*//' signalhandler.out3`"
+EXPECTED_TID="`sed 's/ .*//; q' signalhandler.out3`"
 
 for pattern in SIGFPE DieInThread "TID $EXPECTED_TID" "Aborted at [0-9]"; do
   if ! grep --quiet "$pattern" signalhandler.out3; then
