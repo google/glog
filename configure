@@ -619,6 +619,7 @@ LIBOBJS
 GMOCK_LIBS
 GTEST_LIBS
 GFLAGS_LIBS
+MINGW_CFLAGS
 GMOCK_CFLAGS
 GTEST_CFLAGS
 GFLAGS_CFLAGS
@@ -15706,6 +15707,18 @@ fi
 done
 
 
+ac_fn_cxx_check_header_mongrel "$LINENO" "windows.h" "ac_cv_header_windows_h" "$ac_includes_default"
+if test "x$ac_cv_header_windows_h" = xyes; then :
+  ac_cv_have_windows_h=1
+else
+  ac_cv_have_windows_h=0
+fi
+
+
+if test x"$ac_cv_have_windows_h" = x"1"; then
+  MINGW_CFLAGS=-Isrc/windows
+fi
+
 # The cast to long int works around a bug in the HP C Compiler
 # version HP92453-01 B.11.11.23709.GP, which incorrectly rejects
 # declarations like `int a3[[(sizeof (unsigned char)) >= 0]];'.
@@ -15771,6 +15784,13 @@ $as_echo "#define HAVE_SIGALTSTACK 1" >>confdefs.h
 
 fi
 
+ac_fn_cxx_check_func "$LINENO" "sigaction" "ac_cv_func_sigaction"
+if test "x$ac_cv_func_sigaction" = xyes; then :
+
+$as_echo "#define HAVE_SIGACTION 1" >>confdefs.h
+
+fi
+
 ac_fn_cxx_check_func "$LINENO" "dladdr" "ac_cv_func_dladdr"
 if test "x$ac_cv_func_dladdr" = xyes; then :
 
@@ -15782,6 +15802,20 @@ ac_fn_cxx_check_func "$LINENO" "fcntl" "ac_cv_func_fcntl"
 if test "x$ac_cv_func_fcntl" = xyes; then :
 
 $as_echo "#define HAVE_FCNTL 1" >>confdefs.h
+
+fi
+
+ac_fn_cxx_check_func "$LINENO" "pread" "ac_cv_func_pread"
+if test "x$ac_cv_func_pread" = xyes; then :
+
+$as_echo "#define HAVE_PREAD 1" >>confdefs.h
+
+fi
+
+ac_fn_cxx_check_func "$LINENO" "pwrite" "ac_cv_func_pwrite"
+if test "x$ac_cv_func_pwrite" = xyes; then :
+
+$as_echo "#define HAVE_PWRITE 1" >>confdefs.h
 
 fi
 
@@ -16650,7 +16684,41 @@ $as_echo "no" >&6; }
 fi
 
 
-if test x"$GTEST_CONFIG" = "xyes"; then
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for main in -lgtest" >&5
+$as_echo_n "checking for main in -lgtest... " >&6; }
+if ${ac_cv_lib_gtest_main+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgtest  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+
+int
+main ()
+{
+return main ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"; then :
+  ac_cv_lib_gtest_main=yes
+else
+  ac_cv_lib_gtest_main=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gtest_main" >&5
+$as_echo "$ac_cv_lib_gtest_main" >&6; }
+if test "x$ac_cv_lib_gtest_main" = xyes; then :
+  have_gtest_lib="yes"
+fi
+
+if test x"$GTEST_CONFIG" = "xyes" -a x"$have_gtest_lib" = "xyes"; then
   GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
   GTEST_LIBS=`gtest-config --ldflags --libs`
 
@@ -17157,6 +17225,7 @@ _ACEOF
 
 
 # These are what's needed by logging.h.in and raw_logging.h.in
+
 
 
 

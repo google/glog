@@ -62,6 +62,8 @@
  * used by both C and C++ code, so we put all the C++ together.
  */
 
+#ifdef _MSC_VER
+
 /* 4244: otherwise we get problems when substracting two size_t's to an int
  * 4251: it's complaining about a private struct I've chosen not to dllexport
  * 4355: we use this in a constructor, but we do it safely
@@ -126,6 +128,8 @@ extern int safe_vsnprintf(char *str, size_t size,
 // ----------------------------------- SYSTEM/PROCESS
 typedef int pid_t;
 #define getpid  _getpid
+
+#endif  // _MSC_VER
 
 // ----------------------------------- THREADS
 typedef DWORD pthread_t;

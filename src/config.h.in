@@ -48,14 +48,23 @@
 /* define if the compiler implements namespaces */
 #undef HAVE_NAMESPACES
 
+/* Define if you have the 'pread' function */
+#undef HAVE_PREAD
+
 /* Define if you have POSIX threads libraries and header files. */
 #undef HAVE_PTHREAD
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #undef HAVE_PWD_H
 
+/* Define if you have the 'pwrite' function */
+#undef HAVE_PWRITE
+
 /* define if the compiler implements pthread_rwlock_* */
 #undef HAVE_RWLOCK
+
+/* Define if you have the 'sigaction' function */
+#undef HAVE_SIGACTION
 
 /* Define if you have the `sigaltstack' function */
 #undef HAVE_SIGALTSTACK

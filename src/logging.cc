@@ -179,6 +179,38 @@ GLOG_DEFINE_string(log_backtrace_at, "",
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
 
+#ifndef HAVE_PREAD
+static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
+  off_t orig_offset = lseek(fd, 0, SEEK_CUR);
+  if (orig_offset == (off_t)-1)
+    return -1;
+  if (lseek(fd, offset, SEEK_CUR) == (off_t)-1)
+    return -1;
+  ssize_t len = read(fd, buf, count);
+  if (len < 0)
+    return len;
+  if (lseek(fd, orig_offset, SEEK_SET) == (off_t)-1)
+    return -1;
+  return len;
+}
+#endif  // !HAVE_PREAD
+
+#ifndef HAVE_PWRITE
+static ssize_t pwrite(int fd, void* buf, size_t count, off_t offset) {
+  off_t orig_offset = lseek(fd, 0, SEEK_CUR);
+  if (orig_offset == (off_t)-1)
+    return -1;
+  if (lseek(fd, offset, SEEK_CUR) == (off_t)-1)
+    return -1;
+  ssize_t len = write(fd, buf, count);
+  if (len < 0)
+    return len;
+  if (lseek(fd, orig_offset, SEEK_SET) == (off_t)-1)
+    return -1;
+  return len;
+}
+#endif  // !HAVE_PWRITE
+
 static void GetHostName(string* hostname) {
 #if defined(HAVE_SYS_UTSNAME_H)
   struct utsname buf;
@@ -887,8 +919,10 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     linkpath += linkname;
     unlink(linkpath.c_str());                    // delete old one if it exists
 
+#if defined(OS_WINDOWS)
+    // TODO(hamaji): Create lnk file on Windows?
+#elif defined(HAVE_UNISTD_H)
     // We must have unistd.h.
-#ifdef HAVE_UNISTD_H
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
     const char *linkdest = slash ? (slash + 1) : filename;
@@ -1824,8 +1858,11 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
   int64 read_offset, write_offset;
   // Don't follow symlinks unless they're our own fd symlinks in /proc
   int flags = O_RDWR;
+  // TODO(hamaji): Support other environments.
+#ifdef OS_LINUX
   const char *procfd_prefix = "/proc/self/fd/";
   if (strncmp(procfd_prefix, path, strlen(procfd_prefix))) flags |= O_NOFOLLOW;
+#endif
 
   int fd = open(path, flags);
   if (fd == -1) {

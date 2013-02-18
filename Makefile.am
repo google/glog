@@ -51,7 +51,8 @@ lib_LTLIBRARIES =
 # The libraries libglog depends on.
 COMMON_LIBS = $(PTHREAD_LIBS) $(GFLAGS_LIBS) $(UNWIND_LIBS)
 # Compile switches for our unittest.
-TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS) $(AM_CXXFLAGS)
+TEST_CFLAGS = $(GTEST_CFLAGS) $(GMOCK_CFLAGS) $(GFLAGS_CFLAGS) \
+              $(MINGW_CFLAGS) $(AM_CXXFLAGS)
 # Libraries for our unittest.
 TEST_LIBS = $(GTEST_LIBS) $(GMOCK_LIBS) $(GFLAGS_LIBS)
 
@@ -195,7 +196,8 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/base/commandlineflags.h src/googletest.h
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
 
-libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) $(AM_CXXFLAGS) -DNDEBUG
+libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) $(MINGW_CFLAGS) \
+                      $(AM_CXXFLAGS) -DNDEBUG
 libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_LDFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 

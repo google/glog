@@ -136,6 +136,8 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
 static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
 
+  // TOOD(hamaji): Use signal instead of sigaction?
+#ifdef HAVE_SIGACTION
   // Set the default signal handler for SIGABRT, to avoid invoking our
   // own signal handler installed by InstallFailedSignalHandler().
   struct sigaction sig_action;
@@ -143,6 +145,7 @@ static void DumpStackTraceAndExit() {
   sigemptyset(&sig_action.sa_mask);
   sig_action.sa_handler = SIG_DFL;
   sigaction(SIGABRT, &sig_action, NULL);
+#endif  // HAVE_SIGACTION
 
   abort();
 }

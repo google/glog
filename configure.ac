@@ -47,6 +47,11 @@ AC_CHECK_HEADERS(glob.h)
 # For backtrace with gcc.
 AC_CHECK_HEADERS(unwind.h)
 
+AC_CHECK_HEADER(windows.h, ac_cv_have_windows_h=1, ac_cv_have_windows_h=0)
+if test x"$ac_cv_have_windows_h" = x"1"; then
+  MINGW_CFLAGS=-Isrc/windows
+fi
+
 AC_CHECK_SIZEOF(void *)
 
 # These are the types I need.  We look for them in either stdint.h,
@@ -58,12 +63,21 @@ AC_CHECK_TYPE(__uint16, ac_cv_have___uint16=1, ac_cv_have___uint16=0)
 AC_CHECK_FUNC(sigaltstack,
               AC_DEFINE(HAVE_SIGALTSTACK, 1,
                         [Define if you have the `sigaltstack' function]))
+AC_CHECK_FUNC(sigaction,
+              AC_DEFINE(HAVE_SIGACTION, 1,
+                        [Define if you have the 'sigaction' function]))
 AC_CHECK_FUNC(dladdr,
               AC_DEFINE(HAVE_DLADDR, 1,
                         [Define if you have the `dladdr' function]))
 AC_CHECK_FUNC(fcntl,
               AC_DEFINE(HAVE_FCNTL, 1,
                         [Define if you have the `fcntl' function]))
+AC_CHECK_FUNC(pread,
+              AC_DEFINE(HAVE_PREAD, 1,
+                        [Define if you have the 'pread' function]))
+AC_CHECK_FUNC(pwrite,
+              AC_DEFINE(HAVE_PWRITE, 1,
+                        [Define if you have the 'pwrite' function]))
 
 AX_C___ATTRIBUTE__
 # We only care about these two attributes.
@@ -139,7 +153,8 @@ LIBS="$SAVE_LIBS"
 #               once the m4 macro of Google Mocking becomes ready.
 # Check if there is Google Test library installed.
 AC_CHECK_PROG(GTEST_CONFIG, gtest-config, "yes")
-if test x"$GTEST_CONFIG" = "xyes"; then
+AC_CHECK_LIB(gtest, main, have_gtest_lib="yes")
+if test x"$GTEST_CONFIG" = "xyes" -a x"$have_gtest_lib" = "xyes"; then
   GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
   GTEST_LIBS=`gtest-config --ldflags --libs`
   AC_DEFINE(HAVE_LIB_GTEST, 1, [define if you have google gtest library])
@@ -211,6 +226,7 @@ AC_SUBST(ac_cv_have_libgflags)
 AC_SUBST(GFLAGS_CFLAGS)
 AC_SUBST(GTEST_CFLAGS)
 AC_SUBST(GMOCK_CFLAGS)
+AC_SUBST(MINGW_CFLAGS)
 AC_SUBST(GFLAGS_LIBS)
 AC_SUBST(GTEST_LIBS)
 AC_SUBST(GMOCK_LIBS)
