@@ -318,14 +318,17 @@ static int32 MaxLogSize() {
   return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
 }
 
+// An arbitrary limit on the length of a single log message.  This
+// is so that streaming can be done more efficiently.
+const size_t LogMessage::kMaxLogMessageLen = 30000;
+
 struct LogMessage::LogMessageData  {
-  LogMessageData() {};
+  LogMessageData();
 
   int preserved_errno_;      // preserved errno
-  char* buf_;                   // buffer space for non FATAL messages
-  char* message_text_;  // Complete message text (points to selected buffer)
-  LogStream* stream_alloc_;
-  LogStream* stream_;
+  // Buffer space; contains complete message text.
+  char message_text_[LogMessage::kMaxLogMessageLen+1];
+  LogStream stream_;
   char severity_;      // What level is this LogMessage logged at?
   int line_;                 // line number where logging call is.
   void (LogMessage::*send_method_)();  // Call this in destructor to send
@@ -343,8 +346,6 @@ struct LogMessage::LogMessageData  {
   const char* fullname_;        // fullname of file that called LOG
   bool has_been_flushed_;       // false => data has not been flushed
   bool first_fatal_;            // true => this was first fatal msg
-
-  ~LogMessageData();
 
  private:
   LogMessageData(const LogMessageData&);
@@ -1113,9 +1114,6 @@ void LogFileObject::Write(bool force_flush,
 
 }  // namespace
 
-// An arbitrary limit on the length of a single log message.  This
-// is so that streaming can be done more efficiently.
-const size_t LogMessage::kMaxLogMessageLen = 30000;
 
 // Static log data space to avoid alloc failures in a LOG(FATAL)
 //
@@ -1126,25 +1124,18 @@ const size_t LogMessage::kMaxLogMessageLen = 30000;
 static Mutex fatal_msg_lock;
 static CrashReason crash_reason;
 static bool fatal_msg_exclusive = true;
-static char fatal_msg_buf_exclusive[LogMessage::kMaxLogMessageLen+1];
-static char fatal_msg_buf_shared[LogMessage::kMaxLogMessageLen+1];
-static LogMessage::LogStream fatal_msg_stream_exclusive(
-    fatal_msg_buf_exclusive, LogMessage::kMaxLogMessageLen, 0);
-static LogMessage::LogStream fatal_msg_stream_shared(
-    fatal_msg_buf_shared, LogMessage::kMaxLogMessageLen, 0);
 static LogMessage::LogMessageData fatal_msg_data_exclusive;
 static LogMessage::LogMessageData fatal_msg_data_shared;
 
-LogMessage::LogMessageData::~LogMessageData() {
-  delete[] buf_;
-  delete stream_alloc_;
+LogMessage::LogMessageData::LogMessageData()
+  : stream_(message_text_, LogMessage::kMaxLogMessageLen, 0) {
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
                        int ctr, void (LogMessage::*send_method)())
     : allocated_(NULL) {
   Init(file, line, severity, send_method);
-  data_->stream_->set_ctr(ctr);
+  data_->stream_.set_ctr(ctr);
 }
 
 LogMessage::LogMessage(const char* file, int line,
@@ -1194,27 +1185,17 @@ void LogMessage::Init(const char* file,
   if (severity != GLOG_FATAL || !exit_on_dfatal) {
     allocated_ = new LogMessageData();
     data_ = allocated_;
-    data_->buf_ = new char[kMaxLogMessageLen+1];
-    data_->message_text_ = data_->buf_;
-    data_->stream_alloc_ =
-        new LogStream(data_->message_text_, kMaxLogMessageLen, 0);
-    data_->stream_ = data_->stream_alloc_;
     data_->first_fatal_ = false;
   } else {
     MutexLock l(&fatal_msg_lock);
     if (fatal_msg_exclusive) {
       fatal_msg_exclusive = false;
       data_ = &fatal_msg_data_exclusive;
-      data_->message_text_ = fatal_msg_buf_exclusive;
-      data_->stream_ = &fatal_msg_stream_exclusive;
       data_->first_fatal_ = true;
     } else {
       data_ = &fatal_msg_data_shared;
-      data_->message_text_ = fatal_msg_buf_shared;
-      data_->stream_ = &fatal_msg_stream_shared;
       data_->first_fatal_ = false;
     }
-    data_->stream_alloc_ = NULL;
   }
 
   stream().fill('0');
@@ -1255,7 +1236,7 @@ void LogMessage::Init(const char* file,
              << ' '
              << data_->basename_ << ':' << data_->line_ << "] ";
   }
-  data_->num_prefix_chars_ = data_->stream_->pcount();
+  data_->num_prefix_chars_ = data_->stream_.pcount();
 
   if (!FLAGS_log_backtrace_at.empty()) {
     char fileline[128];
@@ -1280,7 +1261,7 @@ int LogMessage::preserved_errno() const {
 }
 
 ostream& LogMessage::stream() {
-  return *(data_->stream_);
+  return data_->stream_;
 }
 
 // Flush buffered message, called by the destructor, or any other function
@@ -1289,7 +1270,7 @@ void LogMessage::Flush() {
   if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
     return;
 
-  data_->num_chars_to_log_ = data_->stream_->pcount();
+  data_->num_chars_to_log_ = data_->stream_.pcount();
   data_->num_chars_to_syslog_ =
     data_->num_chars_to_log_ - data_->num_prefix_chars_;
 
@@ -1339,7 +1320,7 @@ void LogMessage::Flush() {
 
 // Copy of first FATAL log message so that we can print it out again
 // after all the stack traces.  To preserve legacy behavior, we don't
-// use fatal_msg_buf_exclusive.
+// use fatal_msg_data_exclusive.
 static time_t fatal_time;
 static char fatal_message[256];
 
@@ -1451,7 +1432,7 @@ void LogMessage::RecordCrashReason(
     glog_internal_namespace_::CrashReason* reason) {
   reason->filename = fatal_msg_data_exclusive.fullname_;
   reason->line_number = fatal_msg_data_exclusive.line_;
-  reason->message = fatal_msg_buf_exclusive +
+  reason->message = fatal_msg_data_exclusive.message_text_ +
                     fatal_msg_data_exclusive.num_prefix_chars_;
 #ifdef HAVE_STACKTRACE
   // Retrieve the stack trace, omitting the logging frames that got us here.
