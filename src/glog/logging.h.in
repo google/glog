@@ -1528,8 +1528,12 @@ extern GOOGLE_GLOG_DLL_DECL void SetLogger(LogSeverity level, Logger* logger);
 // be set to an empty string, if this function failed. This means, in most
 // cases, you do not need to check the error code and you can directly
 // use the value of "buf". It will never have an undefined value.
+// DEPRECATED: Use StrError(int) instead.
 GOOGLE_GLOG_DLL_DECL int posix_strerror_r(int err, char *buf, size_t len);
 
+// A thread-safe replacement for strerror(). Returns a string describing the
+// given POSIX error code.
+GOOGLE_GLOG_DLL_DECL std::string StrError(int err);
 
 // A class for which we define operator<<, which does nothing.
 class GOOGLE_GLOG_DLL_DECL NullStream : public LogMessage::LogStream {

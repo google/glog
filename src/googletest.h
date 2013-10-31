@@ -450,19 +450,11 @@ static inline string Munge(const string& filename) {
     // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
     StringReplace(&line, " 0x", " ");
 
-    char errmsg_buf[100];
-    posix_strerror_r(0, errmsg_buf, sizeof(errmsg_buf));
-    if (*errmsg_buf == '\0') {
-      // MacOSX 10.4 and FreeBSD return empty string for errno=0.
-      // In such case, the we need to remove an extra space.
-      StringReplace(&line, "__SUCCESS__ ", "");
-    } else {
-      StringReplace(&line, "__SUCCESS__", errmsg_buf);
-    }
-    StringReplace(&line, "__ENOENT__", strerror(ENOENT));
-    StringReplace(&line, "__EINTR__", strerror(EINTR));
-    StringReplace(&line, "__ENXIO__", strerror(ENXIO));
-    StringReplace(&line, "__ENOEXEC__", strerror(ENOEXEC));
+    StringReplace(&line, "__SUCCESS__", StrError(0));
+    StringReplace(&line, "__ENOENT__", StrError(ENOENT));
+    StringReplace(&line, "__EINTR__", StrError(EINTR));
+    StringReplace(&line, "__ENXIO__", StrError(ENXIO));
+    StringReplace(&line, "__ENOEXEC__", StrError(ENOEXEC));
     result += line + "\n";
   }
   fclose(fp);

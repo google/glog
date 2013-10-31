@@ -1058,8 +1058,9 @@ TEST(Strerror, logging) {
   CHECK_STREQ(buf, "");
   CHECK_EQ(posix_strerror_r(errcode, buf, buf_size), 0);
   CHECK_STREQ(buf, msg);
-  free(msg);
   delete[] buf;
+  CHECK_EQ(msg, StrError(errcode));
+  free(msg);
 }
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and

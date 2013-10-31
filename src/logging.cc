@@ -1580,9 +1580,8 @@ ErrnoLogMessage::ErrnoLogMessage(const char* file, int line,
 ErrnoLogMessage::~ErrnoLogMessage() {
   // Don't access errno directly because it may have been altered
   // while streaming the message.
-  char buf[100];
-  posix_strerror_r(preserved_errno(), buf, sizeof(buf));
-  stream() << ": " << buf << " [" << preserved_errno() << "]";
+  stream() << ": " << StrError(preserved_errno()) << " ["
+           << preserved_errno() << "]";
 }
 
 void FlushLogFiles(LogSeverity min_severity) {
@@ -1711,13 +1710,11 @@ static bool SendEmailInternal(const char*dest, const char *subject,
       bool ok = pclose(pipe) != -1;
       if ( !ok ) {
         if ( use_logging ) {
-          char buf[100];
-          posix_strerror_r(errno, buf, sizeof(buf));
-          LOG(ERROR) << "Problems sending mail to " << dest << ": " << buf;
+          LOG(ERROR) << "Problems sending mail to " << dest << ": "
+                     << StrError(errno);
         } else {
-          char buf[100];
-          posix_strerror_r(errno, buf, sizeof(buf));
-          fprintf(stderr, "Problems sending mail to %s: %s\n", dest, buf);
+          fprintf(stderr, "Problems sending mail to %s: %s\n",
+                  dest, StrError(errno).c_str());
         }
       }
       return ok;
@@ -1989,6 +1986,15 @@ int posix_strerror_r(int err, char *buf, size_t len) {
       return 0;
     }
   }
+}
+
+string StrError(int err) {
+  char buf[100];
+  int rc = posix_strerror_r(err, buf, sizeof(buf));
+  if ((rc < 0) || (buf[0] == '\000')) {
+    snprintf(buf, sizeof(buf), "Error number %d", err);
+  }
+  return buf;
 }
 
 LogMessageFatal::LogMessageFatal(const char* file, int line) :
