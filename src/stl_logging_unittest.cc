@@ -31,23 +31,26 @@
 
 #ifdef HAVE_USING_OPERATOR
 
-#ifdef __GNUC__
-// C++0x isn't enabled by default.
-// # define GLOG_STL_LOGGING_FOR_UNORDERED
-# define GLOG_STL_LOGGING_FOR_TR1_UNORDERED
-# define GLOG_STL_LOGGING_FOR_EXT_HASH
-# define GLOG_STL_LOGGING_FOR_EXT_SLIST
-#endif
-
-#include "glog/stl_logging.h"
-
 #include <iostream>
 #include <map>
 #include <ostream>
 #include <string>
 #include <vector>
 
+#ifdef __GNUC__
+// C++0x isn't enabled by default in GCC and libc++ does not have
+// non-standard ext/* and tr1/unordered_*.
+# if defined(_LIBCPP_VERSION)
+#  define GLOG_STL_LOGGING_FOR_UNORDERED
+# else
+#  define GLOG_STL_LOGGING_FOR_EXT_HASH
+#  define GLOG_STL_LOGGING_FOR_EXT_SLIST
+#  define GLOG_STL_LOGGING_FOR_TR1_UNORDERED
+# endif
+#endif
+
 #include "glog/logging.h"
+#include "glog/stl_logging.h"
 #include "googletest.h"
 
 using namespace std;
