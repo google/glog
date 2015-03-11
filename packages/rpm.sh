@@ -45,7 +45,7 @@ rm -rf "$RPM_SOURCE_DIR" "$RPM_BUILD_DIR"
 mkdir "$RPM_SOURCE_DIR"
 mkdir "$RPM_BUILD_DIR"
 
-cp "$archive" "$RPM_SOURCE_DIR"
+cp "$archive" "$RPM_SOURCE_DIR"/v"$VERSION".tar.gz
 
 rpmbuild -bb rpm/rpm.spec \
   --define "NAME $PACKAGE" \

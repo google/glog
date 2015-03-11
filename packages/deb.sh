@@ -44,16 +44,18 @@ rm -rf tmp
 mkdir -p tmp
 cd tmp
 
+package="google-glog_$VERSION"
+
 # Debian has very specific requirements about the naming of build
 # directories, and tar archives. It also wants to write all generated
 # packages to the parent of the source directory. We accommodate these
 # requirements by building directly from the tar file.
-ln -s "${topdir}/${archive}.tar.gz" "${LIB}${archive}.orig.tar.gz"
-tar zfx "${LIB}${archive}.orig.tar.gz"
-[ -n "${LIB}" ] && mv "${archive}" "${LIB}${archive}"
-cd "${LIB}${archive}"
+ln -s "${topdir}/${archive}.tar.gz" "${LIB}${package}.orig.tar.gz"
+tar zfx "${LIB}${package}.orig.tar.gz"
+mv "${archive}" "${LIB}${package}"
+cd "${LIB}${package}"
 # This is one of those 'specific requirements': where the deb control files live
-ln -s "packages/deb" "debian"
+cp -a "packages/deb" "debian"
 
 # Now, we can call Debian's standard build tool
 debuild -uc -us
