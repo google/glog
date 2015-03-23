@@ -253,6 +253,7 @@ static bool TerminalSupportsColor() {
       !strcmp(term, "xterm") ||
       !strcmp(term, "xterm-color") ||
       !strcmp(term, "xterm-256color") ||
+      !strcmp(term, "screen-256color") ||
       !strcmp(term, "screen") ||
       !strcmp(term, "linux") ||
       !strcmp(term, "cygwin");
