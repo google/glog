@@ -31,6 +31,7 @@
 
 #ifdef HAVE_USING_OPERATOR
 
+#include <functional>
 #include <iostream>
 #include <map>
 #include <ostream>
