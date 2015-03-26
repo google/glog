@@ -41,6 +41,11 @@
 #include "googletest.h"
 #include "config.h"
 
+#ifdef HAVE_LIB_GFLAGS
+#include <gflags/gflags.h>
+using namespace GFLAGS_NAMESPACE;
+#endif
+
 GLOG_DEFINE_bool(demangle_filter, false,
                  "Run demangle_unittest in filter mode");
 

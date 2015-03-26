@@ -41,6 +41,11 @@
 #include "googletest.h"
 #include "config.h"
 
+#ifdef HAVE_LIB_GFLAGS
+#include <gflags/gflags.h>
+using namespace GFLAGS_NAMESPACE;
+#endif
+
 using namespace std;
 using namespace GOOGLE_NAMESPACE;
 

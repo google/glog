@@ -24,6 +24,8 @@ set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
 include (CMakePackageConfigHelpers)
 include (CPack)
 include (CheckCSourceCompiles)
@@ -36,6 +38,7 @@ include (CheckLibraryExists)
 include (CheckStructHasMember)
 include (CheckSymbolExists)
 include (CheckTypeSize)
+include (DetermineGflagsNamespace)
 
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
@@ -44,6 +47,7 @@ if (WITH_GFLAGS)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
+    determine_gflags_namespace (gflags_NAMESPACE)
   endif (gflags_FOUND)
 endif (WITH_GFLAGS)
 

@@ -28,10 +28,14 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: Shinichiro Hamaji
-
 #include "utilities.h"
 #include "googletest.h"
 #include "glog/logging.h"
+
+#ifdef HAVE_LIB_GFLAGS
+#include <gflags/gflags.h>
+using namespace GFLAGS_NAMESPACE;
+#endif
 
 using namespace GOOGLE_NAMESPACE;
 

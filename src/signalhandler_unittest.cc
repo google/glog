@@ -41,6 +41,11 @@
 #include <string>
 #include "glog/logging.h"
 
+#ifdef HAVE_LIB_GFLAGS
+#include <gflags/gflags.h>
+using namespace gflags;
+#endif
+
 using namespace GOOGLE_NAMESPACE;
 
 void* DieInThread(void*) {
