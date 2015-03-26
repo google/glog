@@ -1152,6 +1152,8 @@ public:
     char* str() const { return pbase(); }
 
   private:
+    LogStream(const LogStream&);
+    LogStream& operator=(const LogStream&);
     base_logging::LogStreamBuf streambuf_;
     int ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
