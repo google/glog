@@ -48,14 +48,6 @@
 #endif
 #include <vector>
 
-// Annoying stuff for windows -- makes sure clients can import these functions
-#ifndef GOOGLE_GLOG_DLL_DECL
-# if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
-# else
-#   define GOOGLE_GLOG_DLL_DECL
-# endif
-#endif
 #if defined(_MSC_VER)
 #define GLOG_MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) \
                                      __pragma(warning(disable:n))
@@ -63,6 +55,15 @@
 #else
 #define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
 #define GLOG_MSVC_POP_WARNING()
+#endif
+
+// Annoying stuff for windows -- makes sure clients can import these functions
+#ifndef GOOGLE_GLOG_DLL_DECL
+# if defined(_WIN32) && !defined(__CYGWIN__)
+#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+# else
+#   define GOOGLE_GLOG_DLL_DECL
+# endif
 #endif
 
 // We care a lot about number of bits things take up.  Unfortunately,
