@@ -95,6 +95,8 @@ check_function_exists (sigaction HAVE_SIGACTION)
 check_function_exists (sigaltstack HAVE_SIGALSTACK)
 
 check_cxx_compiler_flag (-Wno-deprecated HAVE_NO_DEPRECATED)
+check_cxx_compiler_flag (-Wno-unnamed-type-template-args
+    HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
 # NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
 # snprintf as an inline function
@@ -360,6 +362,10 @@ if (WIN32 AND HAVE_SNPRINTF)
   set_property (SOURCE src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
     HAVE_SNPRINTF)
 endif (WIN32 AND HAVE_SNPRINTF)
+
+if (HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
+  target_compile_options (glog PUBLIC -Wno-unnamed-type-template-args)
+endif (HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
 if (gflags_FOUND)
   target_include_directories (glog PUBLIC ${gflags_INCLUDE_DIR})
