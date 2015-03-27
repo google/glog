@@ -542,7 +542,7 @@ class LogSink;  // defined below
 //   vector<string> *outvec;
 // The cast is to disambiguate NULL arguments.
 #define LOG_STRING(severity, outvec) \
-  LOG_TO_STRING_##severity(static_cast<vector<string>*>(outvec)).stream()
+  LOG_TO_STRING_##severity(static_cast<std::vector<std::string>*>(outvec)).stream()
 
 #define LOG_IF(severity, condition) \
   !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
