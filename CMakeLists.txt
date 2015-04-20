@@ -370,6 +370,11 @@ endif (HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 if (gflags_FOUND)
   target_include_directories (glog PUBLIC ${gflags_INCLUDE_DIR})
   target_link_libraries (glog PUBLIC ${gflags_LIBRARIES})
+
+  if (NOT BUILD_SHARED_LIBS)
+    # Don't use __declspec(dllexport|dllimport) if this is a static build
+    targeT_compile_definitions (glog PUBLIC GFLAGS_DLL_DECLARE_FLAG= GFLAGS_DLL_DEFINE_FLAG=)
+  endif (NOT BUILD_SHARED_LIBS)
 endif (gflags_FOUND)
 
 set_target_properties (glog PROPERTIES VERSION ${GLOG_MAJOR_VERSION})
