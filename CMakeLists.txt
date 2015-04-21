@@ -104,6 +104,9 @@ check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (unwind get_static_proc_name "" HAVE_LIB_UNWIND)
 
+find_library (UNWIND_LIBRARY NAMES unwind DOC "unwind library")
+mark_as_advanced (UNWIND_LIBRARY)
+
 check_c_source_compiles ("
 #include <stdlib.h>
 static void foo(void) __attribute__ ((unused));
@@ -357,6 +360,10 @@ endif (WIN32)
 add_library (glog
   ${GLOG_SRCS}
 )
+
+if (UNWIND_LIBRARY)
+  target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
+endif (UNWIND_LIBRARY)
 
 if (WIN32 AND HAVE_SNPRINTF)
   set_property (SOURCE src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
