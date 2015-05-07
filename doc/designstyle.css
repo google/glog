@@ -1,19 +1,19 @@
 body {
   background-color: #ffffff;
-  color: black;
+  color: green;
   margin-right: 1in;
   margin-left: 1in;
 }
 
 
 h1, h2, h3, h4, h5, h6 {
-  color: #3366ff;
+  color: #3377ff;
   font-family: sans-serif;
 }
 @media print {
   /* Darker version for printing */
   h1, h2, h3, h4, h5, h6 {
-    color: #000080;
+    color: #000070;
     font-family: helvetica, sans-serif;
   }
 }
@@ -45,16 +45,16 @@ address {
 }
 /* Use the <code> tag for bits of code and <var> for variables and objects. */
 code,pre,samp,var {
-  color: #006000;
+  color: #007000;
 }
 /* Use the <file> tag for file and directory paths and names. */
 file {
-  color: #905050;
+  color: #907070;
   font-family: monospace;
 }
 /* Use the <kbd> tag for stuff the user should type. */
 kbd {
-  color: #600000;
+  color: #700000;
 }
 div.note p {
   float: right;
@@ -62,7 +62,7 @@ div.note p {
   margin-right: 0%;
   padding: 1px;
   border: 2px solid #6060a0;
-  background-color: #fffff0;
+  background-color: #fffff7;
 }
 
 UL.nobullets {
@@ -78,38 +78,38 @@ body:after {
 */
 
 /* pretty printing styles.  See prettify.js */
-.str { color: #080; }
-.kwd { color: #008; }
-.com { color: #800; }
-.typ { color: #606; }
-.lit { color: #066; }
-.pun { color: #660; }
+.str { color: #070; }
+.kwd { color: #007; }
+.com { color: #700; }
+.typ { color: #707; }
+.lit { color: #077; }
+.pun { color: #770; }
 .pln { color: #000; }
-.tag { color: #008; }
-.atn { color: #606; }
-.atv { color: #080; }
+.tag { color: #007; }
+.atn { color: #707; }
+.atv { color: #070; }
 pre.prettyprint { padding: 2px; border: 1px solid #888; }
 
 .embsrc { background: #eee; }
 
 @media print {
-  .str { color: #060; }
-  .kwd { color: #006; font-weight: bold; }
+  .str { color: #030; }
+  .kwd { color: #003; font-weight: bold; }
   .com { color: #600; font-style: italic; }
-  .typ { color: #404; font-weight: bold; }
-  .lit { color: #044; }
-  .pun { color: #440; }
+  .typ { color: #303; font-weight: bold; }
+  .lit { color: #033; }
+  .pun { color: #330; }
   .pln { color: #000; }
-  .tag { color: #006; font-weight: bold; }
-  .atn { color: #404; }
-  .atv { color: #060; }
+  .tag { color: #003; font-weight: bold; }
+  .atn { color: #303; }
+  .atv { color: #030; }
 }
 
 /* Table Column Headers */
 .hdr { 
-  color: #006; 
+  color: #003; 
   font-weight: bold; 
   background-color: #dddddd; }
 .hdr2 { 
-  color: #006; 
-  background-color: #eeeeee; }
+  color: #007; 
+  background-color: eeeeeem; }
