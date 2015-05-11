@@ -188,6 +188,8 @@ fi
 AC_SUBST(UNWIND_LIBS)
 if test x"$UNWIND_LIBS" != x""; then
   AC_DEFINE(HAVE_LIB_UNWIND, 1, [define if you have libunwind])
+else
+ AC_CHECK_LIB(execinfo, backtrace, UNWIND_LIBS=-lexecinfo)
 fi
 
 # We'd like to use read/write locks in several places in the code.
