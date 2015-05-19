@@ -162,7 +162,7 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
   int result = FLAGS_v;
   int const pattern_len = strlen(module_pattern);
   bool found = false;
-  MutexLock l(&vmodule_lock);  // protect whole read-modify-write
+  vmodule_lock.Lock();  // protect whole read-modify-write
   for (const VModuleInfo* info = vmodule_list;
        info != NULL; info = info->next) {
     if (info->module_pattern == module_pattern) {
@@ -186,6 +186,7 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
     info->next = vmodule_list;
     vmodule_list = info;
   }
+  vmodule_lock.Unlock();
   RAW_VLOG(1, "Set VLOG level for \"%s\" to %d", module_pattern, log_level);
   return result;
 }
