@@ -31,7 +31,6 @@
 
 #include "utilities.h"
 
-#include <algorithm>
 #include <assert.h>
 #include <iomanip>
 #include <string>
@@ -56,6 +55,7 @@
 # include <syslog.h>
 #endif
 #include <vector>
+#include <algorithm>   // order important for vs2015 (std::min, NOMINMAX)
 #include <errno.h>                   // for errno
 #include <sstream>
 #include "base/commandlineflags.h"        // to get the program name
