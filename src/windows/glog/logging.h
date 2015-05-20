@@ -1158,6 +1158,10 @@ public:
     base_logging::LogStreamBuf streambuf_;
     int ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
+
+#if defined(_MSC_VER) && _MSC_VER >= 1900 // needed for msvs 2015 RC
+    LogStream(LogStream&&) = delete;
+#endif
   };
 
 public:
