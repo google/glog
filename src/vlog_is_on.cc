@@ -39,6 +39,8 @@
 #include <errno.h>
 #include <cstdio>
 #include <string>
+#include <tuple>
+#include <vector>
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
@@ -48,6 +50,7 @@
 #define ANNOTATE_BENIGN_RACE(address, description)
 
 using std::string;
+using std::vector;
 
 GLOG_DEFINE_int32(v, 0, "Show all VLOG(m) messages for m <= this."
 " Overridable by --vmodule.");
@@ -68,7 +71,7 @@ namespace glog_internal_namespace_ {
 // It's not a static function for the unittest.
 GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
                                        size_t patt_len,
-                                       const char* str,
+                                       const char* str,  // file name string
                                        size_t str_len) {
   size_t p = 0;
   size_t s = 0;
@@ -94,6 +97,8 @@ GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
     return false;
   }
 }
+
+vector<std::tuple<int32**, const char*, unsigned>>* site_flag_list = nullptr;
 
 }  // namespace glog_internal_namespace_
 
@@ -154,6 +159,8 @@ static void VLOG2Initializer() {
     tail->next = vmodule_list;
     vmodule_list = head;
   }
+  site_flag_list = new std::remove_pointer<decltype(site_flag_list)>::type;
+
   inited_vmodule = true;
 }
 
@@ -185,6 +192,22 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
     info->vlog_level = log_level;
     info->next = vmodule_list;
     vmodule_list = info;
+
+    if (site_flag_list) {
+      // Reset all site flags that match the pattern to unitialized value in order to
+      // evaluate them again via InitVLOG3__.
+      for (auto it = site_flag_list->begin(); it != site_flag_list->end(); ) {
+        const char* base_name = std::get<1>(*it);
+        unsigned base_size = std::get<2>(*it);
+        if (SafeFNMatch_(module_pattern, pattern_len, base_name, base_size)) {
+          *std::get<0>(*it) = &kLogSiteUninitialized;
+          *it = site_flag_list->back();
+          site_flag_list->pop_back();
+        } else {
+          ++it;
+        }
+      }
+    }
   }
   vmodule_lock.Unlock();
   RAW_VLOG(1, "Set VLOG level for \"%s\" to %d", module_pattern, log_level);
@@ -231,8 +254,14 @@ bool InitVLOG3__(int32** site_flag, int32* site_default,
       site_flag_value = &info->vlog_level;
         // value at info->vlog_level is now what controls
         // the VLOG at the caller site forever
+
+      // RAW_LOG_ERROR("Found %.*s with %d", int(base_length), base, *site_flag_value);
       break;
     }
+  }
+
+  if (site_flag_value == site_default) {
+    site_flag_list->emplace_back(site_flag, base, base_length);
   }
 
   // Cache the vlog value pointer if --vmodule flag has been parsed.
