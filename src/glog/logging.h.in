@@ -1157,6 +1157,12 @@ public:
     int ctr() const { return ctr_; }
     void set_ctr(int ctr) { ctr_ = ctr; }
     LogStream* self() const { return self_; }
+#if defined(_MSC_VER) && (_MSC_VER >= 1900)
+    // MSC 1900 will implicitly generate this move constructor, which will
+    // in turn (somehow) call the basic_ios copy constructor, which is deleted.
+    // Explicitly deleting this constructor prevents this.
+    LogStream(LogStream &&) = delete;
+#endif
 
     // Legacy std::streambuf methods.
     size_t pcount() const { return streambuf_.pcount(); }
