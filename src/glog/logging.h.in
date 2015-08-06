@@ -48,14 +48,6 @@
 #endif
 #include <vector>
 
-// Annoying stuff for windows -- makes sure clients can import these functions
-#ifndef GOOGLE_GLOG_DLL_DECL
-# if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
-# else
-#   define GOOGLE_GLOG_DLL_DECL
-# endif
-#endif
 #if defined(_MSC_VER)
 #define GLOG_MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) \
                                      __pragma(warning(disable:n))
@@ -63,6 +55,15 @@
 #else
 #define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
 #define GLOG_MSVC_POP_WARNING()
+#endif
+
+// Annoying stuff for windows -- makes sure clients can import these functions
+#ifndef GOOGLE_GLOG_DLL_DECL
+# if defined(_WIN32) && !defined(__CYGWIN__)
+#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
+# else
+#   define GOOGLE_GLOG_DLL_DECL
+# endif
 #endif
 
 // We care a lot about number of bits things take up.  Unfortunately,
@@ -1164,6 +1165,8 @@ public:
     char* str() const { return pbase(); }
 
   private:
+    LogStream(const LogStream&);
+    LogStream& operator=(const LogStream&);
     base_logging::LogStreamBuf streambuf_;
     int ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
@@ -1231,7 +1234,7 @@ public:
   void SendToSyslogAndLog();  // Actually dispatch to syslog and the logs
 
   // Call abort() or similar to perform LOG(FATAL) crash.
-  static void Fail() @ac_cv___attribute___noreturn@;
+  static void @ac_cv___attribute___noreturn@ Fail();
 
   std::ostream& stream();
 
@@ -1279,7 +1282,7 @@ class GOOGLE_GLOG_DLL_DECL LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line);
   LogMessageFatal(const char* file, int line, const CheckOpString& result);
-  ~LogMessageFatal() @ac_cv___attribute___noreturn@;
+  @ac_cv___attribute___noreturn@ ~LogMessageFatal();
 };
 
 // A non-macro interface to the log facility; (useful
@@ -1583,7 +1586,7 @@ class GOOGLE_GLOG_DLL_DECL NullStreamFatal : public NullStream {
   NullStreamFatal() { }
   NullStreamFatal(const char* file, int line, const CheckOpString& result) :
       NullStream(file, line, result) { }
-  @ac_cv___attribute___noreturn@ ~NullStreamFatal() { _exit(1); }
+  @ac_cv___attribute___noreturn@ ~NullStreamFatal() throw () { _exit(1); }
 };
 
 // Install a signal handler that will dump signal information and a stack

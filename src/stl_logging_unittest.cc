@@ -31,6 +31,7 @@
 
 #ifdef HAVE_USING_OPERATOR
 
+#include <functional>
 #include <iostream>
 #include <map>
 #include <ostream>
@@ -41,11 +42,19 @@
 // C++0x isn't enabled by default in GCC and libc++ does not have
 // non-standard ext/* and tr1/unordered_*.
 # if defined(_LIBCPP_VERSION)
+#  ifndef GLOG_STL_LOGGING_FOR_UNORDERED
 #  define GLOG_STL_LOGGING_FOR_UNORDERED
+#  endif
 # else
+#  ifndef GLOG_STL_LOGGING_FOR_EXT_HASH
 #  define GLOG_STL_LOGGING_FOR_EXT_HASH
+#  endif
+#  ifndef GLOG_STL_LOGGING_FOR_EXT_SLIST
 #  define GLOG_STL_LOGGING_FOR_EXT_SLIST
+#  endif
+#  ifndef GLOG_STL_LOGGING_FOR_TR1_UNORDERED
 #  define GLOG_STL_LOGGING_FOR_TR1_UNORDERED
+#  endif
 # endif
 #endif
 

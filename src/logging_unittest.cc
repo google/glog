@@ -61,6 +61,7 @@ DECLARE_string(log_backtrace_at);  // logging.cc
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>
+using namespace GFLAGS_NAMESPACE;
 #endif
 
 #ifdef HAVE_LIB_GMOCK

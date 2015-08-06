@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+include ("${CMAKE_CURRENT_LIST_DIR}/glog-targets.cmake")
+set_and_check (glog_INCLUDE_DIR "@PACKAGE_glog_INCLUDE_DIR@")
+
+@glog_PACKAGE_DEPS@
+
+set (glog_LIBRARY glog)
+
+set (glog_LIBRARIES ${glog_LIBRARY})
+set (glog_INCLUDE_DIRS ${glog_INCLUDE_DIR})
