@@ -817,6 +817,8 @@ void LogDestination::DeleteLogDestinations() {
     delete log_destinations_[severity];
     log_destinations_[severity] = NULL;
   }
+  MutexLock l(&sink_mutex_);
+  delete sinks_;
 }
 
 namespace {
