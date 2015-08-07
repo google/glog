@@ -39,7 +39,6 @@
 #include <errno.h>
 #include <cstdio>
 #include <string>
-#include <tuple>
 #include <vector>
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
@@ -98,7 +97,14 @@ GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
   }
 }
 
-vector<std::tuple<int32**, const char*, unsigned>>* site_flag_list = nullptr;
+struct SiteTuple {
+  int32** site_log;
+  const char* base_name;
+  unsigned base_length;
+};
+
+typedef vector<SiteTuple> SiteVector;
+SiteVector* site_flag_list = NULL;
 
 }  // namespace glog_internal_namespace_
 
@@ -159,7 +165,7 @@ static void VLOG2Initializer() {
     tail->next = vmodule_list;
     vmodule_list = head;
   }
-  site_flag_list = new std::remove_pointer<decltype(site_flag_list)>::type;
+  site_flag_list = new SiteVector;
 
   inited_vmodule = true;
 }
@@ -196,11 +202,9 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
     if (site_flag_list) {
       // Reset all site flags that match the pattern to unitialized value in order to
       // evaluate them again via InitVLOG3__.
-      for (auto it = site_flag_list->begin(); it != site_flag_list->end(); ) {
-        const char* base_name = std::get<1>(*it);
-        unsigned base_size = std::get<2>(*it);
-        if (SafeFNMatch_(module_pattern, pattern_len, base_name, base_size)) {
-          *std::get<0>(*it) = &kLogSiteUninitialized;
+      for (SiteVector::iterator it = site_flag_list->begin(); it != site_flag_list->end(); ) {
+        if (SafeFNMatch_(module_pattern, pattern_len, it->base_name, it->base_length)) {
+          *it->site_log = &kLogSiteUninitialized;
           *it = site_flag_list->back();
           site_flag_list->pop_back();
         } else {
@@ -254,14 +258,16 @@ bool InitVLOG3__(int32** site_flag, int32* site_default,
       site_flag_value = &info->vlog_level;
         // value at info->vlog_level is now what controls
         // the VLOG at the caller site forever
-
-      // RAW_LOG_ERROR("Found %.*s with %d", int(base_length), base, *site_flag_value);
       break;
     }
   }
 
   if (site_flag_value == site_default) {
-    site_flag_list->emplace_back(site_flag, base, base_length);
+    SiteTuple st;
+    st.site_log = site_flag;
+    st.base_name = base;
+    st.base_length = base_length;
+    site_flag_list->push_back(st);
   }
 
   // Cache the vlog value pointer if --vmodule flag has been parsed.
