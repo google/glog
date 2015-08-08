@@ -23,6 +23,7 @@ set (CPACK_PACKAGE_VERSION_PATCH ${GLOG_PATCH_VERSION})
 set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
+option (WITH_THREADS "Enable multithreading support" ON)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -51,7 +52,9 @@ if (WITH_GFLAGS)
   endif (gflags_FOUND)
 endif (WITH_GFLAGS)
 
-find_package (Threads)
+if (WITH_THREADS)
+  find_package (Threads)
+endif (WITH_THREADS)
 
 check_include_file (dlfcn.h HAVE_DLFCN_H)
 check_include_file (execinfo.h HAVE_EXECINFO_H)
@@ -306,9 +309,13 @@ endif (HAVE_USING_OPERATOR)
 
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
-if (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
-  set (HAVE_PTHREAD 1)
-endif (Threads_FOUND AND CMAKE_USE_PTHREADS_INIT)
+if (WITH_THREADS AND Threads_FOUND)
+  if (CMAKE_USE_PTHREADS_INIT)
+    set (HAVE_PTHREAD 1)
+  endif (CMAKE_USE_PTHREADS_INIT)
+else (WITH_THREADS AND Threads_FOUND)
+  set (NO_THREADS 1)
+endif (WITH_THREADS AND Threads_FOUND)
 
 set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
 
@@ -427,12 +434,6 @@ else (NOT BUILD_SHARED_LIBS)
   target_compile_definitions (glog INTERFACE
     "GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS=${_IMPORT}")
 endif (NOT BUILD_SHARED_LIBS)
-
-if (HAVE_PTHREAD)
-  target_link_libraries (glog PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-else (HAVE_PTHREAD)
-  target_compile_definitions (glog PUBLIC NO_THREADS)
-endif (HAVE_PTHREAD)
 
 if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
