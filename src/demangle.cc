@@ -439,6 +439,7 @@ static bool ParseExprPrimary(State *state);
 static bool ParseLocalName(State *state);
 static bool ParseDiscriminator(State *state);
 static bool ParseSubstitution(State *state);
+static bool ParseAbiTag(State *state);
 
 // Implementation note: the following code is a straightforward
 // translation of the Itanium C++ ABI defined in BNF with a couple of
@@ -567,6 +568,8 @@ static bool ParseNestedName(State *state) {
 static bool ParsePrefix(State *state) {
   bool has_something = false;
   while (true) {
+    if (ParseAbiTag(state))
+      continue;
     MaybeAppendSeparator(state);
     if (ParseTemplateParam(state) ||
         ParseSubstitution(state) ||
@@ -583,6 +586,22 @@ static bool ParsePrefix(State *state) {
     }
   }
   return true;
+}
+
+// <abi-tag>          ::= B <source-name>
+static bool ParseAbiTag(State *state) {
+  State copy = *state;
+
+  Append(state, "[", 1);
+  if (ParseOneCharToken(state, 'B') &&
+      ParseSourceName(state))
+  {
+    Append(state, "]", 1);
+    return true;
+  }
+
+  *state = copy;
+  return false;
 }
 
 // <unqualified-name> ::= <operator-name>
