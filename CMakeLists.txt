@@ -376,6 +376,10 @@ if (UNWIND_LIBRARY)
   target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
 endif (UNWIND_LIBRARY)
 
+if (HAVE_PTHREAD)
+  target_link_libraries (glog PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+endif (HAVE_PTHREAD)
+
 if (WIN32 AND HAVE_SNPRINTF)
   set_property (SOURCE src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
     HAVE_SNPRINTF)
