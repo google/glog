@@ -635,7 +635,8 @@ static void GetFiles(const string& pattern, vector<string>* files) {
   do {
     files->push_back(dirname + data.cFileName);
   } while (FindNextFileA(handle, &data));
-  LOG_SYSRESULT(FindClose(handle));
+  BOOL result = FindClose(handle);
+  LOG_SYSRESULT(result);
 #else
 # error There is no way to do glob.
 #endif
