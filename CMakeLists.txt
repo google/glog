@@ -453,7 +453,7 @@ add_executable (logging_unittest
   src/logging_unittest.cc
 )
 
-target_link_libraries (logging_unittest PRIVATE glog)
+target_link_libraries (logging_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable (stl_logging_unittest
   src/stl_logging_unittest.cc
@@ -519,7 +519,7 @@ if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
     src/signalhandler_unittest.cc
   )
 
-  target_link_libraries (signalhandler_unittest PRIVATE glog)
+  target_link_libraries (signalhandler_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
 
 add_test (NAME demangle COMMAND demangle_unittest)
