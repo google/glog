@@ -165,6 +165,10 @@
 				RelativePath="..\..\src\vlog_is_on.cc"
 				>
 			</File>
+			<File
+				RelativePath="..\..\src\signalhandler.cc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
