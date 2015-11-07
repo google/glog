@@ -453,13 +453,13 @@ add_executable (logging_unittest
   src/logging_unittest.cc
 )
 
-target_link_libraries (logging_unittest PRIVATE glog)
+target_link_libraries (logging_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable (stl_logging_unittest
   src/stl_logging_unittest.cc
 )
 
-target_link_libraries (stl_logging_unittest PRIVATE glog)
+target_link_libraries (stl_logging_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 
 if (HAVE_NO_DEPRECATED)
   set_property (TARGET stl_logging_unittest APPEND PROPERTY COMPILE_OPTIONS
@@ -491,35 +491,35 @@ if (HAVE_SYMBOLIZE)
     src/symbolize_unittest.cc
   )
 
-  target_link_libraries (symbolize_unittest PRIVATE glog)
+  target_link_libraries (symbolize_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_SYMBOLIZE)
 
 add_executable (demangle_unittest
   src/demangle_unittest.cc
 )
 
-target_link_libraries (demangle_unittest PRIVATE glog)
+target_link_libraries (demangle_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 
 if (HAVE_STACKTRACE)
   add_executable (stacktrace_unittest
     src/stacktrace_unittest.cc
   )
 
-  target_link_libraries (stacktrace_unittest PRIVATE glog)
+  target_link_libraries (stacktrace_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_STACKTRACE)
 
 add_executable (utilities_unittest
   src/utilities_unittest.cc
 )
 
-target_link_libraries (utilities_unittest PRIVATE glog)
+target_link_libraries (utilities_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 
 if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
   add_executable (signalhandler_unittest
     src/signalhandler_unittest.cc
   )
 
-  target_link_libraries (signalhandler_unittest PRIVATE glog)
+  target_link_libraries (signalhandler_unittest PRIVATE glog ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
 
 add_test (NAME demangle COMMAND demangle_unittest)
