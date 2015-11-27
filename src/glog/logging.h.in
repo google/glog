@@ -882,38 +882,52 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
+static int log_occurrences;
+static bool do_log;
+
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
+  { \
+    static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+    log_occurrences = ++LOG_OCCURRENCES; \
+    if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
+    do_log = (LOG_OCCURRENCES_MOD_N == 1); \
+  } \
+  if (do_log) \
     @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, log_occurrences, \
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
-  if (condition && \
-      ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
+  { \
+    static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+    log_occurrences = ++LOG_OCCURRENCES; \
+    do_log = ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n)); \
+  } \
+  if (condition && do_log) \
     @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, log_occurrences, \
                  &what_to_do).stream()
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
+  { \
+    static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+    log_occurrences = ++LOG_OCCURRENCES; \
+    if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
+    do_log = (LOG_OCCURRENCES_MOD_N == 1); \
+  } \
+  if (do_log) \
     @ac_google_namespace@::ErrnoLogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, log_occurrences, \
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0; \
-  if (LOG_OCCURRENCES <= n) \
-    ++LOG_OCCURRENCES; \
-  if (LOG_OCCURRENCES <= n) \
+  { \
+    static int LOG_OCCURRENCES = 0; \
+    if (LOG_OCCURRENCES <= n) \
+    log_occurrences = ++LOG_OCCURRENCES; \
+    do_log = (LOG_OCCURRENCES <= n); \
+  } \
+  if (do_log) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
