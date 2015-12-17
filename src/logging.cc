@@ -88,6 +88,10 @@ using std::perror;
 using std::fdopen;
 #endif
 
+#ifdef _WIN32
+#define fdopen _fdopen
+#endif
+
 // There is no thread annotation support.
 #define EXCLUSIVE_LOCKS_REQUIRED(mu)
 
