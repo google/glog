@@ -628,7 +628,7 @@ static void GetFiles(const string& pattern, vector<string>* files) {
     LOG(FATAL) << "No directory separator.";
   }
   const string dirname = pattern.substr(0, index + 1);
-  if (FAILED(handle)) {
+  if (handle == INVALID_HANDLE_VALUE) {
     // Finding no files is OK.
     return;
   }
