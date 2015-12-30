@@ -103,7 +103,7 @@ AddressRange expected_range[BACKTRACE_STEPS];
 
 //-----------------------------------------------------------------------//
 
-void CheckRetAddrIsInFunction(void *ret_addr, const AddressRange &range)
+static void CheckRetAddrIsInFunction(void *ret_addr, const AddressRange &range)
 {
   CHECK_GE(ret_addr, range.start);
   CHECK_LE(ret_addr, range.end);
@@ -112,7 +112,7 @@ void CheckRetAddrIsInFunction(void *ret_addr, const AddressRange &range)
 //-----------------------------------------------------------------------//
 
 void ATTRIBUTE_NOINLINE CheckStackTrace(int);
-void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
+static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
   const int STACK_LEN = 10;
   void *stack[STACK_LEN];
   int size;
@@ -148,7 +148,7 @@ void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
 //-----------------------------------------------------------------------//
 
 /* Dummy functions to make the backtrace more interesting. */
-void ATTRIBUTE_NOINLINE CheckStackTrace4(int i) {
+static void ATTRIBUTE_NOINLINE CheckStackTrace4(int i) {
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[2]);
   INIT_ADDRESS_RANGE(CheckStackTrace4, start, end, &expected_range[1]);
   DECLARE_ADDRESS_LABEL(start);
@@ -156,7 +156,7 @@ void ATTRIBUTE_NOINLINE CheckStackTrace4(int i) {
     CheckStackTraceLeaf();
   DECLARE_ADDRESS_LABEL(end);
 }
-void ATTRIBUTE_NOINLINE CheckStackTrace3(int i) {
+static void ATTRIBUTE_NOINLINE CheckStackTrace3(int i) {
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[3]);
   INIT_ADDRESS_RANGE(CheckStackTrace3, start, end, &expected_range[2]);
   DECLARE_ADDRESS_LABEL(start);
@@ -164,7 +164,7 @@ void ATTRIBUTE_NOINLINE CheckStackTrace3(int i) {
     CheckStackTrace4(j);
   DECLARE_ADDRESS_LABEL(end);
 }
-void ATTRIBUTE_NOINLINE CheckStackTrace2(int i) {
+static void ATTRIBUTE_NOINLINE CheckStackTrace2(int i) {
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[4]);
   INIT_ADDRESS_RANGE(CheckStackTrace2, start, end, &expected_range[3]);
   DECLARE_ADDRESS_LABEL(start);
@@ -172,7 +172,7 @@ void ATTRIBUTE_NOINLINE CheckStackTrace2(int i) {
     CheckStackTrace3(j);
   DECLARE_ADDRESS_LABEL(end);
 }
-void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
+static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[5]);
   INIT_ADDRESS_RANGE(CheckStackTrace1, start, end, &expected_range[4]);
   DECLARE_ADDRESS_LABEL(start);

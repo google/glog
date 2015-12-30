@@ -71,7 +71,7 @@ struct user_hash {
   size_t operator()(int x) const { return x; }
 };
 
-void TestSTLLogging() {
+static void TestSTLLogging() {
   {
     // Test a sequence.
     vector<int> v;

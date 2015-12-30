@@ -1067,10 +1067,10 @@ TEST(Strerror, logging) {
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and
 // CHECK(..) via objdump
-void MyFatal() {
+static void MyFatal() {
   LOG(FATAL) << "Failed";
 }
-void MyCheck(bool a, bool b) {
+static void MyCheck(bool a, bool b) {
   CHECK_EQ(a, b);
 }
 

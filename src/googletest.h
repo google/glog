@@ -110,6 +110,8 @@ using testing::InitGoogleTest;
 
 _START_GOOGLE_NAMESPACE_
 
+void InitGoogleTest(int*, char**);
+
 void InitGoogleTest(int*, char**) {}
 
 // The following is some bare-bones testing infrastructure

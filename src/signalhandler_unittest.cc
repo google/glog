@@ -48,7 +48,7 @@ using namespace GFLAGS_NAMESPACE;
 
 using namespace GOOGLE_NAMESPACE;
 
-void* DieInThread(void*) {
+static void* DieInThread(void*) {
   // We assume pthread_t is an integral number or a pointer, rather
   // than a complex struct.  In some environments, pthread_self()
   // returns an uint64 but in some other environments pthread_self()
@@ -62,7 +62,7 @@ void* DieInThread(void*) {
   return NULL;
 }
 
-void WriteToStdout(const char* data, int size) {
+static void WriteToStdout(const char* data, int size) {
   if (write(STDOUT_FILENO, data, size) < 0) {
     // Ignore errors.
   }
