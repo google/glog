@@ -323,7 +323,7 @@ void TestRawLogging() {
   RAW_LOG(WARNING, "%s", s);
   const char const_s[] = "const array";
   RAW_LOG(INFO, "%s", const_s);
-  void* p = reinterpret_cast<void*>(0x12345678);
+  void* p = reinterpret_cast<void*>(PTR_TEST_VALUE);
   RAW_LOG(INFO, "ptr %p", p);
   p = NULL;
   RAW_LOG(INFO, "ptr %p", p);
