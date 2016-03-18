@@ -489,7 +489,11 @@ static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
     WriteToFile(golden, munged_golden);
     string munged_captured = cap->filename() + ".munged";
     WriteToFile(captured, munged_captured);
+#ifdef OS_WINDOWS
+    string diffcmd("fc " + munged_golden + " " + munged_captured);
+#else
     string diffcmd("diff -u " + munged_golden + " " + munged_captured);
+#endif
     if (system(diffcmd.c_str()) != 0) {
       fprintf(stderr, "diff command was failed.\n");
     }
