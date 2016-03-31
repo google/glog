@@ -372,6 +372,11 @@ add_library (glog
   ${GLOG_SRCS}
 )
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    find_library(EXECINFO_LIB NAMES execinfo)
+    target_link_libraries(glog PUBLIC ${EXECINFO_LIB})
+endif()
+
 if (UNWIND_LIBRARY)
   target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
 endif (UNWIND_LIBRARY)
