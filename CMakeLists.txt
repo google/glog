@@ -390,7 +390,7 @@ if (HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 endif (HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
 if (gflags_FOUND)
-  target_include_directories (glog PUBLIC ${gflags_INCLUDE_DIR})
+  target_include_directories (glog PUBLIC $<BUILD_INTERFACE:${gflags_INCLUDE_DIR}>)
   target_link_libraries (glog PUBLIC ${gflags_LIBRARIES})
 
   if (NOT BUILD_SHARED_LIBS)
