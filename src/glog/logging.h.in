@@ -1113,7 +1113,7 @@ class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
   }
 
   // Legacy public ostrstream method.
-  size_t pcount() const { return pptr() - pbase(); }
+  size_t pcount() const { return static_cast<size_t>(pptr() - pbase()); }
   char* pbase() const { return std::streambuf::pbase(); }
 };
 
