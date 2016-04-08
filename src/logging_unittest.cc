@@ -272,12 +272,14 @@ void TestLogging(bool check_counts) {
   LOG(ERROR) << string("foo") << ' '<< j << ' ' << setw(10) << j << " "
              << setw(1) << hex << j;
 
+  LOG(ERROR) << (&LOG(ERROR) && 0) << " nested LOG";
+
   LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << "no prefix";
 
   if (check_counts) {
     CHECK_EQ(base_num_infos   + 14, LogMessage::num_messages(GLOG_INFO));
     CHECK_EQ(base_num_warning + 3,  LogMessage::num_messages(GLOG_WARNING));
-    CHECK_EQ(base_num_errors  + 15, LogMessage::num_messages(GLOG_ERROR));
+    CHECK_EQ(base_num_errors  + 17, LogMessage::num_messages(GLOG_ERROR));
   }
 }
 
