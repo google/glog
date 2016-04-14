@@ -1596,7 +1596,7 @@ class GOOGLE_GLOG_DLL_DECL NullStreamFatal : public NullStream {
   NullStreamFatal() { }
   NullStreamFatal(const char* file, int line, const CheckOpString& result) :
       NullStream(file, line, result) { }
-   ~NullStreamFatal() throw () { _exit(1); }
+   ~NullStreamFatal() { _exit(1); }
 };
 
 // Install a signal handler that will dump signal information and a stack
