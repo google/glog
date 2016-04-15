@@ -569,8 +569,8 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
       return -1;  // Malformed line.
     }
 
-    // Check flags.  We are only interested in "r-x" maps.
-    if (memcmp(flags_start, "r-x", 3) != 0) {  // Not a "r-x" map.
+   // Check flags.  We are only interested in "r*x" maps.
+    if (flags_start[0] != 'r' || flags_start[2] != 'x') {
       continue;  // We skip this map.
     }
     ++cursor;  // Skip ' '.
