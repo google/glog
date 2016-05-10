@@ -72,7 +72,7 @@
 
 #include "config.h"
 
-#if defined(__linux__)
+#if defined(__linux__) && defined(__clang__)
   #define GOOGLE_GLOG_DLL_DECL
 #endif
 
