@@ -915,14 +915,24 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
         &what_to_do).stream()
 
 namespace glog_internal_namespace_ {
+
+#if __cplusplus >= 201103L
+
+#define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) static_assert(expr, #msg)
+
+#else
+
 template <bool>
 struct CompileAssert {
 };
-struct CrashReason;
-}  // namespace glog_internal_namespace_
 
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
   typedef @ac_google_namespace@::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+
+#endif
+
+struct CrashReason;
+}  // namespace glog_internal_namespace_
 
 #define LOG_EVERY_N(severity, n)                                        \
   GOOGLE_GLOG_COMPILE_ASSERT(@ac_google_namespace@::GLOG_ ## severity < \
