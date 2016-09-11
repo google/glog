@@ -825,6 +825,7 @@ void LogDestination::DeleteLogDestinations() {
   }
   MutexLock l(&sink_mutex_);
   delete sinks_;
+  sinks_ = NULL;
 }
 
 namespace {
