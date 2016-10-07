@@ -372,6 +372,8 @@ add_library (glog
   ${GLOG_SRCS}
 )
 
+set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 if (UNWIND_LIBRARY)
   target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
 endif (UNWIND_LIBRARY)
