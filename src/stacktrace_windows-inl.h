@@ -27,33 +27,60 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Portable implementation - just use glibc
+// Author: Andrew Schwartzmeyer
 //
-// Note:  The glibc implementation may cause a call to malloc.
-// This can cause a deadlock in HeapProfiler.
-#include <execinfo.h>
-#include <string.h>
+// Windows implementation - just use CaptureStackBackTrace
+
+#include "port.h"
 #include "stacktrace.h"
+#include "Dbghelp.h"
+#include <vector>
 
 _START_GOOGLE_NAMESPACE_
 
+static bool ready_to_run = false;
+class StackTraceInit {
+public:
+  HANDLE hProcess;
+  StackTraceInit() {
+    // Initialize the symbol handler
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
+    hProcess = GetCurrentProcess();
+    SymSetOptions(SYMOPT_UNDNAME | SYMOPT_DEFERRED_LOADS);
+    SymInitialize(hProcess, NULL, true);
+    ready_to_run = true;
+  }
+  ~StackTraceInit() {
+    SymCleanup(hProcess);
+    ready_to_run = false;
+  }
+};
+
+static const StackTraceInit module_initializer;  // Force initialization
+
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  static const int kStackLength = 64;
-  void * stack[kStackLength];
-  int size;
-
-  size = backtrace(stack, kStackLength);
+  if (!ready_to_run) {
+    return 0;
+  }
   skip_count++;  // we want to skip the current frame as well
-  int result_count = size - skip_count;
-  if (result_count < 0)
-    result_count = 0;
-  if (result_count > max_depth)
-    result_count = max_depth;
-  for (int i = 0; i < result_count; i++)
-    result[i] = stack[i + skip_count];
+  if (max_depth > 64) {
+    max_depth = 64;
+  }
+  std::vector<void*> stack(max_depth);
+  // This API is thread-safe (moreover it walks only the current thread).
+  int size = CaptureStackBackTrace(skip_count, max_depth, &stack[0], NULL);
+  for (int i = 0; i < size; ++i) {
+    // Resolve symbol information from address.
+    char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+    SYMBOL_INFO* symbol = reinterpret_cast<SYMBOL_INFO*>(buffer);
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol->MaxNameLen = MAX_SYM_NAME;
+    SymFromAddr(module_initializer.hProcess, reinterpret_cast<DWORD64>(stack[i]), 0, symbol);
+    result[i] = stack[i];
+  }
 
-  return result_count;
+  return size;
 }
 
 _END_GOOGLE_NAMESPACE_
