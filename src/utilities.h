@@ -131,6 +131,9 @@
 #elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
 # define HAVE_SYMBOLIZE
+#elif defined(OS_WINDOWS)
+// Use Dbghelp.dll to symbolize
+# define HAVE_SYMBOLIZE
 #endif
 
 #ifndef ARRAYSIZE

@@ -457,6 +457,7 @@ endif (HAVE_EXECINFO_H)
 
 if (WIN32)
   set (HAVE_STACKTRACE 1)
+  set (HAVE_SYMBOLIZE 1)
   target_link_libraries (glog PUBLIC Dbghelp.lib)
 endif (WIN32)
 
@@ -532,13 +533,13 @@ if (BUILD_TESTING)
 
   target_link_libraries (utilities_unittest PRIVATE glog)
 
-  if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
+  if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE AND NOT WIN32)
     add_executable (signalhandler_unittest
       src/signalhandler_unittest.cc
     )
 
     target_link_libraries (signalhandler_unittest PRIVATE glog)
-  endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
+  endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE AND NOT WIN32)
 
   add_test (NAME demangle COMMAND demangle_unittest)
   add_test (NAME logging COMMAND logging_unittest)
