@@ -115,6 +115,8 @@ GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
                  "log messages go to stderr in addition to logfiles");
 GLOG_DEFINE_bool(colorlogtostderr, false,
                  "color messages logged to stderr (if supported by terminal)");
+GLOG_DEFINE_bool(iso8601format, BoolFromEnv("GOOGLE_ISO8601FORMAT", false),
+                 "format messages' timestamp using ISO 8601 standard");
 #ifdef OS_LINUX
 GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
                  "Logs can grow very quickly and they are rarely read before they "
@@ -1381,15 +1383,28 @@ void LogMessage::Init(const char* file,
   //    (log level, GMT month, date, time, thread_id, file basename, line)
   // We exclude the thread_id for the default thread.
   if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
-    stream() << LogSeverityNames[severity][0]
-             << setw(2) << 1+data_->tm_time_.tm_mon
-             << setw(2) << data_->tm_time_.tm_mday
-             << ' '
-             << setw(2) << data_->tm_time_.tm_hour  << ':'
-             << setw(2) << data_->tm_time_.tm_min   << ':'
-             << setw(2) << data_->tm_time_.tm_sec   << "."
-             << setw(6) << data_->usecs_
-             << ' '
+    stream() << LogSeverityNames[severity][0];
+    if (FLAGS_iso8601format) {
+      stream() << setw(2) << 1900+data_->tm_time_.tm_year << "-"
+               << setw(2) << 1+data_->tm_time_.tm_mon << "-"
+               << setw(2) << data_->tm_time_.tm_mday
+               << "T"
+               << setw(2) << data_->tm_time_.tm_hour << ':'
+               << setw(2) << data_->tm_time_.tm_min << ':'
+               << setw(2) << data_->tm_time_.tm_sec
+               << (data_->tm_time_.tm_gmtoff >= 0 ? "+" : "-")
+               << setw(2) << ::labs(data_->tm_time_.tm_gmtoff)/(60*60) << ":"
+               << setw(2) << ::labs(data_->tm_time_.tm_gmtoff)%(60*60);
+    } else {
+      stream() << setw(2) << 1+data_->tm_time_.tm_mon
+               << setw(2) << data_->tm_time_.tm_mday
+               << ' '
+               << setw(2) << data_->tm_time_.tm_hour  << ':'
+               << setw(2) << data_->tm_time_.tm_min   << ':'
+               << setw(2) << data_->tm_time_.tm_sec   << "."
+               << setw(6) << data_->usecs_;
+    }
+    stream() << ' '
              << setfill(' ') << setw(5)
              << static_cast<unsigned int>(GetTID()) << setfill('0')
              << ' '

@@ -339,6 +339,9 @@ DECLARE_bool(alsologtostderr);
 // Set color messages logged to stderr (if supported by terminal).
 DECLARE_bool(colorlogtostderr);
 
+// Format messages' timestamp using ISO 8601 standard
+DECLARE_bool(iso8601format);
+
 // Log messages at a level >= this flag are automatically sent to
 // stderr in addition to log files.
 DECLARE_int32(stderrthreshold);
