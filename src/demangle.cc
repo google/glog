@@ -147,7 +147,7 @@ typedef struct {
   const char *out_begin;    // Beginning of output string.
   const char *out_end;      // End of output string.
   const char *prev_name;    // For constructors/destructors.
-  int prev_name_length;     // For constructors/destructors.
+  size_t prev_name_length;     // For constructors/destructors.
   short nest_level;         // For nested names.
   bool append;              // Append flag.
   bool overflowed;          // True if output gets overflowed.
@@ -262,7 +262,7 @@ static bool ZeroOrMore(ParseFunc parse_func, State *state) {
 // Append "str" at "out_cur".  If there is an overflow, "overflowed"
 // is set to true for later use.  The output string is ensured to
 // always terminate with '\0' as long as there is no overflow.
-static void Append(State *state, const char * const str, const int length) {
+static void Append(State *state, const char * const str, const size_t length) {
   int i;
   for (i = 0; i < length; ++i) {
     if (state->out_cur + 1 < state->out_end) {  // +1 for '\0'
@@ -320,7 +320,7 @@ static bool IsFunctionCloneSuffix(const char *str) {
 // Append "str" with some tweaks, iff "append" state is true.
 // Returns true so that it can be placed in "if" conditions.
 static void MaybeAppendWithLength(State *state, const char * const str,
-                                  const int length) {
+                                  const size_t length) {
   if (state->append && length > 0) {
     // Append a space if the output buffer ends with '<' and "str"
     // starts with '<' to avoid <<<.
@@ -340,7 +340,7 @@ static void MaybeAppendWithLength(State *state, const char * const str,
 // A convenient wrapper arount MaybeAppendWithLength().
 static bool MaybeAppend(State *state, const char * const str) {
   if (state->append) {
-    int length = StrLen(str);
+    auto length = StrLen(str);
     MaybeAppendWithLength(state, str, length);
   }
   return true;
@@ -865,7 +865,7 @@ static bool ParseCtorDtorName(State *state) {
   if (ParseOneCharToken(state, 'C') &&
       ParseCharClass(state, "123")) {
     const char * const prev_name = state->prev_name;
-    const int prev_name_length = state->prev_name_length;
+    const size_t prev_name_length = state->prev_name_length;
     MaybeAppendWithLength(state, prev_name, prev_name_length);
     return true;
   }
@@ -874,7 +874,7 @@ static bool ParseCtorDtorName(State *state) {
   if (ParseOneCharToken(state, 'D') &&
       ParseCharClass(state, "012")) {
     const char * const prev_name = state->prev_name;
-    const int prev_name_length = state->prev_name_length;
+    const size_t prev_name_length = state->prev_name_length;
     MaybeAppend(state, "~");
     MaybeAppendWithLength(state, prev_name, prev_name_length);
     return true;
