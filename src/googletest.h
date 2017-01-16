@@ -576,6 +576,10 @@ void (*g_new_hook)() = NULL;
 
 _END_GOOGLE_NAMESPACE_
 
+#ifdef OS_WINDOWS
+#pragma warning( disable : 4290 )
+#endif
+
 void* operator new(size_t size) throw(std::bad_alloc) {
   if (GOOGLE_NAMESPACE::g_new_hook) {
     GOOGLE_NAMESPACE::g_new_hook();
