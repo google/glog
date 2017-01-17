@@ -4,3 +4,5 @@ packages/rpm-unknown
 packages/debian-*
 build
 .DS_Store
+*.dir
+x64
