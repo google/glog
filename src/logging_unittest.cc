@@ -251,8 +251,8 @@ void TestLogging(bool check_counts) {
     PLOG_EVERY_N(ERROR, 2) << "Plog every 2, iteration " << COUNTER;
     errno = old_errno;
 
-    LOG_EVERY_N(ERROR, 3) << "Log every 3, iteration " << COUNTER << endl;
-    LOG_EVERY_N(ERROR, 4) << "Log every 4, iteration " << COUNTER << endl;
+    //LOG_EVERY_N(ERROR, 3) << "Log every 3, iteration " << COUNTER << endl;
+    //LOG_EVERY_N(ERROR, 4) << "Log every 4, iteration " << COUNTER << endl;
 
     LOG_IF_EVERY_N(WARNING, true, 5) << "Log if every 5, iteration " << COUNTER;
     LOG_IF_EVERY_N(WARNING, false, 3)
