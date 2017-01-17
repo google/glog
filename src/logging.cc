@@ -2019,6 +2019,9 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
                                  const CheckOpString& result) :
     LogMessage(file, line, result) {}
 
+#ifdef _MSC_VER
+# pragma warning(disable: 4722)
+#endif
 LogMessageFatal::~LogMessageFatal() {
     Flush();
     LogMessage::Fail();
