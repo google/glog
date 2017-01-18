@@ -2108,4 +2108,9 @@ void ShutdownGoogleLogging() {
   logging_directories_list = NULL;
 }
 
+LogMessageVoidify::LogMessageVoidify() {}
+void LogMessageVoidify::operator&(std::ostream&) {}
+
+
+
 _END_GOOGLE_NAMESPACE_

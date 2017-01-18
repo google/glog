@@ -1347,10 +1347,10 @@ class GOOGLE_GLOG_DLL_DECL ErrnoLogMessage : public LogMessage {
 
 class GOOGLE_GLOG_DLL_DECL LogMessageVoidify {
  public:
-  LogMessageVoidify() { }
+  LogMessageVoidify();
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(std::ostream&) { }
+  void operator&(std::ostream&);
 };
 
 
