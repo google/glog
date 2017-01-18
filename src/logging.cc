@@ -191,7 +191,7 @@ GLOG_DEFINE_string(log_backtrace_at, "",
 #include <BaseTsd.h>
 #define ssize_t SSIZE_T
 #endif
-static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
+static ssize_t pread(int fd, void* buf, unsigned int count, off_t offset) {
   off_t orig_offset = lseek(fd, 0, SEEK_CUR);
   if (orig_offset == (off_t)-1)
     return -1;
@@ -213,7 +213,7 @@ static ssize_t pwrite(int fd, void* buf, unsigned int count, off_t offset) {
     return -1;
   if (lseek(fd, offset, SEEK_CUR) == (off_t)-1)
     return -1;
-  ssize_t len = write(fd, buf, count);
+  ssize_t len = write(fd, buf, (unsigned int)count);
   if (len < 0)
     return len;
   if (lseek(fd, orig_offset, SEEK_SET) == (off_t)-1)
@@ -628,7 +628,7 @@ inline void LogDestination::RemoveLogSink(LogSink *destination) {
   MutexLock l(&sink_mutex_);
   // This doesn't keep the sinks in order, but who cares?
   if (sinks_) {
-    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
+    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
       if ((*sinks_)[i] == destination) {
         (*sinks_)[i] = (*sinks_)[sinks_->size() - 1];
         sinks_->pop_back();
@@ -761,7 +761,15 @@ inline void LogDestination::MaybeLogToLogfile(LogSeverity severity,
 					      size_t len) {
   const bool should_flush = severity > FLAGS_logbuflevel;
   LogDestination* destination = log_destination(severity);
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
   destination->logger_->Write(should_flush, timestamp, message, len);
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 }
 
 inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
@@ -786,7 +794,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
+    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
                          line, tm_time, message, message_len);
     }
@@ -796,7 +804,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
 inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
+    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->WaitTillSent();
     }
   }

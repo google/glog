@@ -928,8 +928,14 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
+#ifdef __APPLE__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
-  typedef @ac_google_namespace@::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+  typedef @ac_google_namespace@::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] UNUSED
 
 #define LOG_EVERY_N(severity, n)                                        \
   GOOGLE_GLOG_COMPILE_ASSERT(@ac_google_namespace@::GLOG_ ## severity < \

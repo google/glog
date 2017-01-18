@@ -150,7 +150,16 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // avoiding FILE buffering (to avoid invoking malloc()), and bypassing
   // libc (to side-step any libc interception).
   // We write just once to avoid races with other invocations of RawLog__.
-  safe_write(STDERR_FILENO, buffer, (unsigned int)strlen(buffer));
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
+  safe_write(STDERR_FILENO, buffer, strlen(buffer));
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
   if (severity == GLOG_FATAL)  {
     if (!sync_val_compare_and_swap(&crashed, false, true)) {
       crash_reason.filename = file;
