@@ -26,8 +26,8 @@ set (CPACK_PACKAGE_VERSION_MINOR ${GLOG_MINOR_VERSION})
 set (CPACK_PACKAGE_VERSION_PATCH ${GLOG_PATCH_VERSION})
 set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
-option (WITH_GFLAGS "Use gflags" OFF)
-option (WITH_THREADS "Enable multithreading support" OFF)
+option (WITH_GFLAGS "Use gflags" ON)
+option (WITH_THREADS "Enable multithreading support" ON)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
