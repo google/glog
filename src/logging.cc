@@ -191,7 +191,7 @@ GLOG_DEFINE_string(log_backtrace_at, "",
 #include <BaseTsd.h>
 #define ssize_t SSIZE_T
 #endif
-static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
+static ssize_t pread(int fd, void* buf, unsigned int count, off_t offset) {
   off_t orig_offset = lseek(fd, 0, SEEK_CUR);
   if (orig_offset == (off_t)-1)
     return -1;
@@ -207,7 +207,7 @@ static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
 #endif  // !HAVE_PREAD
 
 #ifndef HAVE_PWRITE
-static ssize_t pwrite(int fd, void* buf, size_t count, off_t offset) {
+static ssize_t pwrite(int fd, void* buf, unsigned int count, off_t offset) {
   off_t orig_offset = lseek(fd, 0, SEEK_CUR);
   if (orig_offset == (off_t)-1)
     return -1;
@@ -405,7 +405,7 @@ class LogFileObject : public base::Logger {
   virtual void Write(bool force_flush, // Should we force a flush here?
                      time_t timestamp,  // Timestamp for this entry
                      const char* message,
-                     int message_len);
+                     size_t message_len);
 
   // Configuration options
   void SetBasename(const char* basename);
@@ -417,7 +417,7 @@ class LogFileObject : public base::Logger {
 
   // It is the actual file length for the system loggers,
   // i.e., INFO, ERROR, etc.
-  virtual uint32 LogSize() {
+  virtual size_t LogSize() {
     MutexLock l(&lock_);
     return file_length_;
   }
@@ -437,8 +437,8 @@ class LogFileObject : public base::Logger {
   string filename_extension_;     // option users can specify (eg to add port#)
   FILE* file_;
   LogSeverity severity_;
-  uint32 bytes_since_flush_;
-  uint32 file_length_;
+  size_t bytes_since_flush_;
+  size_t file_length_;
   unsigned int rollover_attempt_;
   int64 next_flush_time_;         // cycle count at which to flush log
 
@@ -628,7 +628,7 @@ inline void LogDestination::RemoveLogSink(LogSink *destination) {
   MutexLock l(&sink_mutex_);
   // This doesn't keep the sinks in order, but who cares?
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       if ((*sinks_)[i] == destination) {
         (*sinks_)[i] = (*sinks_)[sinks_->size() - 1];
         sinks_->pop_back();
@@ -786,7 +786,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
                          line, tm_time, message, message_len);
     }
@@ -796,7 +796,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
 inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->WaitTillSent();
     }
   }
@@ -964,7 +964,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 void LogFileObject::Write(bool force_flush,
                           time_t timestamp,
                           const char* message,
-                          int message_len) {
+                          size_t message_len) {
   MutexLock l(&lock_);
 
   // We don't log if the base_name_ is "" (which means "don't write")
@@ -1080,7 +1080,7 @@ void LogFileObject::Write(bool force_flush,
                        << "threadid file:line] msg" << '\n';
     const string& file_header_string = file_header_stream.str();
 
-    const int header_len = file_header_string.size();
+    const size_t header_len = file_header_string.size();
     fwrite(file_header_string.data(), 1, header_len, file_);
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
@@ -1341,7 +1341,7 @@ static char fatal_message[256];
 
 void ReprintFatalMessage() {
   if (fatal_message[0]) {
-    const int n = strlen(fatal_message);
+    const size_t n = strlen(fatal_message);
     if (!FLAGS_logtostderr) {
       // Also write to stderr (don't color to avoid terminal checks)
       WriteToStderr(fatal_message, n);
@@ -1413,7 +1413,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
       SetCrashReason(&crash_reason);
 
       // Store shortened fatal message for other logs and GWQ status
-      const int copy = min<int>(data_->num_chars_to_log_,
+      const size_t copy = min<size_t>(data_->num_chars_to_log_,
                                 sizeof(fatal_message)-1);
       memcpy(fatal_message, data_->message_text_, copy);
       fatal_message[copy] = '\0';
@@ -1436,7 +1436,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     LogDestination::WaitForSinks(data_);
 
     const char* message = "*** Check failure stack trace: ***\n";
-    if (write(STDERR_FILENO, message, strlen(message)) < 0) {
+    if (write(STDERR_FILENO, message, (unsigned int)strlen(message)) < 0) {
       // Ignore errors.
     }
     Fail();
@@ -1514,7 +1514,7 @@ void LogMessage::SaveOrSendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
     // Omit prefix of message and trailing newline when recording in outvec_.
     const char *start = data_->message_text_ + data_->num_prefix_chars_;
-    int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
+    size_t len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
     data_->outvec_->push_back(string(start, len));
   } else {
     SendToLog();
@@ -1527,7 +1527,7 @@ void LogMessage::WriteToStringAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
     // Omit prefix of message and trailing newline when writing to message_.
     const char *start = data_->message_text_ + data_->num_prefix_chars_;
-    int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
+    size_t len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
     data_->message_->assign(start, len);
   }
   SendToLog();
@@ -2019,6 +2019,9 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
                                  const CheckOpString& result) :
     LogMessage(file, line, result) {}
 
+#ifdef _MSC_VER
+# pragma warning(disable: 4722)
+#endif
 LogMessageFatal::~LogMessageFatal() {
     Flush();
     LogMessage::Fail();
