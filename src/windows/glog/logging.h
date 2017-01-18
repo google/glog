@@ -932,8 +932,14 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
+#if defined(__APPLE__) || defined(__GCC__) || defined(__clang__)
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
-  typedef google::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+  typedef google::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] UNUSED
 
 #define LOG_EVERY_N(severity, n)                                        \
   GOOGLE_GLOG_COMPILE_ASSERT(google::GLOG_ ## severity < \
@@ -1529,7 +1535,7 @@ class GOOGLE_GLOG_DLL_DECL Logger {
   // Get the current LOG file size.
   // The returned value is approximate since some
   // logged data may not have been flushed to disk yet.
-  virtual uint32 LogSize() = 0;
+  virtual size_t LogSize() = 0;
 };
 
 // Get the logger for the specified severity level.  The logger

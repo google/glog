@@ -160,7 +160,7 @@ static void VLOG2Initializer() {
 // This can be called very early, so we use SpinLock and RAW_VLOG here.
 int SetVLOGLevel(const char* module_pattern, int log_level) {
   int result = FLAGS_v;
-  int const pattern_len = strlen(module_pattern);
+  size_t const pattern_len = strlen(module_pattern);
   bool found = false;
   {
     MutexLock l(&vmodule_lock);  // protect whole read-modify-write
