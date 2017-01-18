@@ -1436,10 +1436,18 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     LogDestination::WaitForSinks(data_);
 
     const char* message = "*** Check failure stack trace: ***\n";
-    if (write(STDERR_FILENO, message, (unsigned int)strlen(message)) < 0) {
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
+	if (write(STDERR_FILENO, message, strlen(message)) < 0) {
       // Ignore errors.
     }
-    Fail();
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+	Fail();
   }
 }
 
@@ -2020,12 +2028,16 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
     LogMessage(file, line, result) {}
 
 #ifdef _MSC_VER
+#pragma warning( push )
 # pragma warning(disable: 4722)
 #endif
 LogMessageFatal::~LogMessageFatal() {
     Flush();
     LogMessage::Fail();
 }
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 namespace base {
 
