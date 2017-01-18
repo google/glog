@@ -628,7 +628,7 @@ inline void LogDestination::RemoveLogSink(LogSink *destination) {
   MutexLock l(&sink_mutex_);
   // This doesn't keep the sinks in order, but who cares?
   if (sinks_) {
-    for (size_t i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       if ((*sinks_)[i] == destination) {
         (*sinks_)[i] = (*sinks_)[sinks_->size() - 1];
         sinks_->pop_back();
@@ -786,7 +786,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (size_t i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
                          line, tm_time, message, message_len);
     }
@@ -796,7 +796,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
 inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (size_t i = sinks_->size() - 1; i >= 0; i--) {
+    for (int i = (int)sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->WaitTillSent();
     }
   }
