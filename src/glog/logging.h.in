@@ -928,14 +928,17 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
+#if defined(__APPLE__) || defined(__GCC__) || defined(__clang__)
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
-  typedef @ac_google_namespace@::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+  typedef @ac_google_namespace@::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] UNUSED
 
 #define LOG_EVERY_N(severity, n)                                        \
-  GOOGLE_GLOG_COMPILE_ASSERT(@ac_google_namespace@::GLOG_ ## severity < \
-                             @ac_google_namespace@::NUM_SEVERITIES,     \
-                             INVALID_REQUESTED_LOG_SEVERITY);           \
-  SOME_KIND_OF_LOG_EVERY_N(severity, (n), @ac_google_namespace@::LogMessage::SendToLog)
+ SOME_KIND_OF_LOG_EVERY_N(severity, (n), @ac_google_namespace@::LogMessage::SendToLog)
 
 #define SYSLOG_EVERY_N(severity, n) \
   SOME_KIND_OF_LOG_EVERY_N(severity, (n), @ac_google_namespace@::LogMessage::SendToSyslogAndLog)
@@ -1341,10 +1344,10 @@ class GOOGLE_GLOG_DLL_DECL ErrnoLogMessage : public LogMessage {
 
 class GOOGLE_GLOG_DLL_DECL LogMessageVoidify {
  public:
-  LogMessageVoidify() { }
+  LogMessageVoidify();
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(std::ostream&) { }
+  void operator&(std::ostream&);
 };
 
 
@@ -1517,7 +1520,7 @@ class GOOGLE_GLOG_DLL_DECL Logger {
   virtual void Write(bool force_flush,
                      time_t timestamp,
                      const char* message,
-                     int message_len) = 0;
+                     size_t message_len) = 0;
 
   // Flush any buffered messages
   virtual void Flush() = 0;
@@ -1525,7 +1528,7 @@ class GOOGLE_GLOG_DLL_DECL Logger {
   // Get the current LOG file size.
   // The returned value is approximate since some
   // logged data may not have been flushed to disk yet.
-  virtual uint32 LogSize() = 0;
+  virtual size_t LogSize() = 0;
 };
 
 // Get the logger for the specified severity level.  The logger

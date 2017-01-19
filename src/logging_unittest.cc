@@ -732,13 +732,13 @@ struct MyLogger : public base::Logger {
   virtual void Write(bool /* should_flush */,
                      time_t /* timestamp */,
                      const char* message,
-                     int length) {
+                     size_t length) {
     data.append(message, length);
   }
 
   virtual void Flush() { }
 
-  virtual uint32 LogSize() { return data.length(); }
+  virtual size_t LogSize() { return data.length(); }
 };
 
 static void TestWrapper() {
@@ -795,7 +795,15 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   const size_t buf_size = statbuf.st_size + 1;
   char* buf = new char[buf_size];
   memset(buf, 0, buf_size);
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
   CHECK_ERR(read(fd, buf, buf_size));
+#ifdef _MSV_VER
+#pragma warning( pop )
+#endif
 
   const char *p = buf;
   int64 checked = 0;
@@ -960,7 +968,7 @@ class TestLogSinkWriter : public Thread {
       // Normally this would be some more real/involved logging logic
       // where LOG() usage can't be eliminated,
       // e.g. pushing the message over with an RPC:
-      int messages_left = messages_.size();
+      size_t messages_left = messages_.size();
       mutex_.Unlock();
       SleepForMilliseconds(20);
       // May not use LOG while holding mutex_, because Buffer()
