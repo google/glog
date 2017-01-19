@@ -197,7 +197,16 @@ static ssize_t pread(int fd, void* buf, unsigned int count, off_t offset) {
     return -1;
   if (lseek(fd, offset, SEEK_CUR) == (off_t)-1)
     return -1;
-  ssize_t len = read(fd, buf, (unsigned int)count);
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
+  ssize_t len = read(fd, buf, count);
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
   if (len < 0)
     return len;
   if (lseek(fd, orig_offset, SEEK_SET) == (off_t)-1)
@@ -213,7 +222,16 @@ static ssize_t pwrite(int fd, void* buf, unsigned int count, off_t offset) {
     return -1;
   if (lseek(fd, offset, SEEK_CUR) == (off_t)-1)
     return -1;
-  ssize_t len = write(fd, buf, (unsigned int)count);
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
+    ssize_t len = write(fd, buf, count);
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
   if (len < 0)
     return len;
   if (lseek(fd, orig_offset, SEEK_SET) == (off_t)-1)
@@ -628,13 +646,14 @@ inline void LogDestination::RemoveLogSink(LogSink *destination) {
   MutexLock l(&sink_mutex_);
   // This doesn't keep the sinks in order, but who cares?
   if (sinks_) {
-    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
-      if ((*sinks_)[i] == destination) {
-        (*sinks_)[i] = (*sinks_)[sinks_->size() - 1];
-        sinks_->pop_back();
-        break;
-      }
-    }
+	  for (std::vector<LogSink*>::reverse_iterator it = sinks_->rbegin();
+		  it != sinks_->rend(); ++it) {
+		  if ((*it) == destination) {
+			  (*it) = (*sinks_)[sinks_->size() - 1];
+			  sinks_->pop_back();
+			  break;
+		  }
+	  }
   }
 }
 
@@ -794,8 +813,9 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
-      (*sinks_)[i]->send(severity, full_filename, base_filename,
+	for (std::vector<LogSink*>::reverse_iterator it = sinks_->rbegin();
+		it != sinks_->rend(); ++it) {
+	  (*it)->send(severity, full_filename, base_filename,
                          line, tm_time, message, message_len);
     }
   }
@@ -804,9 +824,10 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
 inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (ptrdiff_t i = sinks_->size() - 1; i >= 0; i--) {
-      (*sinks_)[i]->WaitTillSent();
-    }
+	  for (std::vector<LogSink*>::reverse_iterator it = sinks_->rbegin();
+		  it != sinks_->rend(); ++it) {
+		  (*it)->WaitTillSent();
+	  }
   }
   const bool send_to_sink =
       (data->send_method_ == &LogMessage::SendToSink) ||
