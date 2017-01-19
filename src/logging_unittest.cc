@@ -795,7 +795,15 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   const size_t buf_size = statbuf.st_size + 1;
   char* buf = new char[buf_size];
   memset(buf, 0, buf_size);
-  CHECK_ERR(read(fd, buf, (unsigned int)buf_size));
+
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable: 4267 )
+#endif
+  CHECK_ERR(read(fd, buf, buf_size));
+#ifdef _MSV_VER
+#pragma warning( pop )
+#endif
 
   const char *p = buf;
   int64 checked = 0;

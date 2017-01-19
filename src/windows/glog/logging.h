@@ -932,7 +932,7 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__GCC__) || defined(__clang__)
 #define UNUSED __attribute__((unused))
 #else
 #define UNUSED
