@@ -704,6 +704,10 @@ std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
     return name##Impl<int, int>(v1, v2, exprtext); \
   }
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4018 )
+#endif
 // We use the full name Check_EQ, Check_NE, etc. in case the file including
 // base/logging.h provides its own #defines for the simpler names EQ, NE, etc.
 // This happens if, for example, those are used as token names in a
@@ -714,6 +718,10 @@ DEFINE_CHECK_OP_IMPL(Check_LE, <=)
 DEFINE_CHECK_OP_IMPL(Check_LT, < )
 DEFINE_CHECK_OP_IMPL(Check_GE, >=)
 DEFINE_CHECK_OP_IMPL(Check_GT, > )
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 #undef DEFINE_CHECK_OP_IMPL
 
 // Helper macro for binary operators.
