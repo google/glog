@@ -1250,7 +1250,7 @@ public:
   void SendToSyslogAndLog();  // Actually dispatch to syslog and the logs
 
   // Call abort() or similar to perform LOG(FATAL) crash.
-  static void  Fail();
+  static void __declspec(noreturn) Fail();
 
   std::ostream& stream();
 
@@ -1298,7 +1298,7 @@ class GOOGLE_GLOG_DLL_DECL LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line);
   LogMessageFatal(const char* file, int line, const CheckOpString& result);
-   ~LogMessageFatal();
+  __declspec(noreturn) ~LogMessageFatal();
 };
 
 // A non-macro interface to the log facility; (useful
@@ -1602,7 +1602,7 @@ class GOOGLE_GLOG_DLL_DECL NullStreamFatal : public NullStream {
   NullStreamFatal() { }
   NullStreamFatal(const char* file, int line, const CheckOpString& result) :
       NullStream(file, line, result) { }
-   ~NullStreamFatal() throw () { _exit(1); }
+  __declspec(noreturn) ~NullStreamFatal() throw () { _exit(1); }
 };
 
 // Install a signal handler that will dump signal information and a stack
