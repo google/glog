@@ -349,4 +349,12 @@ _END_GOOGLE_NAMESPACE_
 // Make an implementation of stacktrace compiled.
 #ifdef STACKTRACE_H
 # include STACKTRACE_H
+# if 0
+// For include scanners which can't handle macro expansions.
+#  include "stacktrace_libunwind-inl.h"
+#  include "stacktrace_x86-inl.h"
+#  include "stacktrace_x86_64-inl.h"
+#  include "stacktrace_powerpc-inl.h"
+#  include "stacktrace_generic-inl.h"
+# endif
 #endif
