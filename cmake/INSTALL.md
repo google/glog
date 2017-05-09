@@ -20,7 +20,7 @@ To use Glog in your project `myproj`, use:
 cmake_minimum_required (VERSION 3.0)
 project (myproj)
 
-find_package (glog 0.3.4 REQUIRED)
+find_package (glog 0.3.5 REQUIRED)
 
 add_executable (myapp main.cpp)
 target_link_libraries (myapp glog::glog)
