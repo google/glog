@@ -260,8 +260,13 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   return g_symbolize_result;
 }
 
+#ifdef __ppc64__
+// Symbolize stack consumption should be within 4kB.
+const int kStackConsumptionUpperLimit = 4096;
+#else
 // Symbolize stack consumption should be within 2kB.
 const int kStackConsumptionUpperLimit = 2048;
+#endif
 
 TEST(Symbolize, SymbolizeStackConsumption) {
   int stack_consumed;
