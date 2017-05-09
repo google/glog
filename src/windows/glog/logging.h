@@ -1313,6 +1313,35 @@ inline void LogAtLevel(int const severity, std::string const &msg) {
 // LOG macros, 2. this macro can be used as C++ stream.
 #define LOG_AT_LEVEL(severity) google::LogMessage(__FILE__, __LINE__, severity).stream()
 
+// Check if it's compiled in C++11 mode.
+//
+// GXX_EXPERIMENTAL_CXX0X is defined by gcc and clang up to at least
+// gcc-4.7 and clang-3.1 (2011-12-13).  __cplusplus was defined to 1
+// in gcc before 4.7 (Crosstool 16) and clang before 3.1, but is
+// defined according to the language version in effect thereafter.
+// Microsoft Visual Studio 14 (2015) sets __cplusplus==199711 despite
+// reasonably good C++11 support, so we set LANG_CXX for it and
+// newer versions (_MSC_VER >= 1900).
+#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L || \
+     (defined(_MSC_VER) && _MSC_VER >= 1900))
+// Helper for CHECK_NOTNULL().
+//
+// In C++11, all cases can be handled by a single function. Since the value
+// category of the argument is preserved (also for rvalue references),
+// member initializer lists like the one below will compile correctly:
+//
+//   Foo()
+//     : x_(CHECK_NOTNULL(MethodReturningUniquePtr())) {}
+template <typename T>
+T CheckNotNull(const char* file, int line, const char* names, T&& t) {
+ if (t == nullptr) {
+   LogMessageFatal(file, line, new std::string(names));
+ }
+ return std::forward<T>(t);
+}
+
+#else
+
 // A small helper for CHECK_NOTNULL().
 template <typename T>
 T* CheckNotNull(const char *file, int line, const char *names, T* t) {
@@ -1321,6 +1350,7 @@ T* CheckNotNull(const char *file, int line, const char *names, T* t) {
   }
   return t;
 }
+#endif
 
 // Allow folks to put a counter in the LOG_EVERY_X()'ed messages. This
 // only works if ostream is a LogStream. If the ostream is not a
