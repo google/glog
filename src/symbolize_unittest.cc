@@ -99,7 +99,13 @@ TEST(Symbolize, Symbolize) {
 
   // Compilers should give us pointers to them.
   EXPECT_STREQ("nonstatic_func", TrySymbolize((void *)(&nonstatic_func)));
-  EXPECT_STREQ("static_func", TrySymbolize((void *)(&static_func)));
+
+  // The name of an internal linkage symbol is not specified; allow either a
+  // mangled or an unmangled name here.
+  const char *static_func_symbol = TrySymbolize((void *)(&static_func));
+  CHECK(NULL != static_func_symbol);
+  EXPECT_TRUE(strcmp("static_func", static_func_symbol) == 0 ||
+              strcmp("static_func()", static_func_symbol) == 0);
 
   EXPECT_TRUE(NULL == TrySymbolize(NULL));
 }
@@ -267,9 +273,13 @@ TEST(Symbolize, SymbolizeStackConsumption) {
   EXPECT_GT(stack_consumed, 0);
   EXPECT_LT(stack_consumed, kStackConsumptionUpperLimit);
 
+  // The name of an internal linkage symbol is not specified; allow either a
+  // mangled or an unmangled name here.
   symbol = SymbolizeStackConsumption((void *)(&static_func),
                                      &stack_consumed);
-  EXPECT_STREQ("static_func", symbol);
+  CHECK(NULL != symbol);
+  EXPECT_TRUE(strcmp("static_func", symbol) == 0 ||
+              strcmp("static_func()", symbol) == 0);
   EXPECT_GT(stack_consumed, 0);
   EXPECT_LT(stack_consumed, kStackConsumptionUpperLimit);
 }
