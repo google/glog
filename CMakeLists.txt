@@ -53,6 +53,13 @@ if (WITH_GFLAGS)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
+    # When linking unittest, mingw32 cannot find -lgflags without this.
+    LINK_DIRECTORIES( ${LINK_DIRECTORIES} ${gflags_INCLUDE_DIR}/../lib)
+    # A deprecated API, but gflags need it.
+    if(WIN32)
+	  set(CMAKE_CXX_STANDARD_LIBRARIES "${CMAKE_CXX_STANDARD_LIBRARIES} -lshlwapi")
+	  set(CMAKE_C_STANDARD_LIBRARIES "${CMAKE_C_STANDARD_LIBRARIES} -lshlwapi")
+    endif()
     determine_gflags_namespace (gflags_NAMESPACE)
   endif (gflags_FOUND)
 endif (WITH_GFLAGS)
