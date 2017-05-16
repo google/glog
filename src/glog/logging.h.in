@@ -364,6 +364,9 @@ DECLARE_string(log_dir);
 // Set the log file mode.
 DECLARE_int32(logfile_mode);
 
+// Allow writing to the same logfile, using date-only broad suffixes.
+DECLARE_bool(usedatefilenames);
+
 // Sets the path of the directory into which to put additional links
 // to the log files.
 DECLARE_string(log_link);

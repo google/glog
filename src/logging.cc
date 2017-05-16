@@ -167,6 +167,8 @@ static const char* DefaultLogDir() {
 
 GLOG_DEFINE_int32(logfile_mode, 0664, "Log file mode/permissions.");
 
+GLOG_DEFINE_bool(usedatefilenames, false, "Use YYYYMMDD-style logfile naming");
+
 GLOG_DEFINE_string(log_dir, DefaultLogDir(),
                    "If specified, logfiles are written into this directory instead "
                    "of the default logging directory.");
@@ -906,7 +908,9 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   string string_filename = base_filename_+filename_extension_+
                            time_pid_string;
   const char* filename = string_filename.c_str();
-  int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, FLAGS_logfile_mode);
+  int fd = open(filename,
+                O_WRONLY | O_CREAT | ((!FLAGS_usedatefilenames) ? O_EXCL : 0),
+                FLAGS_logfile_mode);
   if (fd == -1) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
@@ -996,13 +1000,15 @@ void LogFileObject::Write(bool force_flush,
     time_pid_stream.fill('0');
     time_pid_stream << 1900+tm_time.tm_year
                     << setw(2) << 1+tm_time.tm_mon
-                    << setw(2) << tm_time.tm_mday
-                    << '-'
-                    << setw(2) << tm_time.tm_hour
-                    << setw(2) << tm_time.tm_min
-                    << setw(2) << tm_time.tm_sec
-                    << '.'
-                    << GetMainThreadPid();
+                    << setw(2) << tm_time.tm_mday;
+    if (!FLAGS_usedatefilenames) {
+      time_pid_stream << '-'
+                      << setw(2) << tm_time.tm_hour
+                      << setw(2) << tm_time.tm_min
+                      << setw(2) << tm_time.tm_sec
+                      << '.'
+                      << GetMainThreadPid();
+    }
     const string& time_pid_string = time_pid_stream.str();
 
     if (base_filename_selected_) {
