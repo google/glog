@@ -183,6 +183,9 @@ GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
 GLOG_DEFINE_string(log_backtrace_at, "",
                    "Emit a backtrace when logging at file:linenum.");
 
+GLOG_DEFINE_bool(daily_rolling_log_file, false,
+                 "Rolling the log file daily.");
+
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
 
@@ -330,6 +333,15 @@ static int32 MaxLogSize() {
   return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
 }
 
+static bool DailyRolling(time_t timestamp, int32 last_day) {
+    if (FLAGS_daily_rolling_log_file) {
+        struct ::tm tm_time;
+        localtime_r(&timestamp, &tm_time);
+        return last_day != tm_time.tm_mday;
+    }
+    return false;
+}
+
 // An arbitrary limit on the length of a single log message.  This
 // is so that streaming can be done more efficiently.
 const size_t LogMessage::kMaxLogMessageLen = 30000;
@@ -441,6 +453,7 @@ class LogFileObject : public base::Logger {
   uint32 file_length_;
   unsigned int rollover_attempt_;
   int64 next_flush_time_;         // cycle count at which to flush log
+  int32 last_mday_;
 
   // Actually create a logfile using the value of base_filename_ and the
   // supplied argument time_pid_string
@@ -837,6 +850,7 @@ LogFileObject::LogFileObject(LogSeverity severity,
     symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
     filename_extension_(),
     file_(NULL),
+    last_mday_(0),
     severity_(severity),
     bytes_since_flush_(0),
     file_length_(0),
@@ -973,7 +987,7 @@ void LogFileObject::Write(bool force_flush,
   }
 
   if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
-      PidHasChanged()) {
+      PidHasChanged() || DailyRolling(timestamp, last_mday_)) {
     if (file_ != NULL) fclose(file_);
     file_ = NULL;
     file_length_ = bytes_since_flush_ = 0;
@@ -1062,6 +1076,7 @@ void LogFileObject::Write(bool force_flush,
         return;
       }
     }
+    last_mday_ = tm_time.tm_mday;
 
     // Write a header message into the log file
     ostringstream file_header_stream;
