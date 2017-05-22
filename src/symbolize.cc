@@ -837,6 +837,57 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
+#elif defined(OS_WINDOWS)
+
+#include "Dbghelp.h"
+
+_START_GOOGLE_NAMESPACE_
+
+class SymInitializer {
+public:
+  HANDLE process = NULL;
+  bool ready = false;
+  SymInitializer() {
+    // Initialize the symbol handler.
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
+    process = GetCurrentProcess();
+    // Defer symbol loading.
+    // We do not request undecorated symbols with SYMOPT_UNDNAME
+    // because the mangling library calls UnDecorateSymbolName.
+    SymSetOptions(SYMOPT_DEFERRED_LOADS);
+    if (SymInitialize(process, NULL, true)) {
+      ready = true;
+    }
+  }
+  ~SymInitializer() {
+    SymCleanup(process);
+  }
+};
+
+__declspec(noinline) static bool SymbolizeAndDemangle(void *pc, char *out,
+                                                      int out_size) {
+  const SymInitializer symInitializer;
+  if (!symInitializer.ready) {
+    return false;
+  }
+  // Resolve symbol information from address.
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680578(v=vs.85).aspx
+  char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+  SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO*>(buf);
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  symbol->MaxNameLen = MAX_SYM_NAME;
+  bool ret = SymFromAddr(symInitializer.process, reinterpret_cast<DWORD64>(pc), 0, symbol);
+  if (ret && static_cast<int>(symbol->NameLen) < out_size) {
+      strncpy(out, symbol->Name, symbol->NameLen);
+      // Symbolization succeeded.  Now we try to demangle the symbol.
+      DemangleInplace(out, out_size);
+      return true;
+  }
+  return false;
+}
+
+_END_GOOGLE_NAMESPACE_
+
 #else
 # error BUG: HAVE_SYMBOLIZE was wrongly set
 #endif

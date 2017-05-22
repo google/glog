@@ -90,6 +90,32 @@ AddressRange expected_range[BACKTRACE_STEPS];
       (prange)->end = ra;                                                \
     }                                                                    \
   } while (0)
+#elif defined(OS_WINDOWS)
+// Compiler Intrinsic _ReturnAddress documentation:
+// https://msdn.microsoft.com/en-us/library/64ez38eh(v=vs.140).aspx
+// This is equivalent to __builtin_return_address.
+#include <intrin.h>
+#pragma intrinsic(_ReturnAddress)
+#define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange)           \
+  do {                                                                   \
+    (prange)->start = &fn;                                               \
+    (prange)->end = _ReturnAddress();                                    \
+    CHECK_LT((prange)->start, (prange)->end);                            \
+  } while (0)
+#define DECLARE_ADDRESS_LABEL(a_label) do { } while (0)
+// MSVC may do the same thing as GCC (as noted above).
+// Adjust function range from _ReturnAddress.
+#define ADJUST_ADDRESS_RANGE_FROM_RA(prange)                             \
+  do {                                                                   \
+    void *ra = _ReturnAddress();                                         \
+    CHECK_LT((prange)->start, ra);                                       \
+    if (ra > (prange)->end) {                                            \
+      printf("Adjusting range from %p..%p to %p..%p\n",                  \
+             (prange)->start, (prange)->end,                             \
+             (prange)->start, ra);                                       \
+      (prange)->end = ra;                                                \
+    }                                                                    \
+  } while (0)
 #else
 // Assume the Check* functions below are not longer than 256 bytes.
 #define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange)           \

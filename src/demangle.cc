@@ -35,10 +35,16 @@
 // Note that we only have partial C++0x support yet.
 
 #include <stdio.h>  // for NULL
+#include "utilities.h"
 #include "demangle.h"
+
+#if defined(OS_WINDOWS)
+#include <Dbghelp.h>
+#endif
 
 _START_GOOGLE_NAMESPACE_
 
+#if !defined(OS_WINDOWS)
 typedef struct {
   const char *abbrev;
   const char *real_name;
@@ -1293,12 +1299,33 @@ static bool ParseTopLevelMangledName(State *state) {
   }
   return false;
 }
+#endif
 
 // The demangler entry point.
 bool Demangle(const char *mangled, char *out, int out_size) {
+#if defined(OS_WINDOWS)
+  // When built with incremental linking, the Windows debugger
+  // library provides a more complicated `Symbol->Name` with the
+  // Incremental Linking Table offset, which looks like
+  // `@ILT+1105(?func@Foo@@SAXH@Z)`. However, the demangler expects
+  // only the mangled symbol, `?func@Foo@@SAXH@Z`. Fortunately, the
+  // mangled symbol is guaranteed to start with `?` (if the symbol
+  // is mangled). So we extract it by searching for `?` and
+  // removing the extra data.
+  std::string symbol(mangled);
+  size_t mark = symbol.find('?');
+  if (mark != std::string::npos) {
+    // Extract the string `?...)`
+    std::string temp = symbol.substr(mark);
+    // Remove the trailing `)`
+    symbol = temp.substr(0, temp.size() - 1);
+  } // else the symbol wasn't mangled, e.g. `main`
+  return UnDecorateSymbolName(symbol.c_str(), out, out_size, UNDNAME_COMPLETE);
+#else
   State state;
   InitState(&state, mangled, out, out_size);
   return ParseTopLevelMangledName(&state) && !state.overflowed;
+#endif
 }
 
 _END_GOOGLE_NAMESPACE_

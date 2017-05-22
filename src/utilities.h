@@ -99,6 +99,8 @@
 //    malloc() from the unwinder.  This is a problem because we're
 //    trying to use the unwinder to instrument malloc().
 //
+// 4) The Windows API CaptureStackTrace.
+//
 // Note: if you add a new implementation here, make sure it works
 // correctly when GetStackTrace() is called with max_depth == 0.
 // Some code may do that.
@@ -112,6 +114,8 @@
 #  define STACKTRACE_H "stacktrace_x86_64-inl.h"
 # elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_powerpc-inl.h"
+# elif defined(OS_WINDOWS)
+#  define STACKTRACE_H "stacktrace_windows-inl.h"
 # endif
 #endif
 
@@ -128,6 +132,9 @@
 # define HAVE_SYMBOLIZE
 #elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
+# define HAVE_SYMBOLIZE
+#elif defined(OS_WINDOWS)
+// Use Dbghelp.dll to symbolize
 # define HAVE_SYMBOLIZE
 #endif
 
