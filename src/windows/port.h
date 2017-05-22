@@ -119,7 +119,7 @@ extern int GOOGLE_GLOG_DLL_DECL safe_vsnprintf(char *str, size_t size,
                           const char *format, va_list ap);
 #define vsnprintf(str, size, format, ap)  safe_vsnprintf(str, size, format, ap)
 #ifndef va_copy
-#define va_copy(dst, src)  (dst) = (src)
+#define va_copy(dst, src)  ((void)((dst) = (src)))
 #endif
 
 /* Windows doesn't support specifying the number of buckets as a
