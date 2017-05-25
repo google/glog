@@ -31,13 +31,14 @@
 //
 // Windows implementation - just use CaptureStackBackTrace
 
+#include "config.h"
 #include "port.h"
 #include "stacktrace.h"
 #include <DbgHelp.h>
 
 _START_GOOGLE_NAMESPACE_
 
-// If you change this function, also change GetStackFrames below.
+GOOGLE_GLOG_DLL_DECL
 int GetStackTrace(void** result, int max_depth, int skip_count) {
   if (max_depth > 64) {
     max_depth = 64;
