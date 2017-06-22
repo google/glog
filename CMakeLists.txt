@@ -49,7 +49,7 @@ include (DetermineGflagsNamespace)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
 if (WITH_GFLAGS)
-  find_package (gflags)
+  find_package (gflags 2.2.0)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
