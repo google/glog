@@ -40,6 +40,7 @@
 
 #if defined(OS_WINDOWS)
 #include <DbgHelp.h>
+#pragma comment(lib, "DbgHelp")
 #endif
 
 _START_GOOGLE_NAMESPACE_

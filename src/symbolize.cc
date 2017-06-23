@@ -840,6 +840,7 @@ _END_GOOGLE_NAMESPACE_
 #elif defined(OS_WINDOWS)
 
 #include <DbgHelp.h>
+#pragma comment(lib, "DbgHelp")
 
 _START_GOOGLE_NAMESPACE_
 

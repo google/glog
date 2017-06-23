@@ -458,7 +458,6 @@ endif (HAVE_EXECINFO_H)
 if (WIN32)
   set (HAVE_STACKTRACE 1)
   set (HAVE_SYMBOLIZE 1)
-  target_link_libraries (glog PUBLIC Dbghelp.lib)
 endif (WIN32)
 
 if (UNIX OR (APPLE AND HAVE_DLADDR))
