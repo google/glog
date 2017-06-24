@@ -28,6 +28,7 @@ set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
+option (GLOG_BUILD_TESTS "Build all of glog's own tests." "${BUILD_TESTING}")
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -461,7 +462,7 @@ endif (UNIX OR (APPLE AND HAVE_DLADDR))
 
 # Unit testing
 
-if (BUILD_TESTING)
+if (GLOG_BUILD_TESTS)
   add_executable (logging_unittest
     src/logging_unittest.cc
   )
@@ -551,7 +552,7 @@ if (BUILD_TESTING)
   if (TARGET symbolize_unittest)
     add_test (NAME symbolize COMMAND symbolize_unittest)
   endif (TARGET symbolize_unittest)
-endif (BUILD_TESTING)
+endif (GLOG_BUILD_TESTS)
 
 install (TARGETS glog
   EXPORT glog-targets
