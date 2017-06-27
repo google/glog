@@ -364,9 +364,9 @@ set (GLOG_SRCS
   src/vlog_is_on.cc
 )
 
-if (HAVE_PTHREAD)
+if (HAVE_PTHREAD OR WIN32)
   list (APPEND GLOG_SRCS src/signalhandler.cc)
-endif (HAVE_PTHREAD)
+endif (HAVE_PTHREAD OR WIN32)
 
 if (WIN32)
   list (APPEND GLOG_SRCS

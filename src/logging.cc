@@ -1463,16 +1463,13 @@ void LogMessage::RecordCrashReason(
 # define ATTRIBUTE_NORETURN
 #endif
 
+#if defined(OS_WINDOWS)
+__declspec(noreturn)
+#endif
 static void logging_fail() ATTRIBUTE_NORETURN;
 
 static void logging_fail() {
-#if defined(_DEBUG) && defined(_MSC_VER)
-  // When debugging on windows, avoid the obnoxious dialog and make
-  // it possible to continue past a LOG(FATAL) in the debugger
-  __debugbreak();
-#else
   abort();
-#endif
 }
 
 typedef void (*logging_fail_func_t)() ATTRIBUTE_NORETURN;
