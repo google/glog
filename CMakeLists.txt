@@ -364,9 +364,9 @@ set (GLOG_SRCS
   src/vlog_is_on.cc
 )
 
-if (HAVE_PTHREAD)
+if (HAVE_PTHREAD OR WIN32)
   list (APPEND GLOG_SRCS src/signalhandler.cc)
-endif (HAVE_PTHREAD)
+endif (HAVE_PTHREAD OR WIN32)
 
 if (WIN32)
   list (APPEND GLOG_SRCS
@@ -454,6 +454,11 @@ endif (NOT BUILD_SHARED_LIBS)
 if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_H)
+
+if (WIN32)
+  set (HAVE_STACKTRACE 1)
+  set (HAVE_SYMBOLIZE 1)
+endif (WIN32)
 
 if (UNIX OR (APPLE AND HAVE_DLADDR))
   set (HAVE_SYMBOLIZE 1)
