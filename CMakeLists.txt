@@ -49,7 +49,7 @@ include (DetermineGflagsNamespace)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
 if (WITH_GFLAGS)
-  find_package (gflags)
+  find_package (gflags 2.2.0)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
@@ -397,8 +397,7 @@ if (WIN32 AND HAVE_SNPRINTF)
 endif (WIN32 AND HAVE_SNPRINTF)
 
 if (gflags_FOUND)
-  target_include_directories (glog PUBLIC $<BUILD_INTERFACE:${gflags_INCLUDE_DIR}>)
-  target_link_libraries (glog PUBLIC ${gflags_LIBRARIES})
+  target_link_libraries (glog PUBLIC gflags)
 
   if (NOT BUILD_SHARED_LIBS)
     # Don't use __declspec(dllexport|dllimport) if this is a static build
