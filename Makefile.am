@@ -194,6 +194,8 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/stacktrace_x86_64-inl.h \
                        src/symbolize.cc src/symbolize.h \
                        src/signalhandler.cc \
+                       src/base/dynamic_annotations.c \
+                       src/base/dynamic_annotations.h \
                        src/base/mutex.h src/base/googleinit.h \
                        src/base/commandlineflags.h src/googletest.h
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)

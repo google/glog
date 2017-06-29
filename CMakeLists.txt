@@ -28,6 +28,7 @@ set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
+option (WITH_TSAN "Use ThreadSanitizer" OFF)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -82,6 +83,7 @@ check_include_file (syslog.h HAVE_SYSLOG_H)
 check_include_file (ucontext.h HAVE_UCONTEXT_H)
 check_include_file (unistd.h HAVE_UNISTD_H)
 check_include_file (unwind.h HAVE_UNWIND_H)
+check_include_file (valgrind.h HAVE_VALGRIND_H)
 
 check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
 check_include_file_cxx ("ext/hash_set" HAVE_EXT_HASH_SET)
@@ -351,6 +353,8 @@ set (GLOG_PUBLIC_H
 set (GLOG_SRCS
   ${GLOG_PUBLIC_H}
   src/base/commandlineflags.h
+  src/base/dynamic_annotations.c
+  src/base/dynamic_annotations.h
   src/base/googleinit.h
   src/base/mutex.h
   src/demangle.cc
@@ -376,6 +380,10 @@ if (WIN32)
 endif (WIN32)
 
 add_compile_options ($<$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>:-Wno-unnamed-type-template-args>)
+
+if (WITH_TSAN)
+  add_compile_options (-fsanitize=thread -DDYNAMIC_ANNOTATIONS_ENABLED)
+endif (WITH_TSAN)
 
 add_library (glog
   ${GLOG_SRCS}

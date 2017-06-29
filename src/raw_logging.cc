@@ -45,6 +45,7 @@
 #include "glog/logging.h"          // To pick up flag settings etc.
 #include "glog/raw_logging.h"
 #include "base/commandlineflags.h"
+#include "base/dynamic_annotations.h"
 
 #ifdef HAVE_STACKTRACE
 # include "stacktrace.h"
@@ -73,6 +74,9 @@ _START_GOOGLE_NAMESPACE_
 // localtime_r which can allocate memory.
 static struct ::tm last_tm_time_for_raw_log;
 static int last_usecs_for_raw_log;
+
+ANNOTATE_BENIGN_RACE_STATIC(last_tm_time_for_raw_log, "");
+ANNOTATE_BENIGN_RACE_STATIC(last_usecs_for_raw_log, "");
 
 void RawLog__SetLastTime(const struct ::tm& t, int usecs) {
   memcpy(&last_tm_time_for_raw_log, &t, sizeof(last_tm_time_for_raw_log));

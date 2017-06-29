@@ -46,6 +46,7 @@ AC_CHECK_HEADERS(sys/time.h)
 AC_CHECK_HEADERS(glob.h)
 # For backtrace with gcc.
 AC_CHECK_HEADERS(unwind.h)
+AC_CHECK_HEADERS(valgrind.h)
 
 AC_CHECK_HEADER(windows.h, ac_cv_have_windows_h=1, ac_cv_have_windows_h=0)
 if test x"$ac_cv_have_windows_h" = x"1"; then
