@@ -29,7 +29,7 @@ set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
 
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
 include (CheckCSourceCompiles)
 include (CheckCXXCompilerFlag)
@@ -330,11 +330,11 @@ endif (WITH_THREADS AND Threads_FOUND)
 
 set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
 
-configure_file (src/config.h.cmake.in config.h)
-configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
-configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
-configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
-configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/src/config.h.cmake.in config.h)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/src/glog/logging.h.in glog/logging.h @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
+configure_file (${CMAKE_CURRENT_LIST_DIR}/src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
 
 set (CMAKE_CXX_VISIBILITY_PRESET default)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -345,33 +345,33 @@ set (GLOG_PUBLIC_H
   ${CMAKE_CURRENT_BINARY_DIR}/glog/raw_logging.h
   ${CMAKE_CURRENT_BINARY_DIR}/glog/stl_logging.h
   ${CMAKE_CURRENT_BINARY_DIR}/glog/vlog_is_on.h
-  src/glog/log_severity.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/glog/log_severity.h
 )
 
 set (GLOG_SRCS
   ${GLOG_PUBLIC_H}
-  src/base/commandlineflags.h
-  src/base/googleinit.h
-  src/base/mutex.h
-  src/demangle.cc
-  src/demangle.h
-  src/logging.cc
-  src/raw_logging.cc
-  src/symbolize.cc
-  src/symbolize.h
-  src/utilities.cc
-  src/utilities.h
-  src/vlog_is_on.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/base/commandlineflags.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/base/googleinit.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/base/mutex.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/demangle.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/demangle.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/logging.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/raw_logging.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/symbolize.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/symbolize.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/utilities.cc
+  ${CMAKE_CURRENT_LIST_DIR}/src/utilities.h
+  ${CMAKE_CURRENT_LIST_DIR}/src/vlog_is_on.cc
 )
 
 if (HAVE_PTHREAD OR WIN32)
-  list (APPEND GLOG_SRCS src/signalhandler.cc)
+  list (APPEND GLOG_SRCS ${CMAKE_CURRENT_LIST_DIR}/src/signalhandler.cc)
 endif (HAVE_PTHREAD OR WIN32)
 
 if (WIN32)
   list (APPEND GLOG_SRCS
-    src/windows/port.cc
-    src/windows/port.h
+    ${CMAKE_CURRENT_LIST_DIR}/src/windows/port.cc
+    ${CMAKE_CURRENT_LIST_DIR}/src/windows/port.h
   )
 endif (WIN32)
 
@@ -392,7 +392,7 @@ if (HAVE_PTHREAD)
 endif (HAVE_PTHREAD)
 
 if (WIN32 AND HAVE_SNPRINTF)
-  set_property (SOURCE src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
+  set_property (SOURCE ${CMAKE_CURRENT_LIST_DIR}/src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
     HAVE_SNPRINTF)
 endif (WIN32 AND HAVE_SNPRINTF)
 
@@ -467,13 +467,13 @@ endif (UNIX OR (APPLE AND HAVE_DLADDR))
 
 if (BUILD_TESTING)
   add_executable (logging_unittest
-    src/logging_unittest.cc
+    ${CMAKE_CURRENT_LIST_DIR}/src/logging_unittest.cc
   )
 
   target_link_libraries (logging_unittest PRIVATE glog)
 
   add_executable (stl_logging_unittest
-    src/stl_logging_unittest.cc
+    ${CMAKE_CURRENT_LIST_DIR}/src/stl_logging_unittest.cc
   )
 
   target_link_libraries (stl_logging_unittest PRIVATE glog)
@@ -505,35 +505,35 @@ if (BUILD_TESTING)
 
   if (HAVE_SYMBOLIZE)
     add_executable (symbolize_unittest
-      src/symbolize_unittest.cc
+      ${CMAKE_CURRENT_LIST_DIR}/src/symbolize_unittest.cc
     )
 
     target_link_libraries (symbolize_unittest PRIVATE glog)
   endif (HAVE_SYMBOLIZE)
 
   add_executable (demangle_unittest
-    src/demangle_unittest.cc
+    ${CMAKE_CURRENT_LIST_DIR}/src/demangle_unittest.cc
   )
 
   target_link_libraries (demangle_unittest PRIVATE glog)
 
   if (HAVE_STACKTRACE)
     add_executable (stacktrace_unittest
-      src/stacktrace_unittest.cc
+      ${CMAKE_CURRENT_LIST_DIR}/src/stacktrace_unittest.cc
     )
 
     target_link_libraries (stacktrace_unittest PRIVATE glog)
   endif (HAVE_STACKTRACE)
 
   add_executable (utilities_unittest
-    src/utilities_unittest.cc
+    ${CMAKE_CURRENT_LIST_DIR}/src/utilities_unittest.cc
   )
 
   target_link_libraries (utilities_unittest PRIVATE glog)
 
   if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
     add_executable (signalhandler_unittest
-      src/signalhandler_unittest.cc
+      ${CMAKE_CURRENT_LIST_DIR}/src/signalhandler_unittest.cc
     )
 
     target_link_libraries (signalhandler_unittest PRIVATE glog)
@@ -568,7 +568,7 @@ if (gflags_FOUND)
   set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION})")
 endif (gflags_FOUND)
 
-configure_package_config_file (glog-config.cmake.in
+configure_package_config_file (${CMAKE_CURRENT_LIST_DIR}/glog-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
   INSTALL_DESTINATION lib/cmake/glog
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
