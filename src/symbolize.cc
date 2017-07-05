@@ -837,6 +837,67 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
+#elif defined(OS_WINDOWS)
+
+#include <DbgHelp.h>
+#pragma comment(lib, "DbgHelp")
+
+_START_GOOGLE_NAMESPACE_
+
+class SymInitializer {
+public:
+  HANDLE process = NULL;
+  bool ready = false;
+  SymInitializer() {
+    // Initialize the symbol handler.
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
+    process = GetCurrentProcess();
+    // Defer symbol loading.
+    // We do not request undecorated symbols with SYMOPT_UNDNAME
+    // because the mangling library calls UnDecorateSymbolName.
+    SymSetOptions(SYMOPT_DEFERRED_LOADS);
+    if (SymInitialize(process, NULL, true)) {
+      ready = true;
+    }
+  }
+  ~SymInitializer() {
+    SymCleanup(process);
+    // We do not need to close `HANDLE process` because it's a "pseudo handle."
+  }
+private:
+  SymInitializer(const SymInitializer&);
+  SymInitializer& operator=(const SymInitializer&);
+};
+
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
+                                                      int out_size) {
+  const static SymInitializer symInitializer;
+  if (!symInitializer.ready) {
+    return false;
+  }
+  // Resolve symbol information from address.
+  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680578(v=vs.85).aspx
+  char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+  SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO *>(buf);
+  symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+  symbol->MaxNameLen = MAX_SYM_NAME;
+  // We use the ANSI version to ensure the string type is always `char *`.
+  // This could break if a symbol has Unicode in it.
+  BOOL ret = SymFromAddr(symInitializer.process,
+                         reinterpret_cast<DWORD64>(pc), 0, symbol);
+  if (ret == 1 && static_cast<int>(symbol->NameLen) < out_size) {
+    // `NameLen` does not include the null terminating character.
+    strncpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
+    out[static_cast<size_t>(symbol->NameLen)] = '\0';
+    // Symbolization succeeded.  Now we try to demangle the symbol.
+    DemangleInplace(out, out_size);
+    return true;
+  }
+  return false;
+}
+
+_END_GOOGLE_NAMESPACE_
+
 #else
 # error BUG: HAVE_SYMBOLIZE was wrongly set
 #endif

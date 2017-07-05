@@ -49,7 +49,7 @@ include (DetermineGflagsNamespace)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
 if (WITH_GFLAGS)
-  find_package (gflags)
+  find_package (gflags 2.2.0)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
@@ -364,9 +364,9 @@ set (GLOG_SRCS
   src/vlog_is_on.cc
 )
 
-if (HAVE_PTHREAD)
+if (HAVE_PTHREAD OR WIN32)
   list (APPEND GLOG_SRCS src/signalhandler.cc)
-endif (HAVE_PTHREAD)
+endif (HAVE_PTHREAD OR WIN32)
 
 if (WIN32)
   list (APPEND GLOG_SRCS
@@ -377,9 +377,18 @@ endif (WIN32)
 
 add_compile_options ($<$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>:-Wno-unnamed-type-template-args>)
 
-add_library (glog
-  ${GLOG_SRCS}
-)
+option(BUILD_SHARED_LIBS_SWITCH "build shared libs" OFF)
+if(BUILD_SHARED_LIBS_SWITCH)
+  set (BUILD_SHARED_LIBS TRUE)
+  add_library (glog SHARED
+    ${GLOG_SRCS}
+  )
+else()
+  set (BUILD_SHARED_LIBS FALSE)
+  add_library (glog STATIC
+    ${GLOG_SRCS}
+  )
+endif()
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -397,8 +406,7 @@ if (WIN32 AND HAVE_SNPRINTF)
 endif (WIN32 AND HAVE_SNPRINTF)
 
 if (gflags_FOUND)
-  target_include_directories (glog PUBLIC $<BUILD_INTERFACE:${gflags_INCLUDE_DIR}>)
-  target_link_libraries (glog PUBLIC ${gflags_LIBRARIES})
+  target_link_libraries (glog PUBLIC gflags)
 
   if (NOT BUILD_SHARED_LIBS)
     # Don't use __declspec(dllexport|dllimport) if this is a static build
@@ -454,6 +462,11 @@ endif (NOT BUILD_SHARED_LIBS)
 if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_H)
+
+if (WIN32)
+  set (HAVE_STACKTRACE 1)
+  set (HAVE_SYMBOLIZE 1)
+endif (WIN32)
 
 if (UNIX OR (APPLE AND HAVE_DLADDR))
   set (HAVE_SYMBOLIZE 1)

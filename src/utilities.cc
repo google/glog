@@ -137,17 +137,19 @@ static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
 
   // TOOD(hamaji): Use signal instead of sigaction?
-#ifdef HAVE_SIGACTION
   if (IsFailureSignalHandlerInstalled()) {
     // Set the default signal handler for SIGABRT, to avoid invoking our
     // own signal handler installed by InstallFailureSignalHandler().
+#ifdef HAVE_SIGACTION
     struct sigaction sig_action;
     memset(&sig_action, 0, sizeof(sig_action));
     sigemptyset(&sig_action.sa_mask);
     sig_action.sa_handler = SIG_DFL;
     sigaction(SIGABRT, &sig_action, NULL);
-  }
+#elif defined(OS_WINDOWS)
+    signal(SIGABRT, SIG_DFL);
 #endif  // HAVE_SIGACTION
+  }
 
   abort();
 }
@@ -349,4 +351,12 @@ _END_GOOGLE_NAMESPACE_
 // Make an implementation of stacktrace compiled.
 #ifdef STACKTRACE_H
 # include STACKTRACE_H
+# if 0
+// For include scanners which can't handle macro expansions.
+#  include "stacktrace_libunwind-inl.h"
+#  include "stacktrace_x86-inl.h"
+#  include "stacktrace_x86_64-inl.h"
+#  include "stacktrace_powerpc-inl.h"
+#  include "stacktrace_generic-inl.h"
+# endif
 #endif

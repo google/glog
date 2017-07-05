@@ -282,7 +282,7 @@ void TestLogging(bool check_counts) {
 }
 
 static void NoAllocNewHook() {
-  CHECK(false) << "unexpected new";
+  LOG(FATAL) << "unexpected new";
 }
 
 struct NewHook {
