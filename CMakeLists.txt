@@ -377,9 +377,18 @@ endif (WIN32)
 
 add_compile_options ($<$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>:-Wno-unnamed-type-template-args>)
 
-add_library (glog
-  ${GLOG_SRCS}
-)
+option(BUILD_SHARED_LIBS_SWITCH "build shared libs" OFF)
+if(BUILD_SHARED_LIBS_SWITCH)
+  set (BUILD_SHARED_LIBS TRUE)
+  add_library (glog SHARED
+    ${GLOG_SRCS}
+  )
+else()
+  set (BUILD_SHARED_LIBS FALSE)
+  add_library (glog STATIC
+    ${GLOG_SRCS}
+  )
+endif()
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
