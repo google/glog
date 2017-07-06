@@ -28,6 +28,7 @@ set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
+option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -189,6 +190,31 @@ namespace Outer { namespace Inner { int i = 0; }}
 using namespace Outer::Inner;;
 int main() { return i; }
 " HAVE_NAMESPACES)
+
+check_cxx_source_compiles ("
+__declspec(thread) int tls;
+int main() { }
+" HAVE_MSVC_TLS)
+
+check_cxx_source_compiles ("
+thread_local int tls;
+int main() { }
+" HAVE_CXX11_TLS)
+
+check_cxx_source_compiles ("
+__attribute__((thread)) int tls;
+int main() { }
+" HAVE_CYGWIN_TLS)
+
+if (WITH_TLS)
+  if (HAVE_CYGWIN_TLS)
+    set (GLOG_THREAD_LOCAL_STORAGE "__attribute__((thread))")
+  elseif (HAVE_MSVC_TLS)
+    set (GLOG_THREAD_LOCAL_STORAGE "__declspec(thread)")
+  elseif (HAVE_CXX11_TLS)
+    set (GLOG_THREAD_LOCAL_STORAGE thread_local)
+  endif (HAVE_CYGWIN_TLS)
+endif (WITH_TLS)
 
 set (_PC_FIELDS
   "gregs[REG_PC]"
