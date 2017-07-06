@@ -272,7 +272,12 @@ void TestLogging(bool check_counts) {
   LOG(ERROR) << string("foo") << ' '<< j << ' ' << setw(10) << j << " "
              << setw(1) << hex << j;
 
-  LOG(ERROR) << (&LOG(ERROR) && 0) << " nested LOG";
+  {
+    google::LogMessage outer(__FILE__, __LINE__, google::ERROR);
+    outer.stream() << "outer";
+
+    LOG(ERROR) << "inner";
+  }
 
   LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << "no prefix";
 
