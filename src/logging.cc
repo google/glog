@@ -114,11 +114,6 @@ GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents.
                  "Logs can grow very quickly and they are rarely read before they "
                  "need to be evicted from memory. Instead, drop them from memory "
                  "as soon as they are flushed to disk.");
-_START_GOOGLE_NAMESPACE_
-namespace logging {
-static const int64 kPageSize = getpagesize();
-}
-_END_GOOGLE_NAMESPACE_
 #endif
 
 // By default, errors (including fatal errors) get logged to stderr as
@@ -438,6 +433,7 @@ class LogFileObject : public base::Logger {
   FILE* file_;
   LogSeverity severity_;
   uint32 bytes_since_flush_;
+  uint32 dropped_mem_length_;
   uint32 file_length_;
   unsigned int rollover_attempt_;
   int64 next_flush_time_;         // cycle count at which to flush log
@@ -839,6 +835,7 @@ LogFileObject::LogFileObject(LogSeverity severity,
     file_(NULL),
     severity_(severity),
     bytes_since_flush_(0),
+    dropped_mem_length_(0),
     file_length_(0),
     rollover_attempt_(kRolloverAttemptFrequency-1),
     next_flush_time_(0) {
@@ -976,7 +973,7 @@ void LogFileObject::Write(bool force_flush,
       PidHasChanged()) {
     if (file_ != NULL) fclose(file_);
     file_ = NULL;
-    file_length_ = bytes_since_flush_ = 0;
+    file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
     rollover_attempt_ = kRolloverAttemptFrequency-1;
   }
 
@@ -1116,11 +1113,17 @@ void LogFileObject::Write(bool force_flush,
        (CycleClock_Now() >= next_flush_time_) ) {
     FlushUnlocked();
 #ifdef OS_LINUX
-    if (FLAGS_drop_log_memory) {
-      if (file_length_ >= logging::kPageSize) {
-        // don't evict the most recent page
-        uint32 len = file_length_ & ~(logging::kPageSize - 1);
-        posix_fadvise(fileno(file_), 0, len, POSIX_FADV_DONTNEED);
+    // Only consider files >= 3MiB
+    if (FLAGS_drop_log_memory && file_length_ >= (3 << 20)) {
+      // Don't evict the most recent 1-2MiB so as not to impact a tailer
+      // of the log file and to avoid page rounding issue on linux < 4.7
+      uint32 total_drop_length = (file_length_ & ~((1 << 20) - 1)) - (1 << 20);
+      uint32 this_drop_length = total_drop_length - dropped_mem_length_;
+      if (this_drop_length >= (2 << 20)) {
+        // Only advise when >= 2MiB to drop
+        posix_fadvise(fileno(file_), dropped_mem_length_, this_drop_length,
+                      POSIX_FADV_DONTNEED);
+        dropped_mem_length_ = total_drop_length;
       }
     }
 #endif
