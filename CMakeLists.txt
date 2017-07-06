@@ -46,6 +46,7 @@ include (CMakePackageConfigHelpers)
 include (CPack)
 include (CTest)
 include (DetermineGflagsNamespace)
+include (GNUInstallDirs)
 
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
@@ -440,10 +441,15 @@ endif (WIN32)
 
 set_target_properties (glog PROPERTIES PUBLIC_HEADER "${GLOG_PUBLIC_H}")
 
+set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
+set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
+set (_glog_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR})
+set (_glog_CMake_INSTALLDIR ${_glog_CMake_LIBDIR}/cmake/glog)
+
 target_include_directories (glog BEFORE PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
-  "$<INSTALL_INTERFACE:include>"
+  "$<INSTALL_INTERFACE:${_glog_CMake_INCLUDE_DIR}>"
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -585,10 +591,10 @@ endif (BUILD_TESTING)
 
 install (TARGETS glog
   EXPORT glog-targets
-  RUNTIME DESTINATION bin
-  PUBLIC_HEADER DESTINATION include/glog
-  LIBRARY DESTINATION lib
-  ARCHIVE DESTINATION lib)
+  RUNTIME DESTINATION ${_glog_CMake_BINDIR}
+  PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog
+  LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
+  ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
 
 if (gflags_FOUND)
   set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION})")
@@ -596,7 +602,7 @@ endif (gflags_FOUND)
 
 configure_package_config_file (glog-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
-  INSTALL_DESTINATION lib/cmake/glog
+  INSTALL_DESTINATION ${_glog_CMake_INSTALLDIR}
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 write_basic_package_version_file (glog-config-version.cmake VERSION
@@ -608,6 +614,7 @@ export (PACKAGE glog)
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
-  DESTINATION lib/cmake/glog)
+  DESTINATION ${_glog_CMake_INSTALLDIR})
 
-install (EXPORT glog-targets NAMESPACE glog:: DESTINATION lib/cmake/glog)
+install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
+  ${_glog_CMake_INSTALLDIR})
