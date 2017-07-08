@@ -112,6 +112,7 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (unwind get_static_proc_name "" HAVE_LIB_UNWIND)
+check_library_exists (DbgHelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
 find_library (UNWIND_LIBRARY NAMES unwind DOC "unwind library")
 mark_as_advanced (UNWIND_LIBRARY)
@@ -339,6 +340,22 @@ else (HAVE_USING_OPERATOR)
   set (ac_cv_cxx_using_operator 0)
 endif (HAVE_USING_OPERATOR)
 
+if (HAVE_EXECINFO_H)
+  set (HAVE_STACKTRACE 1)
+endif (HAVE_EXECINFO_H)
+
+if (WIN32)
+  set (HAVE_STACKTRACE 1)
+
+  if (HAVE_DBGHELP)
+    set (HAVE_SYMBOLIZE 1)
+  endif (HAVE_DBGHELP)
+endif (WIN32)
+
+if (UNIX OR (APPLE AND HAVE_DLADDR))
+  set (HAVE_SYMBOLIZE 1)
+endif (UNIX OR (APPLE AND HAVE_DLADDR))
+
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if (WITH_THREADS AND Threads_FOUND)
@@ -408,6 +425,10 @@ if (UNWIND_LIBRARY)
   target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
 endif (UNWIND_LIBRARY)
 
+if (HAVE_DBGHELP)
+   target_link_libraries (glog PUBLIC DbgHelp)
+endif (HAVE_DBGHELP)
+
 if (HAVE_PTHREAD)
   target_link_libraries (glog PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_PTHREAD)
@@ -432,6 +453,10 @@ set_target_properties (glog PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 if (WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
 endif (WIN32)
+
+if (MSVC)
+  target_compile_definitions (glog PRIVATE _SCL_SECURE_NO_WARNINGS)
+endif (MSVC)
 
 set_target_properties (glog PROPERTIES PUBLIC_HEADER "${GLOG_PUBLIC_H}")
 
@@ -475,19 +500,6 @@ else (NOT BUILD_SHARED_LIBS)
   target_compile_definitions (glog INTERFACE
     "GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS=${_IMPORT}")
 endif (NOT BUILD_SHARED_LIBS)
-
-if (HAVE_EXECINFO_H)
-  set (HAVE_STACKTRACE 1)
-endif (HAVE_EXECINFO_H)
-
-if (WIN32)
-  set (HAVE_STACKTRACE 1)
-  set (HAVE_SYMBOLIZE 1)
-endif (WIN32)
-
-if (UNIX OR (APPLE AND HAVE_DLADDR))
-  set (HAVE_SYMBOLIZE 1)
-endif (UNIX OR (APPLE AND HAVE_DLADDR))
 
 # Unit testing
 
