@@ -136,16 +136,16 @@ AC_ARG_WITH(gflags, AS_HELP_STRING[--with-gflags=GFLAGS_DIR],
   CFLAGS="$CFLAGS $GFLAGS_CFLAGS"
   LIBS="$LIBS $GFLAGS_LIBS"
 )
-AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
-if test x"$ac_cv_have_libgflags" = x"1"; then
-  AC_DEFINE(HAVE_LIB_GFLAGS, 1, [define if you have google gflags library])
-  if test x"$GFLAGS_LIBS" = x""; then
-    GFLAGS_LIBS="-lgflags"
-  fi
-else
-  GFLAGS_CFLAGS=
-  GFLAGS_LIBS=
-fi
+
+AS_IF([test "x$with_gflags" != xno],
+  [AC_CHECK_LIB(gflags, main,
+    [AC_DEFINE(HAVE_LIB_GFLAGS, 1, [Define if you have Google gflags library])
+     if test x"$GFLAGS_LIBS" = x""; then
+       GFLAGS_LIBS="-lgflags"
+     fi
+     ac_cv_have_libgflags=1],
+    AC_MSG_FAILURE([gflags test failed (--without-gflags to disable)]))],
+  ac_cv_have_libgflags=0)
 CFLAGS="$SAVE_CFLAGS"
 LIBS="$SAVE_LIBS"
 
