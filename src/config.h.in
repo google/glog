@@ -30,7 +30,7 @@
 /* Define to 1 if you have the <libunwind.h> header file. */
 #undef HAVE_LIBUNWIND_H
 
-/* define if you have google gflags library */
+/* Define if you have Google gflags library */
 #undef HAVE_LIB_GFLAGS
 
 /* define if you have google gmock library */
