@@ -938,9 +938,6 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
-#define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
-  typedef google::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
-
 #define LOG_EVERY_N(severity, n)                                        \
   SOME_KIND_OF_LOG_EVERY_N(severity, (n), google::LogMessage::SendToLog)
 
