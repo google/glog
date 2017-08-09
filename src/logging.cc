@@ -1151,7 +1151,7 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // LogMessageData object exists (in this case glog makes zero heap memory
 // allocations).
 static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
-static GLOG_THREAD_LOCAL_STORAGE LogMessage::LogMessageData thread_msg_data;
+static GLOG_THREAD_LOCAL_STORAGE LogMessage::LogMessageData* thread_msg_data;
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
 
 LogMessage::LogMessageData::LogMessageData()
@@ -1218,7 +1218,9 @@ void LogMessage::Init(const char* file,
     // No need for locking, because this is thread local.
     if (thread_data_available) {
       thread_data_available = false;
-      data_ = &thread_msg_data;
+      if (!thread_msg_data)
+        thread_msg_data = new LogMessageData();
+      data_ = thread_msg_data;
       // Make sure to clear log data since it may have been used and filled with
       // data. We do not want to append the new message to the previous one.
       data_->reset();
@@ -1299,7 +1301,7 @@ void LogMessage::Init(const char* file,
 LogMessage::~LogMessage() {
   Flush();
 #ifdef GLOG_THREAD_LOCAL_STORAGE
-  if (data_ == &thread_msg_data)
+  if (data_ == thread_msg_data)
     thread_data_available = true;
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
   delete allocated_;
