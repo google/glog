@@ -931,7 +931,8 @@ struct CompileAssert {
 struct CrashReason;
 
 // Returns true if FailureSignalHandler is installed.
-bool IsFailureSignalHandlerInstalled();
+// Needs to be exported since it's used by the signalhandler_unittest.
+GOOGLE_GLOG_DLL_DECL bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
 #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \

@@ -38,7 +38,6 @@
 
 _START_GOOGLE_NAMESPACE_
 
-GOOGLE_GLOG_DLL_DECL
 int GetStackTrace(void** result, int max_depth, int skip_count) {
   if (max_depth > 64) {
     max_depth = 64;
