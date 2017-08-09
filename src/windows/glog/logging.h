@@ -938,8 +938,12 @@ struct CrashReason;
 bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
-#define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
-  typedef google::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+#if __cplusplus <= 199711L
+    #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) \
+      typedef google::glog_internal_namespace_::CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+#else
+    #define GOOGLE_GLOG_COMPILE_ASSERT(expr, msg) static_assert(expr, #msg)
+#endif
 
 #define LOG_EVERY_N(severity, n)                                        \
   GOOGLE_GLOG_COMPILE_ASSERT(google::GLOG_ ## severity < \
