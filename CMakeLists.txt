@@ -410,6 +410,8 @@ add_library (glog
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+target_link_libraries(glog PUBLIC $<$<PLATFORM_ID:Windows>:Dbghelp>)
+
 if (UNWIND_LIBRARY)
   target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
 endif (UNWIND_LIBRARY)
