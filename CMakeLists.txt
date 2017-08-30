@@ -600,6 +600,17 @@ if (gflags_FOUND)
   set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION})")
 endif (gflags_FOUND)
 
+if (OS_WINDOWS)
+  set (PKGCONFIG_INSTALL_DIR)
+else ()
+  set (PKGCONFIG_INSTALL_DIR ${_glog_CMake_LIBDIR}/pkgconfig)
+endif ()
+
+if (PKGCONFIG_INSTALL_DIR)
+  configure_file ("cmake/package.pc.in" "${PROJECT_BINARY_DIR}/lib${CPACK_PACKAGE_NAME}.pc" @ONLY)
+  install (FILES "${PROJECT_BINARY_DIR}/lib${CPACK_PACKAGE_NAME}.pc" DESTINATION "${PKGCONFIG_INSTALL_DIR}")
+endif ()
+
 configure_package_config_file (glog-config.cmake.in
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
   INSTALL_DESTINATION ${_glog_CMake_INSTALLDIR}
