@@ -847,10 +847,10 @@ _END_GOOGLE_NAMESPACE_
 #elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 
 #include <windows.h>
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 #ifdef _MSC_VER
-#pragma comment(lib, "DbgHelp")
+#pragma comment(lib, "dbghelp")
 #endif
 
 _START_GOOGLE_NAMESPACE_

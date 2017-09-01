@@ -115,7 +115,7 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (unwind get_static_proc_name "" HAVE_LIB_UNWIND)
-check_library_exists (DbgHelp UnDecorateSymbolName "" HAVE_DBGHELP)
+check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
 find_library (UNWIND_LIBRARY NAMES unwind DOC "unwind library")
 mark_as_advanced (UNWIND_LIBRARY)
@@ -456,7 +456,7 @@ if (UNWIND_LIBRARY)
 endif (UNWIND_LIBRARY)
 
 if (HAVE_DBGHELP)
-   target_link_libraries (glog PUBLIC DbgHelp)
+   target_link_libraries (glog PUBLIC dbghelp)
 endif (HAVE_DBGHELP)
 
 if (HAVE_PTHREAD)
