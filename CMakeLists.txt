@@ -84,6 +84,7 @@ check_include_file (syslog.h HAVE_SYSLOG_H)
 check_include_file (ucontext.h HAVE_UCONTEXT_H)
 check_include_file (unistd.h HAVE_UNISTD_H)
 check_include_file (unwind.h HAVE_UNWIND_H)
+check_include_file (pwd.h HAVE_PWD_H)
 
 check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
 check_include_file_cxx ("ext/hash_set" HAVE_EXT_HASH_SET)
