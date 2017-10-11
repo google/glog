@@ -331,7 +331,6 @@ const size_t LogMessage::kMaxLogMessageLen = 30000;
 
 struct LogMessage::LogMessageData  {
   LogMessageData();
-  void reset();
 
   int preserved_errno_;      // preserved errno
   // Buffer space; contains complete message text.
@@ -1151,15 +1150,11 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // LogMessageData object exists (in this case glog makes zero heap memory
 // allocations).
 static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
-static GLOG_THREAD_LOCAL_STORAGE LogMessage::LogMessageData thread_msg_data;
+static GLOG_THREAD_LOCAL_STORAGE char thread_msg_data[sizeof(LogMessage::LogMessageData)];
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
 
 LogMessage::LogMessageData::LogMessageData()
   : stream_(message_text_, LogMessage::kMaxLogMessageLen, 0) {
-}
-
-void LogMessage::LogMessageData::reset() {
-    stream_.reset();
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
@@ -1218,10 +1213,7 @@ void LogMessage::Init(const char* file,
     // No need for locking, because this is thread local.
     if (thread_data_available) {
       thread_data_available = false;
-      data_ = &thread_msg_data;
-      // Make sure to clear log data since it may have been used and filled with
-      // data. We do not want to append the new message to the previous one.
-      data_->reset();
+      data_ = new (&thread_msg_data) LogMessageData;
     } else {
       allocated_ = new LogMessageData();
       data_ = allocated_;
@@ -1299,10 +1291,16 @@ void LogMessage::Init(const char* file,
 LogMessage::~LogMessage() {
   Flush();
 #ifdef GLOG_THREAD_LOCAL_STORAGE
-  if (data_ == &thread_msg_data)
+  if (data_ == static_cast<void*>(thread_msg_data)) {
+    data_->~LogMessageData();
     thread_data_available = true;
-#endif // defined(GLOG_THREAD_LOCAL_STORAGE)
+  }
+  else {
+    delete allocated_;
+  }
+#else // !defined(GLOG_THREAD_LOCAL_STORAGE)
   delete allocated_;
+#endif // defined(GLOG_THREAD_LOCAL_STORAGE)
 }
 
 int LogMessage::preserved_errno() const {
