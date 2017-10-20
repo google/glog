@@ -306,21 +306,19 @@ static void MyUserNameInitializer() {
     g_my_user_name = user;
   } else {
 #if defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
-    uid_t uid;
     struct passwd pwd;
-    struct passwd*result = NULL;
+    struct passwd* result = NULL;
     char buffer[1024] = {'\0'};
-    uid = geteuid();
-    int pwuid_res = getpwuid_r(uid, &pwd, buffer, sizeof (buffer), &result);
-    if(pwuid_res == 0) {
+    uid_t uid = geteuid();
+    int pwuid_res = getpwuid_r(uid, &pwd, buffer, sizeof(buffer), &result);
+    if (pwuid_res == 0) {
       g_my_user_name = pwd.pw_name;
-    }
-    else {
+    } else {
       snprintf(buffer, sizeof(buffer), "uid%d", uid);
       g_my_user_name = buffer;
     }
 #endif
-    if(g_my_user_name.empty()) {
+    if (g_my_user_name.empty()) {
       g_my_user_name = "invalid-user";
     }
   }
