@@ -131,7 +131,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
            1 + t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec,
            last_usecs_for_raw_log,
            static_cast<unsigned int>(GetTID()),
-           const_basename(const_cast<char *>(file)), line);
+           const_basename(file), line);
 
   // Record the position and size of the buffer after the prefix
   const char* msg_start = buf;
