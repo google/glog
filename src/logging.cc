@@ -1730,6 +1730,42 @@ void SetExitOnDFatal(bool value) {
 }  // namespace internal
 }  // namespace base
 
+// Shell-escaping as we need to shell out ot /bin/mail.
+static const char kDontNeedShellEscapeChars[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "abcdefghijklmnopqrstuvwxyz"
+            "0123456789+-_.=/:,@";
+
+static string ShellEscape(const string& src) {
+  string result;
+  if (!src.empty() &&  // empty string needs quotes
+      src.find_first_not_of(kDontNeedShellEscapeChars) == string::npos) {
+    // only contains chars that don't need quotes; it's fine
+    result.assign(src);
+  } else if (src.find_first_of('\'') == string::npos) {
+    // no single quotes; just wrap it in single quotes
+    result.assign("'");
+    result.append(src);
+    result.append("'");
+  } else {
+    // needs double quote escaping
+    result.assign("\"");
+    for (size_t i = 0; i < src.size(); ++i) {
+      switch (src[i]) {
+        case '\\':
+        case '$':
+        case '"':
+        case '`':
+          result.append("\\");
+      }
+      result.append(src, i, 1);
+    }
+    result.append("\"");
+  }
+  return result;
+}
+
+
 // use_logging controls whether the logging functions LOG/VLOG are used
 // to log errors.  It should be set to false when the caller holds the
 // log_mutex.
@@ -1745,7 +1781,10 @@ static bool SendEmailInternal(const char*dest, const char *subject,
     }
 
     string cmd =
-        FLAGS_logmailer + " -s\"" + subject + "\" " + dest;
+        FLAGS_logmailer + " -s" +
+        ShellEscape(subject) + " " + ShellEscape(dest);
+    VLOG(4) << "Mailing command: " << cmd;
+
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != NULL) {
       // Add the body if we have one
