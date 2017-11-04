@@ -73,6 +73,10 @@
 #include "config.h"
 #include "glog/logging.h"
 
+#if defined(__linux__) && defined(__clang__)
+  #define GOOGLE_GLOG_DLL_DECL
+#endif
+
 _START_GOOGLE_NAMESPACE_
 
 // Demangle "mangled".  On success, return true and write the
