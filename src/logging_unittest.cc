@@ -775,17 +775,18 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   CHECK_ERR(fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600));
 
   const char *discardstr = "DISCARDME!", *keepstr = "KEEPME!";
+  const size_t discard_size = strlen(discardstr), keep_size = strlen(keepstr);
 
   // Fill the file with the requested data; first discard data, then kept data
   int64 written = 0;
   while (written < dsize) {
-    int bytes = min<int64>(dsize - written, strlen(discardstr));
+    int bytes = min<int64>(dsize - written, discard_size);
     CHECK_ERR(write(fd, discardstr, bytes));
     written += bytes;
   }
   written = 0;
   while (written < ksize) {
-    int bytes = min<int64>(ksize - written, strlen(keepstr));
+    int bytes = min<int64>(ksize - written, keep_size);
     CHECK_ERR(write(fd, keepstr, bytes));
     written += bytes;
   }
@@ -807,7 +808,7 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   const char *p = buf;
   int64 checked = 0;
   while (checked < expect) {
-    int bytes = min<int64>(expect - checked, strlen(keepstr));
+    int bytes = min<int64>(expect - checked, keep_size);
     CHECK(!memcmp(p, keepstr, bytes));
     checked += bytes;
   }
