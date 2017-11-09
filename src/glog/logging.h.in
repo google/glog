@@ -1000,6 +1000,7 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 #define DCHECK_STRCASEEQ(str1, str2) CHECK_STRCASEEQ(str1, str2)
 #define DCHECK_STRNE(str1, str2) CHECK_STRNE(str1, str2)
 #define DCHECK_STRCASENE(str1, str2) CHECK_STRCASENE(str1, str2)
+#define DCHECK_NEAR(val1, val2, margin) CHECK_NEAR(val1, val2, margin)
 
 #else  // !DCHECK_IS_ON()
 
@@ -1081,6 +1082,11 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
   GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
   while (false) \
     GLOG_MSVC_POP_WARNING() CHECK_STRCASENE(str1, str2)
+
+#define DCHECK_NEAR(str1, str2, margin) \
+  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+  while (false) \
+    GLOG_MSVC_POP_WARNING() CHECK_NEAR(str1, str2, margin)
 
 #endif  // DCHECK_IS_ON()
 

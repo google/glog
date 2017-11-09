@@ -543,6 +543,7 @@ void TestCHECK() {
   CHECK_LE(1, 2);
   CHECK_GT(2, 1);
   CHECK_LT(1, 2);
+  CHECK_NEAR(1, 2, 1);
 
   // Tests using CHECK*() on anonymous enums.
   // Apple's GCC doesn't like this.
@@ -571,6 +572,7 @@ void TestDCHECK() {
   DCHECK_LE(1, 2);
   DCHECK_GT(2, 1);
   DCHECK_LT(1, 2);
+  DCHECK_NEAR(1, 2, 1);
 
   auto_ptr<int64> sptr(new int64);
   int64* ptr = DCHECK_NOTNULL(sptr.get());
