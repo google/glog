@@ -47,6 +47,12 @@
 #ifdef HAVE_SYSLOG_H
 # include <syslog.h>
 #endif
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>  // For geteuid.
+#endif
+#ifdef HAVE_PWD_H
+# include <pwd.h>
+#endif
 
 #include "base/googleinit.h"
 
@@ -268,7 +274,7 @@ pid_t GetTID() {
   // If gettid() could not be used, we use one of the following.
 #if defined OS_LINUX
   return getpid();  // Linux:  getpid returns thread ID when gettid is absent
-#elif defined OS_WINDOWS || defined OS_CYGWIN
+#elif defined OS_WINDOWS && !defined OS_CYGWIN
   return GetCurrentThreadId();
 #else
   // If none of the techniques above worked, we use pthread_self().
@@ -299,8 +305,24 @@ static void MyUserNameInitializer() {
   if (user != NULL) {
     g_my_user_name = user;
   } else {
-    g_my_user_name = "invalid-user";
+#if defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
+    struct passwd pwd;
+    struct passwd* result = NULL;
+    char buffer[1024] = {'\0'};
+    uid_t uid = geteuid();
+    int pwuid_res = getpwuid_r(uid, &pwd, buffer, sizeof(buffer), &result);
+    if (pwuid_res == 0) {
+      g_my_user_name = pwd.pw_name;
+    } else {
+      snprintf(buffer, sizeof(buffer), "uid%d", uid);
+      g_my_user_name = buffer;
+    }
+#endif
+    if (g_my_user_name.empty()) {
+      g_my_user_name = "invalid-user";
+    }
   }
+
 }
 REGISTER_MODULE_INITIALIZER(utilities, MyUserNameInitializer());
 

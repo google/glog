@@ -521,7 +521,7 @@ class Thread {
   virtual ~Thread() {}
 
   void SetJoinable(bool) {}
-#if defined(OS_WINDOWS) || defined(OS_CYGWIN)
+#if defined(OS_WINDOWS) && !defined(OS_CYGWIN)
   void Start() {
     handle_ = CreateThread(NULL,
                            0,
@@ -554,7 +554,7 @@ class Thread {
     return NULL;
   }
 
-#if defined(OS_WINDOWS) || defined(OS_CYGWIN)
+#if defined(OS_WINDOWS) && !defined(OS_CYGWIN)
   HANDLE handle_;
   DWORD th_;
 #else
