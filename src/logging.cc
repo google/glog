@@ -276,13 +276,18 @@ static GLogColor SeverityToColor(LogSeverity severity) {
   assert(severity >= 0 && severity < NUM_SEVERITIES);
   GLogColor color = COLOR_DEFAULT;
   switch (severity) {
+  case GLOG_DEBUG:
   case GLOG_INFO:
     color = COLOR_DEFAULT;
     break;
+  case GLOG_NOTICE:
   case GLOG_WARNING:
     color = COLOR_YELLOW;
     break;
   case GLOG_ERROR:
+  case GLOG_CRITICAL:
+  case GLOG_ALERT:
+  case GLOG_EMERGENCY:
   case GLOG_FATAL:
     color = COLOR_RED;
     break;
@@ -367,13 +372,14 @@ struct LogMessage::LogMessageData  {
 static Mutex log_mutex;
 
 // Number of messages sent at each severity.  Under log_mutex.
-int64 LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
+int64 LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 // Globally disable log writing (if disk is full)
 static bool stop_writing = false;
 
 const char*const LogSeverityNames[NUM_SEVERITIES] = {
-  "INFO", "WARNING", "ERROR", "FATAL"
+  "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", 
+  "CRITICAL", "ALERT", "EMERGENCY", "FATAL"
 };
 
 // Has the user called SetExitOnDFatal(true)?
@@ -1378,7 +1384,7 @@ void ReprintFatalMessage() {
       // Also write to stderr (don't color to avoid terminal checks)
       WriteToStderr(fatal_message, n);
     }
-    LogDestination::LogToAllLogfiles(GLOG_ERROR, fatal_time, fatal_message, n);
+    LogDestination::LogToAllLogfiles(GLOG_EMERGENCY, fatal_time, fatal_message, n);
   }
 }
 
