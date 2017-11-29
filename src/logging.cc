@@ -1581,7 +1581,18 @@ void LogMessage::SendToSyslogAndLog() {
   }
 
   // This array maps Google severity levels to syslog levels
-  const int SEVERITY_TO_LEVEL[] = { LOG_INFO, LOG_WARNING, LOG_ERR, LOG_EMERG };
+  const int SEVERITY_TO_LEVEL[] = {
+	LOG_DEBUG,
+       	LOG_INFO,
+       	LOG_NOTICE,
+       	LOG_WARNING,
+       	LOG_ERR,
+       	LOG_CRIT,
+       	LOG_ALERT,
+       	LOG_EMERG,
+       	LOG_EMERG
+  };
+  static_assert(sizeof(SEVERITY_TO_LEVEL) == NUM_SEVERITIES * sizeof(int));
   syslog(LOG_USER | SEVERITY_TO_LEVEL[static_cast<int>(data_->severity_)], "%.*s",
          int(data_->num_chars_to_syslog_),
          data_->message_text_ + data_->num_prefix_chars_);
