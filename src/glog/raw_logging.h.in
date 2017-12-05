@@ -70,15 +70,30 @@
   do { \
     switch (@ac_google_namespace@::GLOG_ ## severity) {  \
       case 0: \
-        RAW_LOG_INFO(__VA_ARGS__); \
+        RAW_LOG_DEBUG(__VA_ARGS__); \
         break; \
       case 1: \
-        RAW_LOG_WARNING(__VA_ARGS__); \
+        RAW_LOG_INFO(__VA_ARGS__); \
         break; \
       case 2: \
-        RAW_LOG_ERROR(__VA_ARGS__); \
+        RAW_LOG_NOTICE(__VA_ARGS__); \
         break; \
       case 3: \
+        RAW_LOG_WARNING(__VA_ARGS__); \
+        break; \
+      case 4: \
+        RAW_LOG_ERROR(__VA_ARGS__); \
+        break; \
+      case 5: \
+        RAW_LOG_CRITICAL(__VA_ARGS__); \
+        break; \
+      case 6: \
+        RAW_LOG_ALERT(__VA_ARGS__); \
+        break; \
+      case 7: \
+        RAW_LOG_EMERGENCY(__VA_ARGS__); \
+        break; \
+      case 8: \
         RAW_LOG_FATAL(__VA_ARGS__); \
         break; \
       default: \
@@ -100,27 +115,62 @@
 #endif // STRIP_LOG == 0
 
 #if STRIP_LOG == 0
+#define RAW_LOG_DEBUG(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_DEBUG, \
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define RAW_LOG_DEBUG(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
+#endif // STRIP_LOG == 0
+
+#if STRIP_LOG <= 1
 #define RAW_LOG_INFO(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_INFO, \
                                    __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_INFO(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
-#endif // STRIP_LOG == 0
+#endif // STRIP_LOG <= 1
 
-#if STRIP_LOG <= 1
+#if STRIP_LOG <=2
+#define RAW_LOG_NOTICE(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_NOTICE, \
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define RAW_LOG_NOTICE(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
+#endif // STRIP_LOG <= 2
+
+#if STRIP_LOG <= 3
 #define RAW_LOG_WARNING(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_WARNING,   \
                                       __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_WARNING(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
-#endif // STRIP_LOG <= 1
+#endif // STRIP_LOG <= 3
 
-#if STRIP_LOG <= 2
+#if STRIP_LOG <= 4
 #define RAW_LOG_ERROR(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_ERROR,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define RAW_LOG_ERROR(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
-#endif // STRIP_LOG <= 2
+#endif // STRIP_LOG <= 4
 
-#if STRIP_LOG <= 3
+#if STRIP_LOG <= 5
+#define RAW_LOG_CRITICAL(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_CRITICAL, \
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define RAW_LOG_CRITICAL(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
+#endif // STRIP_LOG <= 5
+
+#if STRIP_LOG <= 6
+#define RAW_LOG_ALERT(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_ALERT, \
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define RAW_LOG_ALERT(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
+#endif // STRIP_LOG <= 6
+
+#if STRIP_LOG <= 7
+#define RAW_LOG_EMERGENCY(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_EMERGENCY, \
+                                   __FILE__, __LINE__, __VA_ARGS__)
+#else
+#define RAW_LOG_EMERGENCY(...) @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__)
+#endif // STRIP_LOG <= 7
+
+#if STRIP_LOG <= 8
 #define RAW_LOG_FATAL(...) @ac_google_namespace@::RawLog__(@ac_google_namespace@::GLOG_FATAL,       \
                                     __FILE__, __LINE__, __VA_ARGS__)
 #else
@@ -129,7 +179,7 @@
     @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__);        \
     exit(1); \
   } while (0)
-#endif // STRIP_LOG <= 3
+#endif // STRIP_LOG <= 8
 
 // Similar to CHECK(condition) << message,
 // but for low-level modules: we use only RAW_LOG that does not allocate memory.
