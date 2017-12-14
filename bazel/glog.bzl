@@ -46,8 +46,6 @@ def glog_library(namespace='google', with_gflags=1):
             ':vlog_is_on_h',
             'src/glog/log_severity.h',
         ],
-        textual_hdrs = [
-        ],
         strip_include_prefix = 'src',
         copts = [
             # Disable warnings that exists in glog.
