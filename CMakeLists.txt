@@ -52,7 +52,11 @@ set (CMAKE_DEBUG_POSTFIX d)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
 if (WITH_GFLAGS)
-  find_package (gflags 2.2.0)
+  if (NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
+    find_package (gflags 2.2.0 COMPONENTS shared)
+  else ()
+    find_package (gflags 2.2.0 COMPONENTS static)
+  endif()
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
