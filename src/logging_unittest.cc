@@ -273,7 +273,7 @@ void TestLogging(bool check_counts) {
              << setw(1) << hex << j;
 
   {
-    google::LogMessage outer(__FILE__, __LINE__, google::ERROR);
+    google::LogMessage outer(__FILE__, __LINE__, GLOG_ERROR);
     outer.stream() << "outer";
 
     LOG(ERROR) << "inner";
