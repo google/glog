@@ -844,7 +844,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
-#elif defined(OS_WINDOWS) || defined(__CYGWIN__)
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 
 #include <windows.h>
 #include <DbgHelp.h>

@@ -357,7 +357,7 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 #endif
 }
 
-# elif defined(OS_WINDOWS) || defined(__CYGWIN__)
+# elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 
 #ifdef _MSC_VER
 #include <intrin.h>
@@ -409,7 +409,7 @@ int main(int argc, char **argv) {
   TestWithPCInsideNonInlineFunction();
   TestWithReturnAddress();
   return RUN_ALL_TESTS();
-# elif defined(OS_WINDOWS) || defined(__CYGWIN__)
+# elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
   TestWithReturnAddress();
   return RUN_ALL_TESTS();
 # else  // OS_WINDOWS

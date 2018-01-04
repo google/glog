@@ -454,10 +454,6 @@ if (WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
 endif (WIN32)
 
-if (MSVC)
-  target_compile_definitions (glog PRIVATE _SCL_SECURE_NO_WARNINGS)
-endif (MSVC)
-
 set_target_properties (glog PROPERTIES PUBLIC_HEADER "${GLOG_PUBLIC_H}")
 
 set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
