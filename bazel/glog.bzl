@@ -113,7 +113,7 @@ EOF
             'src/config.h.cmake.in',
         ],
         outs = [
-            'glog_internal/src/config.h',
+            'glog_internal/config.h',
         ],
         cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $< > $@",
     )
