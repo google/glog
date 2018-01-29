@@ -409,6 +409,7 @@ add_compile_options ($<$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>:-Wno-unname
 add_library (glog
   ${GLOG_SRCS}
 )
+add_library(glog::glog ALIAS glog)
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
