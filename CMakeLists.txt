@@ -8,21 +8,14 @@ if (POLICY CMP0063)
   cmake_policy (SET CMP0063 NEW)
 endif (POLICY CMP0063)
 
-project (glog)
-
-set (GLOG_MAJOR_VERSION 0)
-set (GLOG_MINOR_VERSION 3)
-set (GLOG_PATCH_VERSION 5)
-
-set (GLOG_VERSION
-  ${GLOG_MAJOR_VERSION}.${GLOG_MINOR_VERSION}.${GLOG_PATCH_VERSION})
+project(glog VERSION 0.3.5 LANGUAGES C CXX)
 
 set (CPACK_PACKAGE_NAME glog)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "")
-set (CPACK_PACKAGE_VERSION_MAJOR ${GLOG_MAJOR_VERSION})
-set (CPACK_PACKAGE_VERSION_MINOR ${GLOG_MINOR_VERSION})
-set (CPACK_PACKAGE_VERSION_PATCH ${GLOG_PATCH_VERSION})
-set (CPACK_PACKAGE_VERSION ${GLOG_VERSION})
+set (CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set (CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
@@ -433,8 +426,8 @@ if (gflags_FOUND)
   endif (NOT BUILD_SHARED_LIBS)
 endif (gflags_FOUND)
 
-set_target_properties (glog PROPERTIES VERSION ${GLOG_MAJOR_VERSION})
-set_target_properties (glog PROPERTIES SOVERSION ${GLOG_VERSION})
+set_target_properties (glog PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties (glog PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 
 if (WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
@@ -618,7 +611,7 @@ configure_package_config_file (glog-config.cmake.in
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 write_basic_package_version_file (glog-config-version.cmake VERSION
-  ${GLOG_VERSION} COMPATIBILITY SameMajorVersion)
+  ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
 
 export (TARGETS glog NAMESPACE glog:: FILE glog-targets.cmake)
 export (PACKAGE glog)
