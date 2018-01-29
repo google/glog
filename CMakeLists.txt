@@ -10,8 +10,6 @@ endif (POLICY CMP0063)
 
 project (glog)
 
-enable_testing ()
-
 set (GLOG_MAJOR_VERSION 0)
 set (GLOG_MINOR_VERSION 3)
 set (GLOG_PATCH_VERSION 5)
