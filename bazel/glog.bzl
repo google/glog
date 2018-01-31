@@ -89,7 +89,8 @@ def glog_library(namespace='google', with_gflags=1):
         cmd = r'''\
 #!/bin/sh
 cat > $@ <<"EOF"
-sed -e 's/@ac_cv_have_unistd_h@/1/g' \
+sed -e 's/@ac_cv_cxx_using_operator@/1/g' \
+    -e 's/@ac_cv_have_unistd_h@/1/g' \
     -e 's/@ac_cv_have_stdint_h@/1/g' \
     -e 's/@ac_cv_have_systypes_h@/1/g' \
     -e 's/@ac_cv_have_libgflags_h@/1/g' \
