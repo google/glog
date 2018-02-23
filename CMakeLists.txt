@@ -26,6 +26,7 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 include (CheckCSourceCompiles)
 include (CheckCXXCompilerFlag)
 include (CheckCXXSourceCompiles)
+include (CheckCXXSourceRuns)
 include (CheckFunctionExists)
 include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
@@ -34,6 +35,7 @@ include (CheckStructHasMember)
 include (CheckSymbolExists)
 include (CheckTypeSize)
 include (CMakePackageConfigHelpers)
+include (CMakePushCheckState)
 include (CPack)
 include (CTest)
 include (DetermineGflagsNamespace)
@@ -344,17 +346,44 @@ if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_H)
 
-if (WIN32)
-  set (HAVE_STACKTRACE 1)
+if (WIN32 OR CYGWIN)
+  cmake_push_check_state (RESET)
+  set (CMAKE_REQUIRED_LIBRARIES DbgHelp)
 
-  if (HAVE_DBGHELP)
-    set (HAVE_SYMBOLIZE 1)
-  endif (HAVE_DBGHELP)
-endif (WIN32)
+  check_cxx_source_runs ([=[
+  #include <windows.h>
+  #include <dbghelp.h>
+  #include <cstdlib>
 
-if (UNIX OR (APPLE AND HAVE_DLADDR))
+  void foobar() { }
+
+  int main()
+  {
+      HANDLE process = GetCurrentProcess();
+
+      if (!SymInitialize(process, NULL, TRUE))
+          return EXIT_FAILURE;
+
+      char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+      SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO *>(buf);
+      symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+      symbol->MaxNameLen = MAX_SYM_NAME;
+
+      void* const pc = reinterpret_cast<void*>(&foobar);
+      BOOL ret = SymFromAddr(process, reinterpret_cast<DWORD64>(pc), 0, symbol);
+
+      return ret ? EXIT_SUCCESS : EXIT_FAILURE;
+  }
+  ]=] HAVE_SYMBOLIZE)
+
+  cmake_pop_check_state ()
+
+  if (HAVE_SYMBOLIZE)
+    set (HAVE_STACKTRACE 1)
+  endif (HAVE_SYMBOLIZE)
+elseif (UNIX OR (APPLE AND HAVE_DLADDR))
   set (HAVE_SYMBOLIZE 1)
-endif (UNIX OR (APPLE AND HAVE_DLADDR))
+endif (WIN32 OR CYGWIN)
 
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
