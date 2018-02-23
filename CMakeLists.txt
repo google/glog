@@ -590,7 +590,7 @@ install (TARGETS glog
   LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
   ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
 
-set (glog_POLICY_VERSION 3.0)
+set (glog_CMake_VERSION 3.0)
 
 if (gflags_FOUND)
   # Ensure clients locate only the package config and not third party find
@@ -600,7 +600,7 @@ if (gflags_FOUND)
   else (CMAKE_VERSION VERSION_LESS 3.9)
     # Passing additional find_package arguments to find_dependency is possible
     # starting with CMake 3.9.
-    set (glog_POLICY_VERSION 3.9)
+    set (glog_CMake_VERSION 3.9)
     set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION} NO_MODULE)")
   endif (CMAKE_VERSION VERSION_LESS 3.9)
 endif (gflags_FOUND)
