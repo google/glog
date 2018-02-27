@@ -130,6 +130,9 @@
 /* define if your compiler has __sync_val_compare_and_swap */
 #cmakedefine HAVE___SYNC_VAL_COMPARE_AND_SWAP
 
+/* define if symbolize support is available */
+#cmakedefine HAVE_SYMBOLIZE
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #cmakedefine LT_OBJDIR

@@ -130,9 +130,9 @@ void InstallSymbolizeCallback(SymbolizeCallback callback);
 // file is opened successfully, returns the file descriptor.  Otherwise,
 // returns -1.  |out_file_name_size| is the size of the file name buffer
 // (including the null-terminator).
-typedef int (*SymbolizeOpenObjectFileCallback)(uint64_t pc,
-                                               uint64_t &start_address,
-                                               uint64_t &base_address,
+typedef int (*SymbolizeOpenObjectFileCallback)(uint64 pc,
+                                               uint64 &start_address,
+                                               uint64 &base_address,
                                                char *out_file_name,
                                                int out_file_name_size);
 void InstallSymbolizeOpenObjectFileCallback(

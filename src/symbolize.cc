@@ -844,18 +844,22 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
-#elif defined(OS_WINDOWS)
+#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 
+#include <windows.h>
 #include <DbgHelp.h>
+
+#ifdef _MSC_VER
 #pragma comment(lib, "DbgHelp")
+#endif
 
 _START_GOOGLE_NAMESPACE_
 
 class SymInitializer {
 public:
-  HANDLE process = NULL;
-  bool ready = false;
-  SymInitializer() {
+  HANDLE process;
+  bool ready;
+  SymInitializer() : process(NULL), ready(false) {
     // Initialize the symbol handler.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
     process = GetCurrentProcess();

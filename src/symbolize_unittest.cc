@@ -357,10 +357,12 @@ void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 #endif
 }
 
-# elif defined(OS_WINDOWS)
+# elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
 
+#ifdef _MSC_VER
 #include <intrin.h>
 #pragma intrinsic(_ReturnAddress)
+#endif
 
 struct Foo {
   static void func(int x);
@@ -378,7 +380,13 @@ TEST(Symbolize, SymbolizeWithDemangling) {
 }
 
 __declspec(noinline) void TestWithReturnAddress() {
-  void *return_address = _ReturnAddress();
+  void *return_address =
+#ifdef __GNUC__ // Cygwin and MinGW support
+	  __builtin_return_address(0)
+#else
+	  _ReturnAddress()
+#endif
+	  ;
   const char *symbol = TrySymbolize(return_address);
   CHECK(symbol != NULL);
   CHECK_STREQ(symbol, "main");
@@ -401,7 +409,7 @@ int main(int argc, char **argv) {
   TestWithPCInsideNonInlineFunction();
   TestWithReturnAddress();
   return RUN_ALL_TESTS();
-# elif defined(OS_WINDOWS)
+# elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
   TestWithReturnAddress();
   return RUN_ALL_TESTS();
 # else  // OS_WINDOWS

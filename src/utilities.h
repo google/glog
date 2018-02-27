@@ -127,6 +127,7 @@
 # define HAVE_STACKTRACE
 #endif
 
+#ifndef HAVE_SYMBOLIZE
 // defined by gcc
 #if defined(__ELF__) && defined(OS_LINUX)
 # define HAVE_SYMBOLIZE
@@ -137,6 +138,7 @@
 // Use DbgHelp to symbolize
 # define HAVE_SYMBOLIZE
 #endif
+#endif // !defined(HAVE_SYMBOLIZE)
 
 #ifndef ARRAYSIZE
 // There is a better way, but this is good enough for our purpose.
