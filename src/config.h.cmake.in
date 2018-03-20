@@ -1,3 +1,6 @@
+#ifndef GLOG_CONFIG_H
+#define GLOG_CONFIG_H
+
 /* define if glog doesn't use RTTI */
 #cmakedefine DISABLE_RTTI
 
@@ -200,3 +203,5 @@
 #cmakedefine _START_GOOGLE_NAMESPACE_ ${_START_GOOGLE_NAMESPACE_}
 
 #endif
+
+#endif  // GLOG_CONFIG_H
