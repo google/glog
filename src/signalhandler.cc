@@ -93,7 +93,7 @@ class MinimalFormatter {
   }
 
   // Returns the number of bytes written in the buffer.
-  int num_bytes_written() const { return cursor_ - buffer_; }
+  int num_bytes_written() const { return (int) (cursor_ - buffer_); }
 
   // Appends string from "str" and updates the internal cursor.
   void AppendString(const char* str) {
