@@ -69,6 +69,7 @@ def glog_library(namespace='google', with_gflags=1):
             '-DHAVE_SIGACTION',
             # For logging.cc.
             '-DHAVE_PREAD',
+            '-DHAVE___ATTRIBUTE__',
 
             # Include generated header files.
             '-I%s/glog_internal' % gendir,
