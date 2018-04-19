@@ -1124,8 +1124,13 @@ void LogFileObject::Write(bool force_flush,
       uint32 this_drop_length = total_drop_length - dropped_mem_length_;
       if (this_drop_length >= (2 << 20)) {
         // Only advise when >= 2MiB to drop
+# if defined(__ANDROID__) && defined(__ANDROID_API__) && (__ANDROID_API__ < 21)
+        // 'posix_fadvise' introduced in API 21:
+        // * https://android.googlesource.com/platform/bionic/+/6880f936173081297be0dc12f687d341b86a4cfa/libc/libc.map.txt#732
+# else
         posix_fadvise(fileno(file_), dropped_mem_length_, this_drop_length,
                       POSIX_FADV_DONTNEED);
+# endif
         dropped_mem_length_ = total_drop_length;
       }
     }
