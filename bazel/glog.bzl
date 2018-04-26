@@ -13,6 +13,37 @@ def glog_library(namespace='google', with_gflags=1):
     else:
         gendir = '$(GENDIR)'
 
+    glog_copts = [
+        # Disable warnings that exist in glog.
+        '-Wno-sign-compare',
+        '-Wno-unused-function',
+        '-Wno-unused-local-typedefs',
+        '-Wno-unused-variable',
+        "-DGLOG_BAZEL_BUILD",
+        # Inject a C++ namespace.
+        "-DGOOGLE_NAMESPACE='%s'" % namespace,
+        # Allows src/base/mutex.h to include pthread.h.
+        '-DHAVE_PTHREAD',
+        # Allows src/logging.cc to determine the host name.
+        '-DHAVE_SYS_UTSNAME_H',
+        # For src/utilities.cc.
+        '-DHAVE_SYS_SYSCALL_H',
+        '-DHAVE_SYS_TIME_H',
+        '-DHAVE_STDINT_H',
+        '-DHAVE_STRING_H',
+        # Enable dumping stacktrace upon sigaction.
+        '-DHAVE_SIGACTION',
+        # For logging.cc.
+        '-DHAVE_PREAD',
+        '-DHAVE___ATTRIBUTE__',
+
+        # Include generated header files.
+        '-I%s/glog_internal' % gendir,
+    ]
+
+    if with_gflags:
+      glog_copts.append('-DHAVE_LIB_GFLAGS')
+
     native.cc_library(
         name = 'glog',
         visibility = [ '//visibility:public' ],
@@ -47,36 +78,7 @@ def glog_library(namespace='google', with_gflags=1):
             'src/glog/log_severity.h',
         ],
         strip_include_prefix = 'src',
-        copts = [
-            # Disable warnings that exists in glog.
-            '-Wno-sign-compare',
-            '-Wno-unused-function',
-            '-Wno-unused-local-typedefs',
-            '-Wno-unused-variable',
-            "-DGLOG_BAZEL_BUILD",
-            # Inject a C++ namespace.
-            "-DGOOGLE_NAMESPACE='%s'" % namespace,
-            # Allows src/base/mutex.h to include pthread.h.
-            '-DHAVE_PTHREAD',
-            # Allows src/logging.cc to determine the host name.
-            '-DHAVE_SYS_UTSNAME_H',
-            # For src/utilities.cc.
-            '-DHAVE_SYS_SYSCALL_H',
-            '-DHAVE_SYS_TIME_H',
-            '-DHAVE_STDINT_H',
-            '-DHAVE_STRING_H',
-            # Enable dumping stacktrace upon sigaction.
-            '-DHAVE_SIGACTION',
-            # For logging.cc.
-            '-DHAVE_PREAD',
-            '-DHAVE___ATTRIBUTE__',
-
-            # Include generated header files.
-            '-I%s/glog_internal' % gendir,
-        ] + [
-            # Use gflags to parse CLI arguments.
-            '-DHAVE_LIB_GFLAGS',
-        ] if with_gflags else [],
+        copts = glog_copts,
         deps = [
             '@com_github_gflags_gflags//:gflags',
         ] if with_gflags else [],
