@@ -136,6 +136,9 @@
 /* define if symbolize support is available */
 #cmakedefine HAVE_SYMBOLIZE
 
+/* define if localtime_r is available in time.h */
+#cmakedefine HAVE_LOCALTIME_R
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #cmakedefine LT_OBJDIR

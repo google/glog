@@ -386,6 +386,18 @@ elseif (UNIX OR (APPLE AND HAVE_DLADDR))
   set (HAVE_SYMBOLIZE 1)
 endif (WIN32 OR CYGWIN)
 
+check_cxx_source_compiles ("
+#include <cstdlib>
+#include <time.h>
+int main()
+{
+    time_t timep;
+    struct tm result;
+    localtime_r(&timep, &result);
+    return EXIT_SUCCESS;
+}
+" HAVE_LOCALTIME_R)
+
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
 if (WITH_THREADS AND Threads_FOUND)

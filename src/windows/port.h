@@ -147,10 +147,12 @@ enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
 #define pthread_equal(pthread_t_1, pthread_t_2)  ((pthread_t_1)==(pthread_t_2))
 #endif // HAVE_PTHREAD
 
+#ifndef HAVE_LOCALTIME_R
 inline struct tm* localtime_r(const time_t* timep, struct tm* result) {
   localtime_s(result, timep);
   return result;
 }
+#endif
 
 inline char* strerror_r(int errnum, char* buf, size_t buflen) {
   strerror_s(buf, buflen, errnum);
