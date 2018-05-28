@@ -66,7 +66,11 @@
 #ifdef HAVE_STACKTRACE
 # include "stacktrace.h"
 #endif
-
+ 
+#ifdef OS_LINUX
+#include <dirent.h>
+#include <sys/stat.h> 
+#endif 
 using std::string;
 using std::vector;
 using std::setw;
@@ -171,6 +175,10 @@ GLOG_DEFINE_string(log_link, "", "Put additional links to the log "
 GLOG_DEFINE_int32(max_log_size, 1800,
                   "approx. maximum log file size (in MB). A value of 0 will "
                   "be silently overridden to 1.");
+
+GLOG_DEFINE_int32(max_log_file_num, 10,
+				  "approx. maximum log file num (in max log MB). A value of 0 will "
+				  "be silently overridden to 1.");
 
 GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
                  "Stop attempting to log to disk if the disk is full.");
@@ -959,6 +967,78 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   }
 
   return true;  // Everything worked
+}
+
+void LogFileObject::DeleteIfMaxNum(string &strDir)
+{
+	if (strDir.empty()) return;
+	string strSeverityName(GetLogSeverityName(severity_));
+	int fileMaxSizeNum = 0;
+#if defined(OS_WINDOWS)
+	long   hFile   =   0;
+	struct _finddata_t *earliestFile = (struct _finddata_t *) malloc(sizeof(struct _finddata_t));
+	struct _finddata_t *fileInfo = (struct _finddata_t *) malloc(sizeof(struct _finddata_t));
+	if((hFile = _findfirst((strDir+string("\\*")).c_str(), fileInfo)) == -1) 
+	{
+		free(fileInfo);
+		free(earliestFile);
+		return;
+	}
+	
+	memcpy(earliestFile, fileInfo, sizeof(struct _finddata_t));
+	do {  
+		if (!(fileInfo->attrib & _A_SUBDIR)) {  
+			string strFile(fileInfo->name);
+			if ((strFile.find(strSeverityName) != std::string::npos) &&
+			   (static_cast<int>(fileInfo->size >> 20) >= MaxLogSize())) {
+					fileMaxSizeNum++;
+					if (fileInfo->time_write < earliestFile->time_write)
+						memcpy(earliestFile, fileInfo, sizeof(struct _finddata_t));
+			}
+		}  
+	} while (_findnext(hFile, fileInfo)  == 0); 
+    
+	if (fileMaxSizeNum > FLAGS_max_log_file_num ) {
+		string deleteFile = strDir + string("\\") + string(earliestFile->name);
+		DeleteFile((LPCSTR) deleteFile.c_str());  
+	}
+	_findclose(hFile);   
+	 free(earliestFile);
+	 free(fileInfo);
+	 return;
+#elif  defined(OS_LINUX)
+	 struct stat earlierState;
+	 struct dirent earlierFile;
+	 struct stat state;
+	 struct dirent *ptr; 
+	 DIR *dir = opendir(strDir.c_str());
+	 int fileCnt = 0;
+
+	 while((ptr = readdir(dir)) != NULL) {
+		 if (ptr->d_type != DT_REG) continue;
+
+		 stat((strDir + string(ptr->d_name)).c_str(), &state);
+         if (fileCnt == 0) {
+             earlierFile = *ptr;
+			 stat((strDir + string(ptr->d_name)).c_str(), &earlierState);
+		 }
+		 if ((string((ptr->d_name)).find(strSeverityName) != std::string::npos) &&
+			 (static_cast<int>(state.st_size ) >= (MaxLogSize() << 20))) {
+				 fileMaxSizeNum++;
+				 if (state.st_mtime < earlierState.st_mtime) {
+					earlierFile = *ptr;
+					earlierState = state;
+				 }
+		 }
+		 fileCnt++;
+	 }
+     if (fileMaxSizeNum >= FLAGS_max_log_file_num ) {
+		 string deleteFile = strDir +  string(earlierFile.d_name);
+		 remove(deleteFile.c_str());
+	 }
+	 closedir(dir);
+	 return;
+#endif
 }
 
 void LogFileObject::Write(bool force_flush,
