@@ -38,14 +38,7 @@
 
 #include "config.h"
 #include <stdarg.h>    // for va_list, va_start, va_end
-#include <string.h>    // for strstr()
-#include <assert.h>
-#include <string>
-#include <vector>
 #include "port.h"
-
-using std::string;
-using std::vector;
 
 // These call the windows _vsnprintf, but always NUL-terminate.
 int safe_vsnprintf(char *str, size_t size, const char *format, va_list ap) {
