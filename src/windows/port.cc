@@ -55,6 +55,12 @@ int safe_vsnprintf(char *str, size_t size, const char *format, va_list ap) {
   return _vsnprintf(str, size-1, format, ap);
 }
 
+#ifndef HAVE_LOCALTIME_R
+struct tm* localtime_r(const time_t* timep, struct tm* result) {
+  localtime_s(result, timep);
+  return result;
+}
+#endif // not HAVE_LOCALTIME_R
 #ifndef HAVE_SNPRINTF
 int snprintf(char *str, size_t size, const char *format, ...) {
   va_list ap;

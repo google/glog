@@ -148,11 +148,8 @@ enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
 #endif // HAVE_PTHREAD
 
 #ifndef HAVE_LOCALTIME_R
-inline struct tm* localtime_r(const time_t* timep, struct tm* result) {
-  localtime_s(result, timep);
-  return result;
-}
-#endif
+extern struct tm* GOOGLE_GLOG_DLL_DECL localtime_r(const time_t* timep, struct tm* result);
+#endif // not HAVE_LOCALTIME_R
 
 inline char* strerror_r(int errnum, char* buf, size_t buflen) {
   strerror_s(buf, buflen, errnum);
