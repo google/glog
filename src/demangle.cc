@@ -39,8 +39,8 @@
 #include "demangle.h"
 
 #if defined(OS_WINDOWS)
-#include <DbgHelp.h>
-#pragma comment(lib, "DbgHelp")
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp")
 #endif
 
 _START_GOOGLE_NAMESPACE_

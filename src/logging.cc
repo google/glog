@@ -183,7 +183,7 @@ GLOG_DEFINE_string(log_backtrace_at, "",
 
 #ifndef HAVE_PREAD
 #if defined(OS_WINDOWS)
-#include <BaseTsd.h>
+#include <basetsd.h>
 #define ssize_t SSIZE_T
 #endif
 static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {

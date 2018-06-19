@@ -136,19 +136,20 @@ typedef int pid_t;
 #endif  // _MSC_VER
 
 // ----------------------------------- THREADS
-#ifndef __MINGW32__
+#if defined(HAVE_PTHREAD)
+# include <pthread.h>
+#else // no PTHREAD
 typedef DWORD pthread_t;
 typedef DWORD pthread_key_t;
 typedef LONG pthread_once_t;
 enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
 #define pthread_self  GetCurrentThreadId
 #define pthread_equal(pthread_t_1, pthread_t_2)  ((pthread_t_1)==(pthread_t_2))
+#endif // HAVE_PTHREAD
 
-inline struct tm* localtime_r(const time_t* timep, struct tm* result) {
-  localtime_s(result, timep);
-  return result;
-}
-#endif
+#ifndef HAVE_LOCALTIME_R
+extern struct tm* GOOGLE_GLOG_DLL_DECL localtime_r(const time_t* timep, struct tm* result);
+#endif // not HAVE_LOCALTIME_R
 
 inline char* strerror_r(int errnum, char* buf, size_t buflen) {
   strerror_s(buf, buflen, errnum);
