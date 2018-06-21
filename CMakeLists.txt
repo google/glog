@@ -624,6 +624,7 @@ if (BUILD_TESTING)
 
   if (TARGET stacktrace_unittest)
     add_test (NAME stacktrace COMMAND stacktrace_unittest)
+    set_tests_properties(stacktrace PROPERTIES TIMEOUT 30)
   endif (TARGET stacktrace_unittest)
 
   add_test (NAME stl_logging COMMAND stl_logging_unittest)
