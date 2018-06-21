@@ -578,21 +578,21 @@ void (*g_new_hook)() = NULL;
 
 _END_GOOGLE_NAMESPACE_
 
-void* operator new(size_t size) throw(std::bad_alloc) {
+void* operator new(size_t size) {
   if (GOOGLE_NAMESPACE::g_new_hook) {
     GOOGLE_NAMESPACE::g_new_hook();
   }
   return malloc(size);
 }
 
-void* operator new[](size_t size) throw(std::bad_alloc) {
+void* operator new[](size_t size) {
   return ::operator new(size);
 }
 
-void operator delete(void* p) throw() {
+void operator delete(void* p) {
   free(p);
 }
 
-void operator delete[](void* p) throw() {
+void operator delete[](void* p) {
   ::operator delete(p);
 }
