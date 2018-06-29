@@ -80,7 +80,7 @@ no prefix
 IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: foo bar 10 3.400000
 WDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: array
 IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: const array
-IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: ptr 0x12345678
+IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: ptr __PTRTEST__
 IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: ptr __NULLP__
 EDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: foo 1000 0000001000 3e8
 IDATE TIME__ THREADID logging_unittest.cc:LINE] RAW: foo 1000

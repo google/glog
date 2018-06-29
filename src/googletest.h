@@ -90,6 +90,8 @@ static const char TEST_SRC_DIR[] = "../..";
 static const char TEST_SRC_DIR[] = ".";
 #endif
 
+static const uint32_t PTR_TEST_VALUE = 0x12345678;
+
 DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
 DEFINE_string(test_srcdir, TEST_SRC_DIR,
               "Source-dir root, needed to find glog_unittest_flagfile");
@@ -447,10 +449,12 @@ static inline string Munge(const string& filename) {
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
     char null_str[256];
+    char ptr_str[256];
     sprintf(null_str, "%p", static_cast<void*>(NULL));
+    sprintf(ptr_str, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
+
     StringReplace(&line, "__NULLP__", null_str);
-    // Remove 0x prefix produced by %p. VC++ doesn't put the prefix.
-    StringReplace(&line, " 0x", " ");
+    StringReplace(&line, "__PTRTEST__", ptr_str);
 
     StringReplace(&line, "__SUCCESS__", StrError(0));
     StringReplace(&line, "__ENOENT__", StrError(ENOENT));
@@ -485,7 +489,11 @@ static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
     WriteToFile(golden, munged_golden);
     string munged_captured = cap->filename() + ".munged";
     WriteToFile(captured, munged_captured);
+#ifdef OS_WINDOWS
+    string diffcmd("fc " + munged_golden + " " + munged_captured);
+#else
     string diffcmd("diff -u " + munged_golden + " " + munged_captured);
+#endif
     if (system(diffcmd.c_str()) != 0) {
       fprintf(stderr, "diff command was failed.\n");
     }
