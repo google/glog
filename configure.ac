@@ -137,7 +137,11 @@ AC_ARG_WITH(gflags, AS_HELP_STRING[--with-gflags=GFLAGS_DIR],
   CFLAGS="$CFLAGS $GFLAGS_CFLAGS"
   LIBS="$LIBS $GFLAGS_LIBS"
 )
-AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
+if test x"$with_gflags" = x"no"; then
+  ac_cv_have_libgflags=0
+else
+  AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
+fi
 if test x"$ac_cv_have_libgflags" = x"1"; then
   AC_DEFINE(HAVE_LIB_GFLAGS, 1, [define if you have google gflags library])
   if test x"$GFLAGS_LIBS" = x""; then
