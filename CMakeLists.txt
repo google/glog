@@ -240,6 +240,12 @@ std::atomic<int> i;
 int main() { }
 " HAVE_CXX11_ATOMIC)
 
+check_cxx_source_compiles ("
+#include <cstddef>
+void foo(std::nullptr_t) {}
+int main(void) { foo(nullptr); }
+" HAVE_CXX11_NULLPTR_T)
+
 if (WITH_TLS)
   # Cygwin does not support the thread attribute. Don't bother.
   if (HAVE_GCC_TLS)
@@ -380,6 +386,12 @@ if (HAVE_USING_OPERATOR)
 else (HAVE_USING_OPERATOR)
   set (ac_cv_cxx_using_operator 0)
 endif (HAVE_USING_OPERATOR)
+
+if (HAVE_CXX11_NULLPTR_T)
+  set (ac_cv_cxx11_nullptr_t 1)
+else (HAVE_CXX11_NULLPTR_T)
+  set (ac_cv_cxx11_nullptr_t 0)
+endif (HAVE_CXX11_NULLPTR_T)
 
 if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)

@@ -37,6 +37,7 @@
 #define _LOGGING_H_
 
 #include <cerrno>
+#include <cstddef>
 #include <cstring>
 #include <ctime>
 #include <iosfwd>
@@ -672,6 +673,13 @@ template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const signed char& v);
 template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
+
+// This is required because nullptr is only present in c++ 11 and later.
+#if @ac_cv_cxx11_nullptr_t@
+// Provide printable value for nullptr_t
+template <> GOOGLE_GLOG_DLL_DECL
+void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v);
+#endif
 
 // Build the error message string. Specify no inlining for code size.
 template <typename T1, typename T2>
