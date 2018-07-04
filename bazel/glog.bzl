@@ -73,10 +73,10 @@ def glog_library(namespace='google', with_gflags=1):
 
             # Include generated header files.
             '-I%s/glog_internal' % gendir,
-        ] + [
+        ] + ([
             # Use gflags to parse CLI arguments.
             '-DHAVE_LIB_GFLAGS',
-        ] if with_gflags else [],
+        ] if with_gflags else []),
         deps = [
             '@com_github_gflags_gflags//:gflags',
         ] if with_gflags else [],
