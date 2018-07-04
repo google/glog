@@ -649,6 +649,10 @@ void MakeCheckOpValueString(std::ostream* os, const signed char& v);
 template <> GOOGLE_GLOG_DLL_DECL
 void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
 
+// Provide printable value for nullptr_t
+template <> GOOGLE_GLOG_DLL_DECL
+void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v);
+
 // Build the error message string. Specify no inlining for code size.
 template <typename T1, typename T2>
 std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
