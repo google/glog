@@ -2163,10 +2163,12 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
   }
 }
 
+#if __cplusplus >= 201103L
 template <>
 void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v) {
   (*os) << "nullptr";
 }
+#endif
 
 void InitGoogleLogging(const char* argv0) {
   glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
