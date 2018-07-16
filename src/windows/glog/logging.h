@@ -377,6 +377,8 @@ DECLARE_int32(v);  // in vlog_is_on.cc
 // Sets the maximum log file size (in MB).
 DECLARE_int32(max_log_size);
 
+DECLARE_int32(max_log_file_num);
+
 // Sets whether to avoid logging to the disk if the disk is full.
 DECLARE_bool(stop_logging_if_full_disk);
 
