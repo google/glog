@@ -73,7 +73,16 @@ def glog_library(namespace='google', with_gflags=1, **kwargs):
 
             # Include generated header files.
             '-I%s/glog_internal' % gendir,
-        ] + ([
+        ] + select({
+            # For stacktrace.
+            '@bazel_tools//src/conditions:darwin': [
+                '-DHAVE_UNWIND_H',
+                '-DHAVE_DLADDR',
+            ],
+            '//conditions:default': [
+                '-DHAVE_UNWIND_H',
+            ],
+        }) + ([
             # Use gflags to parse CLI arguments.
             '-DHAVE_LIB_GFLAGS',
         ] if with_gflags else []),
