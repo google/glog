@@ -31,7 +31,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "config.h"
+#include "glog_config.h"
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
 #include "stacktrace.h"

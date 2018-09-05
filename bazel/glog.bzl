@@ -17,7 +17,7 @@ def glog_library(namespace='google', with_gflags=1):
         name = 'glog',
         visibility = [ '//visibility:public' ],
         srcs = [
-            ':config_h',
+            ':glog_config_h',
             'src/base/commandlineflags.h',
             'src/base/googleinit.h',
             'src/base/mutex.h',
@@ -109,12 +109,12 @@ EOF
     )
 
     native.genrule(
-        name = 'config_h',
+        name = 'glog_config_h',
         srcs = [
-            'src/config.h.cmake.in',
+            'src/glog_config.h.cmake.in',
         ],
         outs = [
-            'glog_internal/config.h',
+            'glog_internal/glog_config.h',
         ],
         cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $< > $@",
     )

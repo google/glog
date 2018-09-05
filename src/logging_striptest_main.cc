@@ -36,7 +36,7 @@
 #include <iosfwd>
 #include "glog/logging.h"
 #include "base/commandlineflags.h"
-#include "config.h"
+#include "glog_config.h"
 
 DECLARE_bool(logtostderr);
 GLOG_DEFINE_bool(check_mode, false, "Prints 'opt' or 'dbg'");

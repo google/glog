@@ -11,7 +11,7 @@ AC_INIT(glog, 0.3.5, opensource@google.com)
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(src/config.h)
+AM_CONFIG_HEADER(src/glog_config.h)
 
 AC_LANG(C++)
 

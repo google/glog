@@ -36,7 +36,7 @@
 # error You should only be including windows/port.cc in a windows environment!
 #endif
 
-#include "config.h"
+#include "glog_config.h"
 #include <stdarg.h>    // for va_list, va_start, va_end
 #include "port.h"
 

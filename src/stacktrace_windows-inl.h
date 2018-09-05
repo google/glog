@@ -31,7 +31,7 @@
 //
 // Windows implementation - just use CaptureStackBackTrace
 
-#include "config.h"
+#include "glog_config.h"
 #include "port.h"
 #include "stacktrace.h"
 #include <DbgHelp.h>

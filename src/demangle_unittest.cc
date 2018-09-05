@@ -39,7 +39,7 @@
 #include "glog/logging.h"
 #include "demangle.h"
 #include "googletest.h"
-#include "config.h"
+#include "glog_config.h"
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>

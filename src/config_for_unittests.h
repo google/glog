@@ -34,14 +34,14 @@
 // Copied from google-perftools and modified by Shinichiro Hamaji
 //
 // This file is needed for windows -- unittests are not part of the
-// glog dll, but still want to include config.h just like the
+// glog dll, but still want to include glog_config.h just like the
 // dll does, so they can use internal tools and APIs for testing.
 //
-// The problem is that config.h declares GOOGLE_GLOG_DLL_DECL to be
+// The problem is that glog_config.h declares GOOGLE_GLOG_DLL_DECL to be
 // for exporting symbols, but the unittest needs to *import* symbols
 // (since it's not the dll).
 //
-// The solution is to have this file, which is just like config.h but
+// The solution is to have this file, which is just like glog_config.h but
 // sets GOOGLE_GLOG_DLL_DECL to do a dllimport instead of a dllexport.
 //
 // The reason we need this extra GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS
@@ -51,11 +51,11 @@
 // unittest case.  For that, we allow folks to define both
 // GOOGLE_GLOG_DLL_DECL and GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS explicitly.
 //
-// NOTE: This file is equivalent to config.h on non-windows systems,
+// NOTE: This file is equivalent to glog_config.h on non-windows systems,
 // which never defined GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS and always
 // define GOOGLE_GLOG_DLL_DECL to the empty string.
 
-#include "config.h"
+#include "glog_config.h"
 
 #undef GOOGLE_GLOG_DLL_DECL
 #ifdef GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS

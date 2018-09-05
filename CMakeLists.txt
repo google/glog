@@ -410,7 +410,7 @@ endif (WITH_THREADS AND Threads_FOUND)
 
 set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
 
-configure_file (src/config.h.cmake.in config.h)
+configure_file (src/glog_config.h.cmake.in glog_config.h)
 configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
 configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
