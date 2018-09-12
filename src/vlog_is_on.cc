@@ -105,7 +105,7 @@ GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
 
 using glog_internal_namespace_::SafeFNMatch_;
 
-int32 kLogSiteUninitialized = 1000;
+int32 token_seq_number = 1;
 
 // List of per-module log levels from FLAGS_vmodule.
 // Once created each element is never deleted/modified
@@ -192,6 +192,9 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
       info->vlog_level = log_level;
       info->next = vmodule_list;
       vmodule_list = info;
+
+      // Increase the token sequence to invalidate all the SiteFlags that were already initialized.
+      ++token_seq_number;
     }
   }
   RAW_VLOG(1, "Set VLOG level for \"%s\" to %d", module_pattern, log_level);
@@ -200,11 +203,10 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
 
 // NOTE: Individual VLOG statements cache the integer log level pointers.
 // NOTE: This function must not allocate memory or require any locks.
-bool InitVLOG3__(int32** site_flag, int32* site_default,
+bool InitVLOG3__(SiteFlag* site_flag, int32* site_default,
                  const char* fname, int32 verbose_level) {
   MutexLock l(&vmodule_lock);
-  bool read_vmodule_flag = inited_vmodule;
-  if (!read_vmodule_flag) {
+  if (!inited_vmodule) {
     VLOG2Initializer();
   }
 
@@ -246,7 +248,8 @@ bool InitVLOG3__(int32** site_flag, int32* site_default,
   ANNOTATE_BENIGN_RACE(site_flag,
                        "*site_flag may be written by several threads,"
                        " but the value will be the same");
-  if (read_vmodule_flag) *site_flag = site_flag_value;
+  site_flag->level = site_flag_value;
+  site_flag->token = token_seq_number;
 
   // restore the errno in case something recoverable went wrong during
   // the initialization of the VLOG mechanism (see above note "protect the..")

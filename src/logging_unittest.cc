@@ -95,6 +95,7 @@ static void TestLogging(bool check_counts);
 static void TestRawLogging();
 static void LogWithLevels(int v, int severity, bool err, bool alsoerr);
 static void TestLoggingLevels();
+static void TestVLogModule();
 static void TestLogString();
 static void TestLogSink();
 static void TestLogToString();
@@ -212,6 +213,7 @@ int main(int argc, char **argv) {
   TestLogging(true);
   TestRawLogging();
   TestLoggingLevels();
+  TestVLogModule();
   TestLogString();
   TestLogSink();
   TestLogToString();
@@ -439,6 +441,22 @@ void TestLoggingLevels() {
   LogWithLevels(0, GLOG_FATAL, false, true);
   LogWithLevels(1, GLOG_WARNING, false, false);
   LogWithLevels(1, GLOG_FATAL, false, true);
+}
+
+int TestVlogHelper() {
+  if (VLOG_IS_ON(1)) {
+    return 1;
+  }
+  return 0;
+}
+
+void TestVLogModule() {
+  int c = TestVlogHelper();
+  EXPECT_EQ(0, c);
+
+  EXPECT_EQ(0, SetVLOGLevel("logging_unittest", 1));
+  c = TestVlogHelper();
+  EXPECT_EQ(1, c);
 }
 
 TEST(DeathRawCHECK, logging) {
