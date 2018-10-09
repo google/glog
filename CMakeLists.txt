@@ -65,7 +65,6 @@ check_include_file (dlfcn.h HAVE_DLFCN_H)
 check_include_file (execinfo.h HAVE_EXECINFO_H)
 check_include_file (glob.h HAVE_GLOB_H)
 check_include_file (inttypes.h HAVE_INTTYPES_H)
-check_include_file (libunwind.h HAVE_LIBUNWIND_H)
 check_include_file (memory.h HAVE_MEMORY_H)
 check_include_file (pwd.h HAVE_PWD_H)
 check_include_file (stdint.h HAVE_STDINT_H)
@@ -81,7 +80,6 @@ check_include_file (syscall.h HAVE_SYSCALL_H)
 check_include_file (syslog.h HAVE_SYSLOG_H)
 check_include_file (ucontext.h HAVE_UCONTEXT_H)
 check_include_file (unistd.h HAVE_UNISTD_H)
-check_include_file (unwind.h HAVE_UNWIND_H)
 check_include_file (pwd.h HAVE_PWD_H)
 
 check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
@@ -117,11 +115,9 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 # snprintf as an inline function
 check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
-check_library_exists (unwind get_static_proc_name "" HAVE_LIB_UNWIND)
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
-find_library (UNWIND_LIBRARY NAMES unwind DOC "unwind library")
-mark_as_advanced (UNWIND_LIBRARY)
+find_package(Libunwind)
 
 check_c_source_compiles ("
 #include <stdlib.h>
@@ -491,9 +487,9 @@ add_library(glog::glog ALIAS glog)
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-if (UNWIND_LIBRARY)
-  target_link_libraries (glog PUBLIC ${UNWIND_LIBRARY})
-endif (UNWIND_LIBRARY)
+if (Libunwind_FOUND)
+  target_link_libraries (glog PUBLIC unwind)
+endif (Libunwind_FOUND)
 
 if (HAVE_DBGHELP)
    target_link_libraries (glog PUBLIC dbghelp)
@@ -705,6 +701,7 @@ export (PACKAGE glog)
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLibunwind.cmake
   DESTINATION ${_glog_CMake_INSTALLDIR})
 
 install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
