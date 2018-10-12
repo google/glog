@@ -1075,13 +1075,14 @@ TEST(Strerror, logging) {
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and
 // CHECK(..) via objdump
+/*
 static void MyFatal() {
   LOG(FATAL) << "Failed";
 }
 static void MyCheck(bool a, bool b) {
   CHECK_EQ(a, b);
 }
-
+*/
 #ifdef HAVE_LIB_GMOCK
 
 TEST(DVLog, Basic) {
