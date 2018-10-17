@@ -1104,7 +1104,7 @@ namespace base_logging {
 // buffer to allow for a '\n' and '\0'.
 class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
  public:
-  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\n'.
+  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\0'.
   LogStreamBuf(char *buf, int len) {
     setp(buf, buf + len - 2);
   }
