@@ -1153,7 +1153,9 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // LogMessageData object exists (in this case glog makes zero heap memory
 // allocations).
 static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
-static GLOG_THREAD_LOCAL_STORAGE char thread_msg_data[sizeof(LogMessage::LogMessageData)];
+static GLOG_THREAD_LOCAL_STORAGE std::aligned_storage<
+    sizeof(LogMessage::LogMessageData),
+    alignof(LogMessage::LogMessageData)>::type thread_msg_data;
 #endif // defined(GLOG_THREAD_LOCAL_STORAGE)
 
 LogMessage::LogMessageData::LogMessageData()
@@ -1294,7 +1296,7 @@ void LogMessage::Init(const char* file,
 LogMessage::~LogMessage() {
   Flush();
 #ifdef GLOG_THREAD_LOCAL_STORAGE
-  if (data_ == static_cast<void*>(thread_msg_data)) {
+  if (data_ == static_cast<void*>(&thread_msg_data)) {
     data_->~LogMessageData();
     thread_data_available = true;
   }
