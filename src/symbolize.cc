@@ -209,6 +209,9 @@ GetSectionHeaderByType(const int fd, ElfW(Half) sh_num, const off_t sh_offset,
         (sizeof(buf) > num_bytes_left) ? num_bytes_left : sizeof(buf);
     const ssize_t len = ReadFromOffset(fd, buf, num_bytes_to_read,
                                        sh_offset + i * sizeof(buf[0]));
+    if (len == -1) {
+      return false;
+    }
     SAFE_ASSERT(len % sizeof(buf[0]) == 0);
     const ssize_t num_headers_in_buf = len / sizeof(buf[0]);
     SAFE_ASSERT(num_headers_in_buf <= sizeof(buf) / sizeof(buf[0]));
@@ -299,6 +302,9 @@ FindSymbol(uint64_t pc, const int fd, char *out, int out_size,
     // Read at most NUM_SYMBOLS symbols at once to save read() calls.
     ElfW(Sym) buf[NUM_SYMBOLS];
     const ssize_t len = ReadFromOffset(fd, &buf, sizeof(buf), offset);
+    if (len == -1) {
+      return false;
+    }
     SAFE_ASSERT(len % sizeof(buf[0]) == 0);
     const ssize_t num_symbols_in_buf = len / sizeof(buf[0]);
     SAFE_ASSERT(num_symbols_in_buf <= sizeof(buf)/sizeof(buf[0]));
