@@ -1153,9 +1153,16 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // LogMessageData object exists (in this case glog makes zero heap memory
 // allocations).
 static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
+
+#ifdef HAVE_ALIGNED_STORAGE
+static GLOG_THREAD_LOCAL_STORAGE
+    std::aligned_storage<sizeof(LogMessage::LogMessageData),
+                         alignof(LogMessage::LogMessageData)>::type thread_msg_data;
+#else
 static GLOG_THREAD_LOCAL_STORAGE
     char thread_msg_data[sizeof(void*) + sizeof(LogMessage::LogMessageData)];
-#endif // defined(GLOG_THREAD_LOCAL_STORAGE)
+#endif  // HAVE_ALIGNED_STORAGE
+#endif  // defined(GLOG_THREAD_LOCAL_STORAGE)
 
 LogMessage::LogMessageData::LogMessageData()
   : stream_(message_text_, LogMessage::kMaxLogMessageLen, 0) {
@@ -1219,9 +1226,13 @@ void LogMessage::Init(const char* file,
     // No need for locking, because this is thread local.
     if (thread_data_available) {
       thread_data_available = false;
+#ifdef HAVE_ALIGNED_STORAGE
+      data_ = new (&thread_msg_data) LogMessageData;
+#else
       char* align_ptr = (char*)(uintptr_t(thread_msg_data + kAlign) & (~kAlign));
       assert(uintptr_t(align_ptr) % sizeof(void*) == 0);
       data_ = new (align_ptr) LogMessageData;
+#endif
     } else {
       allocated_ = new LogMessageData();
       data_ = allocated_;
