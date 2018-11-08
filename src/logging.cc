@@ -598,11 +598,11 @@ inline void LogDestination::FlushLogFiles(int min_severity) {
 
 inline void LogDestination::SetLogDestination(LogSeverity severity,
 					      const char* base_filename) {
-  assert(severity >= 0 && severity < NUM_SEVERITIES);
-  // Prevent any subtle race conditions by wrapping a mutex lock around
-  // all this stuff.
-  MutexLock l(&log_mutex);
-  log_destination(severity)->fileobject_.SetBasename(base_filename);
+//   assert(severity >= 0 && severity < NUM_SEVERITIES);
+//   // Prevent any subtle race conditions by wrapping a mutex lock around
+//   // all this stuff.
+//   MutexLock l(&log_mutex);
+//   log_destination(severity)->fileobject_.SetBasename(base_filename);
 }
 
 inline void LogDestination::SetLogSymlink(LogSeverity severity,
