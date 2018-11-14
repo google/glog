@@ -136,17 +136,20 @@ _END_GOOGLE_NAMESPACE_
 
 _START_GOOGLE_NAMESPACE_
 
-// Read up to "count" bytes from file descriptor "fd" into the buffer
-// starting at "buf" while handling short reads and EINTR.  On
-// success, return the number of bytes read.  Otherwise, return -1.
-static ssize_t ReadPersistent(const int fd, void *buf, const size_t count) {
+// Read up to "count" bytes from "offset" in the file pointed by file
+// descriptor "fd" into the buffer starting at "buf" while handling short reads
+// and EINTR.  On success, return the number of bytes read.  Otherwise, return
+// -1.
+static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
+                              const off_t offset) {
   SAFE_ASSERT(fd >= 0);
   SAFE_ASSERT(count <= std::numeric_limits<ssize_t>::max());
   char *buf0 = reinterpret_cast<char *>(buf);
   ssize_t num_bytes = 0;
   while (num_bytes < count) {
     ssize_t len;
-    NO_INTR(len = read(fd, buf0 + num_bytes, count - num_bytes));
+    NO_INTR(len = pread(fd, buf0 + num_bytes, count - num_bytes,
+                        offset + num_bytes));
     if (len < 0) {  // There was an error other than EINTR.
       return -1;
     }
@@ -157,18 +160,6 @@ static ssize_t ReadPersistent(const int fd, void *buf, const size_t count) {
   }
   SAFE_ASSERT(num_bytes <= count);
   return num_bytes;
-}
-
-// Read up to "count" bytes from "offset" in the file pointed by file
-// descriptor "fd" into the buffer starting at "buf".  On success,
-// return the number of bytes read.  Otherwise, return -1.
-static ssize_t ReadFromOffset(const int fd, void *buf,
-                              const size_t count, const off_t offset) {
-  off_t off = lseek(fd, offset, SEEK_SET);
-  if (off == (off_t)-1) {
-    return -1;
-  }
-  return ReadPersistent(fd, buf, count);
 }
 
 // Try reading exactly "count" bytes from "offset" bytes in a file
@@ -398,9 +389,14 @@ struct FileDescriptor {
 // and snprintf().
 class LineReader {
  public:
-  explicit LineReader(int fd, char *buf, int buf_len) : fd_(fd),
-    buf_(buf), buf_len_(buf_len), bol_(buf), eol_(buf), eod_(buf) {
-  }
+  explicit LineReader(int fd, char *buf, int buf_len, off_t offset)
+      : fd_(fd),
+        buf_(buf),
+        buf_len_(buf_len),
+        offset_(offset),
+        bol_(buf),
+        eol_(buf),
+        eod_(buf) {}
 
   // Read '\n'-terminated line from file.  On success, modify "bol"
   // and "eol", then return true.  Otherwise, return false.
@@ -409,10 +405,11 @@ class LineReader {
   // dropped.  It's an intentional behavior to make the code simple.
   bool ReadLine(const char **bol, const char **eol) {
     if (BufferIsEmpty()) {  // First time.
-      const ssize_t num_bytes = ReadPersistent(fd_, buf_, buf_len_);
+      const ssize_t num_bytes = ReadFromOffset(fd_, buf_, buf_len_, offset_);
       if (num_bytes <= 0) {  // EOF or error.
         return false;
       }
+      offset_ += num_bytes;
       eod_ = buf_ + num_bytes;
       bol_ = buf_;
     } else {
@@ -425,11 +422,12 @@ class LineReader {
         // Read text from file and append it.
         char * const append_pos = buf_ + incomplete_line_length;
         const int capacity_left = buf_len_ - incomplete_line_length;
-        const ssize_t num_bytes = ReadPersistent(fd_, append_pos,
-                                                 capacity_left);
+        const ssize_t num_bytes =
+            ReadFromOffset(fd_, append_pos, capacity_left, offset_);
         if (num_bytes <= 0) {  // EOF or error.
           return false;
         }
+        offset_ += num_bytes;
         eod_ = append_pos + num_bytes;
         bol_ = buf_;
       }
@@ -474,6 +472,7 @@ class LineReader {
   const int fd_;
   char * const buf_;
   const int buf_len_;
+  off_t offset_;
   char *bol_;
   char *eol_;
   const char *eod_;  // End of data in "buf_".
@@ -532,7 +531,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
   // look into the symbol tables inside.
   char buf[1024];  // Big enough for line of sane /proc/self/maps
   int num_maps = 0;
-  LineReader reader(wrapped_maps_fd.get(), buf, sizeof(buf));
+  LineReader reader(wrapped_maps_fd.get(), buf, sizeof(buf), 0);
   while (true) {
     num_maps++;
     const char *cursor;
