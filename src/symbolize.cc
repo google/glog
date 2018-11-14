@@ -58,6 +58,7 @@
 
 #include <string.h>
 
+#include <algorithm>
 #include <limits>
 
 #include "symbolize.h"
@@ -292,13 +293,12 @@ FindSymbol(uint64_t pc, const int fd, char *out, int out_size,
 
     // Read at most NUM_SYMBOLS symbols at once to save read() calls.
     ElfW(Sym) buf[NUM_SYMBOLS];
-    const ssize_t len = ReadFromOffset(fd, &buf, sizeof(buf), offset);
-    if (len == -1) {
-      return false;
-    }
+    int num_symbols_to_read = std::min(NUM_SYMBOLS, num_symbols - i);
+    const ssize_t len =
+        ReadFromOffset(fd, &buf, sizeof(buf[0]) * num_symbols_to_read, offset);
     SAFE_ASSERT(len % sizeof(buf[0]) == 0);
     const ssize_t num_symbols_in_buf = len / sizeof(buf[0]);
-    SAFE_ASSERT(num_symbols_in_buf <= sizeof(buf)/sizeof(buf[0]));
+    SAFE_ASSERT(num_symbols_in_buf <= num_symbols_to_read);
     for (int j = 0; j < num_symbols_in_buf; ++j) {
       const ElfW(Sym)& symbol = buf[j];
       uint64_t start_address = symbol.st_value;
@@ -684,7 +684,8 @@ static char *itoa_r(intptr_t i, char *buf, size_t sz, int base, size_t padding) 
 
   // Handle negative numbers (only for base 10).
   if (i < 0 && base == 10) {
-    j = -i;
+    // This does "j = -i" while avoiding integer overflow.
+    j = static_cast<uintptr_t>(-(i + 1)) + 1;
 
     // Make sure we can write the '-' character.
     if (++n > sz) {
@@ -780,8 +781,13 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                              out_size - 1);
   }
 
+#if defined(PRINT_UNSYMBOLIZED_STACK_TRACES)
+  {
+    FileDescriptor wrapped_object_fd(object_fd);
+#else
   // Check whether a file name was returned.
   if (object_fd < 0) {
+#endif
     if (out[1]) {
       // The object file containing PC was determined successfully however the
       // object file was not opened successfully.  This is still considered
@@ -805,7 +811,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
     // Run the call back if it's installed.
     // Note: relocation (and much of the rest of this code) will be
     // wrong for prelinked shared libraries and PIE executables.
-    uint64 relocation = (elf_type == ET_DYN) ? start_address : 0;
+    uint64_t relocation = (elf_type == ET_DYN) ? start_address : 0;
     int num_bytes_written = g_symbolize_callback(wrapped_object_fd.get(),
                                                  pc, out, out_size,
                                                  relocation);

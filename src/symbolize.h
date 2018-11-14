@@ -116,8 +116,11 @@ _START_GOOGLE_NAMESPACE_
 // counter "pc". The callback function should write output to "out"
 // and return the size of the output written. On error, the callback
 // function should return -1.
-typedef int (*SymbolizeCallback)(int fd, void *pc, char *out, size_t out_size,
-                                 uint64 relocation);
+typedef int (*SymbolizeCallback)(int fd,
+                                 void* pc,
+                                 char* out,
+                                 size_t out_size,
+                                 uint64_t relocation);
 void InstallSymbolizeCallback(SymbolizeCallback callback);
 
 // Installs a callback function, which will be called instead of
@@ -130,10 +133,10 @@ void InstallSymbolizeCallback(SymbolizeCallback callback);
 // file is opened successfully, returns the file descriptor.  Otherwise,
 // returns -1.  |out_file_name_size| is the size of the file name buffer
 // (including the null-terminator).
-typedef int (*SymbolizeOpenObjectFileCallback)(uint64 pc,
-                                               uint64 &start_address,
-                                               uint64 &base_address,
-                                               char *out_file_name,
+typedef int (*SymbolizeOpenObjectFileCallback)(uint64_t pc,
+                                               uint64_t& start_address,
+                                               uint64_t& base_address,
+                                               char* out_file_name,
                                                int out_file_name_size);
 void InstallSymbolizeOpenObjectFileCallback(
     SymbolizeOpenObjectFileCallback callback);
