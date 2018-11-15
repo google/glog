@@ -21,6 +21,8 @@ option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
 option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
+option (PRINT_UNSYMBOLIZED_STACK_TRACES
+  "Print raw pc values on symbolization failure" OFF)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

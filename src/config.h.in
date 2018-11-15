@@ -154,6 +154,9 @@
 /* How to access the PC from a struct ucontext */
 #undef PC_FROM_UCONTEXT
 
+/* define if we should print raw pc values on symbolization failure. */
+#undef PRINT_UNSYMBOLIZED_STACK_TRACES
+
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
 #undef PTHREAD_CREATE_JOINABLE

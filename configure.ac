@@ -207,6 +207,15 @@ AC_PC_FROM_UCONTEXT(AC_MSG_WARN(Could not find the PC.  Will not output failed a
 
 AC_DEFINE_UNQUOTED(TEST_SRC_DIR, "$srcdir", [location of source code])
 
+AC_ARG_ENABLE(unsymbolized-traces,
+              AS_HELP_STRING([--enable-unsymbolized-traces],
+                             [Print raw pc values when symbolization is failed.]),
+              enable_unsymbolized_traces=yes)
+if test x"$enable_unsymbolized_traces" = x"yes"; then
+  AC_DEFINE(PRINT_UNSYMBOLIZED_STACK_TRACES, 1,
+            [define if we should print raw pc values on symbolization failure.])
+fi
+
 # These are what's needed by logging.h.in and raw_logging.h.in
 AC_SUBST(ac_google_start_namespace)
 AC_SUBST(ac_google_end_namespace)
