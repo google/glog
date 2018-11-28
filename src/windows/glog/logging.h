@@ -1155,13 +1155,9 @@ public:
   // 2005 if you are deriving from a type in the Standard C++ Library"
   // http://msdn.microsoft.com/en-us/library/3tdb471s(VS.80).aspx
   // Let's just ignore the warning.
-#ifdef _MSC_VER
-# pragma warning(disable: 4275)
-#endif
+GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
   class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostream {
-#ifdef _MSC_VER
-# pragma warning(default: 4275)
-#endif
+GLOG_MSVC_POP_WARNING()
   public:
     LogStream(char *buf, int len, int ctr)
         : std::ostream(NULL),
