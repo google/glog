@@ -76,7 +76,7 @@ void* GetPC(void* ucontext_in_void) {
 #if (defined(HAVE_UCONTEXT_H) || defined(HAVE_SYS_UCONTEXT_H)) && defined(PC_FROM_UCONTEXT)
   if (ucontext_in_void != NULL) {
     ucontext_t *context = reinterpret_cast<ucontext_t *>(ucontext_in_void);
-    return (void*)context->PC_FROM_UCONTEXT;
+    return NULL;
   }
 #endif
   return NULL;
