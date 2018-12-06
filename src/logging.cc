@@ -156,7 +156,7 @@ GLOG_DEFINE_int32(logemaillevel, 999,
                   "Email log messages logged at this level or higher"
                   " (0 means email all; 3 means email FATAL only;"
                   " ...)");
-GLOG_DEFINE_string(logmailer, "/bin/mail",
+GLOG_DEFINE_string(logmailer, "",
                    "Mailer used to send logging email");
 
 // Compute the default value for --log_dir
@@ -2028,8 +2028,12 @@ static bool SendEmailInternal(const char*dest, const char *subject,
               subject, body, dest);
     }
 
+    string logmailer = FLAGS_logmailer;
+    if (logmailer.empty()) {
+        logmailer = "/bin/mail";
+    }
     string cmd =
-        FLAGS_logmailer + " -s" +
+        logmailer + " -s" +
         ShellEscape(subject) + " " + ShellEscape(dest);
     VLOG(4) << "Mailing command: " << cmd;
 
