@@ -1232,6 +1232,7 @@ void LogMessage::Init(const char* file,
       char* align_ptr =
           reinterpret_cast<char*>(reinterpret_cast<uintptr_t>(thread_msg_data + kAlign) & ~kAlign);
       data_ = new (align_ptr) LogMessageData;
+      assert(reinterpret_cast<uintptr_t>(align_ptr) % sizeof(void*) == 0);
 #endif
     } else {
       allocated_ = new LogMessageData();
