@@ -206,6 +206,12 @@ thread_local int tls;
 int main() { }
 " HAVE_CXX11_TLS)
 
+check_cxx_source_compiles ("
+#include <type_traits>
+std::aligned_storage<sizeof(char), alignof(char)>::type data;
+int main() { }
+" HAVE_ALIGNED_STORAGE)
+
 if (WITH_TLS)
   # Cygwin does not support the thread attribute. Don't bother.
   if (HAVE_GCC_TLS)
