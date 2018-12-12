@@ -1229,8 +1229,8 @@ void LogMessage::Init(const char* file,
 #ifdef HAVE_ALIGNED_STORAGE
       data_ = new (&thread_msg_data) LogMessageData;
 #else
-      char* align_ptr = (char*)(uintptr_t(thread_msg_data + kAlign) & (~kAlign));
-      assert(uintptr_t(align_ptr) % sizeof(void*) == 0);
+      char* align_ptr =
+          reinterpret_cast<char*>(reinterpret_cast<uintptr_t>(thread_msg_data + kAlign) & ~kAlign);
       data_ = new (align_ptr) LogMessageData;
 #endif
     } else {
