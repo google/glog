@@ -311,7 +311,7 @@ TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
 // x86 specific tests.  Uses some inline assembler.
 extern "C" {
 inline void* always_inline inline_func() {
-  register void *pc = NULL;
+  void *pc = NULL;
 #ifdef TEST_X86_32_AND_64
   __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
 #endif
@@ -320,7 +320,7 @@ inline void* always_inline inline_func() {
 
 void* ATTRIBUTE_NOINLINE non_inline_func();
 void* ATTRIBUTE_NOINLINE non_inline_func() {
-  register void *pc = NULL;
+  void *pc = NULL;
 #ifdef TEST_X86_32_AND_64
   __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
 #endif
