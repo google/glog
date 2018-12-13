@@ -63,6 +63,13 @@ matrix:
         BUILD_RELEASE=bionic
         BUILD_ARCH=amd64
         TOOLCHAIN=gcc-cxx17
+    - os: linux
+      env: >
+        BUILD_FLAVOR=ubuntu
+        BUILD_RELEASE=bionic
+        BUILD_ARCH=amd64
+        TOOLCHAIN=clang-cxx17
+        BUILD_PACKAGES="cmake clang"
     # } // end Linux
 
     # Windows build with mingw-w64 on Ubuntu 18.04
