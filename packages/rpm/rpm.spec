@@ -55,7 +55,7 @@ rm -rf $RPM_BUILD_ROOT
 ## documentation.  This depends on the following two lines appearing in
 ## Makefile.am:
 ##     docdir = $(prefix)/share/doc/$(PACKAGE)-$(VERSION)
-##     dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README
+##     dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL NEWS README.md
 %docdir %{prefix}/share/doc/%{NAME}-%{VERSION}
 %{prefix}/share/doc/%{NAME}-%{VERSION}/*
 
