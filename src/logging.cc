@@ -1221,14 +1221,14 @@ void LogMessage::Init(const char* file,
   allocated_ = NULL;
   if (severity != GLOG_FATAL || !exit_on_dfatal) {
 #ifdef GLOG_THREAD_LOCAL_STORAGE
-    const uintptr_t kAlign = sizeof(void*) - 1;
-
     // No need for locking, because this is thread local.
     if (thread_data_available) {
       thread_data_available = false;
 #ifdef HAVE_ALIGNED_STORAGE
       data_ = new (&thread_msg_data) LogMessageData;
 #else
+      const uintptr_t kAlign = sizeof(void*) - 1;
+
       char* align_ptr =
           reinterpret_cast<char*>(reinterpret_cast<uintptr_t>(thread_msg_data + kAlign) & ~kAlign);
       data_ = new (align_ptr) LogMessageData;
