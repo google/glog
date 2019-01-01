@@ -2,5 +2,4 @@
 
 set -eu
 
-touch NEWS
 autoreconf -i
