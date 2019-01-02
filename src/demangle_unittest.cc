@@ -142,6 +142,12 @@ TEST(Demangle, FromFile) {
   }
 }
 
+// Template argument packs can start with I or J.
+TEST(Demangle, TemplateArgs) {
+  EXPECT_STREQ("add<>()", DemangleIt("_Z3addIIiEEvDpT_"));
+  EXPECT_STREQ("add<>()", DemangleIt("_Z3addIJiEEvDpT_"));
+}
+
 #endif
 
 int main(int argc, char **argv) {
