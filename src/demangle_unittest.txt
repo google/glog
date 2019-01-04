@@ -43,6 +43,9 @@ _ZNcvT_IiEEv	operator ?<>()
 # "<< <" case.
 _ZlsI3fooE	operator<< <>
 
+# ABI tags.
+_Z1AB3barB3foo	A
+
 # Random things we found interesting.
 _ZN3FooISt6vectorISsSaISsEEEclEv	Foo<>::operator()()
 _ZTI9Callback1IiE	Callback1<>
