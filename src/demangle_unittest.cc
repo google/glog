@@ -141,6 +141,7 @@ TEST(Demangle, FromFile) {
     EXPECT_EQ(demangled, DemangleIt(mangled.c_str()));
   }
 }
+
 #endif
 
 int main(int argc, char **argv) {
