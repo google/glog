@@ -597,12 +597,12 @@ static bool ParsePrefix(State *state) {
 // <unqualified-name> ::= <operator-name>
 //                    ::= <ctor-dtor-name>
 //                    ::= <source-name> [<abi-tags>]
-//                    ::= <local-source-name>
+//                    ::= <local-source-name> [<abi-tags>]
 static bool ParseUnqualifiedName(State *state) {
   return (ParseOperatorName(state) ||
           ParseCtorDtorName(state) ||
           (ParseSourceName(state) && Optional(ParseAbiTags(state))) ||
-          ParseLocalSourceName(state));
+          (ParseLocalSourceName(state) && Optional(ParseAbiTags(state))));
 }
 
 // <source-name> ::= <positive length number> <identifier>
