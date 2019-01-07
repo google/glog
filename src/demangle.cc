@@ -30,7 +30,7 @@
 // Author: Satoru Takabayashi
 //
 // For reference check out:
-// http://www.codesourcery.com/public/cxx-abi/abi.html#mangling
+// http://itanium-cxx-abi.github.io/cxx-abi/abi.html#mangling
 //
 // Note that we only have partial C++0x support yet.
 
@@ -423,6 +423,8 @@ static bool ParseNumber(State *state, int *number_out);
 static bool ParseFloatNumber(State *state);
 static bool ParseSeqId(State *state);
 static bool ParseIdentifier(State *state, int length);
+static bool ParseAbiTags(State *state);
+static bool ParseAbiTag(State *state);
 static bool ParseOperatorName(State *state);
 static bool ParseSpecialName(State *state);
 static bool ParseCallOffset(State *state);
@@ -594,13 +596,13 @@ static bool ParsePrefix(State *state) {
 
 // <unqualified-name> ::= <operator-name>
 //                    ::= <ctor-dtor-name>
-//                    ::= <source-name>
-//                    ::= <local-source-name>
+//                    ::= <source-name> [<abi-tags>]
+//                    ::= <local-source-name> [<abi-tags>]
 static bool ParseUnqualifiedName(State *state) {
   return (ParseOperatorName(state) ||
           ParseCtorDtorName(state) ||
-          ParseSourceName(state) ||
-          ParseLocalSourceName(state));
+          (ParseSourceName(state) && Optional(ParseAbiTags(state))) ||
+          (ParseLocalSourceName(state) && Optional(ParseAbiTags(state))));
 }
 
 // <source-name> ::= <positive length number> <identifier>
@@ -701,6 +703,23 @@ static bool ParseIdentifier(State *state, int length) {
   }
   state->mangled_cur += length;
   return true;
+}
+
+// <abi-tags> ::= <abi-tag> [<abi-tags>]
+static bool ParseAbiTags(State *state) {
+  State copy = *state;
+  DisableAppend(state);
+  if (OneOrMore(ParseAbiTag, state)) {
+    RestoreAppend(state, copy.append);
+    return true;
+  }
+  *state = copy;
+  return false;
+}
+
+// <abi-tag> ::= B <source-name>
+static bool ParseAbiTag(State *state) {
+  return ParseOneCharToken(state, 'B') && ParseSourceName(state);
 }
 
 // <operator-name> ::= nw, and other two letters cases
