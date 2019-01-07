@@ -1097,10 +1097,11 @@ static bool ParseTemplateArgs(State *state) {
 // <template-arg>  ::= <type>
 //                 ::= <expr-primary>
 //                 ::= I <template-arg>* E        # argument pack
+//                 ::= J <template-arg>* E        # argument pack
 //                 ::= X <expression> E
 static bool ParseTemplateArg(State *state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'I') &&
+  if ((ParseOneCharToken(state, 'I') || ParseOneCharToken(state, 'J')) &&
       ZeroOrMore(ParseTemplateArg, state) &&
       ParseOneCharToken(state, 'E')) {
     return true;

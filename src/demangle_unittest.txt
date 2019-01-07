@@ -135,3 +135,7 @@ _ZlsRSoRKSs	operator<<()
 _ZngILi42EEvN1AIXplT_Li2EEE1TE	operator-<>()
 _ZplR1XS0_	operator+()
 _Zrm1XS_	operator%()
+
+# Template argument packs can start with I or J.
+_Z3addIIiEEvDpT_	add<>()
+_Z3addIJiEEvDpT_	add<>()
