@@ -935,7 +935,8 @@ struct CompileAssert {
 struct CrashReason;
 
 // Returns true if FailureSignalHandler is installed.
-bool IsFailureSignalHandlerInstalled();
+// Needs to be exported since it's used by the signalhandler_unittest.
+GOOGLE_GLOG_DLL_DECL bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
 #define LOG_EVERY_N(severity, n)                                        \
@@ -1107,14 +1108,9 @@ namespace base_logging {
 // buffer to allow for a '\n' and '\0'.
 class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
  public:
-  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\n'.
+  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\0'.
   LogStreamBuf(char *buf, int len) {
     setp(buf, buf + len - 2);
-  }
-
-  // Resets the buffer. Useful if we reuse it by means of TLS.
-  void reset() {
-     setp(pbase(), epptr());
   }
 
   // This effectively ignores overflow.
@@ -1155,9 +1151,14 @@ public:
   // 2005 if you are deriving from a type in the Standard C++ Library"
   // http://msdn.microsoft.com/en-us/library/3tdb471s(VS.80).aspx
   // Let's just ignore the warning.
-GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable: 4275)
+#endif
   class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostream {
-GLOG_MSVC_POP_WARNING()
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
   public:
     LogStream(char *buf, int len, int ctr)
         : std::ostream(NULL),
@@ -1175,7 +1176,6 @@ GLOG_MSVC_POP_WARNING()
     size_t pcount() const { return streambuf_.pcount(); }
     char* pbase() const { return streambuf_.pbase(); }
     char* str() const { return pbase(); }
-    void reset() { streambuf_.reset(); }
 
   private:
     LogStream(const LogStream&);
