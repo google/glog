@@ -181,6 +181,11 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
   DECLARE_ADDRESS_LABEL(end);
 }
 #ifndef __GNUC__
+// On non-GNU environment, we use the address of `CheckStackTrace` to
+// guess the address range of this function. This guess is wrong for
+// non-static function on Windows. This is probably because
+// `&CheckStackTrace` returns the address of a trampoline like PLT,
+// not the actual address of `CheckStackTrace`.
 static
 #endif
 void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
