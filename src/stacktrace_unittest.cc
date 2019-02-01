@@ -186,6 +186,7 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
 // non-static function on Windows. This is probably because
 // `&CheckStackTrace` returns the address of a trampoline like PLT,
 // not the actual address of `CheckStackTrace`.
+// See https://github.com/google/glog/issues/421 for the detail.
 static
 #endif
 void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
