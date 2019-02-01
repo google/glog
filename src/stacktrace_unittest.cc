@@ -180,6 +180,9 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
     CheckStackTrace2(j);
   DECLARE_ADDRESS_LABEL(end);
 }
+#ifndef __GNUC__
+static
+#endif
 void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
   INIT_ADDRESS_RANGE(CheckStackTrace, start, end, &expected_range[5]);
   DECLARE_ADDRESS_LABEL(start);
