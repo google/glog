@@ -180,6 +180,15 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
     CheckStackTrace2(j);
   DECLARE_ADDRESS_LABEL(end);
 }
+#ifndef __GNUC__
+// On non-GNU environment, we use the address of `CheckStackTrace` to
+// guess the address range of this function. This guess is wrong for
+// non-static function on Windows. This is probably because
+// `&CheckStackTrace` returns the address of a trampoline like PLT,
+// not the actual address of `CheckStackTrace`.
+// See https://github.com/google/glog/issues/421 for the detail.
+static
+#endif
 void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
   INIT_ADDRESS_RANGE(CheckStackTrace, start, end, &expected_range[5]);
   DECLARE_ADDRESS_LABEL(start);
