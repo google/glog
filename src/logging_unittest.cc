@@ -572,9 +572,10 @@ void TestDCHECK() {
   DCHECK_GT(2, 1);
   DCHECK_LT(1, 2);
 
-  auto_ptr<int64> sptr(new int64);
-  int64* ptr = DCHECK_NOTNULL(sptr.get());
-  CHECK_EQ(ptr, sptr.get());
+  int64* orig_ptr = new int64;
+  int64* ptr = DCHECK_NOTNULL(orig_ptr);
+  CHECK_EQ(ptr, orig_ptr);
+  delete orig_ptr;
 }
 
 void TestSTREQ() {

@@ -1266,7 +1266,6 @@ void LogMessage::Init(const char* file,
   data_->timestamp_ = static_cast<time_t>(now);
   localtime_r(&data_->timestamp_, &data_->tm_time_);
   int usecs = static_cast<int>((now - data_->timestamp_) * 1000000);
-  RawLog__SetLastTime(data_->tm_time_, usecs);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
