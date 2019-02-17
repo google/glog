@@ -44,6 +44,8 @@
 #ifdef HAVE_SYS_UTSNAME_H
 # include <sys/utsname.h>  // For uname.
 #endif
+#include <dirent.h>
+#include <time.h>
 #include <fcntl.h>
 #include <cstdio>
 #include <iostream>
@@ -1134,6 +1136,78 @@ void LogFileObject::Write(bool force_flush,
 }
 
 }  // namespace
+
+
+namespace {
+
+vector<string> SplitString(const string& s, const char delimiter) {
+  std::stringstream ss(s);
+  string t;
+  vector<string> tokens;
+
+  while (std::getline(ss, t, delimiter)) {
+    if (t.length() > 0) {
+      tokens.push_back(t);
+    }
+  }
+  return tokens;
+}
+
+bool IsGlogLog(const string& log_name) {
+  // Check if log_name matches the pattern "Project.Hostname.Username.log..."
+  static const int kGlogFilenameTokenCount = 6;
+  vector<string> log_name_tokens = SplitString(log_name, '.');
+
+  return log_name_tokens.size() >= kGlogFilenameTokenCount
+    && log_name_tokens[1] == LogDestination::hostname()
+    && log_name_tokens[2] == MyUserName()
+    && log_name_tokens[3] == "log";
+}
+
+bool LastModifiedOver(const string& log_name, int days) {
+  // Try to get the last modified time of log.
+  struct stat log_stat;
+
+  if(stat(log_name.c_str(), &log_stat) == 0) {
+    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
+    time_t last_modified_time = log_stat.st_mtime;
+    time_t current_time = time(nullptr);
+    return difftime(current_time, last_modified_time) > days * 86400;
+  }
+
+  // If failed to get file stat, don't return true!
+  return false;
+}
+
+vector<string> GetOverdueLogNames(string log_directory, int days) {
+  // The names of overdue logs.
+  vector<string> overdue_log_names;
+
+  // Try to get all files within log_directory.
+  DIR *dir;
+  struct dirent *ent;
+
+  // If log_directory doesn't end with a slash, append a slash to it.
+  if (log_directory.back() != '/') {
+    log_directory += '/';
+  }
+
+  if ((dir=opendir(log_directory.c_str()))) {
+    while ((ent=readdir(dir))) {
+      string filename = log_directory + string(ent->d_name);
+      if (IsGlogLog(filename) && LastModifiedOver(filename, days)) {
+        overdue_log_names.push_back(filename);
+      }
+    }
+    closedir(dir);
+  } else {
+    perror("Unable to open directory.");
+  }
+
+  return overdue_log_names;
+}
+
+} // namespace
 
 
 // Static log data space to avoid alloc failures in a LOG(FATAL)
