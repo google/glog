@@ -1171,7 +1171,7 @@ bool LastModifiedOver(const string& log_name, int days) {
   if(stat(log_name.c_str(), &log_stat) == 0) {
     // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
     time_t last_modified_time = log_stat.st_mtime;
-    time_t current_time = time(nullptr);
+    time_t current_time = time(NULL);
     return difftime(current_time, last_modified_time) > days * 86400;
   }
 
@@ -1188,7 +1188,7 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
   struct dirent *ent;
 
   // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.back() != '/') {
+  if (log_directory.at(log_directory.size() - 1) != '/') {
     log_directory += '/';
   }
 
