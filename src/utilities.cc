@@ -56,6 +56,10 @@
 
 #include "base/googleinit.h"
 
+#if defined(OS_WINDOWS)
+#include <Windows.h>    // GetUserNameA
+#endif
+
 using std::string;
 
 _START_GOOGLE_NAMESPACE_
@@ -296,13 +300,17 @@ const string& MyUserName() {
   return g_my_user_name;
 }
 static void MyUserNameInitializer() {
-  // TODO(hamaji): Probably this is not portable.
+  int err = 0;
+  char user[1024];
 #if defined(OS_WINDOWS)
-  const char* user = getenv("USERNAME");
+  DWORD bufsize = sizeof(user);
+  if (GetUserNameA(user, &bufsize)) {
+    err = 0;
+  }
 #else
-  const char* user = getenv("USER");
+  err = getlogin_r(user, sizeof(user));
 #endif
-  if (user != NULL) {
+  if (!err) {
     g_my_user_name = user;
   } else {
 #if defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
