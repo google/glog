@@ -450,6 +450,7 @@ class LogFileObject : public base::Logger {
   uint32 file_length_;
   unsigned int rollover_attempt_;
   int64 next_flush_time_;         // cycle count at which to flush log
+  WallTime start_time_;
 
   // Actually create a logfile using the value of base_filename_ and the
   // optional argument time_pid_string
@@ -923,10 +924,26 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
 bool log_cleaner_enabled_;
 int log_cleaner_overdue_days_ = 7;
 
+std::string g_application_fingerprint;
+
 } // namespace
 
+void SetApplicationFingerprint(const std::string& fingerprint) {
+  g_application_fingerprint = fingerprint;
+}
 
 namespace {
+
+string PrettyDuration(int secs) {
+  std::stringstream result;
+  int mins = secs / 60;
+  int hours = mins / 60;
+  mins = mins % 60;
+  secs = secs % 60;
+  result.fill('0');
+  result << hours << ':' << setw(2) << mins << ':' << setw(2) << secs;
+  return result.str();
+}
 
 LogFileObject::LogFileObject(LogSeverity severity,
                              const char* base_filename)
@@ -940,7 +957,8 @@ LogFileObject::LogFileObject(LogSeverity severity,
     dropped_mem_length_(0),
     file_length_(0),
     rollover_attempt_(kRolloverAttemptFrequency-1),
-    next_flush_time_(0) {
+    next_flush_time_(0),
+    start_time_(WallTime_Now()) {
   assert(severity >= 0);
   assert(severity < NUM_SEVERITIES);
 }
@@ -1215,7 +1233,14 @@ void LogFileObject::Write(bool force_flush,
                        << setw(2) << tm_time.tm_min << ':'
                        << setw(2) << tm_time.tm_sec << '\n'
                        << "Running on machine: "
-                       << LogDestination::hostname() << '\n'
+                       << LogDestination::hostname() << '\n';
+
+    if(!g_application_fingerprint.empty()) {
+      file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
+    }
+
+    file_header_stream << "Running duration (h:mm:ss): "
+                       << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
                        << "Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu "
                        << "threadid file:line] msg" << '\n';
     const string& file_header_string = file_header_stream.str();
