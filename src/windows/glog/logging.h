@@ -1430,6 +1430,16 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
                     const struct ::tm* tm_time,
+                    const char* message, size_t message_len, int32 usecs) {
+    send(severity, full_filename, base_filename, line,
+         tm_time, message, message_len);
+  }
+  // This send() signature is obsolete.
+  // New implementations should define this in terms of
+  // the above send() method.
+  virtual void send(LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct ::tm* tm_time,
                     const char* message, size_t message_len) = 0;
 
   // Redefine this to implement waiting for
@@ -1451,7 +1461,15 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   // Can be useful to implement send().
   static std::string ToString(LogSeverity severity, const char* file, int line,
                               const struct ::tm* tm_time,
-                              const char* message, size_t message_len);
+                              const char* message, size_t message_len,
+                              int32 usecs);
+
+  // Obsolete
+  static std::string ToString(LogSeverity severity, const char* file, int line,
+                              const struct ::tm* tm_time,
+                              const char* message, size_t message_len) {
+    return ToString(severity, file, line, tm_time, message, message_len, 0);
+  }
 };
 
 // Add or remove a LogSink as a consumer of logging data.  Thread-safe.
