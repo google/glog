@@ -349,6 +349,7 @@ struct LogMessage::LogMessageData  {
   };
   time_t timestamp_;            // Time of creation of LogMessage
   struct ::tm tm_time_;         // Time of creation of LogMessage
+  int32 usecs_;                   // Time of creation of LogMessage - microseconds part
   size_t num_prefix_chars_;     // # of chars of prefix in this message
   size_t num_chars_to_log_;     // # of chars of msg to send to log
   size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
@@ -515,7 +516,8 @@ class LogDestination {
                          int line,
                          const struct ::tm* tm_time,
                          const char* message,
-                         size_t message_len);
+                         size_t message_len,
+                         int32 usecs);
 
   // Wait for all registered sinks via WaitTillSent
   // including the optional one in "data".
@@ -782,12 +784,13 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        int line,
                                        const struct ::tm* tm_time,
                                        const char* message,
-                                       size_t message_len) {
+                                       size_t message_len,
+                                       int32 usecs) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
     for (int i = sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
-                         line, tm_time, message, message_len);
+                         line, tm_time, message, message_len, usecs);
     }
   }
 }
@@ -1265,7 +1268,7 @@ void LogMessage::Init(const char* file,
   WallTime now = WallTime_Now();
   data_->timestamp_ = static_cast<time_t>(now);
   localtime_r(&data_->timestamp_, &data_->tm_time_);
-  int usecs = static_cast<int>((now - data_->timestamp_) * 1000000);
+  data_->usecs_ = static_cast<int32>((now - data_->timestamp_) * 1000000);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
@@ -1285,7 +1288,7 @@ void LogMessage::Init(const char* file,
              << setw(2) << data_->tm_time_.tm_hour  << ':'
              << setw(2) << data_->tm_time_.tm_min   << ':'
              << setw(2) << data_->tm_time_.tm_sec   << "."
-             << setw(6) << usecs
+             << setw(6) << data_->usecs_
              << ' '
              << setfill(' ') << setw(5)
              << static_cast<unsigned int>(GetTID()) << setfill('0')
@@ -1432,7 +1435,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                data_->line_, &data_->tm_time_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_ -
-                                data_->num_prefix_chars_ - 1));
+                                data_->num_prefix_chars_ - 1),
+                               data_->usecs_);
   } else {
 
     // log this message to all log files of severity <= severity_
@@ -1449,7 +1453,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                data_->line_, &data_->tm_time_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_
-                                - data_->num_prefix_chars_ - 1));
+                                - data_->num_prefix_chars_ - 1),
+                               data_->usecs_);
     // NOTE: -1 removes trailing \n
   }
 
@@ -1545,7 +1550,8 @@ void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                        data_->line_, &data_->tm_time_,
                        data_->message_text_ + data_->num_prefix_chars_,
                        (data_->num_chars_to_log_ -
-                        data_->num_prefix_chars_ - 1));
+                        data_->num_prefix_chars_ - 1),
+                       data_->usecs_);
   }
 }
 
@@ -1672,15 +1678,9 @@ void LogSink::WaitTillSent() {
 
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
                          const struct ::tm* tm_time,
-                         const char* message, size_t message_len) {
+                         const char* message, size_t message_len, int32 usecs) {
   ostringstream stream(string(message, message_len));
   stream.fill('0');
-
-  // FIXME(jrvb): Updating this to use the correct value for usecs
-  // requires changing the signature for both this method and
-  // LogSink::send().  This change needs to be done in a separate CL
-  // so subclasses of LogSink can be updated at the same time.
-  int usecs = 0;
 
   stream << LogSeverityNames[severity][0]
          << setw(2) << 1+tm_time->tm_mon

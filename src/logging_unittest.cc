@@ -487,9 +487,16 @@ class TestLogSinkImpl : public LogSink {
   virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
                     const struct tm* tm_time,
-                    const char* message, size_t message_len) {
+                    const char* message, size_t message_len, int usecs) {
     errors.push_back(
-      ToString(severity, base_filename, line, tm_time, message, message_len));
+      ToString(severity, base_filename, line, tm_time, message, message_len, usecs));
+  }
+  virtual void send(LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct tm* tm_time,
+                    const char* message, size_t message_len) {
+    send(severity, full_filename, base_filename, line,
+         tm_time, message, message_len, 0);
   }
 };
 
@@ -1010,15 +1017,23 @@ class TestWaitingLogSink : public LogSink {
   virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
                     const struct tm* tm_time,
-                    const char* message, size_t message_len) {
+                    const char* message, size_t message_len, int usecs) {
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
     if (pthread_equal(tid_, pthread_self())) {
       writer_.Buffer(ToString(severity, base_filename, line,
-                              tm_time, message, message_len));
+                              tm_time, message, message_len, usecs));
     }
   }
+
+  virtual void send(LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line,
+                    const struct tm* tm_time,
+                    const char* message, size_t message_len) {
+    send(severity, full_filename, base_filename, line, tm_time, message, message_len);
+  }
+
   virtual void WaitTillSent() {
     // Wait for Writer thread if we are the original logging thread.
     if (pthread_equal(tid_, pthread_self()))  writer_.Wait();
