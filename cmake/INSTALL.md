@@ -53,7 +53,7 @@ If you have Glog installed in your system, you can use the CMake command
 cmake_minimum_required(VERSION 3.0.2)
 project(myproj VERSION 1.0)
 
-find_package(glog 0.3.5 REQUIRED)
+find_package(glog 0.4.0 REQUIRED)
 
 add_executable(myapp main.cpp)
 target_link_libraries(myapp glog::glog)
