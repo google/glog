@@ -305,7 +305,7 @@ static void MyUserNameInitializer() {
   if (user != NULL) {
     g_my_user_name = user;
   } else {
-#if defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
+#if defined(TOMNONONO) && defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
     struct passwd pwd;
     struct passwd* result = NULL;
     char buffer[1024] = {'\0'};
@@ -372,7 +372,7 @@ _END_GOOGLE_NAMESPACE_
 
 // Make an implementation of stacktrace compiled.
 #ifdef STACKTRACE_H
-//# include STACKTRACE_H
+# include STACKTRACE_H
 # if 0
 // For include scanners which can't handle macro expansions.
 #  include "stacktrace_libunwind-inl.h"
