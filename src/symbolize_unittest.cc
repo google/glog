@@ -401,7 +401,7 @@ int main(int argc, char **argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   InitGoogleTest(&argc, argv);
-#if defined(HAVE_SYMBOLIZE)
+#if defined(HAVE_SYMBOLIZE) && defined(HAVE_STACKTRACE)
 # if defined(__ELF__)
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.
