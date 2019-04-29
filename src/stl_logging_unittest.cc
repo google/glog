@@ -33,6 +33,7 @@
 
 #include <functional>
 #include <iostream>
+#include <iterator>
 #include <map>
 #include <ostream>
 #include <string>
