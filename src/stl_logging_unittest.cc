@@ -100,6 +100,10 @@ static void TestSTLLogging() {
 
 #ifdef GLOG_STL_LOGGING_FOR_EXT_HASH
   {
+    // hash_set doesn't have an ordering, so there are many options for the output.
+    vector<string> permutations{
+      "10 20 30", "10 30 20", "20 10 30", "20 30 10", "30 10 20", "30 20 10"
+    };
     // Test a hashed simple associative container.
     hash_set<int> hs;
     hs.insert(10);
@@ -107,7 +111,7 @@ static void TestSTLLogging() {
     hs.insert(30);
     ostringstream ss;
     ss << hs;
-    EXPECT_EQ(ss.str(), "10 20 30");
+    EXPECT_TRUE(std::find(std::begin(permutations), std::end(permutations), ss.str()) != std::end(permutations));
     hash_set<int> copied_hs(hs);
     CHECK_EQ(hs, copied_hs);  // This must compile.
   }
@@ -115,6 +119,15 @@ static void TestSTLLogging() {
 
 #ifdef GLOG_STL_LOGGING_FOR_EXT_HASH
   {
+    // hash_set doesn't have an ordering, so there are many options for the output.
+    vector<string> permutations{
+      "(10, ten) (20, twenty) (30, thirty)",
+      "(10, ten) (30, thirty) (20, twenty)",
+      "(20, twenty) (10, ten) (30, thirty)",
+      "(20, twenty) (30, thirty) (10, ten)",
+      "(30, thirty) (10, ten) (20, twenty)",
+      "(30, thirty) (20, twenty) (10, ten)"
+    };
     // Test a hashed pair associative container.
     hash_map<int, string> hm;
     hm[10] = "ten";
@@ -122,7 +135,7 @@ static void TestSTLLogging() {
     hm[30] = "thirty";
     ostringstream ss;
     ss << hm;
-    EXPECT_EQ(ss.str(), "(10, ten) (20, twenty) (30, thirty)");
+    EXPECT_TRUE(std::find(std::begin(permutations), std::end(permutations), ss.str()) != std::end(permutations));
     hash_map<int, string> copied_hm(hm);
     CHECK_EQ(hm, copied_hm);  // this must compile
   }
@@ -162,6 +175,10 @@ static void TestSTLLogging() {
 
 #ifdef GLOG_STL_LOGGING_FOR_EXT_HASH
   {
+    // hash_set doesn't have an ordering, so there are many options for the output.
+    vector<string> permutations{
+      "10 20 30", "10 30 20", "20 10 30", "20 30 10", "30 10 20", "30 20 10"
+    };
     // Test a hashed simple associative container.
     // Use a user defined hash function.
     hash_set<int, user_hash> hs;
@@ -170,7 +187,7 @@ static void TestSTLLogging() {
     hs.insert(30);
     ostringstream ss;
     ss << hs;
-    EXPECT_EQ(ss.str(), "10 20 30");
+    EXPECT_TRUE(std::find(std::begin(permutations), std::end(permutations), ss.str()) != std::end(permutations));
     hash_set<int, user_hash> copied_hs(hs);
     CHECK_EQ(hs, copied_hs);  // This must compile.
   }
