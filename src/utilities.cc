@@ -142,7 +142,7 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
 static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
 
-  // TOOD(hamaji): Use signal instead of sigaction?
+  // TODO(hamaji): Use signal instead of sigaction?
   if (IsFailureSignalHandlerInstalled()) {
     // Set the default signal handler for SIGABRT, to avoid invoking our
     // own signal handler installed by InstallFailureSignalHandler().
