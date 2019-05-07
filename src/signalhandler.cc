@@ -169,7 +169,7 @@ void DumpTimeInfo() {
   g_failure_writer(buf, formatter.num_bytes_written());
 }
 
-// TOOD(hamaji): Use signal instead of sigaction?
+// TODO(hamaji): Use signal instead of sigaction?
 #ifdef HAVE_SIGACTION
 
 // Dumps information about the signal to STDERR.
