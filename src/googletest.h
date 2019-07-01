@@ -450,8 +450,8 @@ static inline string Munge(const string& filename) {
     string line = MungeLine(buf);
     char null_str[256];
     char ptr_str[256];
-    sprintf(null_str, "%p", static_cast<void*>(NULL));
-    sprintf(ptr_str, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
+    snprintf(null_str, "%p", static_cast<void*>(NULL));
+    snprintf(ptr_str, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
 
     StringReplace(&line, "__NULLP__", null_str);
     StringReplace(&line, "__PTRTEST__", ptr_str);

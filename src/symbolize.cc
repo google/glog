@@ -651,7 +651,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
     if (object_fd < 0) {
       // Failed to open object file.  Copy the object file name to
       // |out_file_name|.
-      strncpy(out_file_name, cursor, out_file_name_size);
+      strlcpy(out_file_name, cursor, out_file_name_size);
       // Making sure |out_file_name| is always null-terminated.
       out_file_name[out_file_name_size - 1] = '\0';
       return -1;
@@ -735,7 +735,7 @@ static void SafeAppendString(const char* source, char* dest, int dest_size) {
   SAFE_ASSERT(dest_string_length < dest_size);
   dest += dest_string_length;
   dest_size -= dest_string_length;
-  strncpy(dest, source, dest_size);
+  strlcpy(dest, source, dest_size);
   // Making sure |dest| is always null-terminated.
   dest[dest_size - 1] = '\0';
 }
@@ -844,7 +844,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   Dl_info info;
   if (dladdr(pc, &info)) {
     if ((int)strlen(info.dli_sname) < out_size) {
-      strcpy(out, info.dli_sname);
+      strlcpy(out, info.dli_sname);
       // Symbolization succeeded.  Now we try to demangle the symbol.
       DemangleInplace(out, out_size);
       return true;
@@ -909,7 +909,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                          reinterpret_cast<DWORD64>(pc), 0, symbol);
   if (ret == 1 && static_cast<int>(symbol->NameLen) < out_size) {
     // `NameLen` does not include the null terminating character.
-    strncpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
+    strlcpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
     out[static_cast<size_t>(symbol->NameLen)] = '\0';
     // Symbolization succeeded.  Now we try to demangle the symbol.
     DemangleInplace(out, out_size);
