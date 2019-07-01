@@ -939,7 +939,7 @@ _END_GOOGLE_NAMESPACE_
 
 #include "config.h"
 
-_START_GOOGLE_NAMESPACE_
+_START_GOOGLE_NAMESPACE_ 
 
 // TODO: Support other environments.
 bool Symbolize(void *pc, char *out, int out_size) {
@@ -950,4 +950,7 @@ bool Symbolize(void *pc, char *out, int out_size) {
 _END_GOOGLE_NAMESPACE_
 
 #endif
+
+
+
 
