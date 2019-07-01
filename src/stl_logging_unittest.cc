@@ -136,7 +136,7 @@ static void TestSTLLogging() {
       v.push_back(i);
       if (i > 0) expected += ' ';
       char buf[256];
-      sprintf(buf, "%d", i);
+      snprintf(buf, "%d", i);
       expected += buf;
     }
     v.push_back(100);

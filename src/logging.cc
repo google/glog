@@ -2086,7 +2086,7 @@ int posix_strerror_r(int err, char *buf, size_t len) {
         return -1;
       }
 #endif
-      strncat(buf, rc, len-1);
+      strlcat(buf, rc, len-1);
       return 0;
     }
   }

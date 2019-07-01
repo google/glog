@@ -1340,7 +1340,7 @@ bool Demangle(const char *mangled, char *out, int out_size) {
     // Extract the string `(?...)`
     const char *rparen = strchr(lparen, ')');
     size_t length = rparen - lparen - 1;
-    strncpy(buffer, lparen + 1, length);
+    strlcpy(buffer, lparen + 1, length);
     buffer[length] = '\0';
     mangled = buffer;
   } // Else the symbol wasn't inside a set of parentheses
