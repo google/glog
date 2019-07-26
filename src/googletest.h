@@ -574,7 +574,12 @@ class Thread {
 
 static inline void SleepForMilliseconds(int t) {
 #ifndef OS_WINDOWS
+# if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+  const struct timespec req = {0, t * 1000 * 1000};
+  nanosleep(&req, NULL);
+# else
   usleep(t * 1000);
+# endif
 #else
   Sleep(t);
 #endif
