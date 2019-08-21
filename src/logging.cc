@@ -44,7 +44,6 @@
 #ifdef HAVE_SYS_UTSNAME_H
 # include <sys/utsname.h>  // For uname.
 #endif
-#include <dirent.h>
 #include <time.h>
 #include <fcntl.h>
 #include <cstdio>
@@ -60,6 +59,11 @@
 #include <vector>
 #include <errno.h>                   // for errno
 #include <sstream>
+#ifdef OS_WINDOWS
+#include "windows/dirent.h"
+#else
+#include <dirent.h> // for automatic removal of old logs
+#endif
 #include "base/commandlineflags.h"        // to get the program name
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
