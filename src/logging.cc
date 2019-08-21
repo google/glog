@@ -1238,9 +1238,11 @@ void LogFileObject::Write(bool force_flush,
 #endif
     // Perform clean up for old logs
     if (log_cleaner_enabled_) {
-      for (const auto& dir : GetLoggingDirectories()) {
-        for (const auto& name : GetOverdueLogNames(dir, 3)) {
-          static_cast<void>(unlink(name.c_str()));
+      const vector<string>& dirs = GetLoggingDirectories();
+      for (size_t i = 0; i < dirs.size(); i++) {
+        vector<string> logs = GetOverdueLogNames(dirs[i], log_cleaner_overdue_days_);
+        for (size_t j = 0; j < logs.size(); j++) {
+          static_cast<void>(unlink(logs[j].c_str()));
         }
       }
     }
