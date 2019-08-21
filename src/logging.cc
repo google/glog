@@ -915,6 +915,11 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
   return overdue_log_names;
 }
 
+// Is log_cleaner enabled?
+// This option can be enabled by calling google::EnableLogCleaner(days)
+bool log_cleaner_enabled_;
+int log_cleaner_overdue_days_ = 7;
+
 } // namespace
 
 
@@ -1222,9 +1227,11 @@ void LogFileObject::Write(bool force_flush,
     }
 #endif
     // Perform clean up for old logs
-    for (const auto& dir : GetLoggingDirectories()) {
-      for (const auto& name : GetOverdueLogNames(dir, 3)) {
-        static_cast<void>(unlink(name.c_str()));
+    if (log_cleaner_enabled_) {
+      for (const auto& dir : GetLoggingDirectories()) {
+        for (const auto& name : GetOverdueLogNames(dir, 3)) {
+          static_cast<void>(unlink(name.c_str()));
+        }
       }
     }
   }
@@ -2268,6 +2275,20 @@ void ShutdownGoogleLogging() {
   LogDestination::DeleteLogDestinations();
   delete logging_directories_list;
   logging_directories_list = NULL;
+}
+
+void EnableLogCleaner(int overdue_days) {
+  log_cleaner_enabled_ = true;
+
+  // Setting overdue_days to 0 day should not be allowed!
+  // Since all logs will be deleted immediately, which will cause troubles.
+  if (overdue_days > 0) {
+    log_cleaner_overdue_days_ = overdue_days;
+  }
+}
+
+void DisableLogCleaner() {
+  log_cleaner_overdue_days_ = false;
 }
 
 _END_GOOGLE_NAMESPACE_
