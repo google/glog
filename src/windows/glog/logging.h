@@ -572,8 +572,10 @@ class LogSink;  // defined below
   LOG_TO_STRING_##severity(static_cast<std::vector<std::string>*>(outvec)).stream()
 
 #define LOG_IF(severity, condition) \
+  static_cast<void>(0),             \
   !(condition) ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 #define SYSLOG_IF(severity, condition) \
+  static_cast<void>(0),                \
   !(condition) ? (void) 0 : google::LogMessageVoidify() & SYSLOG(severity)
 
 #define LOG_ASSERT(condition)  \
@@ -863,6 +865,7 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
       &google::LogMessage::SendToLog)
 
 #define PLOG_IF(severity, condition) \
+  static_cast<void>(0),              \
   !(condition) ? (void) 0 : google::LogMessageVoidify() & PLOG(severity)
 
 // A CHECK() macro that postpends errno if the condition is false. E.g.
@@ -935,7 +938,8 @@ struct CompileAssert {
 struct CrashReason;
 
 // Returns true if FailureSignalHandler is installed.
-bool IsFailureSignalHandlerInstalled();
+// Needs to be exported since it's used by the signalhandler_unittest.
+GOOGLE_GLOG_DLL_DECL bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
 #define LOG_EVERY_N(severity, n)                                        \
@@ -1006,23 +1010,29 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 #else  // !DCHECK_IS_ON()
 
-#define DLOG(severity) \
+#define DLOG(severity)  \
+  static_cast<void>(0), \
   true ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
-#define DVLOG(verboselevel) \
-  (true || !VLOG_IS_ON(verboselevel)) ?\
+#define DVLOG(verboselevel)             \
+  static_cast<void>(0),                 \
+  (true || !VLOG_IS_ON(verboselevel)) ? \
     (void) 0 : google::LogMessageVoidify() & LOG(INFO)
 
 #define DLOG_IF(severity, condition) \
+  static_cast<void>(0),              \
   (true || !(condition)) ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_EVERY_N(severity, n) \
+  static_cast<void>(0),           \
   true ? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_IF_EVERY_N(severity, condition, n) \
+  static_cast<void>(0),                         \
   (true || !(condition))? (void) 0 : google::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_ASSERT(condition) \
+  static_cast<void>(0),        \
   true ? (void) 0 : LOG_ASSERT(condition)
 
 // MSVC warning C4127: conditional expression is constant
@@ -1107,14 +1117,9 @@ namespace base_logging {
 // buffer to allow for a '\n' and '\0'.
 class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
  public:
-  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\n'.
+  // REQUIREMENTS: "len" must be >= 2 to account for the '\n' and '\0'.
   LogStreamBuf(char *buf, int len) {
     setp(buf, buf + len - 2);
-  }
-
-  // Resets the buffer. Useful if we reuse it by means of TLS.
-  void reset() {
-     setp(pbase(), epptr());
   }
 
   // This effectively ignores overflow.
@@ -1175,7 +1180,6 @@ GLOG_MSVC_POP_WARNING()
     size_t pcount() const { return streambuf_.pcount(); }
     char* pbase() const { return streambuf_.pbase(); }
     char* str() const { return pbase(); }
-    void reset() { streambuf_.reset(); }
 
   private:
     LogStream(const LogStream&);
