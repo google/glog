@@ -859,7 +859,12 @@ bool IsGlogLog(const string& log_name) {
   // e.g., /tmp/webserver.examplehost.root.log......
   // here we should erase "/tmp/" from the first token,
   // so that we can compare it with the program name later!
-  log_name_tokens[0].erase(0, log_name_tokens[0].find_last_of('/') + 1); // including last '/'
+  char dir_delim = '/';
+#ifdef OS_WINDOWS
+  dir_delim = '\\';
+#endif
+
+  log_name_tokens[0].erase(0, log_name_tokens[0].find_last_of(dir_delim) + 1); // including last '/'
 
   // Check if log_name matches the pattern
   // "<program name>.<hostname>.<user name>.log.<severity level>.".
@@ -895,9 +900,14 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
   DIR *dir;
   struct dirent *ent;
 
+  char dir_delim = '/';
+#ifdef OS_WINDOWS
+  dir_delim = '\\';
+#endif
+
   // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != '/') {
-    log_directory += '/';
+  if (log_directory.at(log_directory.size() - 1) != dir_delim) {
+    log_directory += dir_delim;
   }
 
   if ((dir=opendir(log_directory.c_str()))) {
