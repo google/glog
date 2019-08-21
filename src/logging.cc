@@ -835,6 +835,91 @@ void LogDestination::DeleteLogDestinations() {
 
 namespace {
 
+vector<string> SplitString(const string& s, const char delimiter) {
+  std::stringstream ss(s);
+  string t;
+  vector<string> tokens;
+
+  while (std::getline(ss, t, delimiter)) {
+    if (t.length() > 0) {
+      tokens.push_back(t);
+    }
+  }
+  return tokens;
+}
+
+bool IsGlogLog(const string& log_name) {
+  static const int kGlogFilenameTokenCount = 6;
+  vector<string> log_name_tokens = SplitString(log_name, '.');
+
+  if (log_name_tokens.size() < kGlogFilenameTokenCount) {
+    return false;
+  }
+
+  // e.g., /tmp/webserver.examplehost.root.log......
+  // here we should erase "/tmp/" from the first token,
+  // so that we can compare it with the program name later!
+  log_name_tokens[0].erase(0, log_name_tokens[0].find_last_of('/') + 1); // including last '/'
+
+  // Check if log_name matches the pattern
+  // "<program name>.<hostname>.<user name>.log.<severity level>.".
+  return log_name_tokens[0] == glog_internal_namespace_::ProgramInvocationShortName()
+    && log_name_tokens[1] == LogDestination::hostname()
+    && log_name_tokens[2] == MyUserName()
+    && log_name_tokens[3] == "log"
+    && (log_name_tokens[4] == "INFO"
+        || log_name_tokens[4] == "ERROR"
+        || log_name_tokens[4] == "WARNING");
+}
+
+bool LastModifiedOver(const string& log_name, int days) {
+  // Try to get the last modified time of log.
+  struct stat log_stat;
+
+  if(stat(log_name.c_str(), &log_stat) == 0) {
+    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
+    time_t last_modified_time = log_stat.st_mtime;
+    time_t current_time = time(NULL);
+    return difftime(current_time, last_modified_time) > days * 86400;
+  }
+
+  // If failed to get file stat, don't return true!
+  return false;
+}
+
+vector<string> GetOverdueLogNames(string log_directory, int days) {
+  // The names of overdue logs.
+  vector<string> overdue_log_names;
+
+  // Try to get all files within log_directory.
+  DIR *dir;
+  struct dirent *ent;
+
+  // If log_directory doesn't end with a slash, append a slash to it.
+  if (log_directory.at(log_directory.size() - 1) != '/') {
+    log_directory += '/';
+  }
+
+  if ((dir=opendir(log_directory.c_str()))) {
+    while ((ent=readdir(dir))) {
+      string filename = log_directory + ent->d_name;
+      if (IsGlogLog(filename) && LastModifiedOver(filename, days)) {
+        overdue_log_names.push_back(filename);
+      }
+    }
+    closedir(dir);
+  } else {
+    perror("Unable to open directory.");
+  }
+
+  return overdue_log_names;
+}
+
+} // namespace
+
+
+namespace {
+
 LogFileObject::LogFileObject(LogSeverity severity,
                              const char* base_filename)
   : base_filename_selected_(base_filename != NULL),
@@ -1091,7 +1176,7 @@ void LogFileObject::Write(bool force_flush,
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
   }
-
+ 
   // Write to LOG file
   if ( !stop_writing ) {
     // fwrite() doesn't return an error when the disk is full, for
@@ -1136,83 +1221,16 @@ void LogFileObject::Write(bool force_flush,
       }
     }
 #endif
+    // Perform clean up for old logs
+    for (const auto& dir : GetLoggingDirectories()) {
+      for (const auto& name : GetOverdueLogNames(dir, 3)) {
+        static_cast<void>(unlink(name.c_str()));
+      }
+    }
   }
 }
 
 }  // namespace
-
-
-namespace {
-
-vector<string> SplitString(const string& s, const char delimiter) {
-  std::stringstream ss(s);
-  string t;
-  vector<string> tokens;
-
-  while (std::getline(ss, t, delimiter)) {
-    if (t.length() > 0) {
-      tokens.push_back(t);
-    }
-  }
-  return tokens;
-}
-
-bool IsGlogLog(const string& log_name) {
-  // Check if log_name matches the pattern "Project.Hostname.Username.log..."
-  static const int kGlogFilenameTokenCount = 6;
-  vector<string> log_name_tokens = SplitString(log_name, '.');
-
-  return log_name_tokens.size() >= kGlogFilenameTokenCount
-    && log_name_tokens[1] == LogDestination::hostname()
-    && log_name_tokens[2] == MyUserName()
-    && log_name_tokens[3] == "log";
-}
-
-bool LastModifiedOver(const string& log_name, int days) {
-  // Try to get the last modified time of log.
-  struct stat log_stat;
-
-  if(stat(log_name.c_str(), &log_stat) == 0) {
-    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
-    time_t last_modified_time = log_stat.st_mtime;
-    time_t current_time = time(NULL);
-    return difftime(current_time, last_modified_time) > days * 86400;
-  }
-
-  // If failed to get file stat, don't return true!
-  return false;
-}
-
-vector<string> GetOverdueLogNames(string log_directory, int days) {
-  // The names of overdue logs.
-  vector<string> overdue_log_names;
-
-  // Try to get all files within log_directory.
-  DIR *dir;
-  struct dirent *ent;
-
-  // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != '/') {
-    log_directory += '/';
-  }
-
-  if ((dir=opendir(log_directory.c_str()))) {
-    while ((ent=readdir(dir))) {
-      string filename = log_directory + string(ent->d_name);
-      if (IsGlogLog(filename) && LastModifiedOver(filename, days)) {
-        overdue_log_names.push_back(filename);
-      }
-    }
-    closedir(dir);
-  } else {
-    perror("Unable to open directory.");
-  }
-
-  return overdue_log_names;
-}
-
-} // namespace
-
 
 // Static log data space to avoid alloc failures in a LOG(FATAL)
 //
