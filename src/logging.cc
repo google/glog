@@ -848,32 +848,32 @@ vector<string> SplitString(const string& s, const char delimiter) {
   return tokens;
 }
 
-bool IsGlogLog(const string& log_name) {
+bool IsGlogLog(const string& filename) {
   static const int kGlogFilenameTokenCount = 6;
-  vector<string> log_name_tokens = SplitString(log_name, '.');
+  vector<string> filename_tokens = SplitString(filename, '.');
 
-  if (log_name_tokens.size() < kGlogFilenameTokenCount) {
+  if (filename_tokens.size() < kGlogFilenameTokenCount) {
     return false;
   }
 
-  // Check if log_name matches the pattern
+  // Check if filename matches the pattern of a glog file:
   // "<program name>.<hostname>.<user name>.log.<severity level>.".
-  return log_name_tokens[0] == glog_internal_namespace_::ProgramInvocationShortName()
-    && log_name_tokens[1] == LogDestination::hostname()
-    && log_name_tokens[2] == MyUserName()
-    && log_name_tokens[3] == "log"
-    && (log_name_tokens[4] == "INFO"
-        || log_name_tokens[4] == "ERROR"
-        || log_name_tokens[4] == "WARNING");
+  return filename_tokens[0] == glog_internal_namespace_::ProgramInvocationShortName()
+    && filename_tokens[1] == LogDestination::hostname()
+    && filename_tokens[2] == MyUserName()
+    && filename_tokens[3] == "log"
+    && (filename_tokens[4] == "INFO"
+        || filename_tokens[4] == "ERROR"
+        || filename_tokens[4] == "WARNING");
 }
 
-bool LastModifiedOver(const string& log_name, int days) {
-  // Try to get the last modified time of log.
-  struct stat log_stat;
+bool LastModifiedOver(const string& filepath, int days) {
+  // Try to get the last modified time of this file.
+  struct stat file_stat;
 
-  if(stat(log_name.c_str(), &log_stat) == 0) {
+  if (stat(filepath.c_str(), &file_stat) == 0) {
     // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
-    time_t last_modified_time = log_stat.st_mtime;
+    time_t last_modified_time = file_stat.st_mtime;
     time_t current_time = time(NULL);
     return difftime(current_time, last_modified_time) > days * 86400;
   }
@@ -902,9 +902,12 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
 
   if ((dir=opendir(log_directory.c_str()))) {
     while ((ent=readdir(dir))) {
-      string filename = log_directory + ent->d_name;
-      if (IsGlogLog(ent->d_name) && LastModifiedOver(filename, days)) {
-        overdue_log_names.push_back(filename);
+      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
+        continue;
+      }
+      string filepath = log_directory + ent->d_name;
+      if (IsGlogLog(ent->d_name) && LastModifiedOver(filepath, days)) {
+        overdue_log_names.push_back(filepath);
       }
     }
     closedir(dir);
