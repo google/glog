@@ -911,8 +911,6 @@ vector<string> GetOverdueLogNames(string log_directory, int days) {
       }
     }
     closedir(dir);
-  } else {
-    perror("Unable to open directory.");
   }
 
   return overdue_log_names;
