@@ -526,6 +526,11 @@ GOOGLE_GLOG_DLL_DECL void ShutdownGoogleLogging();
 // Install a function which will be called after LOG(FATAL).
 GOOGLE_GLOG_DLL_DECL void InstallFailureFunction(void (*fail_func)());
 
+// Enable/Disable old log cleaner.
+GOOGLE_GLOG_DLL_DECL void EnableLogCleaner(int overdue_days);
+GOOGLE_GLOG_DLL_DECL void DisableLogCleaner();
+
+
 class LogSink;  // defined below
 
 // If a non-NULL sink pointer is given, we push this message to that sink.
