@@ -835,36 +835,25 @@ void LogDestination::DeleteLogDestinations() {
 
 namespace {
 
-vector<string> SplitString(const string& s, const char delimiter) {
-  std::stringstream ss(s);
-  string t;
-  vector<string> tokens;
-
-  while (std::getline(ss, t, delimiter)) {
-    if (t.length() > 0) {
-      tokens.push_back(t);
-    }
-  }
-  return tokens;
-}
-
 bool IsGlogLog(const string& filename) {
-  static const int kGlogFilenameTokenCount = 6;
-  vector<string> filename_tokens = SplitString(filename, '.');
-
-  if (filename_tokens.size() < kGlogFilenameTokenCount) {
-    return false;
-  }
-
   // Check if filename matches the pattern of a glog file:
-  // "<program name>.<hostname>.<user name>.log.<severity level>.".
-  return filename_tokens[0] == glog_internal_namespace_::ProgramInvocationShortName()
-    && filename_tokens[1] == LogDestination::hostname()
-    && filename_tokens[2] == MyUserName()
-    && filename_tokens[3] == "log"
-    && (filename_tokens[4] == "INFO"
-        || filename_tokens[4] == "ERROR"
-        || filename_tokens[4] == "WARNING");
+  // "<program name>.<hostname>.<user name>.log...".
+  const int kKeywordCount = 4;
+  std::string keywords[kKeywordCount] = {
+    glog_internal_namespace_::ProgramInvocationShortName(),
+    LogDestination::hostname(),
+    MyUserName(),
+    "log"
+  };
+
+  int start_pos = 0;
+  for (int i = 0; i < kKeywordCount; i++) {
+    if (filename.find(keywords[i], start_pos) == filename.npos) {
+      return false;
+    }
+    start_pos += keywords[i].size() + 1;
+  }
+  return true;
 }
 
 bool LastModifiedOver(const string& filepath, int days) {
