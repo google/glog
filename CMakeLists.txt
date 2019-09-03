@@ -531,13 +531,13 @@ if (NOT BUILD_SHARED_LIBS)
 else (NOT BUILD_SHARED_LIBS)
   target_compile_definitions (glog PRIVATE GOOGLE_GLOG_IS_A_DLL=1)
 
-  if (HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
-    set (_EXPORT "__attribute__((visibility(\"default\")))")
-    set (_IMPORT "")
-  elseif (HAVE___DECLSPEC)
+  if (HAVE___DECLSPEC)
     set (_EXPORT "__declspec(dllexport)")
     set (_IMPORT "__declspec(dllimport)")
-  endif (HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
+  elseif (HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
+    set (_EXPORT "__attribute__((visibility(\"default\")))")
+    set (_IMPORT "")
+  endif (HAVE___DECLSPEC)
 
   target_compile_definitions (glog PRIVATE
     "GOOGLE_GLOG_DLL_DECL=${_EXPORT}")
