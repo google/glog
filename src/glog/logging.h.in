@@ -448,6 +448,16 @@ DECLARE_bool(stop_logging_if_full_disk);
 #define COMPACT_GOOGLE_LOG_DFATAL @ac_google_namespace@::NullStreamFatal()
 #endif
 
+// VLOG variants
+
+#if GOOGLE_STRIP_LOG == 0
+#define COMPACT_GOOGLE_VLOG_INFO @ac_google_namespace@::LogMessage( \
+      __FILE__, __LINE__, true)
+#else
+#define COMPACT_GOOGLE_VLOG_INFO @ac_google_namespace@::NullStream()
+#define LOG_TO_STRING_INFO(message) @ac_google_namespace@::NullStream()
+#endif
+
 #define GOOGLE_LOG_INFO(counter) @ac_google_namespace@::LogMessage(__FILE__, __LINE__, @ac_google_namespace@::GLOG_INFO, counter, &@ac_google_namespace@::LogMessage::SendToLog)
 #define SYSLOG_INFO(counter) \
   @ac_google_namespace@::LogMessage(__FILE__, __LINE__, @ac_google_namespace@::GLOG_INFO, counter, \
@@ -504,6 +514,7 @@ DECLARE_bool(stop_logging_if_full_disk);
 // ostream. We employ a neat hack by calling the stream() member
 // function of LogMessage which seems to avoid the problem.
 #define LOG(severity) COMPACT_GOOGLE_LOG_ ## severity.stream()
+#define LOG_FROM_VLOG(severity) COMPACT_GOOGLE_VLOG_ ## severity.stream()
 #define SYSLOG(severity) SYSLOG_ ## severity(0).stream()
 
 @ac_google_start_namespace@
@@ -570,6 +581,8 @@ class LogSink;  // defined below
 #define LOG_IF(severity, condition) \
   static_cast<void>(0),             \
   !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+#define LOG_IF_FROM_VLOG(severity, condition) \
+  !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG_FROM_VLOG(severity)
 #define SYSLOG_IF(severity, condition) \
   static_cast<void>(0),                \
   !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & SYSLOG(severity)
@@ -909,6 +922,15 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
                  &what_to_do).stream()
 
+#define SOME_KIND_OF_LOG_IF_EVERY_N_FROM_VLOG(severity, condition, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  ++LOG_OCCURRENCES; \
+  if (condition && \
+      ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+                 &what_to_do, true).stream()
+
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
   ++LOG_OCCURRENCES; \
@@ -952,6 +974,9 @@ GOOGLE_GLOG_DLL_DECL bool IsFailureSignalHandlerInstalled();
 
 #define LOG_IF_EVERY_N(severity, condition, n) \
   SOME_KIND_OF_LOG_IF_EVERY_N(severity, (condition), (n), @ac_google_namespace@::LogMessage::SendToLog)
+
+#define LOG_IF_EVERY_N_FROM_VLOG(severity, condition, n) \
+  SOME_KIND_OF_LOG_IF_EVERY_N_FROM_VLOG(severity, (condition), (n), @ac_google_namespace@::LogMessage::SendToLog)
 
 // We want the special COUNTER value available for LOG_EVERY_X()'ed messages
 enum PRIVATE_Counter {COUNTER};
@@ -1095,16 +1120,16 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 // Log only in verbose mode.
 
-#define VLOG(verboselevel) LOG_IF(INFO, VLOG_IS_ON(verboselevel))
+#define VLOG(verboselevel) LOG_IF_FROM_VLOG(INFO, VLOG_IS_ON(verboselevel))
 
 #define VLOG_IF(verboselevel, condition) \
-  LOG_IF(INFO, (condition) && VLOG_IS_ON(verboselevel))
+  LOG_IF_FROM_VLOG(INFO, (condition) && VLOG_IS_ON(verboselevel))
 
 #define VLOG_EVERY_N(verboselevel, n) \
-  LOG_IF_EVERY_N(INFO, VLOG_IS_ON(verboselevel), n)
+  LOG_IF_EVERY_N_FROM_VLOG(INFO, VLOG_IS_ON(verboselevel), n)
 
 #define VLOG_IF_EVERY_N(verboselevel, condition, n) \
-  LOG_IF_EVERY_N(INFO, (condition) && VLOG_IS_ON(verboselevel), n)
+  LOG_IF_EVERY_N_FROM_VLOG(INFO, (condition) && VLOG_IS_ON(verboselevel), n)
 
 namespace base_logging {
 
@@ -1190,7 +1215,7 @@ public:
   typedef void (LogMessage::*SendMethod)();
 
   LogMessage(const char* file, int line, LogSeverity severity, int ctr,
-             SendMethod send_method);
+             SendMethod send_method, bool from_vlog=false);
 
   // Two special constructors that generate reduced amounts of code at
   // LOG call sites for common cases.
@@ -1200,35 +1225,35 @@ public:
   //
   // Using this constructor instead of the more complex constructor above
   // saves 19 bytes per call site.
-  LogMessage(const char* file, int line);
+  LogMessage(const char* file, int line, bool from_vlog=false);
 
   // Used for LOG(severity) where severity != INFO.  Implied
   // are: ctr = 0, send_method = &LogMessage::SendToLog
   //
   // Using this constructor instead of the more complex constructor above
   // saves 17 bytes per call site.
-  LogMessage(const char* file, int line, LogSeverity severity);
+  LogMessage(const char* file, int line, LogSeverity severity, bool from_vlog=false);
 
   // Constructor to log this message to a specified sink (if not NULL).
   // Implied are: ctr = 0, send_method = &LogMessage::SendToSinkAndLog if
   // also_send_to_log is true, send_method = &LogMessage::SendToSink otherwise.
   LogMessage(const char* file, int line, LogSeverity severity, LogSink* sink,
-             bool also_send_to_log);
+             bool also_send_to_log, bool from_vlog=false);
 
   // Constructor where we also give a vector<string> pointer
   // for storing the messages (if the pointer is not NULL).
   // Implied are: ctr = 0, send_method = &LogMessage::SaveOrSendToLog.
   LogMessage(const char* file, int line, LogSeverity severity,
-             std::vector<std::string>* outvec);
+             std::vector<std::string>* outvec, bool from_vlog=false);
 
   // Constructor where we also give a string pointer for storing the
   // message (if the pointer is not NULL).  Implied are: ctr = 0,
   // send_method = &LogMessage::WriteToStringAndLog.
   LogMessage(const char* file, int line, LogSeverity severity,
-             std::string* message);
+             std::string* message, bool from_vlog=false);
 
   // A special constructor used for check failures
-  LogMessage(const char* file, int line, const CheckOpString& result);
+  LogMessage(const char* file, int line, const CheckOpString& result, bool from_vlog=false);
 
   ~LogMessage();
 
@@ -1269,7 +1294,7 @@ private:
   void SaveOrSendToLog();  // Save to stringvec if provided, else to logs
 
   void Init(const char* file, int line, LogSeverity severity,
-            void (LogMessage::*send_method)());
+            void (LogMessage::*send_method)(), bool from_vlog);
 
   // Used to fill in crash information during LOG(FATAL) failures.
   void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
@@ -1426,7 +1451,8 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
                     const struct ::tm* tm_time,
-                    const char* message, size_t message_len) = 0;
+                    const char* message, size_t message_len,
+                    bool from_vlog) = 0;
 
   // Redefine this to implement waiting for
   // the sink's logging logic to complete.

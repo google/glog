@@ -356,6 +356,7 @@ struct LogMessage::LogMessageData  {
   const char* fullname_;        // fullname of file that called LOG
   bool has_been_flushed_;       // false => data has not been flushed
   bool first_fatal_;            // true => this was first fatal msg
+  bool from_vlog_;              // true if this message originated from VLOG
 
  private:
   LogMessageData(const LogMessageData&);
@@ -515,7 +516,7 @@ class LogDestination {
                          int line,
                          const struct ::tm* tm_time,
                          const char* message,
-                         size_t message_len);
+                         size_t message_len, bool from_vlog);
 
   // Wait for all registered sinks via WaitTillSent
   // including the optional one in "data".
@@ -782,12 +783,12 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        int line,
                                        const struct ::tm* tm_time,
                                        const char* message,
-                                       size_t message_len) {
+                                       size_t message_len, bool from_vlog) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
     for (int i = sinks_->size() - 1; i >= 0; i--) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
-                         line, tm_time, message, message_len);
+                         line, tm_time, message, message_len, from_vlog);
     }
   }
 }
@@ -1169,55 +1170,56 @@ LogMessage::LogMessageData::LogMessageData()
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       int ctr, void (LogMessage::*send_method)())
+                       int ctr, void (LogMessage::*send_method)(), bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, severity, send_method);
+  Init(file, line, severity, send_method, from_vlog);
   data_->stream_.set_ctr(ctr);
 }
 
 LogMessage::LogMessage(const char* file, int line,
-                       const CheckOpString& result)
+                       const CheckOpString& result, bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, GLOG_FATAL, &LogMessage::SendToLog);
+  Init(file, line, GLOG_FATAL, &LogMessage::SendToLog, from_vlog);
   stream() << "Check failed: " << (*result.str_) << " ";
 }
 
-LogMessage::LogMessage(const char* file, int line)
+LogMessage::LogMessage(const char* file, int line, bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, GLOG_INFO, &LogMessage::SendToLog);
+  Init(file, line, GLOG_INFO, &LogMessage::SendToLog, from_vlog);
 }
 
-LogMessage::LogMessage(const char* file, int line, LogSeverity severity)
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity, bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, severity, &LogMessage::SendToLog);
+  Init(file, line, severity, &LogMessage::SendToLog, from_vlog);
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       LogSink* sink, bool also_send_to_log)
+                       LogSink* sink, bool also_send_to_log, bool from_vlog)
     : allocated_(NULL) {
   Init(file, line, severity, also_send_to_log ? &LogMessage::SendToSinkAndLog :
-                                                &LogMessage::SendToSink);
+                                                &LogMessage::SendToSink, from_vlog);
   data_->sink_ = sink;  // override Init()'s setting to NULL
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       vector<string> *outvec)
+                       vector<string> *outvec, bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, severity, &LogMessage::SaveOrSendToLog);
+  Init(file, line, severity, &LogMessage::SaveOrSendToLog, from_vlog);
   data_->outvec_ = outvec; // override Init()'s setting to NULL
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       string *message)
+                       string *message, bool from_vlog)
     : allocated_(NULL) {
-  Init(file, line, severity, &LogMessage::WriteToStringAndLog);
+  Init(file, line, severity, &LogMessage::WriteToStringAndLog, from_vlog);
   data_->message_ = message;  // override Init()'s setting to NULL
 }
 
 void LogMessage::Init(const char* file,
                       int line,
                       LogSeverity severity,
-                      void (LogMessage::*send_method)()) {
+                      void (LogMessage::*send_method)(),
+                      bool from_vlog) {
   allocated_ = NULL;
   if (severity != GLOG_FATAL || !exit_on_dfatal) {
 #ifdef GLOG_THREAD_LOCAL_STORAGE
@@ -1272,6 +1274,7 @@ void LogMessage::Init(const char* file,
   data_->basename_ = const_basename(file);
   data_->fullname_ = file;
   data_->has_been_flushed_ = false;
+  data_->from_vlog_ = from_vlog;
 
   // If specified, prepend a prefix to each line.  For example:
   //    I1018 160715 f5d4fbb0 logging.cc:1153]
@@ -1432,7 +1435,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                data_->line_, &data_->tm_time_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_ -
-                                data_->num_prefix_chars_ - 1));
+                                data_->num_prefix_chars_ - 1),
+                               data_->from_vlog_);
   } else {
 
     // log this message to all log files of severity <= severity_
@@ -1449,7 +1453,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                data_->line_, &data_->tm_time_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_
-                                - data_->num_prefix_chars_ - 1));
+                                - data_->num_prefix_chars_ - 1),
+                               data_->from_vlog_);
     // NOTE: -1 removes trailing \n
   }
 
@@ -1545,7 +1550,8 @@ void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                        data_->line_, &data_->tm_time_,
                        data_->message_text_ + data_->num_prefix_chars_,
                        (data_->num_chars_to_log_ -
-                        data_->num_prefix_chars_ - 1));
+                        data_->num_prefix_chars_ - 1),
+                       data_->from_vlog_);
   }
 }
 
