@@ -937,6 +937,8 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 
 #if defined(OS_WINDOWS)
     // TODO(hamaji): Create lnk file on Windows?
+#elif defined(OS_FREERTOS)
+    // TODO
 #elif defined(HAVE_UNISTD_H)
     // We must have unistd.h.
     // Make the symlink be relative (in the same dir) so that if the
@@ -1792,6 +1794,7 @@ static string ShellEscape(const string& src) {
 // log_mutex.
 static bool SendEmailInternal(const char*dest, const char *subject,
                               const char*body, bool use_logging) {
+  #ifndef FREERTOS
   if (dest && *dest) {
     if ( use_logging ) {
       VLOG(1) << "Trying to send TITLE:" << subject
@@ -1830,6 +1833,7 @@ static bool SendEmailInternal(const char*dest, const char *subject,
       }
     }
   }
+  #endif
   return false;
 }
 
@@ -1933,7 +1937,7 @@ void GetExistingTempDirectories(vector<string>* list) {
 }
 
 void TruncateLogFile(const char *path, int64 limit, int64 keep) {
-#ifdef HAVE_UNISTD_H
+#if defined(HAVE_UNISTD_H) && !defined(OS_FREERTOS)
   struct stat statbuf;
   const int kCopyBlockSize = 8 << 10;
   char copybuf[kCopyBlockSize];

@@ -4,3 +4,8 @@
 #endif
 
 #include "port.h"
+
+
+int rtosGetThreadId() {
+    return 0;
+}

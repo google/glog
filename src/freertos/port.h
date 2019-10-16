@@ -1,6 +1,6 @@
 
 #ifndef CTEMPLATE_FREERTOS_PORT_H_
-#define CTEMPLATE_FREERTOS_PORT_H_
+#define CTEMPLATE_FREERTOS_PORT_H_ 1
 
 #ifdef FREERTOS
 
@@ -12,10 +12,10 @@ typedef uint32_t pthread_t;
 //typedef LONG pthread_once_t;
 //enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
 //#define pthread_self  GetCurrentThreadId
-#define pthread_self getThreadId
+#define pthread_self rtosGetThreadId
 #define pthread_equal(pthread_t_1, pthread_t_2)  ((pthread_t_1)==(pthread_t_2))
 
-int getThreadId() { return 0; }
+int rtosGetThreadId();
 
 #endif  /* FREERTOS */
 
