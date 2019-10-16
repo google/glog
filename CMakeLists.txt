@@ -17,9 +17,9 @@ set (CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
-option (WITH_GFLAGS "Use gflags" ON)
-option (WITH_THREADS "Enable multithreading support" ON)
-option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
+option (WITH_GFLAGS "Use gflags" OFF)
+option (WITH_THREADS "Enable multithreading support" OFF)
+option (WITH_TLS "Enable Thread Local Storage (TLS) support" OFF)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print raw pc values on symbolization failure" OFF)
@@ -83,6 +83,11 @@ check_include_file (unistd.h HAVE_UNISTD_H)
 check_include_file (unwind.h HAVE_UNWIND_H)
 check_include_file (pwd.h HAVE_PWD_H)
 
+# somehow check_include_file is not able to correctly detect this
+if (FREERTOS)
+  SET(HAVE_PWD_H 0)
+endif (FREERTOS)
+
 check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
 check_include_file_cxx ("ext/hash_set" HAVE_EXT_HASH_SET)
 check_include_file_cxx ("ext/slist" HAVE_EXT_SLIST)
@@ -101,6 +106,11 @@ check_function_exists (pread HAVE_PREAD)
 check_function_exists (pwrite HAVE_PWRITE)
 check_function_exists (sigaction HAVE_SIGACTION)
 check_function_exists (sigaltstack HAVE_SIGALSTACK)
+
+# somehow check_function_exists is not able to correctly detect this
+if (FREERTOS)
+  SET(HAVE_PREAD 1)
+endif (FREERTOS)
 
 # NOTE gcc does not fail if you pass a non-existent -Wno-* option as an
 # argument. However, it will happily fail if you pass the corresponding -W*
@@ -462,6 +472,13 @@ if (WIN32)
   )
 endif (WIN32)
 
+if (FREERTOS)
+  list(APPEND GLOG_SRCS
+    src/freertos/port.cc
+    src/freertos/port.h
+  )
+endif (FREERTOS)
+
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
 
 add_library (glog
@@ -469,6 +486,9 @@ add_library (glog
 )
 add_library(glog::glog ALIAS glog)
 
+if (FREERTOS)
+  target_compile_definitions (glog PUBLIC FREERTOS=1)
+endif (FREERTOS)
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if (UNWIND_LIBRARY)
@@ -523,6 +543,12 @@ if (WIN32)
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/windows>"
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 endif (WIN32)
+
+if (FREERTOS)
+  target_include_directories (glog PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/freertos>"
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/freertos)
+endif (FREERTOS)
 
 set_target_properties (glog PROPERTIES DEFINE_SYMBOL LIBGLOG_EXPORTS)
 

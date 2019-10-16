@@ -36,6 +36,8 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
 # define OS_WINDOWS
+#elif defined(FREERTOS)
+#define OS_FREERTOS
 #elif defined(__CYGWIN__) || defined(__CYGWIN32__)
 # define OS_CYGWIN
 #elif defined(linux) || defined(__linux) || defined(__linux__)
@@ -76,7 +78,7 @@
 
 #include <string>
 
-#if defined(OS_WINDOWS)
+#if defined(OS_WINDOWS) || defined(OS_FREERTOS)
 # include "port.h"
 #endif
 
