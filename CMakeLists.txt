@@ -487,7 +487,7 @@ add_library (glog
 add_library(glog::glog ALIAS glog)
 
 if (FREERTOS)
-  target_compile_definitions (glog PUBLIC FREERTOS=1)
+  target_compile_definitions (glog PUBLIC FREERTOS=1 DISABLE_RTTI=1)
 endif (FREERTOS)
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
