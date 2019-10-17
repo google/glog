@@ -1855,6 +1855,8 @@ static void GetTempDirectories(vector<string>* list) {
     list->push_back(tmp);
   list->push_back("C:\\tmp\\");
   list->push_back("C:\\temp\\");
+#elif defined(OS_FREERTOS)
+
 #else
   // Directories, in order of preference. If we find a dir that
   // exists, we stop adding other less-preferred dirs
