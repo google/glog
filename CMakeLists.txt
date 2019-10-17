@@ -18,7 +18,7 @@ set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
 option (WITH_GFLAGS "Use gflags" OFF)
-option (WITH_THREADS "Enable multithreading support" OFF)
+option (WITH_THREADS "Enable multithreading support" ON)
 option (WITH_TLS "Enable Thread Local Storage (TLS) support" OFF)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
@@ -423,7 +423,11 @@ if (WITH_THREADS AND Threads_FOUND)
     set (HAVE_PTHREAD 1)
   endif (CMAKE_USE_PTHREADS_INIT)
 else (WITH_THREADS AND Threads_FOUND)
-  set (NO_THREADS 1)
+  if (NOT FREERTOS)
+    set (NO_THREADS 1)
+  else (NOT FREERTOS)
+    set (HAVE_FREERTOS_THREADS 1)
+  endif (NOT FREERTOS)
 endif (WITH_THREADS AND Threads_FOUND)
 
 set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
@@ -548,6 +552,16 @@ if (FREERTOS)
   target_include_directories (glog PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/freertos>"
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/freertos)
+    if (HAVE_FREERTOS_THREADS)
+      target_include_directories (glog
+        PRIVATE
+        /tools/Xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/include
+        /tools/Xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/arm/cortexr5/platform/ZynqMP
+        /tools/Xilinx/SDK/2019.1/data/embeddedsw/XilinxProcessorIPLib/drivers/common_v1_00_a/src
+        /tools/Xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/portable/GCC/ARM_CR5
+        /tools/Xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/common
+        )
+    endif (HAVE_FREERTOS_THREADS)
 endif (FREERTOS)
 
 set_target_properties (glog PROPERTIES DEFINE_SYMBOL LIBGLOG_EXPORTS)

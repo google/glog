@@ -61,6 +61,9 @@
 /* Define if you have POSIX threads libraries and header files. */
 #cmakedefine HAVE_PTHREAD
 
+/* Freertos threads */
+#cmakedefine HAVE_FREERTOS_THREADS
+
 /* Define to 1 if you have the <pwd.h> header file. */
 #cmakedefine HAVE_PWD_H
 
