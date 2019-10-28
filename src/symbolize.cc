@@ -110,7 +110,9 @@ _END_GOOGLE_NAMESPACE_
 
 #if defined(__ELF__)
 
+#if defined(HAVE_DLFCN_H)
 #include <dlfcn.h>
+#endif
 #if defined(OS_OPENBSD)
 #include <sys/exec_elf.h>
 #else
@@ -832,7 +834,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
-#elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
+#elif defined(OS_MACOSX) && defined(HAVE_DLADDR) && defined(HAVE_DLFCN_H)
 
 #include <dlfcn.h>
 #include <string.h>
