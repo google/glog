@@ -41,9 +41,11 @@
 #include <setjmp.h>
 #include <time.h>
 
+#include <chrono>
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <stdio.h>
@@ -573,11 +575,7 @@ class Thread {
 };
 
 static inline void SleepForMilliseconds(int t) {
-#ifndef OS_WINDOWS
-  usleep(t * 1000);
-#else
-  Sleep(t);
-#endif
+  std::this_thread::sleep_for(std:::chrono::milliseconds(t));
 }
 
 // Add hook for operator new to ensure there are no memory allocation.
