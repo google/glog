@@ -1320,7 +1320,7 @@ inline void LogAtLevel(int const severity, std::string const &msg) {
 // reasonably good C++11 support, so we set LANG_CXX for it and
 // newer versions (_MSC_VER >= 1900).
 #if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L || \
-     (defined(_MSC_VER) && _MSC_VER >= 1900))
+     (defined(_MSC_VER) && _MSC_VER >= 1900)) && !defined(__UCLIBCXX_MAJOR__)
 // Helper for CHECK_NOTNULL().
 //
 // In C++11, all cases can be handled by a single function. Since the value
