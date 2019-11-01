@@ -109,9 +109,6 @@ static bool BoolFromEnv(const char *varname, bool defval) {
   return memchr("tTyY1\0", valstr[0], 6) != NULL;
 }
 
-GLOG_DEFINE_bool(timestamp_in_logfile_name,
-                 BoolFromEnv("GOOGLE_TIMESTAMP_IN_LOGFILE_NAME", true),
-                 "put a timestamp at the end of the log file name");
 GLOG_DEFINE_bool(logtostderr, BoolFromEnv("GOOGLE_LOGTOSTDERR", false),
                  "log messages go to stderr instead of logfiles");
 GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
@@ -452,7 +449,7 @@ class LogFileObject : public base::Logger {
   int64 next_flush_time_;         // cycle count at which to flush log
 
   // Actually create a logfile using the value of base_filename_ and the
-  // optional argument time_pid_string
+  // supplied argument time_pid_string
   // REQUIRES: lock_ is held
   bool CreateLogfile(const string& time_pid_string);
 };
@@ -995,54 +992,20 @@ void LogFileObject::FlushUnlocked(){
 }
 
 bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_+filename_extension_;
-  if (FLAGS_timestamp_in_logfile_name) {
-      string_filename += time_pid_string;
-  }
+  string string_filename = base_filename_+filename_extension_+
+                           time_pid_string;
   const char* filename = string_filename.c_str();
-
-  //only write to files, create if non-existant.
-  int flags = O_WRONLY | O_CREAT;
-  if (FLAGS_timestamp_in_logfile_name) {
-    //demand that the file is unique for our timestamp (fail if it exists).
-    flags = flags | O_EXCL;
-  }
-  int fd = open(filename, flags, FLAGS_logfile_mode);
-
+  int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, FLAGS_logfile_mode);
   if (fd == -1) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
   fcntl(fd, F_SETFD, FD_CLOEXEC);
-
-  // Mark the file as exclusive write access to avoid two clients logging to the
-  // same file. This applies particularly when !FLAGS_timestamp_in_logfile_name
-  // (otherwise open would fail because the O_EXCL flag on similar filename).
-  // locks are released on unlock or close() automatically, only after log is
-  // released.
-  // This will work after a fork as it is not inherited (not stored in the fd).
-  // Lock will not be lost because the file is opened with exclusive lock (write)
-  // and we will never read from it inside the process.
-  static struct flock w_lock;
-
-  w_lock.l_type = F_WRLCK;
-  w_lock.l_start = 0;
-  w_lock.l_whence = SEEK_SET;
-  w_lock.l_len = 0;
-
-  int wlock_ret = fcntl(fd, F_SETLK, &w_lock);
-  if (wlock_ret == -1) {
-      close(fd); //as we are failing already, do not check errors here
-      return false;
-  }
 #endif
 
-  //fdopen in append mode so if the file exists it will fseek to the end
   file_ = fdopen(fd, "a");  // Make a FILE*.
   if (file_ == NULL) {  // Man, we're screwed!
     close(fd);
-    if (FLAGS_timestamp_in_logfile_name) {
-      unlink(filename);  // Erase the half-baked evidence: an unusable log file, only if we just created it.
-    }
+    unlink(filename);  // Erase the half-baked evidence: an unusable log file
     return false;
   }
 
