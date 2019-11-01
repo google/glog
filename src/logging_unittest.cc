@@ -40,11 +40,9 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <sys/wait.h>
 
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <memory>
 #include <queue>
 #include <sstream>
@@ -105,8 +103,6 @@ static void TestCHECK();
 static void TestDCHECK();
 static void TestSTREQ();
 static void TestBasename();
-static void TestBasenameAppendWhenNoTimestamp();
-static void TestTwoProcessesWrite();
 static void TestSymlink();
 static void TestExtension();
 static void TestWrapper();
@@ -180,7 +176,6 @@ BENCHMARK(BM_vlog);
 
 int main(int argc, char **argv) {
   FLAGS_colorlogtostderr = false;
-  FLAGS_timestamp_in_logfile_name = true;
 #ifdef HAVE_LIB_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
@@ -232,8 +227,6 @@ int main(int argc, char **argv) {
   FLAGS_logtostderr = false;
 
   TestBasename();
-  TestBasenameAppendWhenNoTimestamp();
-  TestTwoProcessesWrite();
   TestSymlink();
   TestExtension();
   TestWrapper();
@@ -673,8 +666,7 @@ static void DeleteFiles(const string& pattern) {
   }
 }
 
-//check string is in file (or is *NOT*, depending on optional checkInFileOrNot)
-static void CheckFile(const string& name, const string& expected_string, const bool checkInFileOrNot = true) {
+static void CheckFile(const string& name, const string& expected_string) {
   vector<string> files;
   GetFiles(name + "*", &files);
   CHECK_EQ(files.size(), 1UL);
@@ -683,16 +675,13 @@ static void CheckFile(const string& name, const string& expected_string, const b
   CHECK(file != NULL) << ": could not open " << files[0];
   char buf[1000];
   while (fgets(buf, sizeof(buf), file) != NULL) {
-    char* first = strstr(buf, expected_string.c_str());
-    //if first == NULL, not found.
-    //Terser than if (checkInFileOrNot && first != NULL || !check...
-    if (checkInFileOrNot != (first == NULL)) {
+    if (strstr(buf, expected_string.c_str()) != NULL) {
       fclose(file);
       return;
     }
   }
   fclose(file);
-  LOG(FATAL) << "Did " << (checkInFileOrNot? "" : "not ") << " find " << expected_string << " in " << files[0];
+  LOG(FATAL) << "Did not find " << expected_string << " in " << files[0];
 }
 
 static void TestBasename() {
@@ -707,60 +696,6 @@ static void TestBasename() {
   CheckFile(dest, "message to new base");
 
   // Release file handle for the destination file to unlock the file in Windows.
-  LogToStderr();
-  DeleteFiles(dest + "*");
-}
-
-static void TestBasenameAppendWhenNoTimestamp() {
-  fprintf(stderr, "==== Test setting log file basename without timestamp and appending properly\n");
-  const string dest = FLAGS_test_tmpdir + "/logging_test_basename_append_when_no_timestamp";
-  DeleteFiles(dest + "*");
-
-  ofstream out(dest.c_str());
-  out << "test preexisting content" << endl;
-  out.close();
-
-  FLAGS_timestamp_in_logfile_name=false;
-  SetLogDestination(GLOG_INFO, dest.c_str());
-  LOG(INFO) << "message to new base, appending to preexisting file";
-  FlushLogFiles(GLOG_INFO);
-  FLAGS_timestamp_in_logfile_name=true;
-
-  //if the logging overwrites the file instead of appending it will fail.
-  CheckFile(dest, "test preexisting content");
-  CheckFile(dest, "message to new base, appending to preexisting file");
-
-  // Release file handle for the destination file to unlock the file in Windows.
-  LogToStderr();
-  DeleteFiles(dest + "*");
-}
-
-static void TestTwoProcessesWrite() {
-  fprintf(stderr, "==== Test setting log file basename and two processes writing - second should fail\n");
-  const string dest = FLAGS_test_tmpdir + "/logging_test_basename_two_processes_writing";
-  DeleteFiles(dest + "*");
-
-  //make both processes write into the same file (easier test)
-  FLAGS_timestamp_in_logfile_name=false;
-  SetLogDestination(GLOG_INFO, dest.c_str());
-  LOG(INFO) << "message to new base, parent";
-  FlushLogFiles(GLOG_INFO);
-
-  pid_t pid = fork();
-  CHECK_ERR(pid);
-  if (pid == 0) {
-    LOG(INFO) << "message to new base, child - should only appear on STDERR not on the file";
-    ShutdownGoogleLogging(); //for children proc
-    exit(0);
-  } else if (pid > 0) {
-    wait(NULL);
-  }
-  FLAGS_timestamp_in_logfile_name=true;
-
-  CheckFile(dest, "message to new base, parent");
-  CheckFile(dest, "message to new base, child - should only appear on STDERR not on the file", false);
-
-  // Release
   LogToStderr();
   DeleteFiles(dest + "*");
 }
