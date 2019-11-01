@@ -23,6 +23,7 @@ option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print raw pc values on symbolization failure" OFF)
+option (WITH_PKGCONFIG " Enable pkg-config support" ON)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -423,6 +424,25 @@ configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
 configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
 configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
+if (WITH_PKGCONFIG)
+  set (VERSION ${PROJECT_VERSION})
+  set (prefix ${CMAKE_INSTALL_PREFIX})
+  set (exec_prefix ${CMAKE_INSTALL_FULL_BINDIR})
+  set (libdir ${CMAKE_INSTALL_FULL_LIBDIR})
+  set (includedir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+
+  configure_file (
+    "${PROJECT_SOURCE_DIR}/libglog.pc.in"
+    "${PROJECT_BINARY_DIR}/libglog.pc"
+    @ONLY
+  )
+
+  unset (VERSION)
+  unset (prefix)
+  unset (exec_prefix)
+  unset (libdir)
+  unset (includedir)
+endif (WITH_PKGCONFIG)
 
 set (CMAKE_CXX_VISIBILITY_PRESET default)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
@@ -648,6 +668,13 @@ install (TARGETS glog
   PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog
   LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
   ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
+
+if (WITH_PKGCONFIG)
+  install (
+    FILES "${PROJECT_BINARY_DIR}/libglog.pc"
+    DESTINATION "${_glog_CMake_LIBDIR}/pkgconfig"
+  )
+endif (WITH_PKGCONFIG)
 
 set (glog_CMake_VERSION 3.0)
 
