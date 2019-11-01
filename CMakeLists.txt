@@ -117,7 +117,7 @@ check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
-find_package(Libunwind)
+find_package (Unwind)
 
 check_c_source_compiles ("
 #include <stdlib.h>
