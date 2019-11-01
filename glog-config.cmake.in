@@ -5,10 +5,9 @@ endif (CMAKE_VERSION VERSION_LESS @glog_CMake_VERSION@)
 @PACKAGE_INIT@
 
 include (CMakeFindDependencyMacro)
+include (${CMAKE_CURRENT_LIST_DIR}/glog-modules.cmake)
 
 @gflags_DEPENDENCY@
+@Unwind_DEPENDENCY@
 
-list (APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}")
-find_dependency (Libunwind)
-
-include ("${CMAKE_CURRENT_LIST_DIR}/glog-targets.cmake")
+include (${CMAKE_CURRENT_LIST_DIR}/glog-targets.cmake)

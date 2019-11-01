@@ -23,7 +23,16 @@ option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print raw pc values on symbolization failure" OFF)
-option (WITH_PKGCONFIG " Enable pkg-config support" ON)
+option (WITH_PKGCONFIG "Enable pkg-config support" ON)
+option (WITH_UNWIND "Enable libunwind support" ON)
+
+if (NOT WITH_UNWIND)
+  set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
+endif (NOT WITH_UNWIND)
+
+if (NOT WITH_THREADS)
+  set (CMAKE_DISABLE_FIND_PACKAGE_Threads ON)
+endif (NOT WITH_THREADS)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -57,9 +66,13 @@ if (WITH_GFLAGS)
   endif (gflags_FOUND)
 endif (WITH_GFLAGS)
 
-if (WITH_THREADS)
-  find_package (Threads)
-endif (WITH_THREADS)
+find_package (Threads)
+find_package (Unwind)
+
+if (Unwind_FOUND)
+  set (HAVE_LIB_UNWIND 1)
+  set (HAVE_UNWIND_H 1)
+endif (Unwind_FOUND)
 
 check_include_file (dlfcn.h HAVE_DLFCN_H)
 check_include_file (execinfo.h HAVE_EXECINFO_H)
@@ -116,8 +129,6 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
-
-find_package (Unwind)
 
 check_c_source_compiles ("
 #include <stdlib.h>
@@ -480,16 +491,57 @@ endif (WIN32)
 
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
 
+set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
+set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
+set (_glog_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR})
+set (_glog_CMake_INSTALLDIR ${_glog_CMake_LIBDIR}/cmake/glog)
+
+set (_glog_CMake_DIR glog/cmake)
+set (_glog_CMake_DATADIR ${CMAKE_INSTALL_DATAROOTDIR}/${_glog_CMake_DIR})
+set (_glog_BINARY_CMake_DATADIR
+  ${CMAKE_CURRENT_BINARY_DIR}/${_glog_CMake_DATADIR})
+
+# Add additional CMake find modules here.
+set (_glog_CMake_MODULES)
+
+if (Unwind_FOUND)
+  # Copy the module only if libunwind is actually used.
+  list (APPEND _glog_CMake_MODULES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindUnwind.cmake)
+endif (Unwind_FOUND)
+
+# Generate file name for each module in the binary directory
+foreach (_file ${_glog_CMake_MODULES})
+  get_filename_component (_module "${_file}" NAME)
+
+  list (APPEND _glog_BINARY_CMake_MODULES
+    ${_glog_BINARY_CMake_DATADIR}/${_module})
+endforeach (_file)
+
+if (_glog_CMake_MODULES)
+  # Copy modules to binary directory during the build
+  add_custom_command (OUTPUT ${_glog_BINARY_CMake_MODULES}
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+    ${_glog_BINARY_CMake_DATADIR}
+    COMMAND ${CMAKE_COMMAND} -E copy ${_glog_CMake_MODULES}
+    ${_glog_BINARY_CMake_DATADIR}
+    DEPENDS ${_glog_CMake_MODULES}
+    COMMENT "Copying find modules..."
+  )
+endif (_glog_CMake_MODULES)
+
 add_library (glog
   ${GLOG_SRCS}
+  ${_glog_BINARY_CMake_MODULES}
 )
+
 add_library(glog::glog ALIAS glog)
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-if (Libunwind_FOUND)
-  target_link_libraries (glog PUBLIC unwind)
-endif (Libunwind_FOUND)
+if (Unwind_FOUND)
+  target_link_libraries (glog PUBLIC unwind::unwind)
+  set (Unwind_DEPENDENCY "find_dependency (Unwind ${Unwind_VERSION})")
+endif (Unwind_FOUND)
 
 if (HAVE_DBGHELP)
    target_link_libraries (glog PUBLIC dbghelp)
@@ -521,11 +573,6 @@ if (WIN32)
 endif (WIN32)
 
 set_target_properties (glog PROPERTIES PUBLIC_HEADER "${GLOG_PUBLIC_H}")
-
-set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
-set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
-set (_glog_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR})
-set (_glog_CMake_INSTALLDIR ${_glog_CMake_LIBDIR}/cmake/glog)
 
 target_include_directories (glog BEFORE PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
@@ -698,11 +745,47 @@ write_basic_package_version_file (glog-config-version.cmake VERSION
 export (TARGETS glog NAMESPACE glog:: FILE glog-targets.cmake)
 export (PACKAGE glog)
 
+get_filename_component (_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+
+# Directory containing the find modules relative to the config install
+# directory.
+file (RELATIVE_PATH glog_REL_CMake_MODULES
+  ${_PREFIX}/${_glog_CMake_INSTALLDIR}
+  ${_PREFIX}/${_glog_CMake_DATADIR}/glog-modules.cmake)
+
+get_filename_component (glog_REL_CMake_DATADIR ${glog_REL_CMake_MODULES}
+  DIRECTORY)
+
+set (glog_FULL_CMake_DATADIR
+  ${CMAKE_CURRENT_BINARY_DIR}/${_glog_CMake_DATADIR})
+
+configure_file (glog-modules.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/glog-modules.cmake @ONLY)
+
+install (CODE
+"
+set (glog_FULL_CMake_DATADIR \"\\\${CMAKE_CURRENT_LIST_DIR}/${glog_REL_CMake_DATADIR}\")
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/glog-modules.cmake.in
+  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\" @ONLY)
+file (INSTALL
+  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\"
+  DESTINATION
+  \"\${CMAKE_INSTALL_PREFIX}/${_glog_CMake_INSTALLDIR}\")
+"
+  COMPONENT Development
+)
+
 install (FILES
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
-  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLibunwind.cmake
   DESTINATION ${_glog_CMake_INSTALLDIR})
+
+# Find modules in share/glog/cmake
+install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/glog
+  COMPONENT Development
+  FILES_MATCHING PATTERN "*.cmake"
+)
 
 install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
   ${_glog_CMake_INSTALLDIR})
