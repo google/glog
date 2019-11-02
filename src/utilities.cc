@@ -61,7 +61,6 @@ using std::string;
 _START_GOOGLE_NAMESPACE_
 
 static const char* g_program_invocation_short_name = NULL;
-static pthread_t g_main_thread_id;
 
 _END_GOOGLE_NAMESPACE_
 
@@ -181,16 +180,6 @@ bool IsGoogleLoggingInitialized() {
   return g_program_invocation_short_name != NULL;
 }
 
-bool is_default_thread() {
-  if (g_program_invocation_short_name == NULL) {
-    // InitGoogleLogging() not yet called, so unlikely to be in a different
-    // thread
-    return true;
-  } else {
-    return pthread_equal(pthread_self(), g_main_thread_id);
-  }
-}
-
 #ifdef OS_WINDOWS
 struct timeval {
   long tv_sec, tv_usec;
@@ -276,9 +265,11 @@ pid_t GetTID() {
   return getpid();  // Linux:  getpid returns thread ID when gettid is absent
 #elif defined OS_WINDOWS && !defined OS_CYGWIN
   return GetCurrentThreadId();
-#else
+#elif defined(HAVE_PTHREAD)
   // If none of the techniques above worked, we use pthread_self().
   return (pid_t)(uintptr_t)pthread_self();
+#else
+  return -1;
 #endif
 }
 
@@ -350,7 +341,6 @@ void InitGoogleLoggingUtilities(const char* argv0) {
   if (!slash)  slash = strrchr(argv0, '\\');
 #endif
   g_program_invocation_short_name = slash ? slash + 1 : argv0;
-  g_main_thread_id = pthread_self();
 
 #ifdef HAVE_STACKTRACE
   InstallFailureFunction(&DumpStackTraceAndExit);
