@@ -2285,7 +2285,7 @@ void EnableLogCleaner(int overdue_days) {
 }
 
 void DisableLogCleaner() {
-  log_cleaner_overdue_days_ = false;
+  log_cleaner_enabled_ = false;
 }
 
 _END_GOOGLE_NAMESPACE_
