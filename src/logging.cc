@@ -1013,6 +1013,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   fcntl(fd, F_SETFD, FD_CLOEXEC);
 #endif
 
+#ifdef _struct_flock
   // Mark the file as exclusive write access to avoid two clients logging to the
   // same file. This applies particularly when !FLAGS_timestamp_in_logfile_name
   // (otherwise open would fail because the O_EXCL flag on similar filename).
@@ -1033,6 +1034,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
       close(fd); //as we are failing already, do not check errors here
       return false;
   }
+#endif
 
   //fdopen in append mode so if the file exists it will fseek to the end
   file_ = fdopen(fd, "a");  // Make a FILE*.
