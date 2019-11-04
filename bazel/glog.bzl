@@ -13,11 +13,51 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     else:
         gendir = "$(GENDIR)"
 
+    common_copts = [
+        "-DGLOG_BAZEL_BUILD",
+        "-DHAVE_STDINT_H",
+        "-DHAVE_STRING_H",
+        "-DHAVE_UNWIND_H",
+    ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
+
+    linux_or_darwin_copts = [
+        # Disable warnings that exists in glog.
+        "-Wno-sign-compare",
+        "-Wno-unused-function",
+        "-Wno-unused-local-typedefs",
+        "-Wno-unused-variable",
+        # Inject a C++ namespace.
+        "-DGOOGLE_NAMESPACE='%s'" % namespace,
+        # Allows src/base/mutex.h to include pthread.h.
+        "-DHAVE_PTHREAD",
+        # Allows src/logging.cc to determine the host name.
+        "-DHAVE_SYS_UTSNAME_H",
+        # For src/utilities.cc.
+        "-DHAVE_SYS_SYSCALL_H",
+        "-DHAVE_SYS_TIME_H",
+        # Enable dumping stacktrace upon sigaction.
+        "-DHAVE_SIGACTION",
+        # For logging.cc.
+        "-DHAVE_PREAD",
+        "-DHAVE___ATTRIBUTE__",
+        "-I%s/glog_internal" % gendir,
+    ]
+
+    darwin_only_copts = [
+        # For stacktrace.
+        "-DHAVE_DLADDR",
+    ]
+
+    windows_only_copts = [
+        "-DHAVE_SNPRINTF",
+    ]
+
+    gflags_deps = ["@com_github_gflags_gflags//:gflags"] if with_gflags else []
+
     native.cc_library(
         name = "glog",
         visibility = ["//visibility:public"],
         srcs = [
-            ":config_h",
             "src/base/commandlineflags.h",
             "src/base/googleinit.h",
             "src/base/mutex.h",
@@ -38,58 +78,65 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/utilities.cc",
             "src/utilities.h",
             "src/vlog_is_on.cc",
+        ] + select({
+            "@bazel_tools//src/conditions:windows": ["src/windows/port.cc", "src/windows/port.h"],
+            "//conditions:default": [":config_h"],
+        }),
+        copts =
+            select({
+                "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
+                "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
+                "//conditions:default": common_copts + linux_or_darwin_copts,
+            }),
+        deps = [
+            ":glog_headers",
+        ] + gflags_deps,
+        **kwargs
+    )
+
+    # glog headers vary depending on the os.
+    native.cc_library(
+        name = "glog_headers",
+        deps = select({
+            "@bazel_tools//src/conditions:windows": [":windows_glog_headers"],
+            "//conditions:default": [":default_glog_headers"],
+        }),
+    )
+
+    native.cc_library(
+        name = "windows_glog_headers",
+        hdrs = ["src/glog/log_severity.h", "src/windows/config.h",] + native.glob(["src/windows/glog/*.h"]),
+        includes = ["src/windows"],
+        # config.h for windows seem hardcoded that way,
+        # and we need to propagate those defines to binaries/libraries linking
+        # against glog.
+        defines = [
+            "GOOGLE_GLOG_IS_A_DLL=1",
+            "GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)",
+            "GOOGLE_GLOG_DLL_DECL_FOR_UNITTEST=__declspec(dllimport)",
         ],
+    )
+
+    native.cc_library(
+        name = "default_glog_headers",
+        strip_include_prefix = "src",
         hdrs = [
+            "src/glog/log_severity.h",
             ":logging_h",
             ":raw_logging_h",
             ":stl_logging_h",
             ":vlog_is_on_h",
-            "src/glog/log_severity.h",
         ],
-        strip_include_prefix = "src",
-        copts = [
-            # Disable warnings that exists in glog.
-            "-Wno-sign-compare",
-            "-Wno-unused-function",
-            "-Wno-unused-local-typedefs",
-            "-Wno-unused-variable",
-            "-DGLOG_BAZEL_BUILD",
-            # Inject a C++ namespace.
-            "-DGOOGLE_NAMESPACE='%s'" % namespace,
-            # Allows src/base/mutex.h to include pthread.h.
-            "-DHAVE_PTHREAD",
-            # Allows src/logging.cc to determine the host name.
-            "-DHAVE_SYS_UTSNAME_H",
-            # For src/utilities.cc.
-            "-DHAVE_SYS_SYSCALL_H",
-            "-DHAVE_SYS_TIME_H",
-            "-DHAVE_STDINT_H",
-            "-DHAVE_STRING_H",
-            # Enable dumping stacktrace upon sigaction.
-            "-DHAVE_SIGACTION",
-            # For logging.cc.
-            "-DHAVE_PREAD",
-            "-DHAVE___ATTRIBUTE__",
-
-            # Include generated header files.
-            "-I%s/glog_internal" % gendir,
-        ] + select({
-            # For stacktrace.
-            "@bazel_tools//src/conditions:darwin": [
-                "-DHAVE_UNWIND_H",
-                "-DHAVE_DLADDR",
-            ],
-            "//conditions:default": [
-                "-DHAVE_UNWIND_H",
-            ],
-        }) + ([
-            # Use gflags to parse CLI arguments.
-            "-DHAVE_LIB_GFLAGS",
-        ] if with_gflags else []),
-        deps = [
-            "@com_github_gflags_gflags//:gflags",
-        ] if with_gflags else [],
-        **kwargs
+    )
+    native.genrule(
+        name = "config_h",
+        srcs = [
+            "src/config.h.cmake.in",
+        ],
+        outs = [
+            "glog_internal/config.h",
+        ],
+        cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $< > $@",
     )
 
     native.genrule(
@@ -116,17 +163,6 @@ sed -e 's/@ac_cv_cxx_using_operator@/1/g' \
     -e 's/@ac_cv___attribute___printf_4_5@/__attribute__((__format__ (__printf__, 4, 5)))/g'
 EOF
 '''.format(int(with_gflags)),
-    )
-
-    native.genrule(
-        name = "config_h",
-        srcs = [
-            "src/config.h.cmake.in",
-        ],
-        outs = [
-            "glog_internal/config.h",
-        ],
-        cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $< > $@",
     )
 
     [
