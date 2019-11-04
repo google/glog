@@ -1011,9 +1011,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
   fcntl(fd, F_SETFD, FD_CLOEXEC);
-#endif
 
-#ifdef _struct_flock
   // Mark the file as exclusive write access to avoid two clients logging to the
   // same file. This applies particularly when !FLAGS_timestamp_in_logfile_name
   // (otherwise open would fail because the O_EXCL flag on similar filename).
@@ -1022,6 +1020,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   // This will work after a fork as it is not inherited (not stored in the fd).
   // Lock will not be lost because the file is opened with exclusive lock (write)
   // and we will never read from it inside the process.
+  // TBD windows version of this.
   static struct flock w_lock;
 
   w_lock.l_type = F_WRLCK;
