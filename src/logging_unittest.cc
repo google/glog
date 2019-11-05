@@ -40,7 +40,9 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
-#include <sys/wait.h>
+#ifdef HAVE_SYS_WAIT_H
+# include <sys/wait.h>
+#endif
 
 #include <iomanip>
 #include <iostream>
@@ -736,6 +738,8 @@ static void TestBasenameAppendWhenNoTimestamp() {
 }
 
 static void TestTwoProcessesWrite() {
+// test only implemented for platforms with fork & wait; the actual implementation relies on flock
+#if defined(HAVE_SYS_WAIT_H) && defined(HAVE_UNISTD_H) && defined(HAVE_FCNTL)
   fprintf(stderr, "==== Test setting log file basename and two processes writing - second should fail\n");
   const string dest = FLAGS_test_tmpdir + "/logging_test_basename_two_processes_writing";
   DeleteFiles(dest + "*");
@@ -763,6 +767,7 @@ static void TestTwoProcessesWrite() {
   // Release
   LogToStderr();
   DeleteFiles(dest + "*");
+#endif
 }
 
 static void TestSymlink() {
