@@ -543,6 +543,24 @@ setting <code>GOOGLE_STRIP_LOG</code> to 1 or greater removes
 all log messages associated with <code>VLOG</code>s as well as
 <code>INFO</code> log statements.
 
+<h3><A NAME=strip>Automatically Remove Old Logs</A></h3>
+
+<p>To enable the log cleaner:
+
+<pre>
+google::EnableLogCleaner(3); // keep your logs for 3 days
+</pre>
+
+And then Google glog will check if there are overdue logs whenever
+a flush is performed. In this example, any log file from your project whose
+last modified time is greater than 3 days will be unlink()ed.
+
+<p>This feature can be disabled at any time (if it has been enabled)
+
+<pre>
+google::DisableLogCleaner();
+</pre>
+
 <h3><A NAME=windows>Notes for Windows users</A></h3>
 
 <p>Google glog defines a severity level <code>ERROR</code>, which is
