@@ -694,7 +694,7 @@ static void CheckFile(const string& name, const string& expected_string, const b
     }
   }
   fclose(file);
-  LOG(FATAL) << "Did " << (checkInFileOrNot? "" : "not ") << " find " << expected_string << " in " << files[0];
+  LOG(FATAL) << "Did " << (checkInFileOrNot? "not " : "") << "find " << expected_string << " in " << files[0];
 }
 
 static void TestBasename() {
@@ -721,6 +721,8 @@ static void TestBasenameAppendWhenNoTimestamp() {
   ofstream out(dest.c_str());
   out << "test preexisting content" << endl;
   out.close();
+
+  CheckFile(dest, "test preexisting content");
 
   FLAGS_timestamp_in_logfile_name=false;
   SetLogDestination(GLOG_INFO, dest.c_str());

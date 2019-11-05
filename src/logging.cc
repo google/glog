@@ -1020,7 +1020,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   // This will work after a fork as it is not inherited (not stored in the fd).
   // Lock will not be lost because the file is opened with exclusive lock (write)
   // and we will never read from it inside the process.
-  // TBD windows version of this.
+  // TODO windows implementation of this (as flock is not available on mingw).
   static struct flock w_lock;
 
   w_lock.l_type = F_WRLCK;
@@ -1044,7 +1044,15 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     }
     return false;
   }
-
+#ifdef OS_WINDOWS
+  // https://github.com/golang/go/issues/27638 - make sure we seek to the end to append
+  // empirically replicated with wine over mingw build
+  if (!FLAGS_timestamp_in_logfile_name) {
+    if (fseek(file_, 0, SEEK_END) != 0) {
+      return false;
+    }
+  }
+#endif
   // We try to create a symlink called <program_name>.<severity>,
   // which is easier to use.  (Every time we create a new logfile,
   // we destroy the old symlink and create a new one, so it always
