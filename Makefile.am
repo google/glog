@@ -208,9 +208,9 @@ libglog_la_SOURCES = $(gloginclude_HEADERS) \
                        src/base/commandlineflags.h src/googletest.h
 nodist_libglog_la_SOURCES = $(nodist_gloginclude_HEADERS)
 
-libglog_la_CXXFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_CFLAGS) $(MINGW_CFLAGS) \
+libglog_la_CXXFLAGS = $(PTHREAD_CFLAGS) $(GFLAGS_CFLAGS) $(MINGW_CFLAGS) \
                       $(AM_CXXFLAGS) -DNDEBUG
-libglog_la_LDFLAGS = $(PTRHEAD_CFLAGS) $(GFLAGS_LDFLAGS)
+libglog_la_LDFLAGS = $(PTHREAD_CFLAGS) $(GFLAGS_LDFLAGS)
 libglog_la_LIBADD = $(COMMON_LIBS)
 
 ## The location of the windows project file for each binary we make
