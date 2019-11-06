@@ -88,6 +88,8 @@
 
 #if HAVE_CXX11_ATOMIC
 #include <atomic>
+#elif defined(OS_WINDOWS)
+#include <Windows.h>
 #endif
 
 @ac_google_start_namespace@
@@ -937,12 +939,13 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
-#else
+#elif defined(OS_WINDOWS)
 
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
+    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
   if (LOG_OCCURRENCES_MOD_N == 1) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
@@ -950,7 +953,7 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
   if (condition && \
       ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
     @ac_google_namespace@::LogMessage( \
@@ -959,8 +962,9 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
+    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
   if (LOG_OCCURRENCES_MOD_N == 1) \
     @ac_google_namespace@::ErrnoLogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
@@ -969,7 +973,47 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0; \
   if (LOG_OCCURRENCES <= n) \
-    ++LOG_OCCURRENCES; \
+    InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (LOG_OCCURRENCES <= n) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#else
+
+#define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) > n) \
+    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (condition && \
+      ((LOG_OCCURRENCES_MOD_N=__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) % n) == (1 % n))) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+                 &what_to_do).stream()
+
+#define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, n) > n) \
+    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::ErrnoLogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0; \
+  if (LOG_OCCURRENCES <= n) \
+    __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
   if (LOG_OCCURRENCES <= n) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
