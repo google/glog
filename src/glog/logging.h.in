@@ -955,7 +955,9 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
   InterlockedIncrement(&LOG_OCCURRENCES); \
   if (condition && \
-      ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
+      (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) || true) && \
+      ((LOG_OCCURRENCES_MOD_N >= n && InterlockedExchangeAdd(&LOG_OCCURRENCES_MOD_N, n)) || true) && \
+      LOG_OCCURRENCES_MOD_N == (1 % n)) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
                  &what_to_do).stream()
@@ -995,7 +997,9 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
   __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
   if (condition && \
-      ((LOG_OCCURRENCES_MOD_N=__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) % n) == (1 % n))) \
+      (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) || true) && \
+      ((LOG_OCCURRENCES_MOD_N >= n && __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n)) || true) && \
+      LOG_OCCURRENCES_MOD_N == (1 % n)) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
                  &what_to_do).stream()
