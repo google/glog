@@ -52,6 +52,7 @@ include (CMakePushCheckState)
 include (CPack)
 include (CTest)
 include (DetermineGflagsNamespace)
+include (GetCacheVariables)
 include (GNUInstallDirs)
 
 set (CMAKE_DEBUG_POSTFIX d)
@@ -703,6 +704,57 @@ if (BUILD_TESTING)
   if (TARGET symbolize_unittest)
     add_test (NAME symbolize COMMAND symbolize_unittest)
   endif (TARGET symbolize_unittest)
+
+  # Generate an initial cache
+
+  get_cache_variables (_CACHEVARS EXCLUDE CMAKE_MAKE_PROGRAM)
+
+  set (_INITIAL_CACHE
+    ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/glog_package_config_initial_cache.cmake)
+
+  # Package config test
+
+  add_test (NAME cmake_package_config_init COMMAND ${CMAKE_COMMAND}
+    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config
+    -DINITIAL_CACHE=${_INITIAL_CACHE}
+    -DCACHEVARS=${_CACHEVARS}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestInitPackageConfig.cmake
+  )
+
+  add_test (NAME cmake_package_config_generate COMMAND ${CMAKE_COMMAND}
+    -DPATH=$ENV{PATH}
+    -DINITIAL_CACHE=${_INITIAL_CACHE}
+    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
+    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/package_config_unittest/working_config
+    -DPACKAGE_DIR=${CMAKE_CURRENT_BINARY_DIR}
+    -DGENERATOR=${CMAKE_GENERATOR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestPackageConfig.cmake
+  )
+
+  add_test (NAME cmake_package_config_build COMMAND
+    ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
+  )
+
+  add_test (NAME cmake_package_config_cleanup COMMAND ${CMAKE_COMMAND} -E
+    remove_directory
+    ${CMAKE_CURRENT_BINARY_DIR}/test_package_config
+  )
+
+  # Fixtures setup
+  set_tests_properties (cmake_package_config_init PROPERTIES FIXTURES_SETUP
+    cmake_package_config)
+  set_tests_properties (cmake_package_config_generate PROPERTIES FIXTURES_SETUP
+    cmake_package_config_working)
+
+  # Fixtures cleanup
+  set_tests_properties (cmake_package_config_cleanup PROPERTIES FIXTURES_CLEANUP
+    cmake_package_config)
+
+  # Fixture requirements
+  set_tests_properties (cmake_package_config_generate PROPERTIES
+    FIXTURES_REQUIRED cmake_package_config)
+  set_tests_properties (cmake_package_config_build PROPERTIES
+    FIXTURES_REQUIRED "cmake_package_config;cmake_package_config_working")
 endif (BUILD_TESTING)
 
 install (TARGETS glog
