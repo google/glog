@@ -9,9 +9,12 @@
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
-        gendir = "$(GENDIR)/external/" + native.repository_name().lstrip("@")
+        repo_name = native.repository_name().lstrip("@")
+        gendir = "$(GENDIR)/external/" + repo_name
+        src_windows = "external/%s/src/windows" % repo_name
     else:
         gendir = "$(GENDIR)"
+        src_windows = "src/windows"
 
     common_copts = [
         "-DGLOG_BAZEL_BUILD",
@@ -50,6 +53,14 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     windows_only_copts = [
         "-DHAVE_SNPRINTF",
+        "-I" + src_windows,
+    ]
+
+    windows_only_srcs = [
+        "src/glog/log_severity.h",
+        "src/windows/config.h",
+        "src/windows/port.cc",
+        "src/windows/port.h",
     ]
 
     gflags_deps = ["@com_github_gflags_gflags//:gflags"] if with_gflags else []
@@ -79,7 +90,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/utilities.h",
             "src/vlog_is_on.cc",
         ] + select({
-            "@bazel_tools//src/conditions:windows": ["src/windows/port.cc", "src/windows/port.h"],
+            "@bazel_tools//src/conditions:windows": windows_only_srcs,
             "//conditions:default": [":config_h"],
         }),
         copts =
@@ -105,8 +116,9 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     native.cc_library(
         name = "windows_glog_headers",
-        hdrs = ["src/glog/log_severity.h", "src/windows/config.h",] + native.glob(["src/windows/glog/*.h"]),
-        includes = ["src/windows"],
+        hdrs = native.glob(["src/windows/glog/*.h"]),
+        strip_include_prefix = "src/windows",
+        # TODO(rodrigoq): are these necessary?
         # config.h for windows seem hardcoded that way,
         # and we need to propagate those defines to binaries/libraries linking
         # against glog.
@@ -115,6 +127,14 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)",
             "GOOGLE_GLOG_DLL_DECL_FOR_UNITTEST=__declspec(dllimport)",
         ],
+        deps = [":strip_include_prefix_hack"],
+    )
+
+    # Workaround https://github.com/bazelbuild/bazel/issues/6337 by declaring
+    # the dependencies without strip_include_prefix.
+    native.cc_library(
+        name = "strip_include_prefix_hack",
+        hdrs = native.glob(["src/windows/*.h"]),
     )
 
     native.cc_library(
