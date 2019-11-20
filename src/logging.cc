@@ -334,7 +334,7 @@ static const char* GetAnsiColorCode(GLogColor color) {
 
 // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
 static int32 MaxLogSize() {
-  return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
+  return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096 ? FLAGS_max_log_size : 1);
 }
 
 // An arbitrary limit on the length of a single log message.  This
