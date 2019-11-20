@@ -118,15 +118,9 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         name = "windows_glog_headers",
         hdrs = native.glob(["src/windows/glog/*.h"]),
         strip_include_prefix = "src/windows",
-        # TODO(rodrigoq): are these necessary?
-        # config.h for windows seem hardcoded that way,
-        # and we need to propagate those defines to binaries/libraries linking
-        # against glog.
-        defines = [
-            "GOOGLE_GLOG_IS_A_DLL=1",
-            "GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)",
-            "GOOGLE_GLOG_DLL_DECL_FOR_UNITTEST=__declspec(dllimport)",
-        ],
+        # We need to override the default GOOGLE_GLOG_DLL_DECL from
+        # src/windows/glog/*.h to match src/windows/config.h.
+        defines = ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
         deps = [":strip_include_prefix_hack"],
     )
 
