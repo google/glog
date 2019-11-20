@@ -6,6 +6,8 @@
 # This file is inspired by the following sample BUILD files:
 #       https://github.com/google/glog/issues/61
 #       https://github.com/google/glog/files/393474/BUILD.txt
+#
+# Known issue: the namespace parameter is not supported on Win32.
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
