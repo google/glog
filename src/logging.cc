@@ -465,17 +465,19 @@ class LogCleaner {
 
   void Enable(int overdue_days);
   void Disable();
-  void Run() const;
+  void Run(bool base_filename_selected, const string& base_filename) const;
 
   inline bool enabled() const { return enabled_; }
 
  private:
-  bool IsLogFromCurrentProject(const string& filename) const;
+  vector<string> GetOverdueLogNames(string log_directory, int days,
+                                    const string& base_filename) const;
+  bool IsLogFromCurrentProject(const string& filepath, const string& base_filename) const;
   bool IsLogLastModifiedOver(const string& filepath, int days) const;
-  vector<string> GetOverdueLogNames(string log_directory, int days) const;
-
+ 
   bool enabled_;
   int overdue_days_;
+  char dir_delim_;  // filepath delimiter ('/' or '\\')
 };
 
 LogCleaner log_cleaner;
@@ -1213,13 +1215,20 @@ void LogFileObject::Write(bool force_flush,
 #endif
     // Perform clean up for old logs
     if (log_cleaner.enabled()) {
-      log_cleaner.Run();
+      if (base_filename_selected_ && base_filename_.empty()) {
+        return;
+      }
+      log_cleaner.Run(base_filename_selected_, base_filename_);
     }
   }
 }
 
 
-LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7) {}
+LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
+#ifdef OS_WINDOWS
+  dir_delim_ = '\\';
+#endif
+}
 
 void LogCleaner::Enable(int overdue_days) {
   // Setting overdue_days to 0 day should not be allowed!
@@ -1234,37 +1243,77 @@ void LogCleaner::Disable() {
   enabled_ = false;
 }
 
-void LogCleaner::Run() const {
+void LogCleaner::Run(bool base_filename_selected, const string& base_filename) const {
   assert(enabled_ && overdue_days_ > 0);
 
-  const vector<string>& dirs = GetLoggingDirectories();
+  vector<string> dirs;
+
+  if (base_filename_selected) {
+    string dir = base_filename.substr(0, base_filename.find_last_of(dir_delim_) + 1);
+    dirs.push_back(dir);
+  } else {
+    dirs = GetLoggingDirectories();
+  }
+
   for (size_t i = 0; i < dirs.size(); i++) {
-    vector<string> logs = GetOverdueLogNames(dirs[i], overdue_days_);
+    vector<string> logs = GetOverdueLogNames(dirs[i], overdue_days_, base_filename);
     for (size_t j = 0; j < logs.size(); j++) {
       static_cast<void>(unlink(logs[j].c_str()));
     }
   }
 }
 
-bool LogCleaner::IsLogFromCurrentProject(const string& filename) const {
-  // Check if filename matches the pattern of a glog file:
-  // "<program name>.<hostname>.<user name>.log...".
-  const int kKeywordCount = 4;
-  std::string keywords[kKeywordCount] = {
-    glog_internal_namespace_::ProgramInvocationShortName(),
-    LogDestination::hostname(),
-    MyUserName(),
-    "log"
-  };
+vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
+                                              const string& base_filename) const {
+  // The names of overdue logs.
+  vector<string> overdue_log_names;
 
-  int start_pos = 0;
-  for (int i = 0; i < kKeywordCount; i++) {
-    if (filename.find(keywords[i], start_pos) == filename.npos) {
-      return false;
-    }
-    start_pos += keywords[i].size() + 1;
+  // Try to get all files within log_directory.
+  DIR *dir;
+  struct dirent *ent;
+
+  // If log_directory doesn't end with a slash, append a slash to it.
+  if (log_directory.at(log_directory.size() - 1) != dir_delim_) {
+    log_directory += dir_delim_;
   }
-  return true;
+
+  if ((dir=opendir(log_directory.c_str()))) {
+    while ((ent=readdir(dir))) {
+      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
+        continue;
+      }
+      string filepath = log_directory + ent->d_name;
+      if (IsLogFromCurrentProject(filepath, base_filename) &&
+          IsLogLastModifiedOver(filepath, days)) {
+        overdue_log_names.push_back(filepath);
+      }
+    }
+    closedir(dir);
+  }
+
+  return overdue_log_names;
+}
+
+bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
+                                         const string& base_filename) const {
+  // We should remove duplicated delimiters from `base_filename`, e.g.,
+  // before: "/tmp//<program name>.<hostname>.<user name>.log.<severity level>"
+  // after:  "/tmp/<program name>.<hostname>.<user name>.log.<severity level>"
+  string cleaned_base_filename;
+
+  for (size_t i = 0; i < base_filename.size(); ++i) {
+    const char& c = base_filename[i];
+    if (cleaned_base_filename.empty()) {
+      cleaned_base_filename += c;
+    } else if (c != dir_delim_ ||
+        c != cleaned_base_filename.at(cleaned_base_filename.size() - 1)) {
+      cleaned_base_filename += c;
+    }
+  }
+
+  // If the filename of the given logfile starts with `cleaned_base_filename`,
+  // then this logfile is from current project.
+  return filepath.find(cleaned_base_filename) == 0;
 }
 
 bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
@@ -1280,40 +1329,6 @@ bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
 
   // If failed to get file stat, don't return true!
   return false;
-}
-
-vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days) const {
-  // The names of overdue logs.
-  vector<string> overdue_log_names;
-
-  // Try to get all files within log_directory.
-  DIR *dir;
-  struct dirent *ent;
-
-  char dir_delim = '/';
-#ifdef OS_WINDOWS
-  dir_delim = '\\';
-#endif
-
-  // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != dir_delim) {
-    log_directory += dir_delim;
-  }
-
-  if ((dir=opendir(log_directory.c_str()))) {
-    while ((ent=readdir(dir))) {
-      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
-        continue;
-      }
-      string filepath = log_directory + ent->d_name;
-      if (IsLogFromCurrentProject(ent->d_name) && IsLogLastModifiedOver(filepath, days)) {
-        overdue_log_names.push_back(filepath);
-      }
-    }
-    closedir(dir);
-  }
-
-  return overdue_log_names;
 }
 
 }  // namespace
