@@ -457,6 +457,29 @@ class LogFileObject : public base::Logger {
   bool CreateLogfile(const string& time_pid_string);
 };
 
+// Encapsulate all log cleaner related states
+class LogCleaner {
+ public:
+  LogCleaner();
+  virtual ~LogCleaner() {}
+
+  void Enable(int overdue_days);
+  void Disable();
+  void Run() const;
+
+  inline bool enabled() const { return enabled_; }
+
+ private:
+  bool IsLogFromCurrentProject(const string& filename) const;
+  bool IsLogLastModifiedOver(const string& filepath, int days) const;
+  vector<string> GetOverdueLogNames(string log_directory, int days) const;
+
+  bool enabled_;
+  int overdue_days_;
+};
+
+LogCleaner log_cleaner;
+
 }  // namespace
 
 class LogDestination {
@@ -841,86 +864,6 @@ void LogDestination::DeleteLogDestinations() {
 
 namespace {
 
-bool IsGlogLog(const string& filename) {
-  // Check if filename matches the pattern of a glog file:
-  // "<program name>.<hostname>.<user name>.log...".
-  const int kKeywordCount = 4;
-  std::string keywords[kKeywordCount] = {
-    glog_internal_namespace_::ProgramInvocationShortName(),
-    LogDestination::hostname(),
-    MyUserName(),
-    "log"
-  };
-
-  int start_pos = 0;
-  for (int i = 0; i < kKeywordCount; i++) {
-    if (filename.find(keywords[i], start_pos) == filename.npos) {
-      return false;
-    }
-    start_pos += keywords[i].size() + 1;
-  }
-  return true;
-}
-
-bool LastModifiedOver(const string& filepath, int days) {
-  // Try to get the last modified time of this file.
-  struct stat file_stat;
-
-  if (stat(filepath.c_str(), &file_stat) == 0) {
-    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
-    time_t last_modified_time = file_stat.st_mtime;
-    time_t current_time = time(NULL);
-    return difftime(current_time, last_modified_time) > days * 86400;
-  }
-
-  // If failed to get file stat, don't return true!
-  return false;
-}
-
-vector<string> GetOverdueLogNames(string log_directory, int days) {
-  // The names of overdue logs.
-  vector<string> overdue_log_names;
-
-  // Try to get all files within log_directory.
-  DIR *dir;
-  struct dirent *ent;
-
-  char dir_delim = '/';
-#ifdef OS_WINDOWS
-  dir_delim = '\\';
-#endif
-
-  // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != dir_delim) {
-    log_directory += dir_delim;
-  }
-
-  if ((dir=opendir(log_directory.c_str()))) {
-    while ((ent=readdir(dir))) {
-      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
-        continue;
-      }
-      string filepath = log_directory + ent->d_name;
-      if (IsGlogLog(ent->d_name) && LastModifiedOver(filepath, days)) {
-        overdue_log_names.push_back(filepath);
-      }
-    }
-    closedir(dir);
-  }
-
-  return overdue_log_names;
-}
-
-// Is log_cleaner enabled?
-// This option can be enabled by calling google::EnableLogCleaner(days)
-bool log_cleaner_enabled_;
-int log_cleaner_overdue_days_ = 7;
-
-} // namespace
-
-
-namespace {
-
 LogFileObject::LogFileObject(LogSeverity severity,
                              const char* base_filename)
   : base_filename_selected_(base_filename != NULL),
@@ -1269,16 +1212,108 @@ void LogFileObject::Write(bool force_flush,
     }
 #endif
     // Perform clean up for old logs
-    if (log_cleaner_enabled_) {
-      const vector<string>& dirs = GetLoggingDirectories();
-      for (size_t i = 0; i < dirs.size(); i++) {
-        vector<string> logs = GetOverdueLogNames(dirs[i], log_cleaner_overdue_days_);
-        for (size_t j = 0; j < logs.size(); j++) {
-          static_cast<void>(unlink(logs[j].c_str()));
-        }
-      }
+    if (log_cleaner.enabled()) {
+      log_cleaner.Run();
     }
   }
+}
+
+
+LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7) {}
+
+void LogCleaner::Enable(int overdue_days) {
+  // Setting overdue_days to 0 day should not be allowed!
+  // Since all logs will be deleted immediately, which will cause troubles.
+  assert(overdue_days > 0);
+
+  enabled_ = true;
+  overdue_days_ = overdue_days;
+}
+
+void LogCleaner::Disable() {
+  enabled_ = false;
+}
+
+void LogCleaner::Run() const {
+  assert(enabled_ && overdue_days_ > 0);
+
+  const vector<string>& dirs = GetLoggingDirectories();
+  for (size_t i = 0; i < dirs.size(); i++) {
+    vector<string> logs = GetOverdueLogNames(dirs[i], overdue_days_);
+    for (size_t j = 0; j < logs.size(); j++) {
+      static_cast<void>(unlink(logs[j].c_str()));
+    }
+  }
+}
+
+bool LogCleaner::IsLogFromCurrentProject(const string& filename) const {
+  // Check if filename matches the pattern of a glog file:
+  // "<program name>.<hostname>.<user name>.log...".
+  const int kKeywordCount = 4;
+  std::string keywords[kKeywordCount] = {
+    glog_internal_namespace_::ProgramInvocationShortName(),
+    LogDestination::hostname(),
+    MyUserName(),
+    "log"
+  };
+
+  int start_pos = 0;
+  for (int i = 0; i < kKeywordCount; i++) {
+    if (filename.find(keywords[i], start_pos) == filename.npos) {
+      return false;
+    }
+    start_pos += keywords[i].size() + 1;
+  }
+  return true;
+}
+
+bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
+  // Try to get the last modified time of this file.
+  struct stat file_stat;
+
+  if (stat(filepath.c_str(), &file_stat) == 0) {
+    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
+    time_t last_modified_time = file_stat.st_mtime;
+    time_t current_time = time(NULL);
+    return difftime(current_time, last_modified_time) > days * 86400;
+  }
+
+  // If failed to get file stat, don't return true!
+  return false;
+}
+
+vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days) const {
+  // The names of overdue logs.
+  vector<string> overdue_log_names;
+
+  // Try to get all files within log_directory.
+  DIR *dir;
+  struct dirent *ent;
+
+  char dir_delim = '/';
+#ifdef OS_WINDOWS
+  dir_delim = '\\';
+#endif
+
+  // If log_directory doesn't end with a slash, append a slash to it.
+  if (log_directory.at(log_directory.size() - 1) != dir_delim) {
+    log_directory += dir_delim;
+  }
+
+  if ((dir=opendir(log_directory.c_str()))) {
+    while ((ent=readdir(dir))) {
+      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
+        continue;
+      }
+      string filepath = log_directory + ent->d_name;
+      if (IsLogFromCurrentProject(ent->d_name) && IsLogLastModifiedOver(filepath, days)) {
+        overdue_log_names.push_back(filepath);
+      }
+    }
+    closedir(dir);
+  }
+
+  return overdue_log_names;
 }
 
 }  // namespace
@@ -2319,17 +2354,11 @@ void ShutdownGoogleLogging() {
 }
 
 void EnableLogCleaner(int overdue_days) {
-  log_cleaner_enabled_ = true;
-
-  // Setting overdue_days to 0 day should not be allowed!
-  // Since all logs will be deleted immediately, which will cause troubles.
-  if (overdue_days > 0) {
-    log_cleaner_overdue_days_ = overdue_days;
-  }
+  log_cleaner.Enable(overdue_days);
 }
 
 void DisableLogCleaner() {
-  log_cleaner_enabled_ = false;
+  log_cleaner.Disable();
 }
 
 _END_GOOGLE_NAMESPACE_
