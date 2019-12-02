@@ -495,7 +495,7 @@ class LogDestination {
 
  private:
   LogDestination(LogSeverity severity, const char* base_filename);
-  ~LogDestination() { }
+  ~LogDestination();
 
   // Take a log message of a particular severity and log it to stderr
   // iff it's of a high enough severity to deserve it.
@@ -580,6 +580,13 @@ LogDestination::LogDestination(LogSeverity severity,
                                const char* base_filename)
   : fileobject_(severity, base_filename),
     logger_(&fileobject_) {
+}
+
+LogDestination::~LogDestination() {
+  if (logger_ && logger_ != &fileobject_) {
+    // Delete user-specified logger set via SetLogger().
+    delete logger_;
+  }
 }
 
 inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
