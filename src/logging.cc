@@ -1297,12 +1297,13 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
 bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
                                          const string& base_filename) const {
   // We should remove duplicated delimiters from `base_filename`, e.g.,
-  // before: "/tmp//<program name>.<hostname>.<user name>.log.<severity level>"
-  // after:  "/tmp/<program name>.<hostname>.<user name>.log.<severity level>"
+  // before: "/tmp//<base_filename>.<create_time>.<pid>"
+  // after:  "/tmp/<base_filename>.<create_time>.<pid>"
   string cleaned_base_filename;
 
   for (size_t i = 0; i < base_filename.size(); ++i) {
     const char& c = base_filename[i];
+
     if (cleaned_base_filename.empty()) {
       cleaned_base_filename += c;
     } else if (c != dir_delim_ ||
@@ -1311,9 +1312,34 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
     }
   }
 
-  // If the filename of the given logfile starts with `cleaned_base_filename`,
-  // then this logfile is from current project.
-  return filepath.find(cleaned_base_filename) == 0;
+  // Return early if the filename doesn't start with `cleaned_base_filename`.
+  if (filepath.find(cleaned_base_filename) != 0) {
+    return false;
+  }
+
+  // The characters after `cleaned_base_filename` should match the format:
+  // YYYYMMDD-HHMMSS.pid
+  for (size_t i = cleaned_base_filename.size(); i < filepath.size(); i++) {
+    const char& c = filepath[i];
+
+    if (i <= cleaned_base_filename.size() + 7) { // 0 ~ 7 : YYYYMMDD
+      if (c < '0' || c > '9') { return false; }
+
+    } else if (i == cleaned_base_filename.size() + 8) { // 8: -
+      if (c != '-') { return false; }
+
+    } else if (i <= cleaned_base_filename.size() + 14) { // 9 ~ 14: HHMMSS
+      if (c < '0' || c > '9') { return false; }
+
+    } else if (i == cleaned_base_filename.size() + 15) { // 15: .
+      if (c != '.') { return false; }
+
+    } else if (i >= cleaned_base_filename.size() + 16) { // 16+: pid
+      if (c < '0' || c > '9') { return false; }
+    }
+  }
+
+  return true;
 }
 
 bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
