@@ -209,11 +209,11 @@ AC_DEFINE_UNQUOTED(TEST_SRC_DIR, "$srcdir", [location of source code])
 
 AC_ARG_ENABLE(unsymbolized-traces,
               AS_HELP_STRING([--enable-unsymbolized-traces],
-                             [Print raw pc values when symbolization is failed.]),
+                             [Print file offsets in traces instead of symbolizing.]),
               enable_unsymbolized_traces=yes)
 if test x"$enable_unsymbolized_traces" = x"yes"; then
   AC_DEFINE(PRINT_UNSYMBOLIZED_STACK_TRACES, 1,
-            [define if we should print raw pc values on symbolization failure.])
+            [define if we should print file offsets in traces instead of symbolizing.])
 fi
 
 # These are what's needed by logging.h.in and raw_logging.h.in
