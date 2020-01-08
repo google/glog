@@ -22,7 +22,7 @@ option (WITH_THREADS "Enable multithreading support" ON)
 option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
-  "Print raw pc values on symbolization failure" OFF)
+  "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_UNWIND "Enable libunwind support" ON)
 

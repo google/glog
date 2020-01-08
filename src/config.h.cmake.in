@@ -170,7 +170,7 @@
 /* How to access the PC from a struct ucontext */
 #cmakedefine PC_FROM_UCONTEXT
 
-/* define if we should print raw pc values on symbolization failure. */
+/* define if we should print file offsets in traces instead of symbolizing. */
 #cmakedefine PRINT_UNSYMBOLIZED_STACK_TRACES
 
 /* Define to necessary symbol if this constant uses a non-standard name on
