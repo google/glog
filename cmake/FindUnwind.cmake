@@ -74,5 +74,5 @@ if (Unwind_FOUND)
     set_property (TARGET unwind::unwind PROPERTY
       IMPORTED_CONFIGURATIONS RELEASE
     )
-  endif(NOT TARGET unwind::unwind)
+  endif (NOT TARGET unwind::unwind)
 endif (Unwind_FOUND)
