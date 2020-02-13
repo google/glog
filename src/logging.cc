@@ -1588,7 +1588,6 @@ void LogMessage::Init(const char* file,
     }
   }
 
-  stream().fill('0');
   data_->preserved_errno_ = errno;
   data_->severity_ = severity;
   data_->line_ = line;
@@ -1617,7 +1616,10 @@ void LogMessage::Init(const char* file,
     #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       if (custom_prefix_callback == NULL) {
     #endif
-          stream() << LogSeverityNames[severity][0]
+          std::ios saved_fmt(NULL);
+          saved_fmt.copyfmt(stream());
+          stream() << setfill('0')
+                   << LogSeverityNames[severity][0]
                    << setw(4) << 1900+data_->tm_time_.tm_year
                    << setw(2) << 1+data_->tm_time_.tm_mon
                    << setw(2) << data_->tm_time_.tm_mday
@@ -1631,6 +1633,7 @@ void LogMessage::Init(const char* file,
                    << static_cast<unsigned int>(GetTID()) << setfill('0')
                    << ' '
                    << data_->basename_ << ':' << data_->line_ << "] ";
+          stream().copyfmt(saved_fmt);
     #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       } else {
         custom_prefix_callback(

@@ -421,17 +421,21 @@ static inline bool IsLoggingPrefix(const string& s) {
 //     I20200102 030405 logging_unittest.cc:345] RAW: vlog -1
 //  => IYEARDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
 static inline string MungeLine(const string& line) {
-  std::istringstream iss(line);
   string before, logcode_date, time, thread_lineinfo;
-  iss >> logcode_date;
-  while (!IsLoggingPrefix(logcode_date)) {
-    before += " " + logcode_date;
-    if (!(iss >> logcode_date)) {
-      // We cannot find the header of log output.
-      return before;
+  std::size_t begin_of_logging_prefix = 0;
+  for ( ; begin_of_logging_prefix + 9 < line.size(); ++begin_of_logging_prefix) {
+    if (IsLoggingPrefix(line.substr(begin_of_logging_prefix, 9))) {
+      break;
     }
   }
-  if (!before.empty()) before += " ";
+  if (begin_of_logging_prefix > 0) {
+    if (begin_of_logging_prefix + 9 == line.size()) {
+      return line;
+    }
+    before = line.substr(0, begin_of_logging_prefix - 1);
+  }
+  std::istringstream iss(line.substr(begin_of_logging_prefix));
+  iss >> logcode_date;
   iss >> time;
   iss >> thread_lineinfo;
   CHECK(!thread_lineinfo.empty());

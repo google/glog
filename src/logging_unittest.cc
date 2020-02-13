@@ -295,10 +295,12 @@ void TestLogging(bool check_counts) {
     LOG(ERROR) << "inner";
   }
 
+  LOG(INFO) << "foo " << std::setw(10) << 1.0;
+
   LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << "no prefix";
 
   if (check_counts) {
-    CHECK_EQ(base_num_infos   + 14, LogMessage::num_messages(GLOG_INFO));
+    CHECK_EQ(base_num_infos   + 15, LogMessage::num_messages(GLOG_INFO));
     CHECK_EQ(base_num_warning + 3,  LogMessage::num_messages(GLOG_WARNING));
     CHECK_EQ(base_num_errors  + 17, LogMessage::num_messages(GLOG_ERROR));
   }
