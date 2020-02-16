@@ -48,6 +48,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-I%s/glog_internal" % gendir,
     ]
 
+    freebsd_only_copts = [
+        # Enable declaration of _Unwind_Backtrace
+        "-D_GNU_SOURCE",
+    ]
+
     darwin_only_copts = [
         # For stacktrace.
         "-DHAVE_DLADDR",
@@ -99,6 +104,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             select({
                 "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
                 "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
+                "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
                 "//conditions:default": common_copts + linux_or_darwin_copts,
             }),
         deps = [
