@@ -100,6 +100,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/stacktrace_generic-inl.h",
             "src/stacktrace_libunwind-inl.h",
             "src/stacktrace_powerpc-inl.h",
+            "src/stacktrace_aarch64-inl.h",
             "src/stacktrace_windows-inl.h",
             "src/stacktrace_x86-inl.h",
             "src/stacktrace_x86_64-inl.h",
