@@ -25,6 +25,7 @@ option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_UNWIND "Enable libunwind support" ON)
+option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
@@ -365,44 +366,46 @@ if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_H)
 
-if (WIN32 OR CYGWIN)
-  cmake_push_check_state (RESET)
-  set (CMAKE_REQUIRED_LIBRARIES DbgHelp)
+if (WITH_SYMBOLIZE)
+  if (WIN32 OR CYGWIN)
+    cmake_push_check_state (RESET)
+    set (CMAKE_REQUIRED_LIBRARIES DbgHelp)
 
-  check_cxx_source_runs ([=[
-  #include <windows.h>
-  #include <dbghelp.h>
-  #include <cstdlib>
+    check_cxx_source_runs ([=[
+    #include <windows.h>
+    #include <dbghelp.h>
+    #include <cstdlib>
 
-  void foobar() { }
+    void foobar() { }
 
-  int main()
-  {
-      HANDLE process = GetCurrentProcess();
+    int main()
+    {
+        HANDLE process = GetCurrentProcess();
 
-      if (!SymInitialize(process, NULL, TRUE))
-          return EXIT_FAILURE;
+        if (!SymInitialize(process, NULL, TRUE))
+            return EXIT_FAILURE;
 
-      char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
-      SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO *>(buf);
-      symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-      symbol->MaxNameLen = MAX_SYM_NAME;
+        char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+        SYMBOL_INFO *symbol = reinterpret_cast<SYMBOL_INFO *>(buf);
+        symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+        symbol->MaxNameLen = MAX_SYM_NAME;
 
-      void* const pc = reinterpret_cast<void*>(&foobar);
-      BOOL ret = SymFromAddr(process, reinterpret_cast<DWORD64>(pc), 0, symbol);
+        void* const pc = reinterpret_cast<void*>(&foobar);
+        BOOL ret = SymFromAddr(process, reinterpret_cast<DWORD64>(pc), 0, symbol);
 
-      return ret ? EXIT_SUCCESS : EXIT_FAILURE;
-  }
-  ]=] HAVE_SYMBOLIZE)
+        return ret ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+    ]=] HAVE_SYMBOLIZE)
 
   cmake_pop_check_state ()
 
-  if (HAVE_SYMBOLIZE)
-    set (HAVE_STACKTRACE 1)
-  endif (HAVE_SYMBOLIZE)
-elseif (UNIX OR (APPLE AND HAVE_DLADDR))
-  set (HAVE_SYMBOLIZE 1)
-endif (WIN32 OR CYGWIN)
+    if (HAVE_SYMBOLIZE)
+      set (HAVE_STACKTRACE 1)
+    endif (HAVE_SYMBOLIZE)
+  elseif (UNIX OR (APPLE AND HAVE_DLADDR))
+    set (HAVE_SYMBOLIZE 1)
+  endif (WIN32 OR CYGWIN)
+endif (WITH_SYMBOLIZE)
 
 check_cxx_source_compiles ("
 #include <cstdlib>
