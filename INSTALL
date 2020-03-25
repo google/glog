@@ -130,6 +130,22 @@ The simplest way to compile this package is:
   6. Often, you can also type `make uninstall' to remove the installed
      files again.
 
+
+Building glog - Using vcpkg
+===========================
+
+The url of vcpkg is: https://github.com/Microsoft/vcpkg
+You can download and install glog using the vcpkg dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install glog
+
+The glog port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please create an issue or pull request on the vcpkg repository.
+
+
 Compilers and Options
 =====================
 
