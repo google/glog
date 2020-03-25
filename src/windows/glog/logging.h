@@ -284,12 +284,13 @@ typedef unsigned __int64 uint64;
 //
 // Log lines have this form:
 //
-//     Lmmdd hh:mm:ss.uuuuuu threadid file:line] msg...
+//     Lyyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg...
 //
 // where the fields are defined as follows:
 //
 //   L                A single character, representing the log level
 //                    (eg 'I' for INFO)
+//   yyyy             The year
 //   mm               The month (zero padded; ie May is '05')
 //   dd               The day (zero padded)
 //   hh:mm:ss.uuuuuu  Time in hours, minutes and fractional seconds
