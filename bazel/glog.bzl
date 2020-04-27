@@ -25,7 +25,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_UNWIND_H",
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
-    linux_or_darwin_copts = [
+    default_copts = [
         # Disable warnings that exists in glog.
         "-Wno-sign-compare",
         "-Wno-unused-function",
@@ -38,7 +38,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # Allows src/logging.cc to determine the host name.
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
-        "-DHAVE_SYS_SYSCALL_H",
         "-DHAVE_SYS_TIME_H",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
@@ -48,26 +47,9 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-I%s/glog_internal" % gendir,
     ]
 
-    native.config_setting(
-        name = "wasm",
-        values = {"cpu": "wasm"},
-    )
-
-    wasm_copts = [
-        # Inject a C++ namespace.
-        "-DGOOGLE_NAMESPACE='%s'" % namespace,
-        # Allows src/base/mutex.h to include pthread.h.
-        "-DHAVE_PTHREAD",
-        # Allows src/logging.cc to determine the host name.
-        "-DHAVE_SYS_UTSNAME_H",
-        # For src/utilities.cc. We have time.h, but not syscall.h.
-        "-DHAVE_SYS_TIME_H",
-        # Enable dumping stacktrace upon sigaction.
-        "-DHAVE_SIGACTION",
-        # For logging.cc.
-        "-DHAVE_PREAD",
-        "-DHAVE___ATTRIBUTE__",
-        "-I%s/glog_internal" % gendir,
+    linux_or_darwin_copts = default_copts + [
+        # For src/utilities.cc.
+        "-DHAVE_SYS_SYSCALL_H",
     ]
 
     freebsd_only_copts = [
@@ -127,8 +109,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
                 "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
                 "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
-                ":wasm": common_copts + wasm_copts,
-                "//conditions:default": common_copts + linux_or_darwin_copts,
+                "//conditions:default": common_copts + default_copts,
             }),
         deps = [
             ":glog_headers",
