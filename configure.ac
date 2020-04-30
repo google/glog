@@ -8,6 +8,7 @@ AC_PREREQ(2.57)
 AC_INIT(glog, 0.4.0, opensource@google.com)
 # The argument here is just something that should be in the current directory
 # (for sanity checking)
+AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_SRCDIR(README.md)
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE
