@@ -23,7 +23,7 @@ if ENABLE_FRAME_POINTERS
 else
   # TODO(csilvers): check if -fomit-frame-pointer might be in $(CXXFLAGS),
   #                 before setting this.
-  AM_CXXFLAGS += -DNO_FRAME_POINTER
+  AM_CPPFLAGS += -DNO_FRAME_POINTER
 endif
 endif
 
@@ -43,8 +43,8 @@ noinst_HEADERS = src/glog/logging.h.in src/glog/raw_logging.h.in src/glog/vlog_i
 ## This is for HTML and other documentation you want to install.
 ## Add your documentation files (in doc/) in addition to these
 ## top-level boilerplate files.  Also add a TODO file if you have one.
-dist_doc_DATA = AUTHORS COPYING ChangeLog INSTALL README.md README.windows \
-                doc/designstyle.css doc/glog.html
+dist_doc_DATA = AUTHORS ChangeLog README.md
+dist_html_DATA = doc/designstyle.css doc/glog.html
 
 ## The libraries (.so's) you want to install
 lib_LTLIBRARIES =
@@ -225,7 +225,7 @@ WINDOWS_PROJECTS += vsprojects/logging_unittest_static/logging_unittest_static.v
 
 ## This should always include $(TESTS), but may also include other
 ## binaries that you compile but don't want automatically installed.
-noinst_PROGRAMS = $(TESTS) $(TEST_BINARIES)
+check_PROGRAMS = $(TESTS) $(TEST_BINARIES)
 
 rpm: dist-gzip packages/rpm.sh packages/rpm/rpm.spec
 	@cd packages && ./rpm.sh ${PACKAGE} ${VERSION}
@@ -242,14 +242,14 @@ libtool: $(LIBTOOL_DEPS)
 	$(SHELL) ./config.status --recheck
 
 EXTRA_DIST = packages/rpm.sh packages/rpm/rpm.spec \
-	packages/deb.sh packages/deb/* \
+	packages/deb.sh packages/deb \
 	$(SCRIPTS) src/logging_unittest.err src/demangle_unittest.txt \
 	src/windows/config.h src/windows/port.h src/windows/port.cc \
 	src/windows/preprocess.sh \
 	src/windows/glog/log_severity.h src/windows/glog/logging.h \
 	src/windows/glog/raw_logging.h src/windows/glog/stl_logging.h \
 	src/windows/glog/vlog_is_on.h \
-	$(WINDOWS_PROJECTS)
+	$(WINDOWS_PROJECTS) COPYING INSTALL README.windows
 
 CLEANFILES = core demangle.dm demangle.nm signalhandler.out* \
 	signalhandler_unittest.*.log.INFO.*

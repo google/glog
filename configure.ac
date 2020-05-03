@@ -10,8 +10,8 @@ AC_INIT(glog, 0.4.0, opensource@google.com)
 # (for sanity checking)
 AC_CONFIG_SRCDIR(README.md)
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE
-AM_CONFIG_HEADER(src/config.h)
+AM_INIT_AUTOMAKE([1.15 subdir-objects dist-bzip2 no-dist-gzip])
+AC_CONFIG_HEADERS([src/config.h])
 
 AC_LANG(C++)
 
@@ -21,7 +21,7 @@ AC_PROG_CPP
 AC_PROG_CXX
 AM_CONDITIONAL(GCC, test "$GCC" = yes)   # let the Makefile know if we're gcc
 
-AC_PROG_LIBTOOL
+LT_INIT
 AC_SUBST(LIBTOOL_DEPS)
 
 # Check whether some low-level functions/files are available
@@ -103,93 +103,105 @@ AX_C___SYNC_VAL_COMPARE_AND_SWAP
 
 # On x86_64, instead of libunwind, we can choose to compile with frame-pointers
 # (This isn't needed on i386, where -fno-omit-frame-pointer is the default).
-AC_ARG_ENABLE(frame_pointers,
-              AS_HELP_STRING([--enable-frame-pointers],
-                             [On x86_64 systems, compile with -fno-omit-frame-pointer (see INSTALL)]),,
-              enable_frame_pointers=no)
+AC_ARG_ENABLE([frame-pointers],
+	AS_HELP_STRING([--enable-frame-pointers],
+		[On x86_64 systems, compile with -fno-omit-frame-pointer (see INSTALL)]))
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(, [return __x86_64__ == 1 ? 0 : 1])],
                   [is_x86_64=yes], [is_x86_64=no])
-AM_CONDITIONAL(ENABLE_FRAME_POINTERS, test "$enable_frame_pointers" = yes)
-AM_CONDITIONAL(X86_64, test "$is_x86_64" = yes)
+AM_CONDITIONAL([ENABLE_FRAME_POINTERS], [test "x$enable_frame_pointers" = "xyes"])
+AM_CONDITIONAL([X86_64], [test "x$is_x86_64" = "xyes"])
 
-AC_ARG_ENABLE(rtti,
-              AS_HELP_STRING([--disable-rtti],
-                             [Disable RTTI in glog]))
-AM_CONDITIONAL(DISABLE_RTTI, test x"$enable_rtti" = x"no")
-if test x"$enable_rtti" = x"no"; then
-  AC_DEFINE(DISABLE_RTTI, 1, [define if glog doesn't use RTTI])
-fi
+AC_ARG_ENABLE([rtti],
+	AS_HELP_STRING([--disable-rtti], [Disable RTTI in glog]))
+AM_CONDITIONAL([DISABLE_RTTI], [test "x$enable_rtti" = "xno"])
+AS_IF([test "x$enable_rtti" = "xno"], [
+	AC_DEFINE([DISABLE_RTTI], [1], [define if glog doesn't use RTTI])
+])
 
-# Some of the code in this directory depends on pthreads
-ACX_PTHREAD
-if test x"$acx_pthread_ok" = x"yes"; then
-  # To make libglog depend on libpthread on Linux, we need to add
-  # -lpthread in addition to -pthread.
-  AC_CHECK_LIB(pthread, pthread_self)
-fi
+dnl Some of the code in this directory depends on pthreads
+AX_PTHREAD
+AS_IF([test "x$ax_pthread_ok" = "xyes"], [
+	dnl To make libglog depend on libpthread on Linux, we need to add
+	dnl -lpthread in addition to -pthread.
+	AC_CHECK_LIB([pthread], [pthread_self])
+])
 
-# Check if there is google-gflags library installed.
-SAVE_CFLAGS="$CFLAGS"
-SAVE_LIBS="$LIBS"
-AC_ARG_WITH(gflags, AS_HELP_STRING[--with-gflags=GFLAGS_DIR],
-  GFLAGS_CFLAGS="-I${with_gflags}/include"
-  GFLAGS_LIBS="-L${with_gflags}/lib -lgflags"
-  CFLAGS="$CFLAGS $GFLAGS_CFLAGS"
-  LIBS="$LIBS $GFLAGS_LIBS"
-)
-AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
-if test x"$ac_cv_have_libgflags" = x"1"; then
-  AC_DEFINE(HAVE_LIB_GFLAGS, 1, [define if you have google gflags library])
-  if test x"$GFLAGS_LIBS" = x""; then
-    GFLAGS_LIBS="-lgflags"
-  fi
-else
-  GFLAGS_CFLAGS=
-  GFLAGS_LIBS=
-fi
-CFLAGS="$SAVE_CFLAGS"
-LIBS="$SAVE_LIBS"
+dnl Check if there is google-gflags library installed.
+dnl Building against google-gflags library is enabled by default
+AC_ARG_ENABLE([gflags],
+	AS_HELP_STRING([--disable-gflags], [Disable building against google-gflags]))
 
-# TODO(hamaji): Use official m4 macros provided by testing libraries
-#               once the m4 macro of Google Mocking becomes ready.
-# Check if there is Google Test library installed.
-AC_CHECK_PROG(GTEST_CONFIG, gtest-config, "yes")
-AC_CHECK_LIB(gtest, main, have_gtest_lib="yes")
-if test x"$GTEST_CONFIG" = "xyes" -a x"$have_gtest_lib" = "xyes"; then
-  GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
-  GTEST_LIBS=`gtest-config --ldflags --libs`
-  AC_DEFINE(HAVE_LIB_GTEST, 1, [define if you have google gtest library])
+ac_cv_have_libgflags=0
+AS_IF([test "x$enable_gflags" != "xno"], [
+	SAVE_CFLAGS="$CFLAGS"
+	SAVE_LIBS="$LIBS"
+	AC_ARG_WITH([gflags], AS_HELP_STRING([--with-gflags=GFLAGS_DIR]),[
+		GFLAGS_CFLAGS="-I${with_gflags}/include"
+		GFLAGS_LIBS="-L${with_gflags}/lib -lgflags"
+		CFLAGS="$CFLAGS $GFLAGS_CFLAGS"
+		LIBS="$LIBS $GFLAGS_LIBS"
+	])
 
-  # Check if there is Google Mocking library installed.
-  AC_CHECK_PROG(GMOCK_CONFIG, gmock-config, "yes")
-  if test x"$GMOCK_CONFIG" = "xyes"; then
-    GMOCK_CFLAGS=`gmock-config --cppflags --cxxflags`
-    GMOCK_LIBS=`gmock-config --ldflags --libs`
-    AC_DEFINE(HAVE_LIB_GMOCK, 1, [define if you have google gmock library])
-  else
-    # We don't run test cases which use Google Mocking framework.
-    GMOCK_CFLAGS=
-    GMOCK_LIBS=
-  fi
-else
-  # We'll use src/googletest.h for our unittests.
-  GTEST_CFLAGS=
-  GTEST_LIBS=
-fi
-AM_CONDITIONAL(HAVE_GMOCK, test x"$GMOCK_CONFIG" = "xyes")
+	AC_CHECK_LIB(gflags, main, ac_cv_have_libgflags=1, ac_cv_have_libgflags=0)
+	CFLAGS="$SAVE_CFLAGS"
+	LIBS="$SAVE_LIBS"
+])
 
-# We want to link in libunwind if it exists
-UNWIND_LIBS=
-# Unfortunately, we need to check the header file in addition to the
-# lib file to check if libunwind is available since libunwind-0.98
-# doesn't install all necessary header files.
-if test x"$ac_cv_have_libunwind_h" = x"1"; then
- AC_CHECK_LIB(unwind, backtrace, UNWIND_LIBS=-lunwind)
-fi
-AC_SUBST(UNWIND_LIBS)
-if test x"$UNWIND_LIBS" != x""; then
-  AC_DEFINE(HAVE_LIB_UNWIND, 1, [define if you have libunwind])
-fi
+AS_IF([test "x$ac_cv_have_libgflags" = "x1"], [
+	AC_DEFINE([HAVE_LIB_GFLAGS], [1], [define if you have google gflags library])
+	AS_IF([test "x$GFLAGS_LIBS" = "x"], [
+		GFLAGS_LIBS="-lgflags"
+	])
+], [
+	GFLAGS_CFLAGS=
+	GFLAGS_LIBS=
+])
+
+dnl TODO(hamaji): Use official m4 macros provided by testing libraries
+dnl               once the m4 macro of Google Mocking becomes ready.
+dnl Check if there is Google Test library installed.
+dnl Building against Google Test library is enabled by default
+AC_ARG_ENABLE([gtest-config],
+	AS_HELP_STRING([--disable-gtest-config], [Disable building against Google Test library]))
+
+AS_IF([test "x$enable_gtest_config" != "xno"], [
+	AC_CHECK_PROG([GTEST_CONFIG], [gtest-config], [yes])
+	AC_CHECK_LIB([gtest], [main], [have_gtest_lib="yes"])
+], [
+	have_gtest_lib="no"
+])
+
+AS_IF([test "x$GTEST_CONFIG" = "xyes" -a "x$have_gtest_lib" = "xyes"], [
+	GTEST_CFLAGS=`gtest-config --cppflags --cxxflags`
+	GTEST_LIBS=`gtest-config --ldflags --libs`
+	AC_DEFINE([HAVE_LIB_GTEST], [1], [define if you have google gtest library])
+
+	dnl Check if there is Google Mocking library installed.
+	AC_CHECK_PROG([GMOCK_CONFIG], [gmock-config], [yes])
+	AS_IF([test "x$GMOCK_CONFIG" = "xyes"], [
+		GMOCK_CFLAGS=`gmock-config --cppflags --cxxflags`
+		GMOCK_LIBS=`gmock-config --ldflags --libs`
+		AC_DEFINE([HAVE_LIB_GMOCK], [1], [define if you have google gmock library])
+	], [
+		dnl We don't run test cases which use Google Mocking framework.
+		GMOCK_CFLAGS=
+		GMOCK_LIBS=
+	])
+], [
+	dnl We'll use src/googletest.h for our unittests.
+	GTEST_CFLAGS=
+	GTEST_LIBS=
+])
+AM_CONDITIONAL([HAVE_GMOCK], [test "x$GMOCK_CONFIG" = "xyes"])
+
+dnl Building against libunwind is enabled by default
+AC_ARG_ENABLE([unwind],
+	AS_HELP_STRING([--disable-unwind], [Disable building against libunwind]))
+
+AS_IF([test "x$enable_unwind" != "xno"], [
+	PKG_CHECK_MODULES([UNWIND], [libunwind > 0.98])
+	AC_DEFINE([HAVE_LIB_UNWIND], [1], [define if you have libunwind])
+])
 
 # We'd like to use read/write locks in several places in the code.
 # See if our pthreads support extends to that.  Note: for linux, it
