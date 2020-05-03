@@ -18,6 +18,12 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         gendir = "$(GENDIR)"
         src_windows = "src/windows"
 
+    # Config setting for WebAssembly target.
+    native.config_setting(
+        name = "wasm",
+        values = {"cpu": "wasm"},
+    )
+
     common_copts = [
         "-DGLOG_BAZEL_BUILD",
         "-DHAVE_STDINT_H",
@@ -25,7 +31,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_UNWIND_H",
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
-    default_copts = [
+    wasm_copts = [
         # Disable warnings that exists in glog.
         "-Wno-sign-compare",
         "-Wno-unused-function",
@@ -47,7 +53,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-I%s/glog_internal" % gendir,
     ]
 
-    linux_or_darwin_copts = default_copts + [
+    linux_or_darwin_copts = wasm_copts + [
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
     ]
@@ -109,7 +115,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
                 "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
                 "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
-                "//conditions:default": common_copts + default_copts,
+                ":wasm": common_copts + wasm_copts,
+                "//conditions:default": common_copts + linux_or_darwin_copts,
             }),
         deps = [
             ":glog_headers",
