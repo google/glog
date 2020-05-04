@@ -119,6 +119,50 @@ typedef unsigned __int64 uint64;
 
 @ac_google_end_namespace@
 
+#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+struct LogMessageTime {
+  explicit LogMessageTime (const struct::tm& time_struct_,
+                           const time_t& timestamp_, const int32_t& usecs_):
+      time_struct(time_struct_), ts(timestamp_), usecs(usecs_) {}
+
+  const time_t& timestamp() const { return ts; }
+  const int& sec() const { return time_struct.tm_sec; }
+  const int32_t& usec() const { return usecs; }
+  const int& min() const { return time_struct.tm_min; }
+  const int& hour() const { return time_struct.tm_hour; }
+  const int& day() const { return time_struct.tm_mday; }
+  const int& month() const { return time_struct.tm_mon; }
+  const int& year() const { return time_struct.tm_year; }
+  const int& dayOfWeek() const { return time_struct.tm_wday; }
+  const int& dayInYear() const { return time_struct.tm_yday; }
+  const int& dst() const { return time_struct.tm_isdst; }
+
+  private:
+    const struct::tm& time_struct;
+    const time_t& ts;
+    const int32_t& usecs;
+};
+
+struct LogMessageInfo {
+  explicit LogMessageInfo(const char* const severity_,
+                          const char* const filename_,
+                          const int& line_number_,
+                          const int& thread_id_,
+                          const LogMessageTime& time_):
+      severity(severity_), filename(filename_), line_number(line_number_),
+      thread_id(thread_id_), time(time_)
+  {}
+
+  const char* const severity;
+  const char* const filename;
+  const int &line_number;
+  const int &thread_id;
+  const LogMessageTime& time;
+};
+
+typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, void* data);
+#endif
+
 // The global value of GOOGLE_STRIP_LOG. All the messages logged to
 // LOG(XXX) with severity less than GOOGLE_STRIP_LOG will not be displayed.
 // If it can be determined at compile time that the message will not be
@@ -534,6 +578,12 @@ DECLARE_bool(log_utc_time);
 // Initialize google's logging library. You will see the program name
 // specified by argv0 in log outputs.
 GOOGLE_GLOG_DLL_DECL void InitGoogleLogging(const char* argv0);
+
+#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+GOOGLE_GLOG_DLL_DECL void InitGoogleLogging(const char* argv0,
+                                            CustomPrefixCallback prefix_callback,
+                                            void* prefix_callback_data = NULL);
+#endif
 
 // Shutdown google's logging library.
 GOOGLE_GLOG_DLL_DECL void ShutdownGoogleLogging();

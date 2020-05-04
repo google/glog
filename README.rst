@@ -200,7 +200,7 @@ glog defines a series of macros that simplify many common logging tasks.
 You can log messages by severity level, control logging behavior from
 the command line, log based on conditionals, abort the program when
 expected conditions are not met, introduce your own verbose logging
-levels, and more.
+levels, customize the prefix attached to log messages, and more.
 
 Following sections describe the functionality supported by glog. Please note
 this description may not be complete but limited to the most useful ones. If you
@@ -515,6 +515,51 @@ severity level.
       << "I’m printed on every 10th occurence of case when size is more "
          " than 1024, when you run the program with --v=1 or more. ";
          "Present occurence is " << google::COUNTER;
+
+
+Custom log prefix format
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+glog supports changing the format of the prefix attached to log messages by
+receiving a user-provided callback to be used to generate such strings.  That
+feature must be enabled at compile time by the ``WITH_CUSTOM_PREFIX`` flag.
+
+For each log entry, the callback will be invoked with a ``LogMessageInfo``
+struct containing the severity, filename, line number, thread ID, and time of
+the event. It will also be given a reference to the output stream, whose
+contents will be prepended to the actual message in the final log line.
+
+For example:
+
+   .. code:: cpp
+
+      /* This function writes a prefix that matches glog's default format.
+       * (The third parameter can be used to receive user-supplied data, and is
+       * NULL by default.)
+       */
+      void CustomPrefix(std::ostream &s, const LogMessageInfo &l, void*) {
+         s << l.severity[0]
+         << setw(4) << 1900 + l.time.year()
+         << setw(2) << 1 + l.time.month()
+         << setw(2) << l.time.day()
+         << ' '
+         << setw(2) << l.time.hour() << ':'
+         << setw(2) << l.time.min()  << ':'
+         << setw(2) << l.time.sec() << "."
+         << setw(6) << l.time.usec()
+         << ' '
+         << setfill(' ') << setw(5)
+         << l.thread_id << setfill('0')
+         << ' '
+         << l.filename << ':' << l.line_number << "]";
+      }
+
+
+To enable the use of ``CustomPrefix()``, simply give glog a pointer to it
+during initialization: ``InitGoogleLogging(argv[0], &CustomPrefix);``.
+
+Optionally, ``InitGoogleLogging()`` takes a third argument of type  ``void*``
+to pass on to the callback function.
 
 Failure Signal Handler
 ~~~~~~~~~~~~~~~~~~~~~~

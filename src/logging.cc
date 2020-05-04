@@ -409,6 +409,15 @@ static bool SendEmailInternal(const char*dest, const char *subject,
 base::Logger::~Logger() {
 }
 
+#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+namespace  {
+  // Optional user-configured callback to print custom prefixes.
+  CustomPrefixCallback custom_prefix_callback = NULL;
+  // User-provided data to pass to the callback:
+  void* custom_prefix_callback_data = NULL;
+}
+#endif
+
 namespace {
 
 // Encapsulates all file-system related state
@@ -1593,20 +1602,37 @@ void LogMessage::Init(const char* file,
   //    (log level, GMT year, month, date, time, thread_id, file basename, line)
   // We exclude the thread_id for the default thread.
   if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
-    stream() << LogSeverityNames[severity][0]
-             << setw(4) << 1900+data_->tm_time_.tm_year
-             << setw(2) << 1+data_->tm_time_.tm_mon
-             << setw(2) << data_->tm_time_.tm_mday
-             << ' '
-             << setw(2) << data_->tm_time_.tm_hour  << ':'
-             << setw(2) << data_->tm_time_.tm_min   << ':'
-             << setw(2) << data_->tm_time_.tm_sec   << "."
-             << setw(6) << data_->usecs_
-             << ' '
-             << setfill(' ') << setw(5)
-             << static_cast<unsigned int>(GetTID()) << setfill('0')
-             << ' '
-             << data_->basename_ << ':' << data_->line_ << "] ";
+    #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+      if (custom_prefix_callback == NULL) {
+    #endif
+          stream() << LogSeverityNames[severity][0]
+                   << setw(4) << 1900+data_->tm_time_.tm_year
+                   << setw(2) << 1+data_->tm_time_.tm_mon
+                   << setw(2) << data_->tm_time_.tm_mday
+                   << ' '
+                   << setw(2) << data_->tm_time_.tm_hour  << ':'
+                   << setw(2) << data_->tm_time_.tm_min   << ':'
+                   << setw(2) << data_->tm_time_.tm_sec   << "."
+                   << setw(6) << data_->usecs_
+                   << ' '
+                   << setfill(' ') << setw(5)
+                   << static_cast<unsigned int>(GetTID()) << setfill('0')
+                   << ' '
+                   << data_->basename_ << ':' << data_->line_ << "] ";
+    #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+      } else {
+        custom_prefix_callback(
+                stream(),
+                LogMessageInfo(LogSeverityNames[severity],
+                               data_->basename_, data_->line_, GetTID(),
+                               LogMessageTime(data_->tm_time_,
+                                              data_->timestamp_,
+                                              data_->usecs_)),
+                custom_prefix_callback_data
+                );
+        stream() << " ";
+      }
+    #endif
   }
   data_->num_prefix_chars_ = data_->stream_.pcount();
 
@@ -2509,6 +2535,16 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
 void InitGoogleLogging(const char* argv0) {
   glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
 }
+
+#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
+void InitGoogleLogging(const char* argv0,
+                       CustomPrefixCallback prefix_callback,
+                       void* prefix_callback_data) {
+  custom_prefix_callback = prefix_callback;
+  custom_prefix_callback_data = prefix_callback_data;
+  InitGoogleLogging(argv0);
+}
+#endif
 
 void ShutdownGoogleLogging() {
   glog_internal_namespace_::ShutdownGoogleLoggingUtilities();
