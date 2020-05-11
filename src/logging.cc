@@ -73,6 +73,10 @@
 # include "stacktrace.h"
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 using std::string;
 using std::vector;
 using std::setw;
@@ -500,7 +504,7 @@ class LogDestination {
   // Take a log message of a particular severity and log it to stderr
   // iff it's of a high enough severity to deserve it.
   static void MaybeLogToStderr(LogSeverity severity, const char* message,
-			       size_t len);
+			       size_t message_len, size_t prefix_len);
 
   // Take a log message of a particular severity and log it to email
   // iff it's of a high enough severity to deserve it.
@@ -735,12 +739,23 @@ static void WriteToStderr(const char* message, size_t len) {
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
-					     const char* message, size_t len) {
+					     const char* message, size_t message_len, size_t prefix_len) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
-    ColoredWriteToStderr(severity, message, len);
+    ColoredWriteToStderr(severity, message, message_len);
 #ifdef OS_WINDOWS
     // On Windows, also output to the debugger
-    ::OutputDebugStringA(string(message,len).c_str());
+    ::OutputDebugStringA(message);
+#elif defined(__ANDROID__)
+    // On Android, also output to logcat
+    const int android_log_levels[NUM_SEVERITIES] = {
+      ANDROID_LOG_INFO,
+      ANDROID_LOG_WARN,
+      ANDROID_LOG_ERROR,
+      ANDROID_LOG_FATAL,
+    };
+    __android_log_write(android_log_levels[severity],
+                        glog_internal_namespace_::ProgramInvocationShortName(),
+                        message + prefix_len);
 #endif
   }
 }
@@ -1597,7 +1612,8 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                      data_->num_chars_to_log_);
 
     LogDestination::MaybeLogToStderr(data_->severity_, data_->message_text_,
-                                     data_->num_chars_to_log_);
+                                     data_->num_chars_to_log_,
+                                     data_->num_prefix_chars_);
     LogDestination::MaybeLogToEmail(data_->severity_, data_->message_text_,
                                     data_->num_chars_to_log_);
     LogDestination::LogToSinks(data_->severity_,
