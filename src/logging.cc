@@ -1509,6 +1509,7 @@ void LogMessage::Flush() {
     original_final_char = data_->message_text_[data_->num_chars_to_log_];
     data_->message_text_[data_->num_chars_to_log_++] = '\n';
   }
+  data_->message_text_[data_->num_chars_to_log_] = '\0';
 
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // the actual logging action per se.
