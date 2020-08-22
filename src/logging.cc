@@ -73,6 +73,10 @@
 # include "stacktrace.h"
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 using std::string;
 using std::vector;
 using std::setw;
@@ -1485,6 +1489,23 @@ ostream& LogMessage::stream() {
   return data_->stream_;
 }
 
+namespace {
+#if defined(__ANDROID__)
+int AndroidLogLevel(const int severity) {
+  switch (severity) {
+    case 3:
+      return ANDROID_LOG_FATAL;
+    case 2:
+      return ANDROID_LOG_ERROR;
+    case 1:
+      return ANDROID_LOG_WARN;
+    default:
+      return ANDROID_LOG_INFO;
+  }
+}
+#endif  // defined(__ANDROID__)
+}  // namespace	
+
 // Flush buffered message, called by the destructor, or any other function
 // that needs to synchronize the log.
 void LogMessage::Flush() {
@@ -1518,7 +1539,13 @@ void LogMessage::Flush() {
     ++num_messages_[static_cast<int>(data_->severity_)];
   }
   LogDestination::WaitForSinks(data_);
-
+	
+#if defined(__ANDROID__)
+  const int level = AndroidLogLevel((int)data_->severity_);
+  const std::string text = std::string(data_->message_text_);
+  __android_log_write(level, "native", text.substr(0,data_->num_chars_to_log_).c_str());
+#endif  // !defined(__ANDROID__)
+	
   if (append_newline) {
     // Fix the ostrstream back how it was before we screwed with it.
     // It's 99.44% certain that we don't need to worry about doing this.
