@@ -54,6 +54,12 @@ struct tm* localtime_r(const time_t* timep, struct tm* result) {
   return result;
 }
 #endif // not HAVE_LOCALTIME_R
+#ifndef HAVE_GMTIME_R
+struct tm* gmtime_r(const time_t* timep, struct tm* result) {
+    gmtime_s(result, timep);
+    return result;
+}
+#endif // not HAVE_GMTIME_R
 #ifndef HAVE_SNPRINTF
 int snprintf(char *str, size_t size, const char *format, ...) {
   va_list ap;
