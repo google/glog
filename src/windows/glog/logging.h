@@ -1129,7 +1129,7 @@ class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
   }
 
   // This effectively ignores overflow.
-  virtual int_type overflow(int_type ch) {
+  int_type overflow(int_type ch) {
     return ch;
   }
 
