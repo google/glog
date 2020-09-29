@@ -857,11 +857,13 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                     int out_size) {
   Dl_info info;
   if (dladdr(pc, &info)) {
-    if ((int)strlen(info.dli_sname) < out_size) {
-      strcpy(out, info.dli_sname);
-      // Symbolization succeeded.  Now we try to demangle the symbol.
-      DemangleInplace(out, out_size);
-      return true;
+    if (info.dli_sname) {
+      if ((int)strlen(info.dli_sname) < out_size) {
+        strcpy(out, info.dli_sname);
+        // Symbolization succeeded.  Now we try to demangle the symbol.
+        DemangleInplace(out, out_size);
+        return true;
+      }
     }
   }
   return false;
