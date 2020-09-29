@@ -135,8 +135,9 @@ static void TestSTLLogging() {
     for (int i = 0; i < 100; i++) {
       v.push_back(i);
       if (i > 0) expected += ' ';
-      char buf[256];
-      sprintf(buf, "%d", i);
+      const size_t buf_size = 256;
+      char buf[buf_size];
+      snprintf(buf, buf_size, "%d", i);
       expected += buf;
     }
     v.push_back(100);
