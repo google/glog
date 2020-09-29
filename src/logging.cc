@@ -191,6 +191,9 @@ GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
 GLOG_DEFINE_string(log_backtrace_at, "",
                    "Emit a backtrace when logging at file:linenum.");
 
+GLOG_DEFINE_bool(log_utc_time, false,
+    "Use UTC time for logging.");
+
 // TODO(hamaji): consider windows
 #define PATH_SEPARATOR '/'
 
@@ -1162,7 +1165,10 @@ void LogFileObject::Write(bool force_flush,
     rollover_attempt_ = 0;
 
     struct ::tm tm_time;
-    localtime_r(&timestamp, &tm_time);
+    if (FLAGS_log_utc_time)
+        gmtime_r(&timestamp, &tm_time);
+    else
+        localtime_r(&timestamp, &tm_time);
 
     // The logfile's filename will have the date/time & pid in it
     ostringstream time_pid_stream;
@@ -1246,7 +1252,7 @@ void LogFileObject::Write(bool force_flush,
                        << ' '
                        << setw(2) << tm_time.tm_hour << ':'
                        << setw(2) << tm_time.tm_min << ':'
-                       << setw(2) << tm_time.tm_sec << '\n'
+                       << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
                        << "Running on machine: "
                        << LogDestination::hostname() << '\n';
 
@@ -1458,7 +1464,10 @@ void LogMessage::Init(const char* file,
   data_->outvec_ = NULL;
   WallTime now = WallTime_Now();
   data_->timestamp_ = static_cast<time_t>(now);
-  localtime_r(&data_->timestamp_, &data_->tm_time_);
+  if(FLAGS_log_utc_time)
+    gmtime_r(&data_->timestamp_, &data_->tm_time_);
+  else
+    localtime_r(&data_->timestamp_, &data_->tm_time_);
   data_->usecs_ = static_cast<int32>((now - data_->timestamp_) * 1000000);
 
   data_->num_chars_to_log_ = 0;
