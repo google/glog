@@ -529,7 +529,7 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureFunction(void (*fail_func)());
 // Enable/Disable old log cleaner.
 GOOGLE_GLOG_DLL_DECL void EnableLogCleaner(int overdue_days);
 GOOGLE_GLOG_DLL_DECL void DisableLogCleaner();
-
+GOOGLE_GLOG_DLL_DECL void SetApplicationFingerprint(const std::string& fingerprint);
 
 class LogSink;  // defined below
 
