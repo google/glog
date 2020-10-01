@@ -1438,7 +1438,7 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
                     const struct ::tm* tm_time,
-                    const char* message, size_t message_len, int32 usecs) {
+                    const char* message, size_t message_len, int32 /*usecs*/) {
     send(severity, full_filename, base_filename, line,
          tm_time, message, message_len);
   }
