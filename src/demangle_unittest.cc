@@ -31,15 +31,11 @@
 //
 // Unit tests for functions in demangle.c.
 
-#include "utilities.h"
-
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "glog/logging.h"
 #include "demangle.h"
 #include "googletest.h"
-#include "config.h"
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>

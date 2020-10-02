@@ -36,10 +36,10 @@
 #include <signal.h>
 #include <iostream>
 
-#include "glog/logging.h"
+#include <glog/logging.h>
 #include "symbolize.h"
 #include "googletest.h"
-#include "config.h"
+#include <config.h>
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>

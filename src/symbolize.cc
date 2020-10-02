@@ -131,8 +131,8 @@ _END_GOOGLE_NAMESPACE_
 #include <unistd.h>
 
 #include "symbolize.h"
-#include "config.h"
-#include "glog/raw_logging.h"
+#include <config.h>
+#include <glog/raw_logging.h>
 
 // Re-runs fn until it doesn't cause EINTR.
 #define NO_INTR(fn)   do {} while ((fn) < 0 && errno == EINTR)

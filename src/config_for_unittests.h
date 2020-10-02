@@ -55,7 +55,7 @@
 // which never defined GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS and always
 // define GOOGLE_GLOG_DLL_DECL to the empty string.
 
-#include "config.h"
+#include <config.h>
 
 #undef GOOGLE_GLOG_DLL_DECL
 #ifdef GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS

@@ -41,9 +41,9 @@
 #endif
 #include <fcntl.h>                 // for open()
 #include <time.h>
-#include "config.h"
-#include "glog/logging.h"          // To pick up flag settings etc.
-#include "glog/raw_logging.h"
+#include <config.h>
+#include <glog/logging.h>          // To pick up flag settings etc.
+#include <glog/raw_logging.h>
 #include "base/commandlineflags.h"
 
 #ifdef HAVE_STACKTRACE
