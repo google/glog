@@ -374,6 +374,8 @@ DECLARE_string(log_link);
 
 DECLARE_int32(v);  // in vlog_is_on.cc
 
+DECLARE_string(vmodule); // also in vlog_is_on.cc
+
 // Sets the maximum log file size (in MB).
 DECLARE_int32(max_log_size);
 
