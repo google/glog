@@ -62,15 +62,17 @@ find_package_handle_standard_args (Unwind REQUIRED_VARS Unwind_INCLUDE_DIR
   Unwind_LIBRARY Unwind_PLATFORM_LIBRARY VERSION_VAR Unwind_VERSION)
 
 if (Unwind_FOUND)
-  add_library (unwind::unwind INTERFACE IMPORTED)
+  if (NOT TARGET unwind::unwind)
+    add_library (unwind::unwind INTERFACE IMPORTED)
 
-  set_property (TARGET unwind::unwind PROPERTY
-    INTERFACE_INCLUDE_DIRECTORIES ${Unwind_INCLUDE_DIR}
-  )
-  set_property (TARGET unwind::unwind PROPERTY
-    INTERFACE_LINK_LIBRARIES ${Unwind_LIBRARY} ${Unwind_PLATFORM_LIBRARY}
-  )
-  set_property (TARGET unwind::unwind PROPERTY
-    IMPORTED_CONFIGURATIONS RELEASE
-  )
+    set_property (TARGET unwind::unwind PROPERTY
+      INTERFACE_INCLUDE_DIRECTORIES ${Unwind_INCLUDE_DIR}
+    )
+    set_property (TARGET unwind::unwind PROPERTY
+      INTERFACE_LINK_LIBRARIES ${Unwind_LIBRARY} ${Unwind_PLATFORM_LIBRARY}
+    )
+    set_property (TARGET unwind::unwind PROPERTY
+      IMPORTED_CONFIGURATIONS RELEASE
+    )
+  endif (NOT TARGET unwind::unwind)
 endif (Unwind_FOUND)

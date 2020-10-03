@@ -105,8 +105,6 @@ GOOGLE_GLOG_DLL_DECL bool SafeFNMatch_(const char* pattern,
 
 using glog_internal_namespace_::SafeFNMatch_;
 
-int32 kLogSiteUninitialized = 1000;
-
 // List of per-module log levels from FLAGS_vmodule.
 // Once created each element is never deleted/modified
 // except for the vlog_level: other threads will read VModuleInfo blobs

@@ -114,6 +114,7 @@ static void TestExtension();
 static void TestWrapper();
 static void TestErrno();
 static void TestTruncate();
+static void TestCustomLoggerDeletionOnShutdown();
 
 static int x = -1;
 static void BM_Check1(int n) {
@@ -241,8 +242,7 @@ int main(int argc, char **argv) {
   TestWrapper();
   TestErrno();
   TestTruncate();
-
-  ShutdownGoogleLogging();
+  TestCustomLoggerDeletionOnShutdown();
 
   fprintf(stdout, "PASS\n");
   return 0;
@@ -935,6 +935,39 @@ static void TestTruncate() {
 #endif
 
 #endif
+}
+
+struct RecordDeletionLogger : public base::Logger {
+  RecordDeletionLogger(bool* set_on_destruction,
+                       base::Logger* wrapped_logger) :
+      set_on_destruction_(set_on_destruction),
+      wrapped_logger_(wrapped_logger)
+  {
+    *set_on_destruction_ = false;
+  }
+  virtual ~RecordDeletionLogger() {
+    *set_on_destruction_ = true;
+  }
+  virtual void Write(bool force_flush,
+                     time_t timestamp,
+                     const char* message,
+                     int length) {
+    wrapped_logger_->Write(force_flush, timestamp, message, length);
+  }
+  virtual void Flush() { wrapped_logger_->Flush(); }
+  virtual uint32 LogSize() { return wrapped_logger_->LogSize(); }
+ private:
+  bool* set_on_destruction_;
+  base::Logger* wrapped_logger_;
+};
+
+static void TestCustomLoggerDeletionOnShutdown() {
+  bool custom_logger_deleted = false;
+  base::SetLogger(GLOG_INFO,
+                  new RecordDeletionLogger(&custom_logger_deleted,
+                                           base::GetLogger(GLOG_INFO)));
+  ShutdownGoogleLogging();
+  EXPECT_TRUE(custom_logger_deleted);
 }
 
 _START_GOOGLE_NAMESPACE_
