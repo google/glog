@@ -1,0 +1,29 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        steps:
+
+        - name: Checkout repository
+          uses: actions/checkout@v2
+
+        - name: Setup bazel
+          uses: jwlawson/actions-setup-bazel@v1
+          with:
+            bazel-version: '2.0.0'
+
+        - name: Setup cache
+          uses: actions/cache@v2
+          with:
+            path: "/home/runner/.cache/bazel"
+            key: bazel
+
+        - name: Build
+          run: bazel build //...
+
+        - name: Test
+          run: bazel test //...
