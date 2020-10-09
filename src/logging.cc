@@ -473,14 +473,22 @@ class LogCleaner {
 
   void Enable(int overdue_days);
   void Disable();
-  void Run(bool base_filename_selected, const string& base_filename) const;
+  void Run(bool base_filename_selected,
+           const string& base_filename,
+           const string& filename_extension) const;
 
   inline bool enabled() const { return enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(string log_directory, int days,
-                                    const string& base_filename) const;
-  bool IsLogFromCurrentProject(const string& filepath, const string& base_filename) const;
+  vector<string> GetOverdueLogNames(string log_directory,
+                                    int days,
+                                    const string& base_filename,
+                                    const string& filename_extension) const;
+
+  bool IsLogFromCurrentProject(const string& filepath,
+                               const string& base_filename,
+                               const string& filename_extension) const;
+
   bool IsLogLastModifiedOver(const string& filepath, int days) const;
  
   bool enabled_;
@@ -1272,12 +1280,15 @@ void LogFileObject::Write(bool force_flush,
       }
     }
 #endif
+
     // Perform clean up for old logs
     if (log_cleaner.enabled()) {
       if (base_filename_selected_ && base_filename_.empty()) {
         return;
       }
-      log_cleaner.Run(base_filename_selected_, base_filename_);
+      log_cleaner.Run(base_filename_selected_,
+                      base_filename_,
+                      filename_extension_);
     }
   }
 }
@@ -1302,7 +1313,9 @@ void LogCleaner::Disable() {
   enabled_ = false;
 }
 
-void LogCleaner::Run(bool base_filename_selected, const string& base_filename) const {
+void LogCleaner::Run(bool base_filename_selected,
+                     const string& base_filename,
+                     const string& filename_extension) const {
   assert(enabled_ && overdue_days_ > 0);
 
   vector<string> dirs;
@@ -1315,15 +1328,20 @@ void LogCleaner::Run(bool base_filename_selected, const string& base_filename) c
   }
 
   for (size_t i = 0; i < dirs.size(); i++) {
-    vector<string> logs = GetOverdueLogNames(dirs[i], overdue_days_, base_filename);
+    vector<string> logs = GetOverdueLogNames(dirs[i],
+                                             overdue_days_,
+                                             base_filename,
+                                             filename_extension);
     for (size_t j = 0; j < logs.size(); j++) {
       static_cast<void>(unlink(logs[j].c_str()));
     }
   }
 }
 
-vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
-                                              const string& base_filename) const {
+vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
+                                              int days,
+                                              const string& base_filename,
+                                              const string& filename_extension) const {
   // The names of overdue logs.
   vector<string> overdue_log_names;
 
@@ -1342,7 +1360,7 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
         continue;
       }
       string filepath = log_directory + ent->d_name;
-      if (IsLogFromCurrentProject(filepath, base_filename) &&
+      if (IsLogFromCurrentProject(filepath, base_filename, filename_extension) &&
           IsLogLastModifiedOver(filepath, days)) {
         overdue_log_names.push_back(filepath);
       }
@@ -1354,7 +1372,8 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
 }
 
 bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
-                                         const string& base_filename) const {
+                                         const string& base_filename,
+                                         const string& filename_extension) const {
   // We should remove duplicated delimiters from `base_filename`, e.g.,
   // before: "/tmp//<base_filename>.<create_time>.<pid>"
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
@@ -1374,6 +1393,16 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   // Return early if the filename doesn't start with `cleaned_base_filename`.
   if (filepath.find(cleaned_base_filename) != 0) {
     return false;
+  }
+
+  // Check if in the string `filename_extension` is right next to
+  // `cleaned_base_filename` in `filepath` if the user
+  // has set a custom filename extension.
+  if (!filename_extension.empty()) {
+    if (filepath.find(filename_extension) != cleaned_base_filename.size()) {
+      return false;
+    }
+    cleaned_base_filename += filename_extension;
   }
 
   // The characters after `cleaned_base_filename` should match the format:
