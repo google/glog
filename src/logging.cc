@@ -1672,7 +1672,7 @@ void LogMessage::Flush() {
   const int level = AndroidLogLevel((int)data_->severity_);
   const std::string text = std::string(data_->message_text_);
   __android_log_write(level, "native", text.substr(0,data_->num_chars_to_log_).c_str());
-#endif  // !defined(__ANDROID__)
+#endif  // defined(__ANDROID__)
 	
   if (append_newline) {
     // Fix the ostrstream back how it was before we screwed with it.
