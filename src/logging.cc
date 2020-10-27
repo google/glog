@@ -62,7 +62,9 @@
 #ifdef OS_WINDOWS
 #include "windows/dirent.h"
 #else
+#if !defined(OS_FREERTOS)
 #include <dirent.h> // for automatic removal of old logs
+#endif
 #endif
 #include "base/commandlineflags.h"        // to get the program name
 #include "glog/logging.h"
@@ -1329,6 +1331,7 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
   // The names of overdue logs.
   vector<string> overdue_log_names;
 
+#if !defined(OS_FREERTOS)
   // Try to get all files within log_directory.
   DIR *dir;
   struct dirent *ent;
@@ -1351,6 +1354,7 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory, int days,
     }
     closedir(dir);
   }
+  #endif
 
   return overdue_log_names;
 }
