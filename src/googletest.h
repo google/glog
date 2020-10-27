@@ -385,12 +385,12 @@ static inline string GetCapturedTestStderr() {
   return GetCapturedTestOutput(STDERR_FILENO);
 }
 
-// Check if the string is [IWEF](\d{4}|DATE)
+// Check if the string is [IWEF](\d{8}|YEARDATE)
 static inline bool IsLoggingPrefix(const string& s) {
-  if (s.size() != 5) return false;
+  if (s.size() != 9) return false;
   if (!strchr("IWEF", s[0])) return false;
-  for (int i = 1; i <= 4; ++i) {
-    if (!isdigit(s[i]) && s[i] != "DATE"[i-1]) return false;
+  for (int i = 1; i <= 8; ++i) {
+    if (!isdigit(s[i]) && s[i] != "YEARDATE"[i-1]) return false;
   }
   return true;
 }
@@ -398,8 +398,8 @@ static inline bool IsLoggingPrefix(const string& s) {
 // Convert log output into normalized form.
 //
 // Example:
-//     I0102 030405 logging_unittest.cc:345] RAW: vlog -1
-//  => IDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
+//     I20200102 030405 logging_unittest.cc:345] RAW: vlog -1
+//  => IYEARDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
 static inline string MungeLine(const string& line) {
   std::istringstream iss(line);
   string before, logcode_date, time, thread_lineinfo;
@@ -428,7 +428,7 @@ static inline string MungeLine(const string& line) {
   thread_lineinfo = thread_lineinfo.substr(0, index+1) + "LINE]";
   string rest;
   std::getline(iss, rest);
-  return (before + logcode_date[0] + "DATE TIME__ " + thread_lineinfo +
+  return (before + logcode_date[0] + "YEARDATE TIME__ " + thread_lineinfo +
           MungeLine(rest));
 }
 
@@ -448,10 +448,11 @@ static inline string Munge(const string& filename) {
   string result;
   while (fgets(buf, 4095, fp)) {
     string line = MungeLine(buf);
-    char null_str[256];
-    char ptr_str[256];
-    sprintf(null_str, "%p", static_cast<void*>(NULL));
-    sprintf(ptr_str, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
+    const size_t str_size = 256;
+    char null_str[str_size];
+    char ptr_str[str_size];
+    snprintf(null_str, str_size, "%p", static_cast<void*>(NULL));
+    snprintf(ptr_str, str_size, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
 
     StringReplace(&line, "__NULLP__", null_str);
     StringReplace(&line, "__PTRTEST__", ptr_str);
@@ -574,7 +575,12 @@ class Thread {
 
 static inline void SleepForMilliseconds(int t) {
 #ifndef OS_WINDOWS
+# if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+  const struct timespec req = {0, t * 1000 * 1000};
+  nanosleep(&req, NULL);
+# else
   usleep(t * 1000);
+# endif
 #else
   Sleep(t);
 #endif

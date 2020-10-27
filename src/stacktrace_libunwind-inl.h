@@ -49,7 +49,9 @@ _START_GOOGLE_NAMESPACE_
 // recursive request, we'd end up with infinite recursion or deadlock.
 // Luckily, it's safe to ignore those subsequent traces.  In such
 // cases, we return 0 to indicate the situation.
-static bool g_now_entering = false;
+// We can use the GCC __thread syntax here since libunwind is not supported on
+// Windows.
+static __thread bool g_tl_entered; // Initialized to false.
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
@@ -58,9 +60,10 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   unw_cursor_t cursor;
   unw_context_t uc;
 
-  if (sync_val_compare_and_swap(&g_now_entering, false, true)) {
+  if (g_tl_entered) {
     return 0;
   }
+  g_tl_entered = true;
 
   unw_getcontext(&uc);
   RAW_CHECK(unw_init_local(&cursor, &uc) >= 0, "unw_init_local failed");
@@ -80,7 +83,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
       break;
   }
 
-  g_now_entering = false;
+  g_tl_entered = false;
   return n;
 }
 

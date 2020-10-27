@@ -30,6 +30,21 @@
 #ifndef BASE_LOG_SEVERITY_H__
 #define BASE_LOG_SEVERITY_H__
 
+// The recommended semantics of the log levels are as follows:
+//
+// INFO:
+//   Use for state changes or other major events, or to aid debugging.
+// WARNING:
+//   Use for undesired but relatively expected events, which may indicate a
+//   problem
+// ERROR:
+//   Use for undesired and unexpected events that the program can recover from.
+//   All ERRORs should be actionable - it should be appropriate to file a bug
+//   whenever an ERROR occurs in production.
+// FATAL:
+//   Use for undesired and unexpected events that the program cannot recover
+//   from. 
+
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
 # if defined(_WIN32) && !defined(__CYGWIN__)

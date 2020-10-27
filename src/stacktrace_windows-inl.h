@@ -34,7 +34,7 @@
 #include "config.h"
 #include "port.h"
 #include "stacktrace.h"
-#include <DbgHelp.h>
+#include <dbghelp.h>
 
 _START_GOOGLE_NAMESPACE_
 

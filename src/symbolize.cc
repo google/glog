@@ -110,7 +110,9 @@ _END_GOOGLE_NAMESPACE_
 
 #if defined(__ELF__)
 
+#if defined(HAVE_DLFCN_H)
 #include <dlfcn.h>
+#endif
 #if defined(OS_OPENBSD)
 #include <sys/exec_elf.h>
 #else
@@ -310,6 +312,7 @@ FindSymbol(uint64_t pc, const int fd, char *out, int out_size,
         ssize_t len1 = ReadFromOffset(fd, out, out_size,
                                       strtab->sh_offset + symbol.st_name);
         if (len1 <= 0 || memchr(out, '\0', out_size) == NULL) {
+          memset(out, 0, out_size);
           return false;
         }
         return true;  // Obtained the symbol name.
@@ -372,7 +375,7 @@ struct FileDescriptor {
   explicit FileDescriptor(int fd) : fd_(fd) {}
   ~FileDescriptor() {
     if (fd_ >= 0) {
-      NO_INTR(close(fd_));
+      close(fd_);
     }
   }
   int get() { return fd_; }
@@ -781,9 +784,10 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                              out_size - 1);
   }
 
+  FileDescriptor wrapped_object_fd(object_fd);
+
 #if defined(PRINT_UNSYMBOLIZED_STACK_TRACES)
   {
-    FileDescriptor wrapped_object_fd(object_fd);
 #else
   // Check whether a file name was returned.
   if (object_fd < 0) {
@@ -802,7 +806,6 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
     // Failed to determine the object file containing PC.  Bail out.
     return false;
   }
-  FileDescriptor wrapped_object_fd(object_fd);
   int elf_type = FileGetElfType(wrapped_object_fd.get());
   if (elf_type == -1) {
     return false;
@@ -822,6 +825,17 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   }
   if (!GetSymbolFromObjectFile(wrapped_object_fd.get(), pc0,
                                out, out_size, base_address)) {
+    if (out[1] && !g_symbolize_callback) {
+      // The object file containing PC was opened successfully however the
+      // symbol was not found. The object may have been stripped. This is still
+      // considered success because the object file name and offset are known
+      // and tools like asan_symbolize.py can be used for the symbolization.
+      out[out_size - 1] = '\0';  // Making sure |out| is always null-terminated.
+      SafeAppendString("+0x", out, out_size);
+      SafeAppendHexNumber(pc0 - base_address, out, out_size);
+      SafeAppendString(")", out, out_size);
+      return true;
+    }
     return false;
   }
 
@@ -843,11 +857,13 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                     int out_size) {
   Dl_info info;
   if (dladdr(pc, &info)) {
-    if ((int)strlen(info.dli_sname) < out_size) {
-      strcpy(out, info.dli_sname);
-      // Symbolization succeeded.  Now we try to demangle the symbol.
-      DemangleInplace(out, out_size);
-      return true;
+    if (info.dli_sname) {
+      if ((int)strlen(info.dli_sname) < out_size) {
+        strcpy(out, info.dli_sname);
+        // Symbolization succeeded.  Now we try to demangle the symbol.
+        DemangleInplace(out, out_size);
+        return true;
+      }
     }
   }
   return false;

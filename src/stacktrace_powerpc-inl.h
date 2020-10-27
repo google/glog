@@ -114,7 +114,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 #elif defined(__APPLE__) || ((defined(__linux) || defined(__linux__)) && defined(__PPC64__))
       // This check is in case the compiler doesn't define _CALL_AIX/etc.
       result[n++] = *(sp+2);
-#elif defined(__linux)
+#elif defined(__linux) || defined(__OpenBSD__)
       // This check is in case the compiler doesn't define _CALL_SYSV.
       result[n++] = *(sp+1);
 #else

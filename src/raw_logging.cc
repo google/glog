@@ -114,7 +114,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   int size = sizeof(buffer);
 
   // NOTE: this format should match the specification in base/logging.h
-  DoRawLog(&buf, &size, "%c0000 00:00:00.000000 %5u %s:%d] RAW: ",
+  DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %5u %s:%d] RAW: ",
            LogSeverityNames[severity][0],
            static_cast<unsigned int>(GetTID()),
            const_basename(const_cast<char *>(file)), line);
