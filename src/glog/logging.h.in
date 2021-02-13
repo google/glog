@@ -905,8 +905,41 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
+#if defined(__has_feature)
+#define _GLOG_HAS_FEATURE(...) __has_feature(__VA_ARGS__)
+#else
+#define _GLOG_HAS_FEATURE(...) 0
+#endif
+
+#if _GLOG_HAS_FEATURE(thread_sanitizer) || __SANITIZE_THREAD__
+#define _GLOG_SANITIZE_THREAD 1
+#endif
+
+#if defined(_GLOG_SANITIZE_THREAD)
+#define _GLOG_IFDEF_THREAD_SANITIZER(X) X
+#else
+#define _GLOG_IFDEF_THREAD_SANITIZER(X)
+#endif
+
+#if defined(_GLOG_SANITIZE_THREAD)
+} // namespace google
+
+// We need to identify the static variables as "benign" races
+// to avoid noisy reports from TSAN.
+extern "C" void AnnotateBenignRaceSized(
+  const char *file,
+  int line,
+  const volatile void *mem,
+  long size,
+  const char *description);
+
+namespace google {
+#endif
+
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
@@ -916,6 +949,8 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (condition && \
       ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
@@ -925,6 +960,8 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
@@ -934,6 +971,7 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
   static int LOG_OCCURRENCES = 0; \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   if (LOG_OCCURRENCES <= n) \
     ++LOG_OCCURRENCES; \
   if (LOG_OCCURRENCES <= n) \
