@@ -107,7 +107,10 @@ static void TestSTLLogging() {
     hs.insert(30);
     ostringstream ss;
     ss << hs;
-    EXPECT_EQ(ss.str(), "10 20 30");
+    EXPECT_EQ(ss.str().size(), 8);
+    EXPECT_TRUE(ss.str().find("10") != string::npos);
+    EXPECT_TRUE(ss.str().find("20") != string::npos);
+    EXPECT_TRUE(ss.str().find("30") != string::npos);
     hash_set<int> copied_hs(hs);
     CHECK_EQ(hs, copied_hs);  // This must compile.
   }
@@ -122,7 +125,10 @@ static void TestSTLLogging() {
     hm[30] = "thirty";
     ostringstream ss;
     ss << hm;
-    EXPECT_EQ(ss.str(), "(10, ten) (20, twenty) (30, thirty)");
+    EXPECT_EQ(ss.str().size(), 35);
+    EXPECT_TRUE(ss.str().find("(10, ten)") != string::npos);
+    EXPECT_TRUE(ss.str().find("(20, twenty)") != string::npos);
+    EXPECT_TRUE(ss.str().find("(30, thirty)") != string::npos);
     hash_map<int, string> copied_hm(hm);
     CHECK_EQ(hm, copied_hm);  // this must compile
   }
@@ -171,7 +177,10 @@ static void TestSTLLogging() {
     hs.insert(30);
     ostringstream ss;
     ss << hs;
-    EXPECT_EQ(ss.str(), "10 20 30");
+    EXPECT_EQ(ss.str().size(), 8);
+    EXPECT_TRUE(ss.str().find("10") != string::npos);
+    EXPECT_TRUE(ss.str().find("20") != string::npos);
+    EXPECT_TRUE(ss.str().find("30") != string::npos);
     hash_set<int, user_hash> copied_hs(hs);
     CHECK_EQ(hs, copied_hs);  // This must compile.
   }
