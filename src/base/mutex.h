@@ -1,10 +1,10 @@
 // Copyright (c) 2007, Google Inc.
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //     * Redistributions in binary form must reproduce the above
@@ -14,7 +14,7 @@
 //     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -26,7 +26,7 @@
 // THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 // ---
 // Author: Craig Silverstein.
 //
@@ -106,7 +106,7 @@
 
 #if defined(NO_THREADS)
   typedef int MutexType;      // to keep a lock-count
-#elif defined(_WIN32) || defined(__CYGWIN32__) || defined(__CYGWIN64__)
+#elif defined(_WIN32) || defined(__CYGWIN__)
 # ifndef WIN32_LEAN_AND_MEAN
 #  define WIN32_LEAN_AND_MEAN  // We only need minimal includes
 # endif
@@ -223,7 +223,7 @@ bool Mutex::TryLock()      { if (mutex_) return false; Lock(); return true; }
 void Mutex::ReaderLock()   { assert(++mutex_ > 0); }
 void Mutex::ReaderUnlock() { assert(mutex_-- > 0); }
 
-#elif defined(_WIN32) || defined(__CYGWIN32__) || defined(__CYGWIN64__)
+#elif defined(_WIN32) || defined(__CYGWIN__)
 
 Mutex::Mutex()             { InitializeCriticalSection(&mutex_); SetIsSafe(); }
 Mutex::~Mutex()            { DeleteCriticalSection(&mutex_); }
