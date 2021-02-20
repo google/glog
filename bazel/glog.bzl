@@ -56,6 +56,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     linux_or_darwin_copts = wasm_copts + [
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
+        # For src/logging.cc to create symlinks.
+        "-DHAVE_UNISTD_H",
     ]
 
     freebsd_only_copts = [
