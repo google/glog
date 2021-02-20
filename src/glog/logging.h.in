@@ -286,12 +286,13 @@ typedef unsigned __int64 uint64;
 //
 // Log lines have this form:
 //
-//     Lmmdd hh:mm:ss.uuuuuu threadid file:line] msg...
+//     Lyyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg...
 //
 // where the fields are defined as follows:
 //
 //   L                A single character, representing the log level
 //                    (eg 'I' for INFO)
+//   yyyy             The year
 //   mm               The month (zero padded; ie May is '05')
 //   dd               The day (zero padded)
 //   hh:mm:ss.uuuuuu  Time in hours, minutes and fractional seconds
@@ -336,6 +337,9 @@ typedef unsigned __int64 uint64;
   using fLS::FLAGS_##name
 #endif
 
+// Set whether appending a timestamp to the log file name
+DECLARE_bool(timestamp_in_logfile_name);
+
 // Set whether log messages go to stderr instead of logfiles
 DECLARE_bool(logtostderr);
 
@@ -376,11 +380,16 @@ DECLARE_string(log_link);
 
 DECLARE_int32(v);  // in vlog_is_on.cc
 
+DECLARE_string(vmodule); // also in vlog_is_on.cc
+
 // Sets the maximum log file size (in MB).
 DECLARE_int32(max_log_size);
 
 // Sets whether to avoid logging to the disk if the disk is full.
 DECLARE_bool(stop_logging_if_full_disk);
+
+// Use UTC time for logging
+DECLARE_bool(log_utc_time);
 
 #ifdef MUST_UNDEF_GFLAGS_DECLARE_MACROS
 #undef MUST_UNDEF_GFLAGS_DECLARE_MACROS
@@ -531,7 +540,7 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureFunction(void (*fail_func)());
 // Enable/Disable old log cleaner.
 GOOGLE_GLOG_DLL_DECL void EnableLogCleaner(int overdue_days);
 GOOGLE_GLOG_DLL_DECL void DisableLogCleaner();
-
+GOOGLE_GLOG_DLL_DECL void SetApplicationFingerprint(const std::string& fingerprint);
 
 class LogSink;  // defined below
 
@@ -902,9 +911,43 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
+
+#if defined(__has_feature)
+#define _GLOG_HAS_FEATURE(...) __has_feature(__VA_ARGS__)
+#else
+#define _GLOG_HAS_FEATURE(...) 0
+#endif
+
+#if _GLOG_HAS_FEATURE(thread_sanitizer) || __SANITIZE_THREAD__
+#define _GLOG_SANITIZE_THREAD 1
+#endif
+
+#if defined(_GLOG_SANITIZE_THREAD)
+#define _GLOG_IFDEF_THREAD_SANITIZER(X) X
+#else
+#define _GLOG_IFDEF_THREAD_SANITIZER(X)
+#endif
+
+#if defined(_GLOG_SANITIZE_THREAD)
+} // namespace google
+
+// We need to identify the static variables as "benign" races
+// to avoid noisy reports from TSAN.
+extern "C" void AnnotateBenignRaceSized(
+  const char *file,
+  int line,
+  const volatile void *mem,
+  long size,
+  const char *description);
+
+namespace google {
+#endif
+
 #ifdef HAVE_CXX11_ATOMIC
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
@@ -914,6 +957,8 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (condition && \
       ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
@@ -923,6 +968,8 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
   if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
   if (LOG_OCCURRENCES_MOD_N == 1) \
@@ -932,6 +979,7 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0); \
+  _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   if (LOG_OCCURRENCES <= n) \
     ++LOG_OCCURRENCES; \
   if (LOG_OCCURRENCES <= n) \
@@ -1216,7 +1264,7 @@ class GOOGLE_GLOG_DLL_DECL LogStreamBuf : public std::streambuf {
   }
 
   // This effectively ignores overflow.
-  virtual int_type overflow(int_type ch) {
+  int_type overflow(int_type ch) {
     return ch;
   }
 
@@ -1523,7 +1571,7 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
                     const struct ::tm* tm_time,
-                    const char* message, size_t message_len, int32 usecs) {
+                    const char* message, size_t message_len, int32 /*usecs*/) {
     send(severity, full_filename, base_filename, line,
          tm_time, message, message_len);
   }
