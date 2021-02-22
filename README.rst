@@ -7,6 +7,19 @@ The Google Logging Library (glog) implements application-level logging.
 The library provides logging APIs based on C++-style streams and various
 helper macros.
 
+.. role:: cmake(code)
+   :language: cmake
+
+.. role:: cmd(code)
+   :language: bash
+
+.. role:: cpp(code)
+   :language: cpp
+
+.. role:: bazel(code)
+   :language: starlark
+
+
 Getting Started
 ---------------
 
@@ -45,7 +58,7 @@ To use glog within a project which uses the
 `Bazel <https://bazel.build/>`__ build tool, add the following lines to
 your ``WORKSPACE`` file:
 
-.. code:: starlark
+.. code:: bazel
 
    load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -63,11 +76,11 @@ your ``WORKSPACE`` file:
        urls = ["https://github.com/google/glog/archive/d516278b1cd33cd148e8989aec488b6049a4ca0b.zip"],
    )
 
-You can then add ``@com_github_google_glog//:glog`` to the deps section of a
-``cc_binary`` or ``cc_library`` rule, and ``#include <glog/logging.h>`` to
-include it in your source code. Here’s a simple example:
+You can then add :bazel:`@com_github_google_glog//:glog` to the deps section
+of a :bazel:`cc_binary` or :bazel:`cc_library` rule, and :code:`#include
+<glog/logging.h>` to include it in your source code. Here’s a simple example:
 
-.. code:: starlark
+.. code:: bazel
 
    cc_binary(
        name = "main",
@@ -98,16 +111,20 @@ GNU Make as build tool, the typical workflow is:
 
   .. code:: bash
 
-     git clone git@github.com:google/glog.git
+     git clone https://github.com/google/glog.git
      cd glog
 
 2. Run CMake to configure the build tree.
 
   .. code:: bash
 
-     cmake -H. -Bbuild -G "Unix Makefiles"
+     cmake -H . -B build -G "Unix Makefiles"
 
-  Note: to get the list of available generators (e.g., Visual Studio), use ``-G ""``
+  CMake provides different generators, and by default will pick the most
+  relevant one to your environment. If you need a specific version of Visual
+  Studio, use :cmd:`cmake . -G <generator-name>`, and see :cmd:`cmake --help`
+  for the available generators. Also see :cmd:`-T <toolset-name>`, which can
+  be used to request the native x64 toolchain with :cmd:`-T host=x64`.
 
 3. Afterwards, generated files can be used to compile the project.
 
@@ -131,7 +148,7 @@ Consuming glog in a CMake Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you have glog installed in your system, you can use the CMake command
-``find_package`` to build against glog in your CMake Project as follows:
+:cmake:`find_package` to build against glog in your CMake Project as follows:
 
 .. code:: cmake
 
@@ -149,11 +166,11 @@ target as needed.
 Incorporating glog into a CMake Project
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can also use the CMake command ``add_subdirectory`` to include glog
+You can also use the CMake command :cmake:`add_subdirectory` to include glog
 directly from a subdirectory of your project by replacing the
-``find_package`` call from the previous example by ``add_subdirectory``.
-The ``glog::glog`` target is in this case an ``ALIAS`` library target
-for the ``glog`` library target.
+:cmake:`find_package` call from the previous example by
+:cmake:`add_subdirectory`. The :cmake:`glog::glog` target is in this case an
+:cmake:`ALIAS` library target for the ``glog`` library target.
 
 Again, compile definitions and options will be added automatically to
 your target as needed.
@@ -161,8 +178,8 @@ your target as needed.
 vcpkg
 ~~~~~
 
-The url of vcpkg is: https://github.com/Microsoft/vcpkg You can download
-and install glog using the vcpkg dependency manager:
+You can download and install glog using the `vcpkg
+<https://github.com/Microsoft/vcpkg>`__ dependency manager:
 
 .. code:: bash
 
@@ -185,10 +202,10 @@ the command line, log based on conditionals, abort the program when
 expected conditions are not met, introduce your own verbose logging
 levels, and more.
 
-Following sections describe the functionality supported by glog. Please
-note this description may not be complete but limited to the most useful
-ones. If you want to find less common features, please check header
-files under ``src/glog`` directory.
+Following sections describe the functionality supported by glog. Please note
+this description may not be complete but limited to the most useful ones. If you
+want to find less common features, please check header files under `src/glog
+<src/glog>`__ directory.
 
 Severity Levels
 ~~~~~~~~~~~~~~~
@@ -215,13 +232,11 @@ By default, glog copies the log messages of severity level ``ERROR`` or
 Setting Flags
 ~~~~~~~~~~~~~
 
-Several flags influence glog’s output behavior. If the `Google gflags
-library <https://github.com/gflags/gflags>`__ is installed on your
-machine, the ``configure`` script (see the INSTALL file in the package
-for detail of this script) will automatically detect and use it,
-allowing you to pass flags on the command line. For example, if you want
-to turn the flag ``--logtostderr`` on, you can start your application
-with the following command line:
+Several flags influence glog’s output behavior. If the `Google gflags library
+<https://github.com/gflags/gflags>`__ is installed on your machine, the build
+system will automatically detect and use it, allowing you to pass flags on the
+command line. For example, if you want to turn the flag :cmd:`--logtostderr` on,
+you can start your application with the following command line:
 
 .. code:: bash
 
@@ -258,7 +273,7 @@ The following flags are most commonly used:
 
 ``v`` (``int``, default=0)
    Show all ``VLOG(m)`` messages for ``m`` less or equal the value of
-   this flag. Overridable by ``--vmodule``. See `the section about
+   this flag. Overridable by :cmd:`--vmodule`. See `the section about
    verbose logging <#verbose>`__ for more detail.
 
 ``vmodule`` (``string``, default="")
@@ -266,7 +281,7 @@ The following flags are most commonly used:
    comma-separated list of <module name>=<log level>. <module name> is a
    glob pattern (e.g., ``gfs*`` for all modules whose name starts with
    "gfs"), matched against the filename base (that is, name ignoring
-   .cc/.h./-inl.h). <log level> overrides any value given by ``--v``.
+   .cc/.h./-inl.h). <log level> overrides any value given by :cmd:`--v`.
    See also `the section about verbose logging <#verbose>`__.
 
 There are some other flags defined in logging.cc. Please grep the source
@@ -276,7 +291,7 @@ You can also modify flag values in your program by modifying global
 variables ``FLAGS_*`` . Most settings start working immediately after
 you update ``FLAGS_*`` . The exceptions are the flags related to
 destination files. For example, you might want to set ``FLAGS_log_dir``
-before calling ``google::InitGoogleLogging`` . Here is an example:
+before calling :cpp:`google::InitGoogleLogging` . Here is an example:
 
 .. code:: cpp
 
@@ -367,7 +382,7 @@ There are various helper macros for equality/inequality checks -
 ``CHECK_EQ``, ``CHECK_NE``, ``CHECK_LE``, ``CHECK_LT``, ``CHECK_GE``,
 and ``CHECK_GT``. They compare two values, and log a ``FATAL`` message
 including the two values when the result is not as expected. The values
-must have ``operator<<(ostream, ...)`` defined.
+must have :cpp:`operator<<(ostream, ...)` defined.
 
 You may append to the error message like so:
 
@@ -385,9 +400,9 @@ for example:
 
    CHECK_EQ(string("abc")[1], ’b’);
 
-The compiler reports an error if one of the arguments is a pointer and
-the other is ``NULL``. To work around this, simply ``static_cast``
-``NULL`` to the type of the desired pointer.
+The compiler reports an error if one of the arguments is a pointer and the other
+is :cpp:`NULL`. To work around this, simply :cpp:`static_cast` :cpp:`NULL` to
+the type of the desired pointer.
 
 .. code:: cpp
 
@@ -414,17 +429,17 @@ Note that you cannot use this macro as a C++ stream due to this feature.
 Please use ``CHECK_EQ`` described above to log a custom message before
 aborting the application.
 
-If you are comparing C strings (``char *``), a handy set of macros
-performs case sensitive as well as case insensitive comparisons -
-``CHECK_STREQ``, ``CHECK_STRNE``, ``CHECK_STRCASEEQ``, and
-``CHECK_STRCASENE``. The CASE versions are case-insensitive. You can
-safely pass ``NULL`` pointers for this macro. They treat ``NULL`` and
-any non-``NULL`` string as not equal. Two ``NULL``\ s are equal.
+If you are comparing C strings (:cpp:`char *`), a handy set of macros performs
+case sensitive as well as case insensitive comparisons - ``CHECK_STREQ``,
+``CHECK_STRNE``, ``CHECK_STRCASEEQ``, and ``CHECK_STRCASENE``. The CASE versions
+are case-insensitive. You can safely pass :cpp:`NULL` pointers for this macro. They
+treat :cpp:`NULL` and any non-:cpp:`NULL` string as not equal. Two :cpp:`NULL`\
+s are equal.
 
 Note that both arguments may be temporary strings which are destructed
 at the end of the current "full expression" (e.g.,
-``CHECK_STREQ(Foo().c_str(), Bar().c_str())`` where ``Foo`` and ``Bar``
-return C++’s ``std::string``).
+:cpp:`CHECK_STREQ(Foo().c_str(), Bar().c_str())` where ``Foo`` and ``Bar``
+return C++’s :cpp:`std::string`).
 
 The ``CHECK_DOUBLE_EQ`` macro checks the equality of two floating point
 values, accepting a small error margin. ``CHECK_NEAR`` accepts a third
@@ -433,27 +448,26 @@ floating point argument, which specifies the acceptable error margin.
 Verbose Logging
 ~~~~~~~~~~~~~~~
 
-When you are chasing difficult bugs, thorough log messages are very
-useful. However, you may want to ignore too verbose messages in usual
-development. For such verbose logging, glog provides the ``VLOG`` macro,
-which allows you to define your own numeric logging levels. The ``--v``
-command line option controls which verbose messages are logged:
+When you are chasing difficult bugs, thorough log messages are very useful.
+However, you may want to ignore too verbose messages in usual development. For
+such verbose logging, glog provides the ``VLOG`` macro, which allows you to
+define your own numeric logging levels. The :cmd:`--v` command line option
+controls which verbose messages are logged:
 
 .. code:: cpp
 
    VLOG(1) << "I’m printed when you run the program with --v=1 or higher";
    VLOG(2) << "I’m printed when you run the program with --v=2 or higher";
 
-With ``VLOG``, the lower the verbose level, the more likely messages are
-to be logged. For example, if ``--v==1``, ``VLOG(1)`` will log, but
-``VLOG(2)`` will not log. This is opposite of the severity level, where
-``INFO`` is 0, and ``ERROR`` is 2. ``--minloglevel`` of 1 will log
-``WARNING`` and above. Though you can specify any integers for both
-``VLOG`` macro and ``--v`` flag, the common values for them are small
-positive integers. For example, if you write ``VLOG(0)``, you should
-specify ``--v=-1`` or lower to silence it. This is less useful since we
-may not want verbose logs by default in most cases. The ``VLOG`` macros
-always log at the ``INFO`` log level (when they log at all).
+With ``VLOG``, the lower the verbose level, the more likely messages are to be
+logged. For example, if :cmd:`--v==1`, ``VLOG(1)`` will log, but ``VLOG(2)``
+will not log. This is opposite of the severity level, where ``INFO`` is 0, and
+``ERROR`` is 2. :cmd:`--minloglevel` of 1 will log ``WARNING`` and above. Though
+you can specify any integers for both ``VLOG`` macro and :cmd:`--v` flag, the
+common values for them are small positive integers. For example, if you write
+``VLOG(0)``, you should specify :cmd:`--v=-1` or lower to silence it. This is
+less useful since we may not want verbose logs by default in most cases. The
+``VLOG`` macros always log at the ``INFO`` log level (when they log at all).
 
 Verbose logging can be controlled from the command line on a per-module
 basis:
@@ -474,7 +488,7 @@ or more characters) and ’?’ (matches any single character) wildcards.
 Please also check the section about `command line flags <#flags>`__.
 
 There’s also ``VLOG_IS_ON(n)`` "verbose level" condition macro. This
-macro returns true when the ``--v`` is equal or greater than ``n``. To
+macro returns true when the :cmd:`--v` is equal or greater than ``n``. To
 be used as
 
 .. code:: cpp
@@ -506,10 +520,9 @@ Failure Signal Handler
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The library provides a convenient signal handler that will dump useful
-information when the program crashes on certain signals such as
-``SIGSEGV``. The signal handler can be installed by
-``google::InstallFailureSignalHandler()``. The following is an example
-of output from the signal handler.
+information when the program crashes on certain signals such as ``SIGSEGV``. The
+signal handler can be installed by :cpp:`google::InstallFailureSignalHandler()`.
+The following is an example of output from the signal handler.
 
 ::
 
@@ -527,13 +540,13 @@ of output from the signal handler.
        @           0x4046f9 (unknown)
 
 By default, the signal handler writes the failure dump to the standard
-error. You can customize the destination by ``InstallFailureWriter()``.
+error. You can customize the destination by :cpp:`InstallFailureWriter()`.
 
 Performance of Messages
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The conditional logging macros provided by glog (e.g., ``CHECK``,
-``LOG_IF``, ``VLOG``, ...) are carefully implemented and don’t execute
+``LOG_IF``, ``VLOG``, etc.) are carefully implemented and don’t execute
 the right hand side expressions when the conditions are false. So, the
 following check may not sacrifice the performance of your application.
 
@@ -546,7 +559,7 @@ User-defined Failure Function
 
 ``FATAL`` severity level messages or unsatisfied ``CHECK`` condition
 terminate your program. You can change the behavior of the termination
-by ``InstallFailureFunction``.
+by :cpp:`InstallFailureFunction`.
 
 .. code:: cpp
 
@@ -567,11 +580,11 @@ September 2008, glog supports stack tracing for x86 and x86_64).
 Raw Logging
 ~~~~~~~~~~~
 
-The header file ``<glog/raw_logging.h>`` can be used for thread-safe
-logging, which does not allocate any memory or acquire any locks.
-Therefore, the macros defined in this header file can be used by
-low-level memory allocation and synchronization code. Please check
-``src/glog/raw_logging.h.in`` for detail.
+The header file ``<glog/raw_logging.h>`` can be used for thread-safe logging,
+which does not allocate any memory or acquire any locks. Therefore, the macros
+defined in this header file can be used by low-level memory allocation and
+synchronization code. Please check `src/glog/raw_logging.h.in
+<src/glog/raw_logging.h.in>`__ for detail.
 
 Google Style ``perror()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -692,15 +705,15 @@ more detail.
 Installation Notes for 64-bit Linux Systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The glibc built-in stack-unwinder on 64-bit systems has some problems
-with glog. (In particular, if you are using
-InstallFailureSignalHandler(), the signal may be raised in the middle of
-malloc, holding some malloc-related locks when they invoke the stack
-unwinder. The built-in stack unwinder may call malloc recursively, which
-may require the thread to acquire a lock it already holds: deadlock.)
+The glibc built-in stack-unwinder on 64-bit systems has some problems with glog.
+(In particular, if you are using :cpp:`InstallFailureSignalHandler()`, the
+signal may be raised in the middle of malloc, holding some malloc-related locks
+when they invoke the stack unwinder. The built-in stack unwinder may call malloc
+recursively, which may require the thread to acquire a lock it already holds:
+deadlock.)
 
 For that reason, if you use a 64-bit system and you need
-``InstallFailureSignalHandler()``, we strongly recommend you install
+:cpp:`InstallFailureSignalHandler()`, we strongly recommend you install
 ``libunwind`` before trying to configure or install google glog.
 libunwind can be found
 `here <http://download.savannah.nongnu.org/releases/libunwind/libunwind-snap-070410.tar.gz>`__.
@@ -716,19 +729,19 @@ handling APIs, but they implement them differently on some platforms.
 This is not likely to be a problem on ia64, but may be on x86-64.
 
 Also, if you link binaries statically, make sure that you add
-``-Wl,--eh-frame-hdr`` to your linker options. This is required so that
-``libunwind`` can find the information generated by the compiler
-required for stack unwinding.
+:cmd:`-Wl,--eh-frame-hdr` to your linker options. This is required so that
+``libunwind`` can find the information generated by the compiler required for
+stack unwinding.
 
-Using ``-static`` is rare, though, so unless you know this will affect
-you it probably won’t.
+Using :cmd:`-static` is rare, though, so unless you know this will affect you it
+probably won’t.
 
 If you cannot or do not wish to install libunwind, you can still try to
 use two kinds of stack-unwinder: 1. glibc built-in stack-unwinder and 2.
 frame pointer based stack-unwinder.
 
 1. As we already mentioned, glibc’s unwinder has a deadlock issue.
-   However, if you don’t use ``InstallFailureSignalHandler()`` or you
+   However, if you don’t use :cpp:`InstallFailureSignalHandler()` or you
    don’t worry about the rare possibilities of deadlocks, you can use
    this stack-unwinder. If you specify no options and ``libunwind``
    isn’t detected on your system, the configure script chooses this
@@ -767,7 +780,7 @@ don’t need to do it again.
 
 Once your CLA is submitted (or if you already submitted one for another
 Google project), make a commit adding yourself to the
-`AUTHORS <./AUTHORS>`__ and `CONTRIBUTORS <CONTRIBUTORS>`__ files. This
+`AUTHORS <./AUTHORS>`__ and `CONTRIBUTORS <./CONTRIBUTORS>`__ files. This
 commit can be part of your first `pull
 request <https://help.github.com/articles/creating-a-pull-request>`__.
 
