@@ -198,6 +198,9 @@
 /* Check whether aligned_storage and alignof present */
 #cmakedefine HAVE_ALIGNED_STORAGE ${HAVE_ALIGNED_STORAGE}
 
+/* Check whether C++11 atomic is available */
+#cmakedefine HAVE_CXX11_ATOMIC ${HAVE_CXX11_ATOMIC}
+
 /* Version number of package */
 #cmakedefine VERSION
 

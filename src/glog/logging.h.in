@@ -86,6 +86,12 @@
 #include <gflags/gflags.h>
 #endif
 
+#if HAVE_CXX11_ATOMIC
+#include <atomic>
+#elif defined(OS_WINDOWS)
+#include <Windows.h>
+#endif
+
 @ac_google_start_namespace@
 
 #if @ac_cv_have_uint16_t@      // the C99 format
@@ -905,6 +911,7 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
+
 #if defined(__has_feature)
 #define _GLOG_HAS_FEATURE(...) __has_feature(__VA_ARGS__)
 #else
@@ -936,8 +943,9 @@ extern "C" void AnnotateBenignRaceSized(
 namespace google {
 #endif
 
+#ifdef HAVE_CXX11_ATOMIC
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
@@ -948,7 +956,7 @@ namespace google {
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
@@ -959,7 +967,7 @@ namespace google {
                  &what_to_do).stream()
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
   ++LOG_OCCURRENCES; \
@@ -970,7 +978,7 @@ namespace google {
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0; \
+  static std::atomic<int> LOG_OCCURRENCES(0); \
   _GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
   if (LOG_OCCURRENCES <= n) \
     ++LOG_OCCURRENCES; \
@@ -978,6 +986,91 @@ namespace google {
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
+
+#elif defined(OS_WINDOWS)
+
+#define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
+    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (condition && \
+      (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) || true) && \
+      ((LOG_OCCURRENCES_MOD_N >= n && InterlockedExchangeAdd(&LOG_OCCURRENCES_MOD_N, n)) || true) && \
+      LOG_OCCURRENCES_MOD_N == (1 % n)) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+                 &what_to_do).stream()
+
+#define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
+    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::ErrnoLogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0; \
+  if (LOG_OCCURRENCES <= n) \
+    InterlockedIncrement(&LOG_OCCURRENCES); \
+  if (LOG_OCCURRENCES <= n) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#else
+
+#define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) > n) \
+    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (condition && \
+      (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) || true) && \
+      ((LOG_OCCURRENCES_MOD_N >= n && __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n)) || true) && \
+      LOG_OCCURRENCES_MOD_N == (1 % n)) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+                 &what_to_do).stream()
+
+#define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) > n) \
+    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
+  if (LOG_OCCURRENCES_MOD_N == 1) \
+    @ac_google_namespace@::ErrnoLogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+
+#define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
+  static int LOG_OCCURRENCES = 0; \
+  if (LOG_OCCURRENCES <= n) \
+    __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
+  if (LOG_OCCURRENCES <= n) \
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
+        &what_to_do).stream()
+#endif
 
 namespace glog_internal_namespace_ {
 template <bool>

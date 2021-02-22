@@ -223,6 +223,12 @@ std::aligned_storage<sizeof(char), alignof(char)>::type data;
 int main() { }
 " HAVE_ALIGNED_STORAGE)
 
+check_cxx_source_compiles ("
+#include <atomic>
+std::atomic<int> i;
+int main() { }
+" HAVE_CXX11_ATOMIC)
+
 if (WITH_TLS)
   # Cygwin does not support the thread attribute. Don't bother.
   if (HAVE_GCC_TLS)
