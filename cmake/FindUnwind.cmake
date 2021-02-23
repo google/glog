@@ -52,13 +52,13 @@ if (Unwind_LIBRARY)
 
     set (Unwind_VERSION ${Unwind_VERSION_MAJOR}.${Unwind_VERSION_MINOR})
 
-    if (CMAKE_MATCH_1)
+    if (CMAKE_MATCH_0)
       # Third version component may be empty
       set (Unwind_VERSION ${Unwind_VERSION}.${Unwind_VERSION_PATCH})
       set (Unwind_VERSION_COMPONENTS 3)
-    else (CMAKE_MATCH_1)
+    else (CMAKE_MATCH_0)
       set (Unwind_VERSION_COMPONENTS 2)
-    endif (CMAKE_MATCH_1)
+    endif (CMAKE_MATCH_0)
   endif (EXISTS ${_Unwind_VERSION_HEADER})
 endif (Unwind_LIBRARY)
 
