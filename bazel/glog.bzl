@@ -1,4 +1,4 @@
-# Implement a macro glog_library() that the BUILD file can load.
+# Implement a macro glog_library() that the BUILD.bazel file can load.
 
 # By default, glog is built with gflags support.  You can change this behavior
 # by using glog_library(with_gflags=0)
