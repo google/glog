@@ -112,6 +112,32 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "@bazel_tools//src/conditions:windows": windows_only_srcs,
             "//conditions:default": [":config_h"],
         }),
+        hdrs = select({
+            "@bazel_tools//src/conditions:windows": [
+                "src/windows/glog/logging.h",
+                "src/windows/glog/log_severity.h",
+                "src/windows/glog/raw_logging.h",
+                "src/windows/glog/stl_logging.h",
+                "src/windows/glog/vlog_is_on.h",
+            ],
+            "//conditions:default": [
+                "src/glog/log_severity.h",
+                ":logging_h",
+                ":raw_logging_h",
+                ":stl_logging_h",
+                ":vlog_is_on_h",
+            ],
+        }),
+        strip_include_prefix = select({
+            "@bazel_tools//src/conditions:windows": "/src/windows",
+            "//conditions:default": "src",
+        }),
+        defines = select({
+            # We need to override the default GOOGLE_GLOG_DLL_DECL from
+            # src/windows/glog/*.h to match src/windows/config.h.
+            "@bazel_tools//src/conditions:windows": ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
+            "//conditions:default": [],
+        }),
         copts =
             select({
                 "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
@@ -120,29 +146,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 ":wasm": common_copts + wasm_copts,
                 "//conditions:default": common_copts + linux_or_darwin_copts,
             }),
-        deps = [
-            ":glog_headers",
-        ] + gflags_deps,
-        **kwargs
-    )
-
-    # glog headers vary depending on the os.
-    native.cc_library(
-        name = "glog_headers",
-        deps = select({
-            "@bazel_tools//src/conditions:windows": [":windows_glog_headers"],
-            "//conditions:default": [":default_glog_headers"],
+        deps = gflags_deps + select({
+            "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
+            "//conditions:default": [],
         }),
-    )
-
-    native.cc_library(
-        name = "windows_glog_headers",
-        hdrs = native.glob(["src/windows/glog/*.h"]),
-        strip_include_prefix = "src/windows",
-        # We need to override the default GOOGLE_GLOG_DLL_DECL from
-        # src/windows/glog/*.h to match src/windows/config.h.
-        defines = ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
-        deps = [":strip_include_prefix_hack"],
+        **kwargs
     )
 
     # Workaround https://github.com/bazelbuild/bazel/issues/6337 by declaring
@@ -152,17 +160,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         hdrs = native.glob(["src/windows/*.h"]),
     )
 
-    native.cc_library(
-        name = "default_glog_headers",
-        strip_include_prefix = "src",
-        hdrs = [
-            "src/glog/log_severity.h",
-            ":logging_h",
-            ":raw_logging_h",
-            ":stl_logging_h",
-            ":vlog_is_on_h",
-        ],
-    )
     native.genrule(
         name = "config_h",
         srcs = [
