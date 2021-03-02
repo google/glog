@@ -4,5 +4,6 @@ cc_test(
     srcs = ["main.cc"],
     deps = [
         "//:glog",
+        "@com_github_gflags_gflags//:gflags",
     ],
 )
