@@ -131,6 +131,8 @@ GLOG_DEFINE_string(alsologtoemail, "",
                    "in addition to logfiles");
 GLOG_DEFINE_bool(log_prefix, true,
                  "Prepend the log prefix to the start of each log line");
+GLOG_DEFINE_bool(log_prefix_include_pid, false,
+                 "Include PID into the log prefix");
 GLOG_DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
                   "actually get logged anywhere");
 GLOG_DEFINE_int32(logbuflevel, 0,
@@ -1294,8 +1296,11 @@ void LogMessage::Init(const char* file,
              << setw(2) << data_->tm_time_.tm_sec   << "."
              << setw(6) << usecs
              << ' '
-             << setfill(' ') << setw(5)
-             << static_cast<unsigned int>(GetTID()) << setfill('0')
+             << setfill(' ') << setw(5);
+    if (FLAGS_log_prefix_include_pid) {
+      stream() << static_cast<unsigned int>(getpid()) << setfill('0') << ' ';
+    }
+    stream() << static_cast<unsigned int>(GetTID()) << setfill('0')
              << ' '
              << data_->basename_ << ':' << data_->line_ << "] ";
   }
