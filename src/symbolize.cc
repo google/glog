@@ -56,7 +56,7 @@
 
 #if defined(HAVE_SYMBOLIZE)
 
-#include <string.h>
+#include <cstring>
 
 #include <algorithm>
 #include <limits>
@@ -118,14 +118,14 @@ _END_GOOGLE_NAMESPACE_
 #else
 #include <elf.h>
 #endif
-#include <errno.h>
+#include <cerrno>
+#include <climits>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <fcntl.h>
-#include <limits.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -849,7 +849,7 @@ _END_GOOGLE_NAMESPACE_
 #elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
 
 #include <dlfcn.h>
-#include <string.h>
+#include <cstring>
 
 _START_GOOGLE_NAMESPACE_
 
@@ -951,7 +951,7 @@ _END_GOOGLE_NAMESPACE_
 
 #else  /* HAVE_SYMBOLIZE */
 
-#include <assert.h>
+#include <cassert>
 
 #include "config.h"
 

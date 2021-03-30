@@ -27,15 +27,14 @@
 #endif
 #include <windows.h>
 
-#include <stdio.h>
-#include <stdarg.h>
-#include <wchar.h>
-#include <string.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <sys/types.h>
+#include <cerrno>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cwchar>
 #include <sys/stat.h>
-#include <errno.h>
+#include <sys/types.h>
 
 /* Indicates that d_type field is available in dirent structure */
 #define _DIRENT_HAVE_D_TYPE

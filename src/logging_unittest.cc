@@ -44,17 +44,16 @@
 # include <sys/wait.h>
 #endif
 
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <memory>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "base/commandlineflags.h"
 #include "glog/logging.h"

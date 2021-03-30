@@ -38,7 +38,7 @@
 #include <sys/mman.h>
 #endif
 
-#include <stdio.h>  // for NULL
+#include <cstdio>  // for NULL
 #include "stacktrace.h"
 
 _START_GOOGLE_NAMESPACE_

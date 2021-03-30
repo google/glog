@@ -36,9 +36,9 @@
 #ifndef _LOGGING_H_
 #define _LOGGING_H_
 
-#include <errno.h>
-#include <string.h>
-#include <time.h>
+#include <cerrno>
+#include <cstring>
+#include <ctime>
 #include <iosfwd>
 #include <ostream>
 #include <sstream>

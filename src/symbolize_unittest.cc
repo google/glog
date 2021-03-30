@@ -33,7 +33,7 @@
 
 #include "utilities.h"
 
-#include <signal.h>
+#include <csignal>
 #include <iostream>
 
 #include "glog/logging.h"
