@@ -21,6 +21,7 @@ option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_GFLAGS "Use gflags" ON)
+option (WITH_GTEST "Use googletest" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
@@ -30,6 +31,10 @@ option (WITH_UNWIND "Enable libunwind support" ON)
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
 endif (NOT WITH_UNWIND)
+
+if (NOT WITH_GTEST)
+  set (CMAKE_DISABLE_FIND_PACKAGE_GTest ON)
+endif (NOT WITH_GTEST)
 
 if (NOT WITH_THREADS)
   set (CMAKE_DISABLE_FIND_PACKAGE_Threads ON)
@@ -62,6 +67,12 @@ include (GNUInstallDirs)
 
 set (CMAKE_DEBUG_POSTFIX d)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
+
+find_package (GTest)
+
+if (GTest_FOUND)
+  set (HAVE_LIB_GTEST 1)
+endif (GTest_FOUND)
 
 if (WITH_GFLAGS)
   find_package (gflags 2.2.0)
@@ -615,17 +626,23 @@ set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
 # Unit testing
 
 if (BUILD_TESTING)
+  set (_GLOG_TEST_LIBS glog::glog)
+
+  if (HAVE_LIB_GTEST)
+    list (APPEND _GLOG_TEST_LIBS GTest::GTest)
+  endif (HAVE_LIB_GTEST)
+
   add_executable (logging_unittest
     src/logging_unittest.cc
   )
 
-  target_link_libraries (logging_unittest PRIVATE glog)
+  target_link_libraries (logging_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
   add_executable (stl_logging_unittest
     src/stl_logging_unittest.cc
   )
 
-  target_link_libraries (stl_logging_unittest PRIVATE glog)
+  target_link_libraries (stl_logging_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
   if (HAVE_NO_DEPRECATED)
     set_property (TARGET stl_logging_unittest APPEND PROPERTY COMPILE_OPTIONS
@@ -657,35 +674,35 @@ if (BUILD_TESTING)
       src/symbolize_unittest.cc
     )
 
-    target_link_libraries (symbolize_unittest PRIVATE glog)
+    target_link_libraries (symbolize_unittest PRIVATE ${_GLOG_TEST_LIBS})
   endif (HAVE_SYMBOLIZE)
 
   add_executable (demangle_unittest
     src/demangle_unittest.cc
   )
 
-  target_link_libraries (demangle_unittest PRIVATE glog)
+  target_link_libraries (demangle_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
   if (HAVE_STACKTRACE)
     add_executable (stacktrace_unittest
       src/stacktrace_unittest.cc
     )
 
-    target_link_libraries (stacktrace_unittest PRIVATE glog)
+    target_link_libraries (stacktrace_unittest PRIVATE ${_GLOG_TEST_LIBS})
   endif (HAVE_STACKTRACE)
 
   add_executable (utilities_unittest
     src/utilities_unittest.cc
   )
 
-  target_link_libraries (utilities_unittest PRIVATE glog)
+  target_link_libraries (utilities_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
   if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
     add_executable (signalhandler_unittest
       src/signalhandler_unittest.cc
     )
 
-    target_link_libraries (signalhandler_unittest PRIVATE glog)
+    target_link_libraries (signalhandler_unittest PRIVATE ${_GLOG_TEST_LIBS})
   endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
 
   add_test (NAME demangle COMMAND demangle_unittest)
