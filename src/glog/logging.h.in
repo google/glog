@@ -402,6 +402,12 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
 #define DECLARE_int32(name) \
   DECLARE_VARIABLE(@ac_google_namespace@::int32, I, name, int32)
 
+#if !defined(DECLARE_uint32) && !(@ac_cv_have_libgflags@)
+// uint32 specialization
+#define DECLARE_uint32(name) \
+  DECLARE_VARIABLE(@ac_google_namespace@::uint32, U, name, uint32)
+#endif // !defined(DECLARE_uint32) && !(@ac_cv_have_libgflags@)
+
 // Special case for string, because we have to specify the namespace
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
 #define DECLARE_string(name)                                            \
@@ -460,7 +466,7 @@ DECLARE_int32(v);  // in vlog_is_on.cc
 DECLARE_string(vmodule); // also in vlog_is_on.cc
 
 // Sets the maximum log file size (in MB).
-DECLARE_int32(max_log_size);
+DECLARE_uint32(max_log_size);
 
 // Sets whether to avoid logging to the disk if the disk is full.
 DECLARE_bool(stop_logging_if_full_disk);
@@ -473,6 +479,7 @@ DECLARE_bool(log_utc_time);
 #undef DECLARE_VARIABLE
 #undef DECLARE_bool
 #undef DECLARE_int32
+#undef DECLARE_uint32
 #undef DECLARE_string
 #endif
 
@@ -1831,7 +1838,7 @@ GOOGLE_GLOG_DLL_DECL void ReprintFatalMessage();
 // lose very small amounts of data. For security, only follow symlinks
 // if the path is /proc/self/fd/*
 GOOGLE_GLOG_DLL_DECL void TruncateLogFile(const char *path,
-                                          int64 limit, int64 keep);
+                                          uint64 limit, uint64 keep);
 
 // Truncate stdout and stderr if they are over the value specified by
 // --max_log_size; keep the final 1MB.  This function has the same

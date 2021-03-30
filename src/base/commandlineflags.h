@@ -85,6 +85,14 @@
 #define DEFINE_int32(name, value, meaning) \
   DEFINE_VARIABLE(GOOGLE_NAMESPACE::int32, I, name, value, meaning, int32)
 
+// uint32 specialization
+#ifndef DECLARE_uint32
+#define DECLARE_uint32(name) \
+  DECLARE_VARIABLE(GOOGLE_NAMESPACE::uint32, U, name, uint32)
+#endif // DECLARE_uint64
+#define DEFINE_uint32(name, value, meaning) \
+  DEFINE_VARIABLE(GOOGLE_NAMESPACE::uint32, U, name, value, meaning, uint32)
+
 // Special case for string, because we have to specify the namespace
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
 #define DECLARE_string(name)                                            \
@@ -115,6 +123,9 @@
 #define GLOG_DEFINE_int32(name, value, meaning) \
   DEFINE_int32(name, EnvToInt("GLOG_" #name, value), meaning)
 
+#define GLOG_DEFINE_uint32(name, value, meaning) \
+  DEFINE_uint32(name, EnvToUInt("GLOG_" #name, value), meaning)
+
 #define GLOG_DEFINE_string(name, value, meaning) \
   DEFINE_string(name, EnvToString("GLOG_" #name, value), meaning)
 
@@ -129,5 +140,8 @@
 
 #define EnvToInt(envname, dflt)  \
   (!getenv(envname) ? (dflt) : strtol(getenv(envname), NULL, 10))
+
+#define EnvToUInt(envname, dflt)  \
+  (!getenv(envname) ? (dflt) : strtoul(getenv(envname), NULL, 10))
 
 #endif  // BASE_COMMANDLINEFLAGS_H__

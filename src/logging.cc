@@ -183,9 +183,9 @@ GLOG_DEFINE_string(log_dir, DefaultLogDir(),
 GLOG_DEFINE_string(log_link, "", "Put additional links to the log "
                    "files in this directory");
 
-GLOG_DEFINE_int32(max_log_size, 1800,
-                  "approx. maximum log file size (in MB). A value of 0 will "
-                  "be silently overridden to 1.");
+GLOG_DEFINE_uint32(max_log_size, 1800,
+                   "approx. maximum log file size (in MB). A value of 0 will "
+                   "be silently overridden to 1.");
 
 GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
                  "Stop attempting to log to disk if the disk is full.");
@@ -342,8 +342,10 @@ static const char* GetAnsiColorCode(GLogColor color) {
 #endif  // GLOG_OS_WINDOWS
 
 // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
-static int32 MaxLogSize() {
-  return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096 ? FLAGS_max_log_size : 1);
+static uint32 MaxLogSize() {
+  return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096
+              ? FLAGS_max_log_size
+              : 1);
 }
 
 // An arbitrary limit on the length of a single log message.  This
@@ -1114,12 +1116,11 @@ void LogFileObject::Write(bool force_flush,
     return;
   }
 
-  if (static_cast<int>(file_length_ >> 20) >= MaxLogSize() ||
-      PidHasChanged()) {
+  if (file_length_ >> 20U >= MaxLogSize() || PidHasChanged()) {
     if (file_ != NULL) fclose(file_);
     file_ = NULL;
     file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
-    rollover_attempt_ = kRolloverAttemptFrequency-1;
+    rollover_attempt_ = kRolloverAttemptFrequency - 1;
   }
 
   // If there's no destination file, make one before outputting
@@ -1273,12 +1274,13 @@ void LogFileObject::Write(bool force_flush,
     FlushUnlocked();
 #ifdef GLOG_OS_LINUX
     // Only consider files >= 3MiB
-    if (FLAGS_drop_log_memory && file_length_ >= (3 << 20)) {
+    if (FLAGS_drop_log_memory && file_length_ >= (3U << 20U)) {
       // Don't evict the most recent 1-2MiB so as not to impact a tailer
       // of the log file and to avoid page rounding issue on linux < 4.7
-      uint32 total_drop_length = (file_length_ & ~((1 << 20U) - 1U)) - (1U << 20U);
+      uint32 total_drop_length =
+          (file_length_ & ~((1U << 20U) - 1U)) - (1U << 20U);
       uint32 this_drop_length = total_drop_length - dropped_mem_length_;
-      if (this_drop_length >= (2 << 20)) {
+      if (this_drop_length >= (2U << 20U)) {
         // Only advise when >= 2MiB to drop
 # if defined(__ANDROID__) && defined(__ANDROID_API__) && (__ANDROID_API__ < 21)
         // 'posix_fadvise' introduced in API 21:
@@ -2325,7 +2327,7 @@ void GetExistingTempDirectories(vector<string>* list) {
   }
 }
 
-void TruncateLogFile(const char *path, int64 limit, int64 keep) {
+void TruncateLogFile(const char *path, uint64 limit, uint64 keep) {
 #ifdef HAVE_UNISTD_H
   struct stat statbuf;
   const int kCopyBlockSize = 8 << 10;
@@ -2366,14 +2368,14 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
   // See if the path refers to a regular file bigger than the
   // specified limit
   if (!S_ISREG(statbuf.st_mode)) goto out_close_fd;
-  if (statbuf.st_size <= limit)  goto out_close_fd;
-  if (statbuf.st_size <= keep) goto out_close_fd;
+  if (statbuf.st_size <= static_cast<off_t>(limit))  goto out_close_fd;
+  if (statbuf.st_size <= static_cast<off_t>(keep)) goto out_close_fd;
 
   // This log file is too large - we need to truncate it
   LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
 
   // Copy the last "keep" bytes of the file to the beginning of the file
-  read_offset = statbuf.st_size - keep;
+  read_offset = statbuf.st_size - static_cast<off_t>(keep);
   write_offset = 0;
   ssize_t bytesin, bytesout;
   while ((bytesin = pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
@@ -2401,12 +2403,12 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
 #else
   LOG(ERROR) << "No log truncation support.";
 #endif
-}
+ }
 
 void TruncateStdoutStderr() {
 #ifdef HAVE_UNISTD_H
-  int64 limit = MaxLogSize() << 20;
-  int64 keep = 1 << 20;
+  uint64 limit = MaxLogSize() << 20U;
+  uint64 keep = 1U << 20U;
   TruncateLogFile("/proc/self/fd/1", limit, keep);
   TruncateLogFile("/proc/self/fd/2", limit, keep);
 #else
