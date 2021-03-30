@@ -578,7 +578,7 @@ class LogSink;  // defined below
 // NOTE: LOG(severity) expands to LogMessage().stream() for the specified
 // severity.
 #define LOG_TO_STRING(severity, message) \
-  LOG_TO_STRING_##severity(static_cast<string*>(message)).stream()
+  LOG_TO_STRING_##severity(static_cast<std::string*>(message)).stream()
 
 // If a non-NULL pointer is given, we push the message onto the end
 // of a vector of strings; otherwise, we report it with LOG(severity).
