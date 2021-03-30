@@ -341,7 +341,7 @@ static const char* GetAnsiColorCode(GLogColor color) {
 
 // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
 static int32 MaxLogSize() {
-  return (FLAGS_max_log_size > 0 ? FLAGS_max_log_size : 1);
+  return (FLAGS_max_log_size > 0 && FLAGS_max_log_size < 4096 ? FLAGS_max_log_size : 1);
 }
 
 // An arbitrary limit on the length of a single log message.  This
@@ -490,7 +490,7 @@ class LogCleaner {
                                const string& filename_extension) const;
 
   bool IsLogLastModifiedOver(const string& filepath, int days) const;
- 
+
   bool enabled_;
   int overdue_days_;
   char dir_delim_;  // filepath delimiter ('/' or '\\')
@@ -1230,7 +1230,7 @@ void LogFileObject::Write(bool force_flush,
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
   }
- 
+
   // Write to LOG file
   if ( !stop_writing ) {
     // fwrite() doesn't return an error when the disk is full, for
@@ -1660,7 +1660,7 @@ int AndroidLogLevel(const int severity) {
   }
 }
 #endif  // defined(__ANDROID__)
-}  // namespace	
+}  // namespace
 
 // Flush buffered message, called by the destructor, or any other function
 // that needs to synchronize the log.
@@ -1696,13 +1696,13 @@ void LogMessage::Flush() {
     ++num_messages_[static_cast<int>(data_->severity_)];
   }
   LogDestination::WaitForSinks(data_);
-	
+
 #if defined(__ANDROID__)
   const int level = AndroidLogLevel((int)data_->severity_);
   const std::string text = std::string(data_->message_text_);
   __android_log_write(level, "native", text.substr(0,data_->num_chars_to_log_).c_str());
 #endif  // defined(__ANDROID__)
-	
+
   if (append_newline) {
     // Fix the ostrstream back how it was before we screwed with it.
     // It's 99.44% certain that we don't need to worry about doing this.
