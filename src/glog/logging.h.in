@@ -57,6 +57,10 @@
 #define GLOG_MSVC_POP_WARNING()
 #endif
 
+#if @ac_cv_have_glog_export@
+#include "glog/export.h"
+#endif
+
 // Annoying stuff for windows -- makes sure clients can import these functions
 #ifndef GOOGLE_GLOG_DLL_DECL
 # if defined(_WIN32) && !defined(__CYGWIN__)
@@ -86,7 +90,7 @@
 #include <gflags/gflags.h>
 #endif
 
-#if HAVE_CXX11_ATOMIC
+#ifdef HAVE_CXX11_ATOMIC
 #include <atomic>
 #elif defined(OS_WINDOWS)
 #include <Windows.h>

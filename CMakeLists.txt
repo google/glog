@@ -11,21 +11,21 @@ endif (POLICY CMP0063)
 project(glog VERSION 0.5.0 LANGUAGES C CXX)
 
 set (CPACK_PACKAGE_NAME glog)
-set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "")
+set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Google logging library")
 set (CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
 set (CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
-option (WITH_GFLAGS "Use gflags" ON)
-option (WITH_THREADS "Enable multithreading support" ON)
-option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
+option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
-option (WITH_UNWIND "Enable libunwind support" ON)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
+option (WITH_THREADS "Enable multithreading support" ON)
+option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
+option (WITH_UNWIND "Enable libunwind support" ON)
 
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
@@ -35,6 +35,9 @@ if (NOT WITH_THREADS)
   set (CMAKE_DISABLE_FIND_PACKAGE_Threads ON)
 endif (NOT WITH_THREADS)
 
+set (CMAKE_C_VISIBILITY_PRESET hidden)
+set (CMAKE_CXX_VISIBILITY_PRESET hidden)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include (CheckCSourceCompiles)
@@ -53,6 +56,7 @@ include (CMakePushCheckState)
 include (CPack)
 include (CTest)
 include (DetermineGflagsNamespace)
+include (GenerateExportHeader)
 include (GetCacheVariables)
 include (GNUInstallDirs)
 
@@ -295,6 +299,7 @@ endif (STL_STD_NAMESPACE)
 set (GOOGLE_NAMESPACE google)
 set (_START_GOOGLE_NAMESPACE_ "namespace ${GOOGLE_NAMESPACE} {")
 set (_END_GOOGLE_NAMESPACE_ "}")
+set (ac_cv_have_glog_export 1)
 
 if (HAVE___UINT16)
   set (ac_cv_have___uint16 1)
@@ -442,6 +447,7 @@ configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
 configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
 configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
+
 if (WITH_PKGCONFIG)
   set (VERSION ${PROJECT_VERSION})
   set (prefix ${CMAKE_INSTALL_PREFIX})
@@ -462,10 +468,8 @@ if (WITH_PKGCONFIG)
   unset (includedir)
 endif (WITH_PKGCONFIG)
 
-set (CMAKE_CXX_VISIBILITY_PRESET default)
-set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-
 set (GLOG_PUBLIC_H
+  ${CMAKE_CURRENT_BINARY_DIR}/glog/export.h
   ${CMAKE_CURRENT_BINARY_DIR}/glog/logging.h
   ${CMAKE_CURRENT_BINARY_DIR}/glog/raw_logging.h
   ${CMAKE_CURRENT_BINARY_DIR}/glog/stl_logging.h
@@ -545,7 +549,7 @@ add_library (glog
   ${_glog_BINARY_CMake_MODULES}
 )
 
-add_library(glog::glog ALIAS glog)
+add_library (glog::glog ALIAS glog)
 
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -602,28 +606,11 @@ if (WIN32)
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 endif (WIN32)
 
-set_target_properties (glog PROPERTIES DEFINE_SYMBOL LIBGLOG_EXPORTS)
+generate_export_header (glog
+  EXPORT_MACRO_NAME GOOGLE_GLOG_DLL_DECL
+  EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/glog/export.h)
 
-if (NOT BUILD_SHARED_LIBS)
-  target_compile_definitions (glog PUBLIC GOOGLE_GLOG_DLL_DECL=)
-else (NOT BUILD_SHARED_LIBS)
-  target_compile_definitions (glog PRIVATE GOOGLE_GLOG_IS_A_DLL=1)
-
-  if (HAVE___DECLSPEC)
-    set (_EXPORT "__declspec(dllexport)")
-    set (_IMPORT "__declspec(dllimport)")
-  elseif (HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
-    set (_EXPORT "__attribute__((visibility(\"default\")))")
-    set (_IMPORT "")
-  endif (HAVE___DECLSPEC)
-
-  target_compile_definitions (glog PRIVATE
-    "GOOGLE_GLOG_DLL_DECL=${_EXPORT}")
-  target_compile_definitions (glog INTERFACE
-    "GOOGLE_GLOG_DLL_DECL=${_IMPORT}")
-  target_compile_definitions (glog INTERFACE
-    "GOOGLE_GLOG_DLL_DECL_FOR_UNITTESTS=${_IMPORT}")
-endif (NOT BUILD_SHARED_LIBS)
+set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
 
 # Unit testing
 
