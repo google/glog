@@ -8,7 +8,7 @@ if (POLICY CMP0063)
   cmake_policy (SET CMP0063 NEW)
 endif (POLICY CMP0063)
 
-project(glog VERSION 0.5.0 LANGUAGES C CXX)
+project(glog VERSION 0.5.0 LANGUAGES CXX)
 
 set (CPACK_PACKAGE_NAME glog)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Google logging library")
@@ -45,12 +45,11 @@ set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include (CheckCSourceCompiles)
+include (CheckCXXSourceCompiles)
 include (CheckCXXCompilerFlag)
 include (CheckCXXSourceCompiles)
 include (CheckCXXSourceRuns)
 include (CheckFunctionExists)
-include (CheckIncludeFile)
 include (CheckIncludeFileCXX)
 include (CheckLibraryExists)
 include (CheckStructHasMember)
@@ -91,27 +90,26 @@ if (Unwind_FOUND)
   set (HAVE_UNWIND_H 1)
 endif (Unwind_FOUND)
 
-check_include_file (dlfcn.h HAVE_DLFCN_H)
-check_include_file (execinfo.h HAVE_EXECINFO_H)
-check_include_file (glob.h HAVE_GLOB_H)
-check_include_file (inttypes.h HAVE_INTTYPES_H)
-check_include_file (memory.h HAVE_MEMORY_H)
-check_include_file (pwd.h HAVE_PWD_H)
-check_include_file (stdint.h HAVE_STDINT_H)
-check_include_file (stdlib.h HAVE_STDLIB_H)
-check_include_file (string.h HAVE_STRING_H)
-check_include_file (strings.h HAVE_STRINGS_H)
-check_include_file (sys/stat.h HAVE_SYS_STAT_H)
-check_include_file (sys/syscall.h HAVE_SYS_SYSCALL_H)
-check_include_file (sys/time.h HAVE_SYS_TIME_H)
-check_include_file (sys/types.h HAVE_SYS_TYPES_H)
-check_include_file (sys/utsname.h HAVE_SYS_UTSNAME_H)
-check_include_file (sys/wait.h HAVE_SYS_WAIT_H)
-check_include_file (syscall.h HAVE_SYSCALL_H)
-check_include_file (syslog.h HAVE_SYSLOG_H)
-check_include_file (ucontext.h HAVE_UCONTEXT_H)
-check_include_file (unistd.h HAVE_UNISTD_H)
-check_include_file (pwd.h HAVE_PWD_H)
+check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
+check_include_file_cxx (execinfo.h HAVE_EXECINFO_H)
+check_include_file_cxx (glob.h HAVE_GLOB_H)
+check_include_file_cxx (inttypes.h HAVE_INTTYPES_H)
+check_include_file_cxx (memory.h HAVE_MEMORY_H)
+check_include_file_cxx (pwd.h HAVE_PWD_H)
+check_include_file_cxx (stdint.h HAVE_STDINT_H)
+check_include_file_cxx (stdlib.h HAVE_STDLIB_H)
+check_include_file_cxx (string.h HAVE_STRING_H)
+check_include_file_cxx (strings.h HAVE_STRINGS_H)
+check_include_file_cxx (sys/stat.h HAVE_SYS_STAT_H)
+check_include_file_cxx (sys/syscall.h HAVE_SYS_SYSCALL_H)
+check_include_file_cxx (sys/time.h HAVE_SYS_TIME_H)
+check_include_file_cxx (sys/types.h HAVE_SYS_TYPES_H)
+check_include_file_cxx (sys/utsname.h HAVE_SYS_UTSNAME_H)
+check_include_file_cxx (sys/wait.h HAVE_SYS_WAIT_H)
+check_include_file_cxx (syscall.h HAVE_SYSCALL_H)
+check_include_file_cxx (syslog.h HAVE_SYSLOG_H)
+check_include_file_cxx (ucontext.h HAVE_UCONTEXT_H)
+check_include_file_cxx (unistd.h HAVE_UNISTD_H)
 
 check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
 check_include_file_cxx ("ext/hash_set" HAVE_EXT_HASH_SET)
@@ -121,9 +119,9 @@ check_include_file_cxx ("tr1/unordered_set" HAVE_TR1_UNORDERED_SET)
 check_include_file_cxx ("unordered_map" HAVE_UNORDERED_MAP)
 check_include_file_cxx ("unordered_set" HAVE_UNORDERED_SET)
 
-check_type_size ("unsigned __int16" HAVE___UINT16)
-check_type_size (u_int16_t HAVE_U_INT16_T)
-check_type_size (uint16_t HAVE_UINT16_T)
+check_type_size ("unsigned __int16" HAVE___UINT16 LANGUAGE CXX)
+check_type_size (u_int16_t HAVE_U_INT16_T LANGUAGE CXX)
+check_type_size (uint16_t HAVE_UINT16_T LANGUAGE CXX)
 
 check_function_exists (dladdr HAVE_DLADDR)
 check_function_exists (fcntl HAVE_FCNTL)
@@ -148,36 +146,36 @@ check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 #include <stdlib.h>
 static void foo(void) __attribute__ ((unused));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 #include <stdlib.h>
 static void foo(void) __attribute__ ((visibility(\"default\")));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 #include <stdlib.h>
 static void foo(void) __attribute__ ((visibility(\"hidden\")));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 int main(void) { if (__builtin_expect(0, 0)) return 1; return 0; }
 " HAVE___BUILTIN_EXPECT)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 int main(void)
 {
   int a; if (__sync_val_compare_and_swap(&a, 0, 1)) return 1; return 0;
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
 int main(void)
@@ -189,7 +187,7 @@ int main(void)
 }
 " HAVE_RWLOCK)
 
-check_c_source_compiles ("
+check_cxx_source_compiles ("
 __declspec(selectany) int a;
 int main(void) { return 0; }
 " HAVE___DECLSPEC)
@@ -281,7 +279,7 @@ if (HAVE_UCONTEXT_H AND NOT PC_FROM_UCONTEXT)
   foreach (_PC_FIELD ${_PC_FIELDS})
     foreach (_PC_HEADER ${_PC_HEADERS})
       set (_TMP
-      ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/uctfield.c)
+      ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/uctfield.cpp)
       file (WRITE ${_TMP} "
 #define _GNU_SOURCE 1
 #include <${_PC_HEADER}>
