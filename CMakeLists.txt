@@ -416,7 +416,7 @@ if (WITH_SYMBOLIZE)
     }
     ]=] HAVE_SYMBOLIZE)
 
-  cmake_pop_check_state ()
+    cmake_pop_check_state ()
 
     if (HAVE_SYMBOLIZE)
       set (HAVE_STACKTRACE 1)
@@ -425,6 +425,11 @@ if (WITH_SYMBOLIZE)
     set (HAVE_SYMBOLIZE 1)
   endif (WIN32 OR CYGWIN)
 endif (WITH_SYMBOLIZE)
+
+# CMake manages symbolize availability. The definition is necessary only when
+# building the library. Switch to add_compile_definitions once we drop support
+# for CMake below version 3.12.
+add_definitions (-DGLOG_NO_SYMBOLIZE_DETECTION)
 
 check_cxx_source_compiles ("
 #include <cstdlib>

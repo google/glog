@@ -127,6 +127,7 @@
 # define HAVE_STACKTRACE
 #endif
 
+#ifndef GLOG_NO_SYMBOLIZE_DETECTION
 #ifndef HAVE_SYMBOLIZE
 // defined by gcc
 #if defined(__ELF__) && defined(OS_LINUX)
@@ -139,6 +140,7 @@
 # define HAVE_SYMBOLIZE
 #endif
 #endif // !defined(HAVE_SYMBOLIZE)
+#endif // !defined(GLOG_NO_SYMBOLIZE_DETECTION)
 
 #ifndef ARRAYSIZE
 // There is a better way, but this is good enough for our purpose.
