@@ -121,6 +121,7 @@ typedef int (*SymbolizeCallback)(int fd,
                                  char* out,
                                  size_t out_size,
                                  uint64_t relocation);
+GOOGLE_GLOG_DLL_DECL
 void InstallSymbolizeCallback(SymbolizeCallback callback);
 
 // Installs a callback function, which will be called instead of
