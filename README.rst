@@ -3,9 +3,9 @@ Google Logging Library
 
 |Build Status| |Grunt status|
 
-The Google Logging Library (glog) implements application-level logging.
-The library provides logging APIs based on C++-style streams and various
-helper macros.
+Google Logging (glog) is a C++98 library that implements application-level
+logging. The library provides logging APIs based on C++-style streams and
+various helper macros.
 
 .. role:: cmake(code)
    :language: cmake
