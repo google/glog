@@ -873,7 +873,7 @@ static void TestErrno() {
   CHECK_EQ(errno, ENOENT);
 }
 
-static void TestOneTruncate(const char *path, int64 limit, int64 keep,
+static void TestOneTruncate(const char *path, uint64 limit, uint64 keep,
                             size_t dsize, size_t ksize, size_t expect) {
   int fd;
   CHECK_ERR(fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600));
@@ -909,7 +909,7 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   memset(buf, 0, buf_size);
   CHECK_ERR(read(fd, buf, buf_size));
 
-  const char *p = buf;
+  const char* p = buf;
   size_t checked = 0;
   while (checked < expect) {
     size_t bytes = min(expect - checked, keep_size);
@@ -929,7 +929,8 @@ static void TestTruncate() {
   TestOneTruncate(path.c_str(), 10, 10, 10, 10, 10);
 
   // And a big file (multiple blocks to copy)
-  TestOneTruncate(path.c_str(), 2<<20, 4<<10, 3<<20, 4<<10, 4<<10);
+  TestOneTruncate(path.c_str(), 2U << 20U, 4U << 10U, 3U << 20U, 4U << 10U,
+                  4U << 10U);
 
   // Check edge-case limits
   TestOneTruncate(path.c_str(), 10, 20, 0, 20, 20);
