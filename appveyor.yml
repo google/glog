@@ -29,6 +29,16 @@ environment:
       TEST_TARGET: RUN_TESTS
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
+    - TOOLCHAIN: "vs-16-2019-win64"
+      GENERATOR: "Visual Studio 16 2019 Win64"
+      TEST_TARGET: RUN_TESTS
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+    - TOOLCHAIN: "vs-16-2019-win64-cxx17"
+      GENERATOR: "Visual Studio 16 2019 Win64"
+      TEST_TARGET: RUN_TESTS
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
     - TOOLCHAIN: "mingw-cxx11"
       GENERATOR: "MinGW Makefiles"
       MINGW_PATH: "C:\\mingw-w64\\x86_64-7.2.0-posix-seh-rt_v5-rev1\\mingw64\\bin"
