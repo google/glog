@@ -149,8 +149,8 @@
 
 // We need to include these header files after defining _XOPEN_SOURCE
 // as they may define the _XOPEN_SOURCE macro.
-#include <assert.h>
-#include <stdlib.h>      // for abort()
+#include <cassert>
+#include <cstdlib>      // for abort()
 
 #define MUTEX_NAMESPACE glog_internal_namespace_
 

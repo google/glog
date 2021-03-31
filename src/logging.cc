@@ -32,7 +32,7 @@
 #include "utilities.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iomanip>
 #include <string>
 #ifdef HAVE_UNISTD_H
@@ -44,12 +44,12 @@
 #ifdef HAVE_SYS_UTSNAME_H
 # include <sys/utsname.h>  // For uname.
 #endif
-#include <time.h>
+#include <ctime>
 #include <fcntl.h>
 #include <cstdio>
 #include <iostream>
-#include <stdarg.h>
-#include <stdlib.h>
+#include <cstdarg>
+#include <cstdlib>
 #ifdef HAVE_PWD_H
 # include <pwd.h>
 #endif
@@ -57,7 +57,7 @@
 # include <syslog.h>
 #endif
 #include <vector>
-#include <errno.h>                   // for errno
+#include <cerrno>                   // for errno
 #include <sstream>
 #ifdef OS_WINDOWS
 #include "windows/dirent.h"

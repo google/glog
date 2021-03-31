@@ -36,8 +36,8 @@
 #include "symbolize.h"
 #include "glog/logging.h"
 
-#include <signal.h>
-#include <time.h>
+#include <csignal>
+#include <ctime>
 #ifdef HAVE_UCONTEXT_H
 # include <ucontext.h>
 #endif

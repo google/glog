@@ -97,8 +97,6 @@ check_include_file_cxx (inttypes.h HAVE_INTTYPES_H)
 check_include_file_cxx (memory.h HAVE_MEMORY_H)
 check_include_file_cxx (pwd.h HAVE_PWD_H)
 check_include_file_cxx (stdint.h HAVE_STDINT_H)
-check_include_file_cxx (stdlib.h HAVE_STDLIB_H)
-check_include_file_cxx (string.h HAVE_STRING_H)
 check_include_file_cxx (strings.h HAVE_STRINGS_H)
 check_include_file_cxx (sys/stat.h HAVE_SYS_STAT_H)
 check_include_file_cxx (sys/syscall.h HAVE_SYS_SYSCALL_H)
@@ -142,24 +140,24 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 
 # NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
 # snprintf as an inline function
-check_symbol_exists (snprintf stdio.h HAVE_SNPRINTF)
+check_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
 check_cxx_source_compiles ("
-#include <stdlib.h>
+#include <cstdlib>
 static void foo(void) __attribute__ ((unused));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__)
 
 check_cxx_source_compiles ("
-#include <stdlib.h>
+#include <cstdlib>
 static void foo(void) __attribute__ ((visibility(\"default\")));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
 
 check_cxx_source_compiles ("
-#include <stdlib.h>
+#include <cstdlib>
 static void foo(void) __attribute__ ((visibility(\"hidden\")));
 int main(void) { return 0; }
 " HAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
