@@ -1173,7 +1173,7 @@ GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
   class GOOGLE_GLOG_DLL_DECL LogStream : public std::ostream {
 GLOG_MSVC_POP_WARNING()
   public:
-    LogStream(char *buf, int len, int ctr)
+    LogStream(char *buf, int len, uint64 ctr)
         : std::ostream(NULL),
           streambuf_(buf, len),
           ctr_(ctr),
@@ -1181,8 +1181,8 @@ GLOG_MSVC_POP_WARNING()
       rdbuf(&streambuf_);
     }
 
-    int ctr() const { return ctr_; }
-    void set_ctr(int ctr) { ctr_ = ctr; }
+    uint64 ctr() const { return ctr_; }
+    void set_ctr(uint64 ctr) { ctr_ = ctr; }
     LogStream* self() const { return self_; }
 
     // Legacy std::streambuf methods.
@@ -1194,7 +1194,7 @@ GLOG_MSVC_POP_WARNING()
     LogStream(const LogStream&);
     LogStream& operator=(const LogStream&);
     base_logging::LogStreamBuf streambuf_;
-    int ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
+    uint64 ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
   };
 
@@ -1202,7 +1202,7 @@ public:
   // icc 8 requires this typedef to avoid an internal compiler error.
   typedef void (LogMessage::*SendMethod)();
 
-  LogMessage(const char* file, int line, LogSeverity severity, int ctr,
+  LogMessage(const char* file, int line, LogSeverity severity, uint64 ctr,
              SendMethod send_method);
 
   // Two special constructors that generate reduced amounts of code at
@@ -1373,7 +1373,7 @@ GOOGLE_GLOG_DLL_DECL std::ostream& operator<<(std::ostream &os,
 class GOOGLE_GLOG_DLL_DECL ErrnoLogMessage : public LogMessage {
  public:
 
-  ErrnoLogMessage(const char* file, int line, LogSeverity severity, int ctr,
+  ErrnoLogMessage(const char* file, int line, LogSeverity severity, uint64 ctr,
                   void (LogMessage::*send_method)());
 
   // Postpends ": strerror(errno) [errno]".
