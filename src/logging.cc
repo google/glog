@@ -997,10 +997,11 @@ void LogFileObject::FlushUnlocked(){
 }
 
 bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_+filename_extension_;
+  string string_filename = base_filename_;
   if (FLAGS_timestamp_in_logfile_name) {
     string_filename += time_pid_string;
   }
+  string_filename += filename_extension_;
   const char* filename = string_filename.c_str();
   //only write to files, create if non-existant.
   int flags = O_WRONLY | O_CREAT;
