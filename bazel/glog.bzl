@@ -111,6 +111,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         name = "glog",
         visibility = ["//visibility:public"],
         srcs = [
+            ":config_h",
             "src/base/commandlineflags.h",
             "src/base/googleinit.h",
             "src/base/mutex.h",
@@ -133,7 +134,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/vlog_is_on.cc",
         ] + select({
             "@bazel_tools//src/conditions:windows": windows_only_srcs,
-            "//conditions:default": [":config_h"],
+            "//conditions:default": [],
         }),
         hdrs = [
                 "src/glog/log_severity.h",
@@ -144,8 +145,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             ],
         strip_include_prefix = "src",
         defines = select({
-            # We need to override the default GOOGLE_GLOG_DLL_DECL from
-            # src/glog/*.h to match src/windows/config.h.
+            # GOOGLE_GLOG_DLL_DECL is normally set by export.h, but that's not
+            # generated for Bazel.
             "@bazel_tools//src/conditions:windows": ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
             "//conditions:default": [],
         }),
