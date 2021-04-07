@@ -1,0 +1,79 @@
+name: Windows builds
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    # available environments: https://github.com/actions/virtual-environments
+    name: ${{matrix.config.name}} ${{matrix.build_type}}
+    runs-on: ${{matrix.config.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+          name: "vs-15-2017-win64-cxx11",
+          os: windows-2016,
+          generator: "Visual Studio 15 2017",
+          std: 11,
+          test_target: RUN_TESTS,
+          }
+        - {
+          name: "vs-16-2019-win64-cxx11",
+          os: windows-2019,
+          generator: "Visual Studio 16 2019",
+          std: 11,
+          test_target: RUN_TESTS,
+          }
+        - {
+          name: "vs-16-2019-win64-cxx17",
+          os: windows-2019,
+          generator: "Visual Studio 16 2019",
+          std: 17,
+          test_target: RUN_TESTS,
+          }
+        - {
+          name: "mingw-cxx11",
+          os: windows-latest,
+          generator: "MinGW Makefiles",
+          std: 11,
+          test_target: test,
+          }
+        - {
+          name: "mingw-cxx17",
+          os: windows-latest,
+          generator: "MinGW Makefiles",
+          std: 17,
+          test_target: test,
+          }
+        build_type: [Debug] #, Release]
+        ARCH: ["x64"]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Visual Studio build steps
+    - name: Configure build MSVC
+      if: ${{ startswith(matrix.config.name, 'vs-') }}
+      shell: powershell
+      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -A "${{matrix.ARCH}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF
+    - name: Build MSVC
+      if: ${{ startswith(matrix.config.name, 'vs-') }}
+      shell: powershell
+      run: cmake --build ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} --config ${{matrix.build_type}}
+
+    # mingw build steps
+    - name: Configure build MinGW
+      if: ${{ startswith(matrix.config.name, 'mingw-') }}
+      shell: powershell
+      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+    - name: Build MinGW
+      if: ${{ startswith(matrix.config.name, 'mingw-') }}
+      shell: powershell
+      run: cmake --build ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}}
+
+    - name: Run tests
+      shell: powershell
+      env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+      run: cmake --build ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} --target ${{matrix.config.test_target}}
