@@ -29,7 +29,6 @@
 //
 // Author: Ray Sidney
 
-#include "config_for_unittests.h"
 #include "utilities.h"
 
 #include <fcntl.h>
