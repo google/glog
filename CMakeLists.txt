@@ -20,6 +20,7 @@ set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
+option (WITH_CUSTOM_PREFIX "Enable support for user-generated message prefixes" OFF)
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_GTEST "Use googletest" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
@@ -599,6 +600,10 @@ if (WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
 endif (WIN32)
 
+if (WITH_CUSTOM_PREFIX)
+  target_compile_definitions(glog PUBLIC GLOG_CUSTOM_PREFIX_SUPPORT)
+endif (WITH_CUSTOM_PREFIX)
+
 set_target_properties (glog PROPERTIES PUBLIC_HEADER "${GLOG_PUBLIC_H}")
 
 target_include_directories (glog BEFORE PUBLIC
@@ -634,6 +639,17 @@ if (BUILD_TESTING)
   )
 
   target_link_libraries (logging_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+  if (WITH_CUSTOM_PREFIX)
+    add_executable (logging_custom_prefix_unittest
+      src/logging_custom_prefix_unittest.cc
+    )
+
+    target_link_libraries (logging_custom_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+    add_test (NAME logging_custom_prefix
+              COMMAND logging_custom_prefix_unittest)
+  endif (WITH_CUSTOM_PREFIX)
 
   add_executable (stl_logging_unittest
     src/stl_logging_unittest.cc
