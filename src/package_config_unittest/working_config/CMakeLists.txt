@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.1)
-project (glog_package_config)
+cmake_minimum_required (VERSION 3.0)
+project (glog_package_config LANGUAGES CXX)
 
 find_package (glog REQUIRED NO_MODULE)
 

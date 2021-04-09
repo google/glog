@@ -48,9 +48,12 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     common_copts = [
         "-DGLOG_BAZEL_BUILD",
+        # Inject a C++ namespace.
+        "-DGOOGLE_NAMESPACE='%s'" % namespace,
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
         "-DHAVE_UNWIND_H",
+        "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
     wasm_copts = [
@@ -59,8 +62,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-Wno-unused-function",
         "-Wno-unused-local-typedefs",
         "-Wno-unused-variable",
-        # Inject a C++ namespace.
-        "-DGOOGLE_NAMESPACE='%s'" % namespace,
         # Allows src/base/mutex.h to include pthread.h.
         "-DHAVE_PTHREAD",
         # Allows src/logging.cc to determine the host name.
@@ -72,7 +73,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # For logging.cc.
         "-DHAVE_PREAD",
         "-DHAVE___ATTRIBUTE__",
-        "-I%s/glog_internal" % gendir,
     ]
 
     linux_or_darwin_copts = wasm_copts + [
@@ -93,13 +93,13 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     ]
 
     windows_only_copts = [
+        "-DGLOG_NO_ABBREVIATED_SEVERITIES",
         "-DHAVE_SNPRINTF",
         "-I" + src_windows,
     ]
 
     windows_only_srcs = [
         "src/glog/log_severity.h",
-        "src/windows/config.h",
         "src/windows/dirent.h",
         "src/windows/port.cc",
         "src/windows/port.h",

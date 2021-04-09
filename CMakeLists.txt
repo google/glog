@@ -574,11 +574,6 @@ if (HAVE_PTHREAD)
   target_link_libraries (glog PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_PTHREAD)
 
-if (WIN32 AND HAVE_SNPRINTF)
-  set_property (SOURCE src/windows/port.cc APPEND PROPERTY COMPILE_DEFINITIONS
-    HAVE_SNPRINTF)
-endif (WIN32 AND HAVE_SNPRINTF)
-
 if (gflags_FOUND)
   target_link_libraries (glog PUBLIC gflags)
 
@@ -614,11 +609,11 @@ if (WIN32)
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 endif (WIN32)
 
+set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
+
 generate_export_header (glog
   EXPORT_MACRO_NAME GOOGLE_GLOG_DLL_DECL
   EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/glog/export.h)
-
-set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
 
 # Unit testing
 
@@ -737,12 +732,14 @@ if (BUILD_TESTING)
   )
 
   add_test (NAME cmake_package_config_generate COMMAND ${CMAKE_COMMAND}
-    -DPATH=$ENV{PATH}
-    -DINITIAL_CACHE=${_INITIAL_CACHE}
-    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
-    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/package_config_unittest/working_config
-    -DPACKAGE_DIR=${CMAKE_CURRENT_BINARY_DIR}
     -DGENERATOR=${CMAKE_GENERATOR}
+    -DGENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DGENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -DINITIAL_CACHE=${_INITIAL_CACHE}
+    -DPACKAGE_DIR=${CMAKE_CURRENT_BINARY_DIR}
+    -DPATH=$ENV{PATH}
+    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/package_config_unittest/working_config
+    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestPackageConfig.cmake
   )
 
@@ -806,8 +803,9 @@ configure_package_config_file (glog-config.cmake.in
   INSTALL_DESTINATION ${_glog_CMake_INSTALLDIR}
   NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-write_basic_package_version_file (glog-config-version.cmake VERSION
-  ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file (
+  ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
+  COMPATIBILITY SameMajorVersion)
 
 export (TARGETS glog NAMESPACE glog:: FILE glog-targets.cmake)
 export (PACKAGE glog)

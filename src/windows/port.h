@@ -62,6 +62,8 @@
  * used by both C and C++ code, so we put all the C++ together.
  */
 
+#include "glog/logging.h"
+
 #ifdef _MSC_VER
 
 /* 4244: otherwise we get problems when substracting two size_t's to an int
