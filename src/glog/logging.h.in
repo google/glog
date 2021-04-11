@@ -86,6 +86,14 @@
 #include <inttypes.h>           // a third place for uint16_t or u_int16_t
 #endif
 
+#ifdef GFLAGS_DLL_DECLARE_FLAG
+#define GLOG_GFLAGS_DLL_DECLARE_FLAG_WAS_DEFINED
+#pragma push_macro("GFLAGS_DLL_DECLARE_FLAG")
+#undef GFLAGS_DLL_DECLARE_FLAG
+#endif // defined(GFLAGS_DLL_DECLARE_FLAG)
+
+#define GFLAGS_DLL_DECLARE_FLAG GOOGLE_GLOG_DLL_DECL
+
 #if @ac_cv_have_libgflags@
 #include <gflags/gflags.h>
 #endif
@@ -1875,5 +1883,10 @@ GOOGLE_GLOG_DLL_DECL void InstallFailureWriter(
     void (*writer)(const char* data, int size));
 
 @ac_google_end_namespace@
+
+#ifdef GLOG_GFLAGS_DLL_DECLARE_FLAG_WAS_DEFINED
+#undef GLOG_GFLAGS_DLL_DECLARE_FLAG_WAS_DEFINED
+#pragma pop_macro("GFLAGS_DLL_DECLARE_FLAG")
+#endif // defined(GLOG_GFLAGS_DLL_DECLARE_FLAG_WAS_DEFINED)
 
 #endif // _LOGGING_H_

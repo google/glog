@@ -583,10 +583,10 @@ endif (HAVE_PTHREAD)
 if (gflags_FOUND)
   target_link_libraries (glog PUBLIC gflags)
 
-  if (NOT BUILD_SHARED_LIBS)
-    # Don't use __declspec(dllexport|dllimport) if this is a static build
-    targeT_compile_definitions (glog PUBLIC GFLAGS_DLL_DECLARE_FLAG= GFLAGS_DLL_DEFINE_FLAG=)
-  endif (NOT BUILD_SHARED_LIBS)
+  target_compile_definitions (glog PRIVATE
+    GFLAGS_DLL_DECLARE_FLAG=GOOGLE_GLOG_DLL_DECL
+    GFLAGS_DLL_DEFINE_FLAG=GOOGLE_GLOG_DLL_DECL
+  )
 endif (gflags_FOUND)
 
 if (ANDROID)
