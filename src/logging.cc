@@ -1389,6 +1389,7 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
   string cleaned_base_filename;
 
+  size_t real_filepath_size = filepath.size();
   for (size_t i = 0; i < base_filename.size(); ++i) {
     const char& c = base_filename[i];
 
@@ -1409,15 +1410,29 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   // `cleaned_base_filename` in `filepath` if the user
   // has set a custom filename extension.
   if (!filename_extension.empty()) {
-    if (filepath.find(filename_extension) != cleaned_base_filename.size()) {
+    if (cleaned_base_filename.size() >= real_filepath_size) {
       return false;
     }
-    cleaned_base_filename += filename_extension;
+    // for origin version, `filename_extension` is middle of the `filepath`.
+    string ext = filepath.substr(cleaned_base_filename.size(), filename_extension.size());
+    if (ext == filename_extension) {
+      cleaned_base_filename += filename_extension;
+    }
+    else {
+      // for new version, `filename_extension` is right of the `filepath`.
+      if (filename_extension.size() >= real_filepath_size) {
+        return false;
+      }
+      real_filepath_size = filepath.size() - filename_extension.size();
+      if (filepath.substr(real_filepath_size) != filename_extension) {
+        return false;
+      }
+    }
   }
 
   // The characters after `cleaned_base_filename` should match the format:
   // YYYYMMDD-HHMMSS.pid
-  for (size_t i = cleaned_base_filename.size(); i < filepath.size(); i++) {
+  for (size_t i = cleaned_base_filename.size(); i < real_filepath_size; i++) {
     const char& c = filepath[i];
 
     if (i <= cleaned_base_filename.size() + 7) { // 0 ~ 7 : YYYYMMDD
