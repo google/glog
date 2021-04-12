@@ -50,6 +50,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DGLOG_BAZEL_BUILD",
         # Inject a C++ namespace.
         "-DGOOGLE_NAMESPACE='%s'" % namespace,
+        "-DHAVE_CXX11_NULLPTR_T",
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
         "-DHAVE_UNWIND_H",
@@ -186,6 +187,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     )
 
     common_config = {
+        "@ac_cv_cxx11_nullptr_t@": "1",
         "@ac_cv_cxx_using_operator@": "1",
         "@ac_cv_have_inttypes_h@": "0",
         "@ac_cv_have_u_int16_t@": "0",

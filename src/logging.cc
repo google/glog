@@ -2547,6 +2547,13 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
   }
 }
 
+#ifdef HAVE_CXX11_NULLPTR_T
+template <>
+void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v) {
+  (*os) << "nullptr";
+}
+#endif // defined(HAVE_CXX11_NULLPTR_T)
+
 void InitGoogleLogging(const char* argv0) {
   glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
 }
