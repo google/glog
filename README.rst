@@ -118,7 +118,7 @@ GNU Make as build tool, the typical workflow is:
 
   .. code:: bash
 
-     cmake -H . -B build -G "Unix Makefiles"
+     cmake -S . -B build -G "Unix Makefiles"
 
   CMake provides different generators, and by default will pick the most
   relevant one to your environment. If you need a specific version of Visual
