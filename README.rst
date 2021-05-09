@@ -71,9 +71,9 @@ your ``WORKSPACE`` file:
 
    http_archive(
        name = "com_github_google_glog",
-       sha256 = "62efeb57ff70db9ea2129a16d0f908941e355d09d6d83c9f7b18557c0a7ab59e",
-       strip_prefix = "glog-d516278b1cd33cd148e8989aec488b6049a4ca0b",
-       urls = ["https://github.com/google/glog/archive/d516278b1cd33cd148e8989aec488b6049a4ca0b.zip"],
+       sha256 = "21bc744fb7f2fa701ee8db339ded7dce4f975d0d55837a97be7d46e8382dea5a",
+       strip_prefix = "glog-0.5.0",
+       urls = ["https://github.com/google/glog/archive/v0.5.0.zip"],
    )
 
 You can then add :bazel:`@com_github_google_glog//:glog` to the deps section
