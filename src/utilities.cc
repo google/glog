@@ -62,6 +62,10 @@ _START_GOOGLE_NAMESPACE_
 
 static const char* g_program_invocation_short_name = NULL;
 
+bool IsGoogleLoggingInitialized() {
+  return g_program_invocation_short_name != NULL;
+}
+
 _END_GOOGLE_NAMESPACE_
 
 // The following APIs are all internal.
@@ -174,10 +178,6 @@ const char* ProgramInvocationShortName() {
     // TODO(hamaji): Use /proc/self/cmdline and so?
     return "UNKNOWN";
   }
-}
-
-bool IsGoogleLoggingInitialized() {
-  return g_program_invocation_short_name != NULL;
 }
 
 #ifdef OS_WINDOWS

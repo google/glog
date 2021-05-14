@@ -221,10 +221,14 @@ int main(int argc, char **argv) {
   LogWithLevels(0, 0, 0, 0);  // simulate "before global c-tors"
   const string early_stderr = GetCapturedTestStderr();
 
+  EXPECT_FALSE(IsGoogleLoggingInitialized());
+
   // Setting a custom prefix generator (it will use the default format so that
   // the golden outputs can be reused):
   string prefix_attacher_data = "good data";
   InitGoogleLogging(argv[0], &PrefixAttacher, static_cast<void*>(&prefix_attacher_data));
+
+  EXPECT_TRUE(IsGoogleLoggingInitialized());
 
   RunSpecifiedBenchmarks();
 
@@ -992,8 +996,10 @@ static void TestCustomLoggerDeletionOnShutdown() {
   base::SetLogger(GLOG_INFO,
                   new RecordDeletionLogger(&custom_logger_deleted,
                                            base::GetLogger(GLOG_INFO)));
+  EXPECT_TRUE(IsGoogleLoggingInitialized());
   ShutdownGoogleLogging();
   EXPECT_TRUE(custom_logger_deleted);
+  EXPECT_FALSE(IsGoogleLoggingInitialized());
 }
 
 _START_GOOGLE_NAMESPACE_

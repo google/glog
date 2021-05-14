@@ -163,8 +163,6 @@ namespace glog_internal_namespace_ {
 
 const char* ProgramInvocationShortName();
 
-bool IsGoogleLoggingInitialized();
-
 int64 CycleClock_Now();
 
 int64 UsecToCycles(int64 usec);
