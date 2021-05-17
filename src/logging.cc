@@ -478,7 +478,7 @@ class LogFileObject : public base::Logger {
 class LogCleaner {
  public:
   LogCleaner();
-  virtual ~LogCleaner() {}
+  ~LogCleaner() {}
 
   void Enable(int overdue_days);
   void Disable();
@@ -1304,7 +1304,10 @@ void LogFileObject::Write(bool force_flush,
 }
 
 
-LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
+LogCleaner::LogCleaner()
+    : enabled_(false),
+      overdue_days_(7),
+      dir_delim_('/') {
 #ifdef OS_WINDOWS
   dir_delim_ = '\\';
 #endif
@@ -1435,19 +1438,19 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   for (size_t i = cleaned_base_filename.size(); i < real_filepath_size; i++) {
     const char& c = filepath[i];
 
-    if (i <= cleaned_base_filename.size() + 7) { // 0 ~ 7 : YYYYMMDD
+    if (i <= cleaned_base_filename.size() + 7) {  // 0 ~ 7 : YYYYMMDD
       if (c < '0' || c > '9') { return false; }
 
-    } else if (i == cleaned_base_filename.size() + 8) { // 8: -
+    } else if (i == cleaned_base_filename.size() + 8) {  // 8: -
       if (c != '-') { return false; }
 
-    } else if (i <= cleaned_base_filename.size() + 14) { // 9 ~ 14: HHMMSS
+    } else if (i <= cleaned_base_filename.size() + 14) {  // 9 ~ 14: HHMMSS
       if (c < '0' || c > '9') { return false; }
 
-    } else if (i == cleaned_base_filename.size() + 15) { // 15: .
+    } else if (i == cleaned_base_filename.size() + 15) {  // 15: .
       if (c != '.') { return false; }
 
-    } else if (i >= cleaned_base_filename.size() + 16) { // 16+: pid
+    } else if (i >= cleaned_base_filename.size() + 16) {  // 16+: pid
       if (c < '0' || c > '9') { return false; }
     }
   }
