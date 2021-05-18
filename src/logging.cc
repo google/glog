@@ -489,8 +489,8 @@ class LogCleaner {
   inline bool is_enabled() const { return is_enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(string log_directory,
-                                    int days,
+  vector<string> GetOverdueLogNames(int days,
+                                    const string& log_directory,
                                     const string& base_filename,
                                     const string& filename_extension) const;
 
@@ -1341,8 +1341,8 @@ void LogCleaner::Run(bool base_filename_selected,
   }
 
   for (size_t i = 0; i < dirs.size(); i++) {
-    vector<string> logs = GetOverdueLogNames(dirs[i],
-                                             overdue_days_,
+    vector<string> logs = GetOverdueLogNames(overdue_days_,
+                                             dirs[i],
                                              base_filename,
                                              filename_extension);
     for (size_t j = 0; j < logs.size(); j++) {
@@ -1351,8 +1351,8 @@ void LogCleaner::Run(bool base_filename_selected,
   }
 }
 
-vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
-                                              int days,
+vector<string> LogCleaner::GetOverdueLogNames(int days,
+                                              const string& log_directory,
                                               const string& base_filename,
                                               const string& filename_extension) const {
   // The names of overdue logs.
