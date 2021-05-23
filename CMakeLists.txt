@@ -466,7 +466,16 @@ else (WITH_THREADS AND Threads_FOUND)
   set (NO_THREADS 1)
 endif (WITH_THREADS AND Threads_FOUND)
 
-set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
+# fopen/open on Cygwin can not handle unix-type paths like /home/.... 
+# therefore we translate TEST_SRC_DIR to windows-path.
+if (CYGWIN)
+  execute_process (COMMAND cygpath.exe -m ${CMAKE_CURRENT_SOURCE_DIR}
+                   OUTPUT_STRIP_TRAILING_WHITESPACE
+                   OUTPUT_VARIABLE TEST_SRC_DIR)
+  set (TEST_SRC_DIR \"${TEST_SRC_DIR}\")
+else (CYGWIN)
+  set (TEST_SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")
+endif (CYGWIN)
 
 configure_file (src/config.h.cmake.in config.h)
 configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
@@ -519,16 +528,16 @@ set (GLOG_SRCS
   src/vlog_is_on.cc
 )
 
-if (HAVE_PTHREAD OR WIN32)
+if (HAVE_PTHREAD OR WIN32 OR CYGWIN)
   list (APPEND GLOG_SRCS src/signalhandler.cc)
-endif (HAVE_PTHREAD OR WIN32)
+endif (HAVE_PTHREAD OR WIN32 OR CYGWIN)
 
-if (WIN32)
+if (CYGWIN OR WIN32)
   list (APPEND GLOG_SRCS
     src/windows/port.cc
     src/windows/port.h
   )
-endif (WIN32)
+endif (CYGWIN OR WIN32)
 
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
 
@@ -608,9 +617,9 @@ endif()
 set_target_properties (glog PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties (glog PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR})
 
-if (WIN32)
+if (CYGWIN OR WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
-endif (WIN32)
+endif (CYGWIN OR WIN32)
 
 if (WITH_CUSTOM_PREFIX)
   target_compile_definitions(glog PUBLIC GLOG_CUSTOM_PREFIX_SUPPORT)
@@ -625,11 +634,11 @@ target_include_directories (glog BEFORE PUBLIC
   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-if (WIN32)
+if (CYGWIN OR WIN32)
   target_include_directories (glog PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/windows>"
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
-endif (WIN32)
+endif (CYGWIN OR WIN32)
 
 set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
 
