@@ -118,6 +118,15 @@ void InitGoogleTest(int*, char**) {}
 
 // The following is some bare-bones testing infrastructure
 
+#define EXPECT_NEAR(val1, val2, abs_error)                                     \
+  do {                                                                         \
+    if (abs(val1 - val2) > abs_error) {                                        \
+      fprintf(stderr, "Check failed: %s within %s of %s\n", #val1, #abs_error, \
+              #val2);                                                          \
+      exit(1);                                                                 \
+    }                                                                          \
+  } while (0)
+
 #define EXPECT_TRUE(cond)                               \
   do {                                                  \
     if (!(cond)) {                                      \

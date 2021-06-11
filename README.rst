@@ -346,6 +346,19 @@ output to the first n occurrences:
 Outputs log messages for the first 20 times it is executed. Again, the
 ``google::COUNTER`` identifier indicates which repetition is happening.
 
+Other times, it is desired to only log a message periodically based on a time.
+So for example, to log a message every 10ms:
+
+.. code:: cpp
+
+   LOG_EVERY_T(INFO, 0.01) << "Got a cookie";
+
+Or every 2.35s:
+
+.. code:: cpp
+
+   LOG_EVERY_T(INFO, 2.35) << "Got a cookie";
+
 Debug Mode Support
 ~~~~~~~~~~~~~~~~~~
 
