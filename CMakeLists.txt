@@ -43,7 +43,9 @@ endif (NOT WITH_THREADS)
 
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
-set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+set (CMAKE_POSITION_INDEPENDENT_CODE ON)
+set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 include (CheckCXXCompilerFlag)
@@ -584,8 +586,6 @@ add_library (glog
 )
 
 add_library (glog::glog ALIAS glog)
-
-set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if (Unwind_FOUND)
   target_link_libraries (glog PUBLIC unwind::unwind)
