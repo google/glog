@@ -398,6 +398,12 @@ if (HAVE_EXECINFO_H)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_H)
 
+if (HAVE_CXX11_ATOMIC)
+  set (ac_cv_cxx11_atomic 1)
+else (HAVE_CXX11_ATOMIC)
+  set (ac_cv_cxx11_atomic 0)
+endif (HAVE_CXX11_ATOMIC)
+
 if (WITH_SYMBOLIZE)
   if (WIN32 OR CYGWIN)
     cmake_push_check_state (RESET)
@@ -466,7 +472,7 @@ else (WITH_THREADS AND Threads_FOUND)
   set (NO_THREADS 1)
 endif (WITH_THREADS AND Threads_FOUND)
 
-# fopen/open on Cygwin can not handle unix-type paths like /home/.... 
+# fopen/open on Cygwin can not handle unix-type paths like /home/....
 # therefore we translate TEST_SRC_DIR to windows-path.
 if (CYGWIN)
   execute_process (COMMAND cygpath.exe -m ${CMAKE_CURRENT_SOURCE_DIR}

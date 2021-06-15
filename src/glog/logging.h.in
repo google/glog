@@ -99,7 +99,7 @@
 #include <gflags/gflags.h>
 #endif
 
-#ifdef HAVE_CXX11_ATOMIC
+#if @ac_cv_cxx11_atomic@
 #include <atomic>
 #elif defined(OS_WINDOWS)
 #include <Windows.h>
