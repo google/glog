@@ -46,15 +46,14 @@ set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-include (CheckCXXSourceCompiles)
 include (CheckCXXCompilerFlag)
 include (CheckCXXSourceCompiles)
 include (CheckCXXSourceRuns)
+include (CheckCXXSymbolExists)
 include (CheckFunctionExists)
 include (CheckIncludeFileCXX)
 include (CheckLibraryExists)
 include (CheckStructHasMember)
-include (CheckSymbolExists)
 include (CheckTypeSize)
 include (CMakePackageConfigHelpers)
 include (CMakePushCheckState)
@@ -141,7 +140,7 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 
 # NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
 # snprintf as an inline function
-check_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
+check_cxx_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
 
 check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
 
@@ -446,7 +445,7 @@ add_definitions (-DGLOG_NO_SYMBOLIZE_DETECTION)
 
 check_cxx_source_compiles ("
 #include <cstdlib>
-#include <time.h>
+#include <ctime>
 int main()
 {
     time_t timep;
@@ -466,7 +465,7 @@ else (WITH_THREADS AND Threads_FOUND)
   set (NO_THREADS 1)
 endif (WITH_THREADS AND Threads_FOUND)
 
-# fopen/open on Cygwin can not handle unix-type paths like /home/.... 
+# fopen/open on Cygwin can not handle unix-type paths like /home/....
 # therefore we translate TEST_SRC_DIR to windows-path.
 if (CYGWIN)
   execute_process (COMMAND cygpath.exe -m ${CMAKE_CURRENT_SOURCE_DIR}
