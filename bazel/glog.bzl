@@ -187,6 +187,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     )
 
     common_config = {
+        "@ac_cv_cxx11_atomic@": "1",
         "@ac_cv_cxx11_nullptr_t@": "1",
         "@ac_cv_cxx_using_operator@": "1",
         "@ac_cv_have_inttypes_h@": "0",
