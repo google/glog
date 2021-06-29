@@ -54,6 +54,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
         "-DHAVE_UNWIND_H",
+        "-DGLOG_CUSTOM_PREFIX_SUPPORT",
         "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
