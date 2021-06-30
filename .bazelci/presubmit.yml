@@ -1,32 +1,23 @@
 ---
 platforms:
-  ubuntu1604:
-    build_flags:
-    - "--features=layering_check"
-    build_targets:
-    - "..."
-    test_flags:
-    - "--features=layering_check"
-    test_targets:
-    - "..."
   ubuntu1804:
     build_flags:
     - "--features=layering_check"
     build_targets:
-    - "..."
+    - "//..."
     test_flags:
     - "--features=layering_check"
     test_targets:
-    - "..."
+    - "//..."
   macos:
     build_flags:
     - "--features=layering_check"
     build_targets:
-    - "..."
+    - "//..."
     test_flags:
     - "--features=layering_check"
     test_targets:
-    - "..."
+    - "//..."
   windows:
     # Optional: use VS 2017 instead of 2015.
     environment:
@@ -34,8 +25,8 @@ platforms:
     build_flags:
     - "--features=layering_check"
     build_targets:
-    - "..."
+    - "//..."
     test_flags:
     - "--features=layering_check"
     test_targets:
-    - "..."
+    - "//..."
