@@ -195,6 +195,9 @@
 /* Check whether C++11 atomic is available */
 #cmakedefine HAVE_CXX11_ATOMIC ${HAVE_CXX11_ATOMIC}
 
+/* Check whether C++11 chrono is available */
+#cmakedefine HAVE_CXX11_CHRONO ${HAVE_CXX11_CHRONO}
+
 /* Check whether C++11 nullptr_t is available */
 #cmakedefine HAVE_CXX11_NULLPTR_T ${HAVE_CXX11_NULLPTR_T}
 

@@ -243,6 +243,17 @@ int main() { }
 " HAVE_CXX11_ATOMIC)
 
 check_cxx_source_compiles ("
+constexpr int x = 0;
+int main() { }
+" HAVE_CXX11_CONSTEXPR)
+
+check_cxx_source_compiles ("
+#include <chrono>
+std::chrono::seconds s;
+int main() { }
+" HAVE_CXX11_CHRONO)
+
+check_cxx_source_compiles ("
 #include <cstddef>
 void foo(std::nullptr_t) {}
 int main(void) { foo(nullptr); }
@@ -388,6 +399,18 @@ if (HAVE_USING_OPERATOR)
 else (HAVE_USING_OPERATOR)
   set (ac_cv_cxx_using_operator 0)
 endif (HAVE_USING_OPERATOR)
+
+if (HAVE_CXX11_CONSTEXPR)
+  set (ac_cv_cxx11_constexpr 1)
+else (HAVE_CXX11_CONSTEXPR)
+  set (ac_cv_cxx11_constexpr 0)
+endif (HAVE_CXX11_CONSTEXPR)
+
+if (HAVE_CXX11_CHRONO)
+  set (ac_cv_cxx11_chrono 1)
+else (HAVE_CXX11_CHRONO)
+  set (ac_cv_cxx11_chrono 0)
+endif (HAVE_CXX11_CHRONO)
 
 if (HAVE_CXX11_NULLPTR_T)
   set (ac_cv_cxx11_nullptr_t 1)
