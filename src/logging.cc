@@ -1490,7 +1490,7 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // allocations).
 static GLOG_THREAD_LOCAL_STORAGE bool thread_data_available = true;
 
-#ifdef HAVE_ALIGNED_STORAGE
+#if defined(HAVE_ALIGNED_STORAGE) && __cplusplus >= 201103L
 static GLOG_THREAD_LOCAL_STORAGE
     std::aligned_storage<sizeof(LogMessage::LogMessageData),
                          alignof(LogMessage::LogMessageData)>::type thread_msg_data;
@@ -2547,7 +2547,7 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
   }
 }
 
-#ifdef HAVE_CXX11_NULLPTR_T
+#if defined(HAVE_CXX11_NULLPTR_T) && __cplusplus >= 201103L
 template <>
 void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v) {
   (*os) << "nullptr";
