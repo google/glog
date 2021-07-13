@@ -530,7 +530,7 @@ severity level.
          "Present occurence is " << google::COUNTER;
 
 
-Custom log prefix format
+Custom Log Prefix Format
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 glog supports changing the format of the prefix attached to log messages by
@@ -544,28 +544,28 @@ contents will be prepended to the actual message in the final log line.
 
 For example:
 
-   .. code:: cpp
+.. code:: cpp
 
-      /* This function writes a prefix that matches glog's default format.
-       * (The third parameter can be used to receive user-supplied data, and is
-       * NULL by default.)
-       */
-      void CustomPrefix(std::ostream &s, const LogMessageInfo &l, void*) {
-         s << l.severity[0]
-         << setw(4) << 1900 + l.time.year()
-         << setw(2) << 1 + l.time.month()
-         << setw(2) << l.time.day()
-         << ' '
-         << setw(2) << l.time.hour() << ':'
-         << setw(2) << l.time.min()  << ':'
-         << setw(2) << l.time.sec() << "."
-         << setw(6) << l.time.usec()
-         << ' '
-         << setfill(' ') << setw(5)
-         << l.thread_id << setfill('0')
-         << ' '
-         << l.filename << ':' << l.line_number << "]";
-      }
+    /* This function writes a prefix that matches glog's default format.
+     * (The third parameter can be used to receive user-supplied data, and is
+     * NULL by default.)
+     */
+    void CustomPrefix(std::ostream &s, const LogMessageInfo &l, void*) {
+       s << l.severity[0]
+       << setw(4) << 1900 + l.time.year()
+       << setw(2) << 1 + l.time.month()
+       << setw(2) << l.time.day()
+       << ' '
+       << setw(2) << l.time.hour() << ':'
+       << setw(2) << l.time.min()  << ':'
+       << setw(2) << l.time.sec() << "."
+       << setw(6) << l.time.usec()
+       << ' '
+       << setfill(' ') << setw(5)
+       << l.thread_id << setfill('0')
+       << ' '
+       << l.filename << ':' << l.line_number << "]";
+    }
 
 
 To enable the use of ``CustomPrefix()``, simply give glog a pointer to it
