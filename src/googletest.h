@@ -37,17 +37,15 @@
 
 #include "utilities.h"
 
-#include <ctype.h>
-#include <setjmp.h>
-#include <time.h>
-
+#include <cctype>
+#include <csetjmp>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,6 +55,12 @@
 #endif
 
 #include "base/commandlineflags.h"
+
+#if __cplusplus < 201103L && !defined(_MSC_VER)
+#define GOOGLE_GLOG_THROW_BAD_ALLOC throw (std::bad_alloc)
+#else
+#define GOOGLE_GLOG_THROW_BAD_ALLOC
+#endif
 
 using std::map;
 using std::string;
@@ -601,21 +605,21 @@ void (*g_new_hook)() = NULL;
 
 _END_GOOGLE_NAMESPACE_
 
-void* operator new(size_t size) {
+void* operator new(size_t size) GOOGLE_GLOG_THROW_BAD_ALLOC {
   if (GOOGLE_NAMESPACE::g_new_hook) {
     GOOGLE_NAMESPACE::g_new_hook();
   }
   return malloc(size);
 }
 
-void* operator new[](size_t size) {
+void* operator new[](size_t size) GOOGLE_GLOG_THROW_BAD_ALLOC {
   return ::operator new(size);
 }
 
-void operator delete(void* p) {
+void operator delete(void* p) throw() {
   free(p);
 }
 
-void operator delete[](void* p) {
+void operator delete[](void* p) throw() {
   ::operator delete(p);
 }
