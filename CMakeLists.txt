@@ -140,6 +140,11 @@ check_cxx_compiler_flag (-Wdeprecated HAVE_NO_DEPRECATED)
 check_cxx_compiler_flag (-Wunnamed-type-template-args
     HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
+cmake_push_check_state (RESET)
+set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+check_cxx_symbol_exists (pthread_threadid_np "pthread.h" HAVE_PTHREAD_THREADID_NP)
+cmake_pop_check_state ()
+
 # NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
 # snprintf as an inline function
 check_cxx_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
