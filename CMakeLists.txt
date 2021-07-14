@@ -630,7 +630,12 @@ if (HAVE_PTHREAD)
 endif (HAVE_PTHREAD)
 
 if (gflags_FOUND)
-  target_link_libraries (glog PUBLIC gflags)
+  # Prefer the gflags target that uses double colon convention
+  if (TARGET gflags::gflags)
+    target_link_libraries (glog PUBLIC gflags::gflags)
+  else (TARGET gflags::gflags)
+    target_link_libraries (glog PUBLIC gflags)
+  endif (TARGET gflags::gflags)
 
   target_compile_definitions (glog PRIVATE
     GFLAGS_DLL_DECLARE_FLAG=GOOGLE_GLOG_DLL_DECL
