@@ -478,7 +478,7 @@ class LogFileObject : public base::Logger {
 class LogCleaner {
  public:
   LogCleaner();
-  virtual ~LogCleaner() {}
+  ~LogCleaner() {}
 
   void Enable(int overdue_days);
   void Disable();
@@ -486,11 +486,11 @@ class LogCleaner {
            const string& base_filename,
            const string& filename_extension) const;
 
-  inline bool enabled() const { return enabled_; }
+  inline bool is_enabled() const { return is_enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(string log_directory,
-                                    int days,
+  vector<string> GetOverdueLogNames(int days,
+                                    const string& log_directory,
                                     const string& base_filename,
                                     const string& filename_extension) const;
 
@@ -500,7 +500,7 @@ class LogCleaner {
 
   bool IsLogLastModifiedOver(const string& filepath, int days) const;
 
-  bool enabled_;
+  bool is_enabled_;
   int overdue_days_;
   char dir_delim_;  // filepath delimiter ('/' or '\\')
 };
@@ -1292,10 +1292,7 @@ void LogFileObject::Write(bool force_flush,
 #endif
 
     // Perform clean up for old logs
-    if (log_cleaner.enabled()) {
-      if (base_filename_selected_ && base_filename_.empty()) {
-        return;
-      }
+    if (log_cleaner.is_enabled()) {
       log_cleaner.Run(base_filename_selected_,
                       base_filename_,
                       filename_extension_);
@@ -1304,7 +1301,10 @@ void LogFileObject::Write(bool force_flush,
 }
 
 
-LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
+LogCleaner::LogCleaner()
+    : is_enabled_(false),
+      overdue_days_(7),
+      dir_delim_('/') {
 #ifdef OS_WINDOWS
   dir_delim_ = '\\';
 #endif
@@ -1315,31 +1315,34 @@ void LogCleaner::Enable(int overdue_days) {
   // Since all logs will be deleted immediately, which will cause troubles.
   assert(overdue_days > 0);
 
-  enabled_ = true;
+  is_enabled_ = true;
   overdue_days_ = overdue_days;
 }
 
 void LogCleaner::Disable() {
-  enabled_ = false;
+  is_enabled_ = false;
 }
 
 void LogCleaner::Run(bool base_filename_selected,
                      const string& base_filename,
                      const string& filename_extension) const {
-  assert(enabled_ && overdue_days_ > 0);
+  assert(is_enabled_ && overdue_days_ > 0);
+  assert(!base_filename_selected || !base_filename.empty());
 
   vector<string> dirs;
 
-  if (base_filename_selected) {
+  if (!base_filename_selected) {
+    dirs = GetLoggingDirectories();
+  } else if (base_filename.find(dir_delim_) != string::npos) {
     string dir = base_filename.substr(0, base_filename.find_last_of(dir_delim_) + 1);
     dirs.push_back(dir);
   } else {
-    dirs = GetLoggingDirectories();
+    dirs.push_back(base_filename);
   }
 
   for (size_t i = 0; i < dirs.size(); i++) {
-    vector<string> logs = GetOverdueLogNames(dirs[i],
-                                             overdue_days_,
+    vector<string> logs = GetOverdueLogNames(overdue_days_,
+                                             dirs[i],
                                              base_filename,
                                              filename_extension);
     for (size_t j = 0; j < logs.size(); j++) {
@@ -1348,8 +1351,8 @@ void LogCleaner::Run(bool base_filename_selected,
   }
 }
 
-vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
-                                              int days,
+vector<string> LogCleaner::GetOverdueLogNames(int days,
+                                              const string& log_directory,
                                               const string& base_filename,
                                               const string& filename_extension) const {
   // The names of overdue logs.
@@ -1359,17 +1362,18 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
   DIR *dir;
   struct dirent *ent;
 
-  // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != dir_delim_) {
-    log_directory += dir_delim_;
-  }
-
-  if ((dir=opendir(log_directory.c_str()))) {
-    while ((ent=readdir(dir))) {
+  if ((dir = opendir(log_directory.c_str()))) {
+    while ((ent = readdir(dir))) {
       if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
         continue;
       }
-      string filepath = log_directory + ent->d_name;
+
+      string filepath = ent->d_name;
+
+      if (log_directory.at(log_directory.size() - 1) == dir_delim_) {
+        filepath = log_directory + filepath;
+      }
+
       if (IsLogFromCurrentProject(filepath, base_filename, filename_extension) &&
           IsLogLastModifiedOver(filepath, days)) {
         overdue_log_names.push_back(filepath);
@@ -1435,19 +1439,19 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   for (size_t i = cleaned_base_filename.size(); i < real_filepath_size; i++) {
     const char& c = filepath[i];
 
-    if (i <= cleaned_base_filename.size() + 7) { // 0 ~ 7 : YYYYMMDD
+    if (i <= cleaned_base_filename.size() + 7) {  // 0 ~ 7 : YYYYMMDD
       if (c < '0' || c > '9') { return false; }
 
-    } else if (i == cleaned_base_filename.size() + 8) { // 8: -
+    } else if (i == cleaned_base_filename.size() + 8) {  // 8: -
       if (c != '-') { return false; }
 
-    } else if (i <= cleaned_base_filename.size() + 14) { // 9 ~ 14: HHMMSS
+    } else if (i <= cleaned_base_filename.size() + 14) {  // 9 ~ 14: HHMMSS
       if (c < '0' || c > '9') { return false; }
 
-    } else if (i == cleaned_base_filename.size() + 15) { // 15: .
+    } else if (i == cleaned_base_filename.size() + 15) {  // 15: .
       if (c != '.') { return false; }
 
-    } else if (i >= cleaned_base_filename.size() + 16) { // 16+: pid
+    } else if (i >= cleaned_base_filename.size() + 16) {  // 16+: pid
       if (c < '0' || c > '9') { return false; }
     }
   }
