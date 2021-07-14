@@ -45,12 +45,15 @@ function (get_cache_variables _CACHEVARS)
     string (REPLACE "\"" "\\\"" _CACHEVARDOC "${_CACHEVARDOC}")
     # Escape ; in values
     string (REPLACE ";" "\\\;" _CACHEVARVAL "${_CACHEVARVAL}")
+    # Escape ; in help strings
+    string (REPLACE ";" "\\\;" _CACHEVARDOC "${_CACHEVARDOC}")
     # Escape backslashes in values except those that are followed by a
     # quote.
     string (REGEX REPLACE "\\\\([^\"])" "\\\\\\1" _CACHEVARVAL "${_CACHEVARVAL}")
     # Escape backslashes in values that are followed by a letter to avoid
     # invalid escape sequence errors.
     string (REGEX REPLACE "\\\\([a-zA-Z])" "\\\\\\\\1" _CACHEVARVAL "${_CACHEVARVAL}")
+    string (REPLACE "\\\\" "\\\\\\\\" _CACHEVARDOC "${_CACHEVARDOC}")
 
     if (NOT "${_CACHEVARTYPE}" STREQUAL BOOL)
       set (_CACHEVARVAL "\"${_CACHEVARVAL}\"")

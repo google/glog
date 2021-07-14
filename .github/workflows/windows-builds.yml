@@ -1,4 +1,4 @@
-name: Windows builds
+name: Windows
 
 on: [push, pull_request]
 
@@ -12,38 +12,73 @@ jobs:
       matrix:
         config:
         - {
-          name: "vs-15-2017-win64-cxx11",
+          name: "VS-15-2017-win64-C++11",
           os: windows-2016,
           generator: "Visual Studio 15 2017",
           std: 11,
           test_target: RUN_TESTS,
           }
         - {
-          name: "vs-16-2019-win64-cxx11",
+          name: "VS-16-2019-win64-C++98",
+          os: windows-2019,
+          generator: "Visual Studio 16 2019",
+          std: 98,
+          test_target: RUN_TESTS,
+          }
+        - {
+          name: "VS-16-2019-win64-C++11",
           os: windows-2019,
           generator: "Visual Studio 16 2019",
           std: 11,
           test_target: RUN_TESTS,
           }
         - {
-          name: "vs-16-2019-win64-cxx17",
+          name: "VS-16-2019-win64-C++17",
           os: windows-2019,
           generator: "Visual Studio 16 2019",
           std: 17,
           test_target: RUN_TESTS,
           }
         - {
-          name: "mingw-cxx11",
+          name: "VS-16-2019-win64-C++20",
+          os: windows-2019,
+          generator: "Visual Studio 16 2019",
+          std: 20,
+          test_target: RUN_TESTS,
+          }
+        - {
+          name: "MinGW-C++98",
+          os: windows-latest,
+          generator: "MinGW Makefiles",
+          std: 98,
+          test_target: test,
+          }
+        - {
+          name: "MinGW-C++11",
           os: windows-latest,
           generator: "MinGW Makefiles",
           std: 11,
           test_target: test,
           }
         - {
-          name: "mingw-cxx17",
+          name: "MinGW-C++14",
+          os: windows-latest,
+          generator: "MinGW Makefiles",
+          std: 14,
+          test_target: test,
+          }
+        - {
+          name: "MinGW-C++17",
           os: windows-latest,
           generator: "MinGW Makefiles",
           std: 17,
+          test_target: test,
+          }
+        - {
+          name: "MinGW-C++20",
+          os: windows-latest,
+          generator: "MinGW Makefiles",
+          std: 20,
           test_target: test,
           }
         build_type: [Debug] #, Release]
@@ -54,21 +89,21 @@ jobs:
 
     # Visual Studio build steps
     - name: Configure build MSVC
-      if: ${{ startswith(matrix.config.name, 'vs-') }}
+      if: ${{ startswith(matrix.config.name, 'VS-') }}
       shell: powershell
-      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -A "${{matrix.ARCH}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF
+      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -A "${{matrix.ARCH}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_CXX_EXTENSIONS=OFF
     - name: Build MSVC
-      if: ${{ startswith(matrix.config.name, 'vs-') }}
+      if: ${{ startswith(matrix.config.name, 'VS-') }}
       shell: powershell
       run: cmake --build ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} --config ${{matrix.build_type}}
 
-    # mingw build steps
+    # MinGW build steps
     - name: Configure build MinGW
-      if: ${{ startswith(matrix.config.name, 'mingw-') }}
+      if: ${{ startswith(matrix.config.name, 'MinGW-') }}
       shell: powershell
-      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
+      run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
     - name: Build MinGW
-      if: ${{ startswith(matrix.config.name, 'mingw-') }}
+      if: ${{ startswith(matrix.config.name, 'MinGW-') }}
       shell: powershell
       run: cmake --build ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}}
 

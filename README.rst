@@ -1,7 +1,7 @@
 Google Logging Library
 ======================
 
-|Build Status| |Grunt status| |Github actions|
+|Build Status| |Grunt status| |Windows Github actions| |macOS Github actions|
 
 Google Logging (glog) is a C++98 library that implements application-level
 logging. The library provides logging APIs based on C++-style streams and
@@ -869,5 +869,7 @@ Submitting a Patch
    :target: https://travis-ci.org/google/glog/builds
 .. |Grunt status| image:: https://img.shields.io/appveyor/ci/google-admin/glog/master.svg?label=Appveyor
    :target: https://ci.appveyor.com/project/google-admin/glog/history
-.. |Github actions| image:: https://github.com/google/glog/actions/workflows/windows-builds.yml/badge.svg
+.. |Windows Github actions| image:: https://github.com/google/glog/actions/workflows/windows-builds.yml/badge.svg
+   :target: https://github.com/google/glog/actions
+.. |macOS Github actions| image:: https://github.com/google/glog/actions/workflows/macos-builds.yml/badge.svg
    :target: https://github.com/google/glog/actions

@@ -1,0 +1,43 @@
+name: macOS
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: AppleClang-C++${{matrix.std}}-${{matrix.build_type}}
+    runs-on: macos-10.15
+    strategy:
+      fail-fast: false
+      matrix:
+          std: [98, 11, 14, 17, 20]
+          include:
+            - generator: Ninja
+            - build_type: Debug
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Ninja
+      uses: ashutoshvarma/setup-ninja@master
+      with:
+        version: 1.10.0
+
+    - name: Configure
+      shell: bash
+      run: |
+        if [[ ${{matrix.std}} == 98 ]]; then
+          export CXXFLAGS=-Werror=c++11-extensions
+        fi
+        cmake -S . -B ${{runner.workspace}}/build_${{matrix.name}}_${{matrix.build_type}} \
+              -G "${{matrix.generator}}" \
+              -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+              -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+              -DCMAKE_CXX_EXTENSIONS=OFF
+    - name: Build
+      run: |
+        cmake --build ${{runner.workspace}}/build_${{matrix.name}}_${{matrix.build_type}} \
+              --config ${{matrix.build_type}}
+    - name: Run tests
+      run: |
+        ctest --test-dir ${{runner.workspace}}/build_${{matrix.name}}_${{matrix.build_type}} \
+              --output-on-failure
