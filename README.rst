@@ -274,7 +274,7 @@ The following flags are most commonly used:
 ``v`` (``int``, default=0)
    Show all ``VLOG(m)`` messages for ``m`` less or equal the value of
    this flag. Overridable by :cmd:`--vmodule`. See `the section about
-   verbose logging <#verbose>`__ for more detail.
+   verbose logging <#verbose-logging>`__ for more detail.
 
 ``vmodule`` (``string``, default="")
    Per-module verbose level. The argument has to contain a
@@ -282,7 +282,7 @@ The following flags are most commonly used:
    glob pattern (e.g., ``gfs*`` for all modules whose name starts with
    "gfs"), matched against the filename base (that is, name ignoring
    .cc/.h./-inl.h). <log level> overrides any value given by :cmd:`--v`.
-   See also `the section about verbose logging <#verbose>`__.
+   See also `the section about verbose logging <#verbose-logging>`__.
 
 There are some other flags defined in logging.cc. Please grep the source
 code for ``DEFINE_`` to see a complete list of all flags.
@@ -498,7 +498,7 @@ will:
 
 The wildcarding functionality shown by (c) supports both ’*’ (matches 0
 or more characters) and ’?’ (matches any single character) wildcards.
-Please also check the section about `command line flags <#flags>`__.
+Please also check the section about `command line flags <#setting-flags>`__.
 
 There’s also ``VLOG_IS_ON(n)`` "verbose level" condition macro. This
 macro returns true when the :cmd:`--v` is equal or greater than ``n``. To
