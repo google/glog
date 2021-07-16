@@ -71,6 +71,7 @@ const struct {
 
 static bool kFailureSignalHandlerInstalled = false;
 
+#if !defined(OS_WINDOWS)
 // Returns the program counter from signal context, NULL if unknown.
 void* GetPC(void* ucontext_in_void) {
 #if (defined(HAVE_UCONTEXT_H) || defined(HAVE_SYS_UCONTEXT_H)) && defined(PC_FROM_UCONTEXT)
@@ -78,26 +79,29 @@ void* GetPC(void* ucontext_in_void) {
     ucontext_t *context = reinterpret_cast<ucontext_t *>(ucontext_in_void);
     return (void*)context->PC_FROM_UCONTEXT;
   }
+#else
+  (void)ucontext_in_void;
 #endif
   return NULL;
 }
+#endif
 
 // The class is used for formatting error messages.  We don't use printf()
 // as it's not async signal safe.
 class MinimalFormatter {
  public:
-  MinimalFormatter(char *buffer, int size)
+  MinimalFormatter(char *buffer, size_t size)
       : buffer_(buffer),
         cursor_(buffer),
         end_(buffer + size) {
   }
 
   // Returns the number of bytes written in the buffer.
-  int num_bytes_written() const { return (int) (cursor_ - buffer_); }
+  std::size_t num_bytes_written() const { return static_cast<std::size_t>(cursor_ - buffer_); }
 
   // Appends string from "str" and updates the internal cursor.
   void AppendString(const char* str) {
-    int i = 0;
+    ptrdiff_t i = 0;
     while (str[i] != '\0' && cursor_ + i < end_) {
       cursor_[i] = str[i];
       ++i;
@@ -107,12 +111,12 @@ class MinimalFormatter {
 
   // Formats "number" in "radix" and updates the internal cursor.
   // Lowercase letters are used for 'a' - 'z'.
-  void AppendUint64(uint64 number, int radix) {
-    int i = 0;
+  void AppendUint64(uint64 number, unsigned radix) {
+    unsigned i = 0;
     while (cursor_ + i < end_) {
-      const int tmp = number % radix;
+      const uint64 tmp = number % radix;
       number /= radix;
-      cursor_[i] = (tmp < 10 ? '0' + tmp : 'a' + tmp - 10);
+      cursor_[i] = static_cast<char>(tmp < 10 ? '0' + tmp : 'a' + tmp - 10);
       ++i;
       if (number == 0) {
         break;
@@ -145,14 +149,14 @@ class MinimalFormatter {
 };
 
 // Writes the given data with the size to the standard error.
-void WriteToStderr(const char* data, int size) {
+void WriteToStderr(const char* data, size_t size) {
   if (write(STDERR_FILENO, data, size) < 0) {
     // Ignore errors.
   }
 }
 
 // The writer function can be changed by InstallFailureWriter().
-void (*g_failure_writer)(const char* data, int size) = WriteToStderr;
+void (*g_failure_writer)(const char* data, size_t size) = WriteToStderr;
 
 // Dumps time information.  We don't dump human-readable time information
 // as localtime() is not guaranteed to be async signal safe.
@@ -161,10 +165,10 @@ void DumpTimeInfo() {
   char buf[256];  // Big enough for time info.
   MinimalFormatter formatter(buf, sizeof(buf));
   formatter.AppendString("*** Aborted at ");
-  formatter.AppendUint64(time_in_sec, 10);
+  formatter.AppendUint64(static_cast<uint64>(time_in_sec), 10);
   formatter.AppendString(" (unix time)");
   formatter.AppendString(" try \"date -d @");
-  formatter.AppendUint64(time_in_sec, 10);
+  formatter.AppendUint64(static_cast<uint64>(time_in_sec), 10);
   formatter.AppendString("\" if you are using GNU date ***\n");
   g_failure_writer(buf, formatter.num_bytes_written());
 }
@@ -192,13 +196,13 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
     // Use the signal number if the name is unknown.  The signal name
     // should be known, but just in case.
     formatter.AppendString("Signal ");
-    formatter.AppendUint64(signal_number, 10);
+    formatter.AppendUint64(static_cast<uint64>(signal_number), 10);
   }
   formatter.AppendString(" (@0x");
   formatter.AppendUint64(reinterpret_cast<uintptr_t>(siginfo->si_addr), 16);
   formatter.AppendString(")");
   formatter.AppendString(" received by PID ");
-  formatter.AppendUint64(getpid(), 10);
+  formatter.AppendUint64(static_cast<uint64>(getpid()), 10);
   formatter.AppendString(" (TID 0x");
   // We assume pthread_t is an integral number or a pointer, rather
   // than a complex struct.  In some environments, pthread_self()
@@ -210,7 +214,7 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   // Only linux has the PID of the signal sender in si_pid.
 #ifdef OS_LINUX
   formatter.AppendString("from PID ");
-  formatter.AppendUint64(siginfo->si_pid, 10);
+  formatter.AppendUint64(static_cast<uint64>(siginfo->si_pid), 10);
   formatter.AppendString("; ");
 #endif
   formatter.AppendString("stack trace: ***\n");
@@ -394,7 +398,7 @@ void InstallFailureSignalHandler() {
 #endif  // HAVE_SIGACTION
 }
 
-void InstallFailureWriter(void (*writer)(const char* data, int size)) {
+void InstallFailureWriter(void (*writer)(const char* data, size_t size)) {
 #if defined(HAVE_SIGACTION) || defined(OS_WINDOWS)
   g_failure_writer = writer;
 #endif  // HAVE_SIGACTION

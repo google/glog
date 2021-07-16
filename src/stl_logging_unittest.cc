@@ -68,7 +68,7 @@ using namespace __gnu_cxx;
 #endif
 
 struct user_hash {
-  size_t operator()(int x) const { return x; }
+  size_t operator()(int x) const { return static_cast<size_t>(x); }
 };
 
 static void TestSTLLogging() {

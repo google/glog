@@ -429,7 +429,7 @@ class LogFileObject : public base::Logger {
   virtual void Write(bool force_flush, // Should we force a flush here?
                      time_t timestamp,  // Timestamp for this entry
                      const char* message,
-                     int message_len);
+                     size_t message_len);
 
   // Configuration options
   void SetBasename(const char* basename);
@@ -695,13 +695,7 @@ inline void LogDestination::RemoveLogSink(LogSink *destination) {
   MutexLock l(&sink_mutex_);
   // This doesn't keep the sinks in order, but who cares?
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
-      if ((*sinks_)[i] == destination) {
-        (*sinks_)[i] = (*sinks_)[sinks_->size() - 1];
-        sinks_->pop_back();
-        break;
-      }
-    }
+    sinks_->erase(std::remove(sinks_->begin(), sinks_->end(), destination), sinks_->end());
   }
 }
 
@@ -785,7 +779,7 @@ static void WriteToStderr(const char* message, size_t len) {
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
-					     const char* message, size_t message_len, size_t prefix_len) {
+					     const char* message, size_t message_len, size_t /*prefix_len*/) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
     ColoredWriteToStderr(severity, message, message_len);
 #ifdef OS_WINDOWS
@@ -865,7 +859,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        int32 usecs) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
+    for (size_t i = sinks_->size(); i-- > 0; ) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
                          line, tm_time, message, message_len, usecs);
     }
@@ -875,7 +869,7 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
 inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
-    for (int i = sinks_->size() - 1; i >= 0; i--) {
+    for (size_t i = sinks_->size(); i-- > 0; ) {
       (*sinks_)[i]->WaitTillSent();
     }
   }
@@ -1076,7 +1070,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     const string linkname =
       symlink_basename_ + '.' + LogSeverityNames[severity_];
     string linkpath;
-    if ( slash ) linkpath = string(filename, slash-filename+1);  // get dirname
+    if ( slash ) linkpath = string(filename, static_cast<size_t>(slash-filename+1));  // get dirname
     linkpath += linkname;
     unlink(linkpath.c_str());                    // delete old one if it exists
 
@@ -1109,7 +1103,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 void LogFileObject::Write(bool force_flush,
                           time_t timestamp,
                           const char* message,
-                          int message_len) {
+                          size_t message_len) {
   MutexLock l(&lock_);
 
   // We don't log if the base_name_ is "" (which means "don't write")
@@ -1235,7 +1229,7 @@ void LogFileObject::Write(bool force_flush,
                        << "threadid file:line] msg" << '\n';
     const string& file_header_string = file_header_stream.str();
 
-    const int header_len = file_header_string.size();
+    const size_t header_len = file_header_string.size();
     fwrite(file_header_string.data(), 1, header_len, file_);
     file_length_ += header_len;
     bytes_since_flush_ += header_len;
@@ -1275,7 +1269,7 @@ void LogFileObject::Write(bool force_flush,
     if (FLAGS_drop_log_memory && file_length_ >= (3 << 20)) {
       // Don't evict the most recent 1-2MiB so as not to impact a tailer
       // of the log file and to avoid page rounding issue on linux < 4.7
-      uint32 total_drop_length = (file_length_ & ~((1 << 20) - 1)) - (1 << 20);
+      uint32 total_drop_length = (file_length_ & ~((1 << 20U) - 1U)) - (1U << 20U);
       uint32 this_drop_length = total_drop_length - dropped_mem_length_;
       if (this_drop_length >= (2 << 20)) {
         // Only advise when >= 2MiB to drop
@@ -1773,7 +1767,7 @@ static char fatal_message[256];
 
 void ReprintFatalMessage() {
   if (fatal_message[0]) {
-    const int n = strlen(fatal_message);
+    const size_t n = strlen(fatal_message);
     if (!FLAGS_logtostderr) {
       // Also write to stderr (don't color to avoid terminal checks)
       WriteToStderr(fatal_message, n);
@@ -1848,7 +1842,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
       SetCrashReason(&crash_reason);
 
       // Store shortened fatal message for other logs and GWQ status
-      const int copy = min<int>(data_->num_chars_to_log_,
+      const size_t copy = min(data_->num_chars_to_log_,
                                 sizeof(fatal_message)-1);
       memcpy(fatal_message, data_->message_text_, copy);
       fatal_message[copy] = '\0';
@@ -1892,28 +1886,10 @@ void LogMessage::RecordCrashReason(
 #endif
 }
 
-#ifdef HAVE___ATTRIBUTE__
-# define ATTRIBUTE_NORETURN __attribute__((noreturn))
-#else
-# define ATTRIBUTE_NORETURN
-#endif
+GOOGLE_GLOG_DLL_DECL logging_fail_func_t g_logging_fail_func = reinterpret_cast<logging_fail_func_t>(&abort);
 
-#if defined(OS_WINDOWS)
-__declspec(noreturn)
-#endif
-static void logging_fail() ATTRIBUTE_NORETURN;
-
-static void logging_fail() {
-  abort();
-}
-
-typedef void (*logging_fail_func_t)() ATTRIBUTE_NORETURN;
-
-GOOGLE_GLOG_DLL_DECL
-logging_fail_func_t g_logging_fail_func = &logging_fail;
-
-void InstallFailureFunction(void (*fail_func)()) {
-  g_logging_fail_func = (logging_fail_func_t)fail_func;
+void InstallFailureFunction(logging_fail_func_t fail_func) {
+  g_logging_fail_func = fail_func;
 }
 
 void LogMessage::Fail() {
@@ -1947,7 +1923,7 @@ void LogMessage::SaveOrSendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
     // Omit prefix of message and trailing newline when recording in outvec_.
     const char *start = data_->message_text_ + data_->num_prefix_chars_;
-    int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
+    size_t len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
     data_->outvec_->push_back(string(start, len));
   } else {
     SendToLog();
@@ -1960,7 +1936,7 @@ void LogMessage::WriteToStringAndLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
     // Omit prefix of message and trailing newline when writing to message_.
     const char *start = data_->message_text_ + data_->num_prefix_chars_;
-    int len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
+    size_t len = data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1;
     data_->message_->assign(start, len);
   }
   SendToLog();
@@ -2321,7 +2297,7 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
   struct stat statbuf;
   const int kCopyBlockSize = 8 << 10;
   char copybuf[kCopyBlockSize];
-  int64 read_offset, write_offset;
+  off_t read_offset, write_offset;
   // Don't follow symlinks unless they're our own fd symlinks in /proc
   int flags = O_RDWR;
   // TODO(hamaji): Support other environments.
@@ -2366,9 +2342,9 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
   // Copy the last "keep" bytes of the file to the beginning of the file
   read_offset = statbuf.st_size - keep;
   write_offset = 0;
-  int bytesin, bytesout;
+  ssize_t bytesin, bytesout;
   while ((bytesin = pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
-    bytesout = pwrite(fd, copybuf, bytesin, write_offset);
+    bytesout = pwrite(fd, copybuf, static_cast<size_t>(bytesin), write_offset);
     if (bytesout == -1) {
       PLOG(ERROR) << "Unable to write to " << path;
       break;
@@ -2549,7 +2525,7 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
 
 #if defined(HAVE_CXX11_NULLPTR_T) && __cplusplus >= 201103L
 template <>
-void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v) {
+void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& /*v*/) {
   (*os) << "nullptr";
 }
 #endif // defined(HAVE_CXX11_NULLPTR_T)

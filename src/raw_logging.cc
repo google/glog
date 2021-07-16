@@ -76,23 +76,23 @@ _START_GOOGLE_NAMESPACE_
 // Helper for RawLog__ below.
 // *DoRawLog writes to *buf of *size and move them past the written portion.
 // It returns true iff there was no overflow or error.
-static bool DoRawLog(char** buf, int* size, const char* format, ...) {
+static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
   int n = vsnprintf(*buf, *size, format, ap);
   va_end(ap);
-  if (n < 0 || n > *size) return false;
-  *size -= n;
+  if (n < 0 || static_cast<size_t>(n) > *size) return false;
+  *size -= static_cast<size_t>(n);
   *buf += n;
   return true;
 }
 
 // Helper for RawLog__ below.
-inline static bool VADoRawLog(char** buf, int* size,
+inline static bool VADoRawLog(char** buf, size_t* size,
                               const char* format, va_list ap) {
   int n = vsnprintf(*buf, *size, format, ap);
-  if (n < 0 || n > *size) return false;
-  *size -= n;
+  if (n < 0 || static_cast<size_t>(n) > *size) return false;
+  *size -= static_cast<size_t>(n);
   *buf += n;
   return true;
 }
@@ -111,7 +111,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // can't call localtime_r here: it can allocate
   char buffer[kLogBufSize];
   char* buf = buffer;
-  int size = sizeof(buffer);
+  size_t size = sizeof(buffer);
 
   // NOTE: this format should match the specification in base/logging.h
   DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %5u %s:%d] RAW: ",
@@ -121,7 +121,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
 
   // Record the position and size of the buffer after the prefix
   const char* msg_start = buf;
-  const int msg_size = size;
+  const size_t msg_size = size;
 
   va_list ap;
   va_start(ap, format);
