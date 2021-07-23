@@ -29,6 +29,7 @@
 //
 // Author: Shinichiro Hamaji
 
+#include "config.h"
 #include "utilities.h"
 
 #include <cstdio>
@@ -142,6 +143,11 @@ static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
   }
 }
 
+#if defined(__GNUC__)
+__attribute__((noreturn))
+#elif defined(_MSC_VER)
+__declspec(noreturn)
+#endif
 static void DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, NULL);
 
@@ -187,10 +193,14 @@ struct timeval {
 
 // Based on: http://www.google.com/codesearch/p?hl=en#dR3YEbitojA/os_win32.c&q=GetSystemTimeAsFileTime%20license:bsd
 // See COPYING for copyright information.
-static int gettimeofday(struct timeval *tv, void* tz) {
+static int gettimeofday(struct timeval *tv, void* /*tz*/) {
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlong-long"
+#endif
 #define EPOCHFILETIME (116444736000000000ULL)
   FILETIME ft;
-  LARGE_INTEGER li;
+  ULARGE_INTEGER li;
   uint64 tt;
 
   GetSystemTimeAsFileTime(&ft);
@@ -199,6 +209,9 @@ static int gettimeofday(struct timeval *tv, void* tz) {
   tt = (li.QuadPart - EPOCHFILETIME) / 10;
   tv->tv_sec = tt / 1000000;
   tv->tv_usec = tt % 1000000;
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
   return 0;
 }
@@ -251,9 +264,9 @@ pid_t GetTID() {
 #if (defined(OS_MACOSX) && defined(HAVE_PTHREAD_THREADID_NP))
     uint64_t tid64;
     const int error = pthread_threadid_np(NULL, &tid64);
-    pid_t tid = error ? -1 : (pid_t)tid64;
+    pid_t tid = error ? -1 : static_cast<pid_t>(tid64);
 #else
-    pid_t tid = syscall(__NR_gettid);
+    pid_t tid = static_cast<pid_t>(syscall(__NR_gettid));
 #endif
     if (tid != -1) {
       return tid;

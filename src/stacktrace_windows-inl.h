@@ -44,7 +44,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   }
   skip_count++;  // we want to skip the current frame as well
   // This API is thread-safe (moreover it walks only the current thread).
-  return CaptureStackBackTrace(skip_count, max_depth, result, NULL);
+  return CaptureStackBackTrace(static_cast<DWORD>(skip_count), static_cast<DWORD>(max_depth), result, NULL);
 }
 
 _END_GOOGLE_NAMESPACE_

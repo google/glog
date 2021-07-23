@@ -273,8 +273,15 @@ static inline void RunSpecifiedBenchmarks() {
     iter->second(iter_cnt);
     double elapsed_ns =
         ((double)clock() - start) / CLOCKS_PER_SEC * 1000*1000*1000;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat="
+#endif
     printf("%s\t%8.2lf\t%10d\n",
            iter->first.c_str(), elapsed_ns / iter_cnt, iter_cnt);
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
   }
   puts("");
 }
@@ -402,7 +409,7 @@ static inline string GetCapturedTestStderr() {
 static inline bool IsLoggingPrefix(const string& s) {
   if (s.size() != 9) return false;
   if (!strchr("IWEF", s[0])) return false;
-  for (int i = 1; i <= 8; ++i) {
+  for (size_t i = 1; i <= 8; ++i) {
     if (!isdigit(s[i]) && s[i] != "YEARDATE"[i-1]) return false;
   }
   return true;
@@ -549,7 +556,7 @@ class Thread {
   void Start() {
     handle_ = CreateThread(NULL,
                            0,
-                           (LPTHREAD_START_ROUTINE)&Thread::InvokeThread,
+                           &Thread::InvokeThreadW,
                            (LPVOID)this,
                            0,
                            &th_);
@@ -579,6 +586,10 @@ class Thread {
   }
 
 #if defined(OS_WINDOWS) && !defined(OS_CYGWIN)
+  static DWORD InvokeThreadW(void* self) {
+    InvokeThread(self);
+    return 0;
+  }
   HANDLE handle_;
   DWORD th_;
 #else
@@ -586,7 +597,7 @@ class Thread {
 #endif
 };
 
-static inline void SleepForMilliseconds(int t) {
+static inline void SleepForMilliseconds(unsigned t) {
 #ifndef OS_WINDOWS
 # if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
   const struct timespec req = {0, t * 1000 * 1000};
@@ -620,6 +631,14 @@ void operator delete(void* p) throw() {
   free(p);
 }
 
+void operator delete(void* p, size_t) throw() {
+  ::operator delete(p);
+}
+
 void operator delete[](void* p) throw() {
+  ::operator delete(p);
+}
+
+void operator delete[](void* p, size_t) throw() {
   ::operator delete(p);
 }

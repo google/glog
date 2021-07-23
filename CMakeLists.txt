@@ -128,7 +128,7 @@ check_function_exists (fcntl HAVE_FCNTL)
 check_function_exists (pread HAVE_PREAD)
 check_function_exists (pwrite HAVE_PWRITE)
 check_function_exists (sigaction HAVE_SIGACTION)
-check_function_exists (sigaltstack HAVE_SIGALSTACK)
+check_function_exists (sigaltstack HAVE_SIGALTSTACK)
 
 # NOTE gcc does not fail if you pass a non-existent -Wno-* option as an
 # argument. However, it will happily fail if you pass the corresponding -W*

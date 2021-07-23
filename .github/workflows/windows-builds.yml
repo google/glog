@@ -101,6 +101,8 @@ jobs:
     - name: Configure build MinGW
       if: ${{ startswith(matrix.config.name, 'MinGW-') }}
       shell: powershell
+      env:
+        CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Werror -Wno-error=variadic-macros -Wno-error=long-long
       run: cmake -S . -B ${{runner.workspace}}/build_${{matrix.config.name}}_${{matrix.build_type}} -G "${{matrix.config.generator}}" -DCMAKE_CXX_STANDARD=${{matrix.config.std}} -DCMAKE_CXX_EXTENSIONS=OFF -DCMAKE_CXX_STANDARD_REQUIRED=ON -DCMAKE_BUILD_TYPE=${{matrix.build_type}}
     - name: Build MinGW
       if: ${{ startswith(matrix.config.name, 'MinGW-') }}

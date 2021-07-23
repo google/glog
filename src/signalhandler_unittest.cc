@@ -64,7 +64,7 @@ static void* DieInThread(void*) {
   return NULL;
 }
 
-static void WriteToStdout(const char* data, int size) {
+static void WriteToStdout(const char* data, size_t size) {
   if (write(STDOUT_FILENO, data, size) < 0) {
     // Ignore errors.
   }

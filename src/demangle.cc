@@ -35,12 +35,12 @@
 // Note that we only have partial C++0x support yet.
 
 #include <cstdio>  // for NULL
-#include "utilities.h"
+
 #include "demangle.h"
+#include "utilities.h"
 
 #if defined(OS_WINDOWS)
 #include <dbghelp.h>
-#pragma comment(lib, "dbghelp")
 #endif
 
 _START_GOOGLE_NAMESPACE_
@@ -192,7 +192,7 @@ static bool StrPrefix(const char *str, const char *prefix) {
 }
 
 static void InitState(State *state, const char *mangled,
-                      char *out, int out_size) {
+                      char *out, size_t out_size) {
   state->mangled_cur = mangled;
   state->out_cur = out;
   state->out_begin = out;
@@ -1323,7 +1323,7 @@ static bool ParseTopLevelMangledName(State *state) {
 #endif
 
 // The demangler entry point.
-bool Demangle(const char *mangled, char *out, int out_size) {
+bool Demangle(const char *mangled, char *out, size_t out_size) {
 #if defined(OS_WINDOWS)
   // When built with incremental linking, the Windows debugger
   // library provides a more complicated `Symbol->Name` with the
@@ -1339,7 +1339,7 @@ bool Demangle(const char *mangled, char *out, int out_size) {
   if (lparen) {
     // Extract the string `(?...)`
     const char *rparen = strchr(lparen, ')');
-    size_t length = rparen - lparen - 1;
+    size_t length = static_cast<size_t>(rparen - lparen) - 1;
     strncpy(buffer, lparen + 1, length);
     buffer[length] = '\0';
     mangled = buffer;

@@ -24,15 +24,19 @@ jobs:
 
     - name: Configure
       shell: bash
+      env:
+        CXXFLAGS: -Wall -Wextra -Wsign-conversion -Werror
       run: |
         if [[ ${{matrix.std}} == 98 ]]; then
-          export CXXFLAGS=-Werror=c++11-extensions
+          export CXXFLAGS="-Werror=c++11-extensions ${CXXFLAGS}"
         fi
         cmake -S . -B ${{runner.workspace}}/build_${{matrix.name}}_${{matrix.build_type}} \
               -G "${{matrix.generator}}" \
+              -DCMAKE_CXX_EXTENSIONS=OFF \
+              -DCMAKE_CXX_FLAGS_DEBUG=-pedantic-errors  \
+              -DCMAKE_CXX_FLAGS_RELEASE=-pedantic-errors \
               -DCMAKE_CXX_STANDARD=${{matrix.std}} \
-              -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-              -DCMAKE_CXX_EXTENSIONS=OFF
+              -DCMAKE_CXX_STANDARD_REQUIRED=ON
     - name: Build
       run: |
         cmake --build ${{runner.workspace}}/build_${{matrix.name}}_${{matrix.build_type}} \
