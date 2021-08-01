@@ -25,7 +25,7 @@ jobs:
     - name: Configure
       shell: bash
       env:
-        CXXFLAGS: -Wall -Wextra -Wsign-conversion -Werror
+        CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Werror
       run: |
         if [[ ${{matrix.std}} == 98 ]]; then
           export CXXFLAGS="-Werror=c++11-extensions ${CXXFLAGS}"

@@ -233,8 +233,9 @@ bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
   }
 
   ElfW(Shdr) shstrtab;
-  size_t shstrtab_offset = (elf_header.e_shoff +
-                           elf_header.e_shentsize * elf_header.e_shstrndx);
+  size_t shstrtab_offset =
+      (elf_header.e_shoff + static_cast<size_t>(elf_header.e_shentsize) *
+                                static_cast<size_t>(elf_header.e_shstrndx));
   if (!ReadFromOffsetExact(fd, &shstrtab, sizeof(shstrtab), shstrtab_offset)) {
     return false;
   }
@@ -670,7 +671,7 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
 // bytes. Output will be truncated as needed, and a NUL character is always
 // appended.
 // NOTE: code from sandbox/linux/seccomp-bpf/demo.cc.
-static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t padding) {
+static char *itoa_r(intptr_t i, char *buf, size_t sz, unsigned base, size_t padding) {
   // Make sure we can write at least one NUL byte.
   size_t n = 1;
   if (n > sz)
@@ -683,7 +684,7 @@ static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t pad
 
   char *start = buf;
 
-  uintptr_t j = i;
+  uintptr_t j = static_cast<uintptr_t>(i);
 
   // Handle negative numbers (only for base 10).
   if (i < 0 && base == 10) {
@@ -943,7 +944,6 @@ _END_GOOGLE_NAMESPACE_
 _START_GOOGLE_NAMESPACE_
 
 bool Symbolize(void *pc, char *out, size_t out_size) {
-  SAFE_ASSERT(out_size >= 0);
   return SymbolizeAndDemangle(pc, out, out_size);
 }
 
