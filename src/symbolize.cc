@@ -146,7 +146,7 @@ _START_GOOGLE_NAMESPACE_
 static ssize_t ReadFromOffset(const int fd, void *buf, const size_t count,
                               const size_t offset) {
   SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count <= std::numeric_limits<ssize_t>::max());
+  SAFE_ASSERT(count <= static_cast<size_t>(std::numeric_limits<ssize_t>::max()));
   char *buf0 = reinterpret_cast<char *>(buf);
   size_t num_bytes = 0;
   while (num_bytes < count) {
