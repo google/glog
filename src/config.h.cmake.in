@@ -31,9 +31,6 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #cmakedefine HAVE_LIBPTHREAD
 
-/* Define to 1 if you have the <libunwind.h> header file. */
-#cmakedefine HAVE_LIBUNWIND_H
-
 /* define if you have google gflags library */
 #cmakedefine HAVE_LIB_GFLAGS
 
@@ -115,8 +112,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}
 
-/* Define to 1 if you have the <unwind.h> header file. */
-#cmakedefine HAVE_UNWIND_H ${HAVE_UNWIND_H}
+/* Define if you have the <unwind.h> header file. */
+#cmakedefine HAVE_UNWIND_H
 
 /* define if the compiler supports using expression for operator */
 #cmakedefine HAVE_USING_OPERATOR

@@ -89,7 +89,8 @@ find_package (Unwind)
 
 if (Unwind_FOUND)
   set (HAVE_LIB_UNWIND 1)
-  set (HAVE_UNWIND_H 1)
+else (Unwind_FOUND)
+  check_include_file_cxx (unwind.h HAVE_UNWIND_H)
 endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
