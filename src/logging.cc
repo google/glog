@@ -779,7 +779,8 @@ static void WriteToStderr(const char* message, size_t len) {
 }
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
-					     const char* message, size_t message_len, size_t /*prefix_len*/) {
+					     const char* message, size_t message_len, size_t prefix_len) {
+  (void) prefix_len;
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
     ColoredWriteToStderr(severity, message, message_len);
 #ifdef GLOG_OS_WINDOWS
