@@ -53,7 +53,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_CXX11_NULLPTR_T",
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
-        "-DHAVE_UNWIND_H",
         "-DGLOG_CUSTOM_PREFIX_SUPPORT",
         "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
@@ -70,6 +69,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
+        "-DHAVE_UNWIND_H",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
@@ -128,7 +128,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/stacktrace_powerpc-inl.h",
             "src/stacktrace_windows-inl.h",
             "src/stacktrace_x86-inl.h",
-            "src/stacktrace_x86_64-inl.h",
+            "src/stacktrace_unwind-inl.h",
             "src/symbolize.cc",
             "src/symbolize.h",
             "src/utilities.cc",
