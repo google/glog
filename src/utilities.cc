@@ -54,6 +54,9 @@
 #ifdef HAVE_PWD_H
 # include <pwd.h>
 #endif
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
 
 #include "base/googleinit.h"
 
@@ -92,6 +95,11 @@ static void DebugWriteToStderr(const char* data, void *) {
   if (write(STDERR_FILENO, data, strlen(data)) < 0) {
     // Ignore errors.
   }
+#if defined(__ANDROID__)
+  __android_log_write(ANDROID_LOG_FATAL,
+                      glog_internal_namespace_::ProgramInvocationShortName(),
+                      data);
+#endif
 }
 
 static void DebugWriteToString(const char* data, void *arg) {

@@ -1869,6 +1869,11 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     if (write(STDERR_FILENO, message, strlen(message)) < 0) {
       // Ignore errors.
     }
+#if defined(__ANDROID__)
+    __android_log_write(ANDROID_LOG_FATAL,
+                        glog_internal_namespace_::ProgramInvocationShortName(),
+                        message);
+#endif
     Fail();
   }
 }
