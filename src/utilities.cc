@@ -96,6 +96,7 @@ static void DebugWriteToStderr(const char* data, void *) {
     // Ignore errors.
   }
 #if defined(__ANDROID__)
+  // ANDROID_LOG_FATAL as fatal error occurred and now is dumping call stack.
   __android_log_write(ANDROID_LOG_FATAL,
                       glog_internal_namespace_::ProgramInvocationShortName(),
                       data);

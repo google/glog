@@ -780,10 +780,10 @@ static void WriteToStderr(const char* message, size_t len) {
 
 inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
 					     const char* message, size_t message_len, size_t prefix_len) {
-  (void) prefix_len;
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
     ColoredWriteToStderr(severity, message, message_len);
 #ifdef GLOG_OS_WINDOWS
+    (void) prefix_len;
     // On Windows, also output to the debugger
     ::OutputDebugStringA(message);
 #elif defined(__ANDROID__)
@@ -797,6 +797,8 @@ inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
     __android_log_write(android_log_levels[severity],
                         glog_internal_namespace_::ProgramInvocationShortName(),
                         message + prefix_len);
+#else
+    (void) prefix_len;
 #endif
   }
 }
@@ -1847,6 +1849,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
       // Ignore errors.
     }
 #if defined(__ANDROID__)
+    // ANDROID_LOG_FATAL as this message is of FATAL severity.
     __android_log_write(ANDROID_LOG_FATAL,
                         glog_internal_namespace_::ProgramInvocationShortName(),
                         message);
