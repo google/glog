@@ -6,8 +6,8 @@
 
 include (FindPackageHandleStandardArgs)
 
-find_path (Unwind_INCLUDE_DIR NAMES libunwind.h DOC "libunwind include directory")
-find_library (Unwind_LIBRARY NAMES unwind DOC "libunwind library")
+find_path (Unwind_INCLUDE_DIR NAMES unwind.h libunwind.h DOC "unwind include directory")
+find_library (Unwind_LIBRARY NAMES unwind DOC "unwind library")
 
 if (CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
     set (Unwind_ARCH "arm")
