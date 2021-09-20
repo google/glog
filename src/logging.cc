@@ -2148,7 +2148,7 @@ static string ShellEscape(const string& src) {
 // log_mutex.
 static bool SendEmailInternal(const char*dest, const char *subject,
                               const char*body, bool use_logging) {
-#ifdef __USE_POSIX2
+#ifndef __EMSCRIPTEN__
   if (dest && *dest) {
     if ( use_logging ) {
       VLOG(1) << "Trying to send TITLE:" << subject
