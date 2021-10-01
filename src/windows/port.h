@@ -62,7 +62,7 @@
  * used by both C and C++ code, so we put all the C++ together.
  */
 
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 #ifdef _MSC_VER
 

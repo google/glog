@@ -63,8 +63,10 @@
 #define GLOG_MSVC_POP_WARNING()
 #endif
 
+#include <glog/platform.h>
+
 #if @ac_cv_have_glog_export@
-#include "glog/export.h"
+#include <glog/export.h>
 #endif
 
 // Annoying stuff for windows -- makes sure clients can import these functions
@@ -106,7 +108,7 @@
 
 #if @ac_cv_cxx11_atomic@ && __cplusplus >= 201103L
 #include <atomic>
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 #include <Windows.h>
 #endif
 
@@ -586,8 +588,8 @@ DECLARE_bool(log_utc_time);
 @ac_google_start_namespace@
 
 // They need the definitions of integer types.
-#include "glog/log_severity.h"
-#include "glog/vlog_is_on.h"
+#include <glog/log_severity.h>
+#include <glog/vlog_is_on.h>
 
 // Initialize google's logging library. You will see the program name
 // specified by argv0 in log outputs.
@@ -1055,7 +1057,7 @@ namespace google {
     LOG_PREVIOUS_TIME_RAW.store(std::chrono::duration_cast<std::chrono::nanoseconds>(LOG_CURRENT_TIME).count(), std::memory_order_relaxed); \
   if (LOG_TIME_DELTA > LOG_TIME_PERIOD) @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity).stream()
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 #define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
   GLOG_CONSTEXPR LONGLONG LOG_TIME_PERIOD = (seconds) * LONGLONG(1000000000); \
   static LARGE_INTEGER LOG_PREVIOUS_TIME; \
@@ -1131,7 +1133,7 @@ namespace google {
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static volatile unsigned LOG_OCCURRENCES = 0; \

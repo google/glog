@@ -76,7 +76,7 @@ _END_GOOGLE_NAMESPACE_
 #define GOOGLE_GLOG_DLL_DECL
 
 static inline string GetTempDir() {
-#ifndef OS_WINDOWS
+#ifndef GLOG_OS_WINDOWS
   return "/tmp";
 #else
   char tmp[MAX_PATH];
@@ -85,7 +85,7 @@ static inline string GetTempDir() {
 #endif
 }
 
-#if defined(OS_WINDOWS) && defined(_MSC_VER) && !defined(TEST_SRC_DIR)
+#if defined(GLOG_OS_WINDOWS) && defined(_MSC_VER) && !defined(TEST_SRC_DIR)
 // The test will run in glog/vsproject/<project name>
 // (e.g., glog/vsproject/logging_unittest).
 static const char TEST_SRC_DIR[] = "../..";
@@ -220,7 +220,7 @@ static inline void CalledAbort() {
   longjmp(g_jmp_buf, 1);
 }
 
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
 // TODO(hamaji): Death test somehow doesn't work in Windows.
 #define ASSERT_DEATH(fn, msg)
 #else
@@ -510,7 +510,7 @@ static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
     WriteToFile(golden, munged_golden);
     string munged_captured = cap->filename() + ".munged";
     WriteToFile(captured, munged_captured);
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
     string diffcmd("fc " + munged_golden + " " + munged_captured);
 #else
     string diffcmd("diff -u " + munged_golden + " " + munged_captured);
@@ -552,7 +552,7 @@ class Thread {
   virtual ~Thread() {}
 
   void SetJoinable(bool) {}
-#if defined(OS_WINDOWS) && !defined(OS_CYGWIN)
+#if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
   void Start() {
     handle_ = CreateThread(NULL,
                            0,
@@ -585,7 +585,7 @@ class Thread {
     return NULL;
   }
 
-#if defined(OS_WINDOWS) && !defined(OS_CYGWIN)
+#if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
   static DWORD InvokeThreadW(void* self) {
     InvokeThread(self);
     return 0;
@@ -598,7 +598,7 @@ class Thread {
 };
 
 static inline void SleepForMilliseconds(unsigned t) {
-#ifndef OS_WINDOWS
+#ifndef GLOG_OS_WINDOWS
 # if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
   const struct timespec req = {0, t * 1000 * 1000};
   nanosleep(&req, NULL);

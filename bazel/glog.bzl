@@ -140,6 +140,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         }),
         hdrs = [
                 "src/glog/log_severity.h",
+                "src/glog/platform.h",
                 ":logging_h",
                 ":raw_logging_h",
                 ":stl_logging_h",
@@ -149,7 +150,10 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         defines = select({
             # GOOGLE_GLOG_DLL_DECL is normally set by export.h, but that's not
             # generated for Bazel.
-            "@bazel_tools//src/conditions:windows": ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
+            "@bazel_tools//src/conditions:windows": [
+                "GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)",
+                "GLOG_NO_ABBREVIATED_SEVERITIES",
+            ],
             "//conditions:default": [],
         }),
         copts =

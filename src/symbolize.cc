@@ -46,7 +46,7 @@
 // and memmove().  We assume they are async-signal-safe.
 //
 // Additional header can be specified by the GLOG_BUILD_CONFIG_INCLUDE
-// macro to add platform specific defines (e.g. OS_OPENBSD).
+// macro to add platform specific defines (e.g. GLOG_OS_OPENBSD).
 
 #ifdef GLOG_BUILD_CONFIG_INCLUDE
 #include GLOG_BUILD_CONFIG_INCLUDE
@@ -113,7 +113,7 @@ _END_GOOGLE_NAMESPACE_
 #if defined(HAVE_DLFCN_H)
 #include <dlfcn.h>
 #endif
-#if defined(OS_OPENBSD)
+#if defined(GLOG_OS_OPENBSD)
 #include <sys/exec_elf.h>
 #else
 #include <elf.h>
@@ -132,7 +132,7 @@ _END_GOOGLE_NAMESPACE_
 
 #include "symbolize.h"
 #include "config.h"
-#include "glog/raw_logging.h"
+#include <glog/raw_logging.h>
 
 // Re-runs fn until it doesn't cause EINTR.
 #define NO_INTR(fn)   do {} while ((fn) < 0 && errno == EINTR)
@@ -847,7 +847,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
-#elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
+#elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 
 #include <dlfcn.h>
 #include <cstring>
@@ -872,7 +872,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
 
 _END_GOOGLE_NAMESPACE_
 
-#elif defined(OS_WINDOWS) || defined(OS_CYGWIN)
+#elif defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
 
 #include <windows.h>
 #include <dbghelp.h>
