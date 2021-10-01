@@ -30,7 +30,7 @@
 // Author: Shinichiro Hamaji
 #include "utilities.h"
 #include "googletest.h"
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>

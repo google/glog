@@ -56,8 +56,8 @@
 #include <vector>
 
 #include "base/commandlineflags.h"
-#include "glog/logging.h"
-#include "glog/raw_logging.h"
+#include <glog/logging.h>
+#include <glog/raw_logging.h>
 #include "googletest.h"
 
 DECLARE_string(log_backtrace_at);  // logging.cc
@@ -587,7 +587,7 @@ void TestCHECK() {
 
   // Tests using CHECK*() on anonymous enums.
   // Apple's GCC doesn't like this.
-#if !defined(OS_MACOSX)
+#if !defined(GLOG_OS_MACOSX)
   CHECK_EQ(CASE_A, CASE_A);
   CHECK_NE(CASE_A, CASE_B);
   CHECK_GE(CASE_A, CASE_A);
@@ -669,7 +669,7 @@ static void GetFiles(const string& pattern, vector<string>* files) {
     files->push_back(string(g.gl_pathv[i]));
   }
   globfree(&g);
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
   WIN32_FIND_DATAA data;
   HANDLE handle = FindFirstFileA(pattern.c_str(), &data);
   size_t index = pattern.rfind('\\');
@@ -798,7 +798,7 @@ static void TestTwoProcessesWrite() {
 }
 
 static void TestSymlink() {
-#ifndef OS_WINDOWS
+#ifndef GLOG_OS_WINDOWS
   fprintf(stderr, "==== Test setting log file symlink\n");
   string dest = FLAGS_test_tmpdir + "/logging_test_symlink";
   string sym = FLAGS_test_tmpdir + "/symlinkbase";
@@ -941,7 +941,7 @@ static void TestTruncate() {
   // MacOSX 10.4 doesn't fail in this case.
   // Windows doesn't have symlink.
   // Let's just ignore this test for these cases.
-#if !defined(OS_MACOSX) && !defined(OS_WINDOWS)
+#if !defined(GLOG_OS_MACOSX) && !defined(GLOG_OS_WINDOWS)
   // Through a symlink should fail to truncate
   string linkname = path + ".link";
   unlink(linkname.c_str());
@@ -950,7 +950,7 @@ static void TestTruncate() {
 #endif
 
   // The /proc/self path makes sense only for linux.
-#if defined(OS_LINUX)
+#if defined(GLOG_OS_LINUX)
   // Through an open fd symlink should work
   int fd;
   CHECK_ERR(fd = open(path.c_str(), O_APPEND | O_WRONLY));
@@ -1031,7 +1031,7 @@ int64 elapsedTime_ns(const std::chrono::steady_clock::time_point& begin,
   return std::chrono::duration_cast<std::chrono::nanoseconds>((end - begin))
           .count();
 }
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 struct LogTimeRecorder {
   LogTimeRecorder() : m_streamTimes(0) {}
   size_t m_streamTimes;
@@ -1299,7 +1299,7 @@ TEST(Strerror, logging) {
   CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
   CHECK_EQ(buf[0], 'A');
   CHECK_EQ(posix_strerror_r(errcode, NULL, buf_size), -1);
-#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
+#if defined(GLOG_OS_MACOSX) || defined(GLOG_OS_FREEBSD) || defined(GLOG_OS_OPENBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.
   CHECK_EQ(posix_strerror_r(errcode, buf, 1), -1);

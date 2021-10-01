@@ -42,7 +42,7 @@
 
 #include <gmock/gmock.h>
 
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 _START_GOOGLE_NAMESPACE_
 namespace glog_testing {

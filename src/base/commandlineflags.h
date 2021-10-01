@@ -59,7 +59,7 @@
 
 #else
 
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 #define DECLARE_VARIABLE(type, shorttype, name, tn)                     \
   namespace fL##shorttype {                                             \

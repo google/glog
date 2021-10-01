@@ -34,7 +34,7 @@
 #include "utilities.h"
 #include "stacktrace.h"
 #include "symbolize.h"
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 #include <csignal>
 #include <ctime>
@@ -63,7 +63,7 @@ const struct {
   { SIGILL, "SIGILL" },
   { SIGFPE, "SIGFPE" },
   { SIGABRT, "SIGABRT" },
-#if !defined(OS_WINDOWS)
+#if !defined(GLOG_OS_WINDOWS)
   { SIGBUS, "SIGBUS" },
 #endif
   { SIGTERM, "SIGTERM" },
@@ -71,7 +71,7 @@ const struct {
 
 static bool kFailureSignalHandlerInstalled = false;
 
-#if !defined(OS_WINDOWS)
+#if !defined(GLOG_OS_WINDOWS)
 // Returns the program counter from signal context, NULL if unknown.
 void* GetPC(void* ucontext_in_void) {
 #if (defined(HAVE_UCONTEXT_H) || defined(HAVE_SYS_UCONTEXT_H)) && defined(PC_FROM_UCONTEXT)
@@ -212,7 +212,7 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   formatter.AppendUint64((uintptr_t)pthread_self(), 16);
   formatter.AppendString(") ");
   // Only linux has the PID of the signal sender in si_pid.
-#ifdef OS_LINUX
+#ifdef GLOG_OS_LINUX
   formatter.AppendString("from PID ");
   formatter.AppendUint64(static_cast<uint64>(siginfo->si_pid), 10);
   formatter.AppendString("; ");
@@ -257,7 +257,7 @@ void InvokeDefaultSignalHandler(int signal_number) {
   sig_action.sa_handler = SIG_DFL;
   sigaction(signal_number, &sig_action, NULL);
   kill(getpid(), signal_number);
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
   signal(signal_number, SIG_DFL);
   raise(signal_number);
 #endif
@@ -271,7 +271,7 @@ static pthread_t* g_entered_thread_id_pointer = NULL;
 
 // Dumps signal and stack frame information, and invokes the default
 // signal handler once our job is done.
-#if defined(OS_WINDOWS)
+#if defined(GLOG_OS_WINDOWS)
 void FailureSignalHandler(int signal_number)
 #else
 void FailureSignalHandler(int signal_number,
@@ -318,7 +318,7 @@ void FailureSignalHandler(int signal_number,
   // First dump time info.
   DumpTimeInfo();
 
-#if !defined(OS_WINDOWS)
+#if !defined(GLOG_OS_WINDOWS)
   // Get the program counter from ucontext.
   void *pc = GetPC(ucontext);
   DumpStackFrameInfo("PC: ", pc);
@@ -368,7 +368,7 @@ bool IsFailureSignalHandlerInstalled() {
   sigaction(SIGABRT, NULL, &sig_action);
   if (sig_action.sa_sigaction == &FailureSignalHandler)
     return true;
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
   return kFailureSignalHandlerInstalled;
 #endif  // HAVE_SIGACTION
   return false;
@@ -389,7 +389,7 @@ void InstallFailureSignalHandler() {
     CHECK_ERR(sigaction(kFailureSignals[i].number, &sig_action, NULL));
   }
   kFailureSignalHandlerInstalled = true;
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
   for (size_t i = 0; i < ARRAYSIZE(kFailureSignals); ++i) {
     CHECK_NE(signal(kFailureSignals[i].number, &FailureSignalHandler),
              SIG_ERR);
@@ -399,7 +399,7 @@ void InstallFailureSignalHandler() {
 }
 
 void InstallFailureWriter(void (*writer)(const char* data, size_t size)) {
-#if defined(HAVE_SIGACTION) || defined(OS_WINDOWS)
+#if defined(HAVE_SIGACTION) || defined(GLOG_OS_WINDOWS)
   g_failure_writer = writer;
 #endif  // HAVE_SIGACTION
 }

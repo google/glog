@@ -39,13 +39,13 @@
 #include "demangle.h"
 #include "utilities.h"
 
-#if defined(OS_WINDOWS)
+#if defined(GLOG_OS_WINDOWS)
 #include <dbghelp.h>
 #endif
 
 _START_GOOGLE_NAMESPACE_
 
-#if !defined(OS_WINDOWS)
+#if !defined(GLOG_OS_WINDOWS)
 typedef struct {
   const char *abbrev;
   const char *real_name;
@@ -1324,7 +1324,7 @@ static bool ParseTopLevelMangledName(State *state) {
 
 // The demangler entry point.
 bool Demangle(const char *mangled, char *out, size_t out_size) {
-#if defined(OS_WINDOWS)
+#if defined(GLOG_OS_WINDOWS)
   // When built with incremental linking, the Windows debugger
   // library provides a more complicated `Symbol->Name` with the
   // Incremental Linking Table offset, which looks like

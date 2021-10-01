@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2008, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,47 +27,32 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: Sergey Ioffe
+// Author: Shinichiro Hamaji
+//
+// Detect supported platforms.
 
-// The common part of the striplog tests.
+#ifndef GLOG_PLATFORM_H
+#define GLOG_PLATFORM_H
 
-#include <cstdio>
-#include <string>
-#include <iosfwd>
-#include <glog/logging.h>
-#include "base/commandlineflags.h"
-#include "config.h"
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
+#define GLOG_OS_WINDOWS
+#elif defined(__CYGWIN__) || defined(__CYGWIN32__)
+#define GLOG_OS_CYGWIN
+#elif defined(linux) || defined(__linux) || defined(__linux__)
+#ifndef GLOG_OS_LINUX
+#define GLOG_OS_LINUX
+#endif
+#elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
+#define GLOG_OS_MACOSX
+#elif defined(__FreeBSD__)
+#define GLOG_OS_FREEBSD
+#elif defined(__NetBSD__)
+#define GLOG_OS_NETBSD
+#elif defined(__OpenBSD__)
+#define GLOG_OS_OPENBSD
+#else
+// TODO(hamaji): Add other platforms.
+#error Platform not supported by glog. Please consider to contribute platform information by submitting a pull request on Github.
+#endif
 
-DECLARE_bool(logtostderr);
-GLOG_DEFINE_bool(check_mode, false, "Prints 'opt' or 'dbg'");
-
-using std::string;
-using namespace GOOGLE_NAMESPACE;
-
-int CheckNoReturn(bool b) {
-  string s;
-  if (b) {
-    LOG(FATAL) << "Fatal";
-  } else {
-    return 0;
-  }
-}
-
-struct A { };
-std::ostream &operator<<(std::ostream &str, const A&) {return str;}
-
-int main(int, char* argv[]) {
-  FLAGS_logtostderr = true;
-  InitGoogleLogging(argv[0]);
-  if (FLAGS_check_mode) {
-    printf("%s\n", DEBUG_MODE ? "dbg" : "opt");
-    return 0;
-  }
-  LOG(INFO) << "TESTMESSAGE INFO";
-  LOG(WARNING) << 2 << "something" << "TESTMESSAGE WARNING"
-               << 1 << 'c' << A() << std::endl;
-  LOG(ERROR) << "TESTMESSAGE ERROR";
-  bool flag = true;
-  (flag ? LOG(INFO) : LOG(ERROR)) << "TESTMESSAGE COND";
-  LOG(FATAL) << "TESTMESSAGE FATAL";
-}
+#endif // GLOG_PLATFORM_H

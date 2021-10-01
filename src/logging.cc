@@ -59,14 +59,14 @@
 #include <vector>
 #include <cerrno>                   // for errno
 #include <sstream>
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
 #include "windows/dirent.h"
 #else
 #include <dirent.h> // for automatic removal of old logs
 #endif
 #include "base/commandlineflags.h"        // to get the program name
-#include "glog/logging.h"
-#include "glog/raw_logging.h"
+#include <glog/logging.h>
+#include <glog/raw_logging.h>
 #include "base/googleinit.h"
 
 #ifdef HAVE_STACKTRACE
@@ -122,7 +122,7 @@ GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
                  "log messages go to stderr in addition to logfiles");
 GLOG_DEFINE_bool(colorlogtostderr, false,
                  "color messages logged to stderr (if supported by terminal)");
-#ifdef OS_LINUX
+#ifdef GLOG_OS_LINUX
 GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
                  "Logs can grow very quickly and they are rarely read before they "
                  "need to be evicted from memory. Instead, drop them from memory "
@@ -198,7 +198,7 @@ GLOG_DEFINE_bool(log_utc_time, false,
 #define PATH_SEPARATOR '/'
 
 #ifndef HAVE_PREAD
-#if defined(OS_WINDOWS)
+#if defined(GLOG_OS_WINDOWS)
 #include <basetsd.h>
 #define ssize_t SSIZE_T
 #endif
@@ -241,7 +241,7 @@ static void GetHostName(string* hostname) {
     *buf.nodename = '\0';
   }
   *hostname = buf.nodename;
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
   char buf[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
   if (GetComputerNameA(buf, &len)) {
@@ -258,7 +258,7 @@ static void GetHostName(string* hostname) {
 // Returns true iff terminal supports using colors in output.
 static bool TerminalSupportsColor() {
   bool term_supports_color = false;
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
   // on Windows TERM variable is usually not set, but the console does
   // support colors.
   term_supports_color = true;
@@ -312,7 +312,7 @@ static GLogColor SeverityToColor(LogSeverity severity) {
   return color;
 }
 
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
 
 // Returns the character attribute for the given color.
 static WORD GetColorAttribute(GLogColor color) {
@@ -337,7 +337,7 @@ static const char* GetAnsiColorCode(GLogColor color) {
   return NULL; // stop warning about return type.
 }
 
-#endif  // OS_WINDOWS
+#endif  // GLOG_OS_WINDOWS
 
 // Safely get max_log_size, overriding to 1 if it somehow gets defined as 0
 static int32 MaxLogSize() {
@@ -747,7 +747,7 @@ static void ColoredWriteToStderr(LogSeverity severity,
     fwrite(message, len, 1, stderr);
     return;
   }
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
   const HANDLE stderr_handle = GetStdHandle(STD_ERROR_HANDLE);
 
   // Gets the current text color.
@@ -769,7 +769,7 @@ static void ColoredWriteToStderr(LogSeverity severity,
   fprintf(stderr, "\033[0;3%sm", GetAnsiColorCode(color));
   fwrite(message, len, 1, stderr);
   fprintf(stderr, "\033[m");  // Resets the terminal to default.
-#endif  // OS_WINDOWS
+#endif  // GLOG_OS_WINDOWS
 }
 
 static void WriteToStderr(const char* message, size_t len) {
@@ -782,7 +782,7 @@ inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
 					     const char* message, size_t message_len, size_t /*prefix_len*/) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
     ColoredWriteToStderr(severity, message, message_len);
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
     // On Windows, also output to the debugger
     ::OutputDebugStringA(message);
 #elif defined(__ANDROID__)
@@ -1050,7 +1050,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     }
     return false;
   }
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
   // https://github.com/golang/go/issues/27638 - make sure we seek to the end to append
   // empirically replicated with wine over mingw build
   if (!FLAGS_timestamp_in_logfile_name) {
@@ -1074,7 +1074,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     linkpath += linkname;
     unlink(linkpath.c_str());                    // delete old one if it exists
 
-#if defined(OS_WINDOWS)
+#if defined(GLOG_OS_WINDOWS)
     // TODO(hamaji): Create lnk file on Windows?
 #elif defined(HAVE_UNISTD_H)
     // We must have unistd.h.
@@ -1264,7 +1264,7 @@ void LogFileObject::Write(bool force_flush,
        (bytes_since_flush_ >= 1000000) ||
        (CycleClock_Now() >= next_flush_time_) ) {
     FlushUnlocked();
-#ifdef OS_LINUX
+#ifdef GLOG_OS_LINUX
     // Only consider files >= 3MiB
     if (FLAGS_drop_log_memory && file_length_ >= (3 << 20)) {
       // Don't evict the most recent 1-2MiB so as not to impact a tailer
@@ -1299,7 +1299,7 @@ void LogFileObject::Write(bool force_flush,
 
 
 LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
   dir_delim_ = '\\';
 #endif
 }
@@ -2201,7 +2201,7 @@ bool SendEmail(const char*dest, const char *subject, const char*body){
 
 static void GetTempDirectories(vector<string>* list) {
   list->clear();
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
   // On windows we'll try to find a directory in this order:
   //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
   //   C:/TMP/
@@ -2260,7 +2260,7 @@ const vector<string>& GetLoggingDirectories() {
       logging_directories_list->push_back(FLAGS_log_dir.c_str());
     } else {
       GetTempDirectories(logging_directories_list);
-#ifdef OS_WINDOWS
+#ifdef GLOG_OS_WINDOWS
       char tmp[MAX_PATH];
       if (GetWindowsDirectoryA(tmp, MAX_PATH))
         logging_directories_list->push_back(tmp);
@@ -2303,7 +2303,7 @@ void TruncateLogFile(const char *path, int64 limit, int64 keep) {
   // Don't follow symlinks unless they're our own fd symlinks in /proc
   int flags = O_RDWR;
   // TODO(hamaji): Support other environments.
-#ifdef OS_LINUX
+#ifdef GLOG_OS_LINUX
   const char *procfd_prefix = "/proc/self/fd/";
   if (strncmp(procfd_prefix, path, strlen(procfd_prefix))) flags |= O_NOFOLLOW;
 #endif
@@ -2442,7 +2442,7 @@ int posix_strerror_r(int err, char *buf, size_t len) {
       return 0;
     } else {
       buf[0] = '\000';
-#if defined(OS_MACOSX) || defined(OS_FREEBSD) || defined(OS_OPENBSD)
+#if defined(GLOG_OS_MACOSX) || defined(GLOG_OS_FREEBSD) || defined(GLOG_OS_OPENBSD)
       if (reinterpret_cast<intptr_t>(rc) < sys_nerr) {
         // This means an error on MacOSX or FreeBSD.
         return -1;

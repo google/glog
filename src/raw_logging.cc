@@ -42,8 +42,8 @@
 #include <fcntl.h>                 // for open()
 #include <ctime>
 #include "config.h"
-#include "glog/logging.h"          // To pick up flag settings etc.
-#include "glog/raw_logging.h"
+#include <glog/logging.h>          // To pick up flag settings etc.
+#include <glog/raw_logging.h>
 #include "base/commandlineflags.h"
 
 #ifdef HAVE_STACKTRACE
@@ -59,7 +59,7 @@
 # include <unistd.h>
 #endif
 
-#if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) && (!(defined(OS_MACOSX)))
+#if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) && (!(defined(GLOG_OS_MACOSX)))
 # define safe_write(fd, s, len)  syscall(SYS_write, fd, s, len)
 #else
   // Not so safe, but what can you do?

@@ -41,7 +41,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-#include "glog/logging.h"
+#include <glog/logging.h>
 
 #ifdef HAVE_LIB_GFLAGS
 #include <gflags/gflags.h>

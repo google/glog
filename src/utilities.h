@@ -34,26 +34,6 @@
 #ifndef UTILITIES_H__
 #define UTILITIES_H__
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-# define OS_WINDOWS
-#elif defined(__CYGWIN__) || defined(__CYGWIN32__)
-# define OS_CYGWIN
-#elif defined(linux) || defined(__linux) || defined(__linux__)
-# ifndef OS_LINUX
-#  define OS_LINUX
-# endif
-#elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
-# define OS_MACOSX
-#elif defined(__FreeBSD__)
-# define OS_FREEBSD
-#elif defined(__NetBSD__)
-# define OS_NETBSD
-#elif defined(__OpenBSD__)
-# define OS_OPENBSD
-#else
-// TODO(hamaji): Add other platforms.
-#endif
-
 // printf macros for size_t, in the style of inttypes.h
 #ifdef _LP64
 #define __PRIS_PREFIX "z"
@@ -76,12 +56,13 @@
 
 #include <string>
 
-#if defined(OS_WINDOWS)
+#include <glog/logging.h>
+
+#if defined(GLOG_OS_WINDOWS)
 # include "port.h"
 #endif
 
 #include "config.h"
-#include "glog/logging.h"
 
 // There are three different ways we can try to get the stack trace:
 //
@@ -114,7 +95,7 @@
 #  define STACKTRACE_H "stacktrace_x86_64-inl.h"
 # elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_powerpc-inl.h"
-# elif defined(OS_WINDOWS)
+# elif defined(GLOG_OS_WINDOWS)
 #  define STACKTRACE_H "stacktrace_windows-inl.h"
 # endif
 #endif
@@ -130,12 +111,12 @@
 #ifndef GLOG_NO_SYMBOLIZE_DETECTION
 #ifndef HAVE_SYMBOLIZE
 // defined by gcc
-#if defined(__ELF__) && defined(OS_LINUX)
+#if defined(__ELF__) && defined(GLOG_OS_LINUX)
 # define HAVE_SYMBOLIZE
-#elif defined(OS_MACOSX) && defined(HAVE_DLADDR)
+#elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
 # define HAVE_SYMBOLIZE
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 // Use DbgHelp to symbolize
 # define HAVE_SYMBOLIZE
 #endif
@@ -154,7 +135,7 @@ namespace glog_internal_namespace_ {
 #ifdef HAVE___ATTRIBUTE__
 # define ATTRIBUTE_NOINLINE __attribute__ ((noinline))
 # define HAVE_ATTRIBUTE_NOINLINE
-#elif defined(OS_WINDOWS)
+#elif defined(GLOG_OS_WINDOWS)
 # define ATTRIBUTE_NOINLINE __declspec(noinline)
 # define HAVE_ATTRIBUTE_NOINLINE
 #else
