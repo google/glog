@@ -114,9 +114,6 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 #define hash  hash_compare
 #endif
 
-/* Sleep is in ms, on windows */
-#define sleep(secs)  Sleep((secs) * 1000)
-
 /* We can't just use _vsnprintf and _snprintf as drop-in-replacements,
  * because they don't always NUL-terminate. :-(  We also can't use the
  * name vsnprintf, since windows defines that (but not snprintf (!)).
@@ -144,6 +141,9 @@ typedef int pid_t;
 #define getpid  _getpid
 
 #endif  // _MSC_VER
+
+/* Sleep is in ms, on windows */
+#define sleep(secs)  Sleep((secs) * 1000)
 
 // ----------------------------------- THREADS
 #if defined(HAVE_PTHREAD)
