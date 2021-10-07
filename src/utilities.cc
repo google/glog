@@ -292,15 +292,6 @@ pid_t GetTID() {
 #endif
 }
 
-const char* const_basename(const char* filepath) {
-  const char* base = strrchr(filepath, '/');
-#ifdef GLOG_OS_WINDOWS  // Look for either path separator in Windows
-  if (!base)
-    base = strrchr(filepath, '\\');
-#endif
-  return base ? (base+1) : filepath;
-}
-
 static string g_my_user_name;
 const string& MyUserName() {
   return g_my_user_name;

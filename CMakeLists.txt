@@ -17,17 +17,40 @@ set (CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
 set (CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set (CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
+list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+include (CheckCXXCompilerFlag)
+include (CheckCXXSourceCompiles)
+include (CheckCXXSourceRuns)
+include (CheckCXXSymbolExists)
+include (CheckFunctionExists)
+include (CheckIncludeFileCXX)
+include (CheckLibraryExists)
+include (CheckStructHasMember)
+include (CheckTypeSize)
+include (CMakeDependentOption)
+include (CMakePackageConfigHelpers)
+include (CMakePushCheckState)
+include (CPack)
+include (CTest)
+include (DetermineGflagsNamespace)
+include (GenerateExportHeader)
+include (GetCacheVariables)
+include (GNUInstallDirs)
+
 option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_CUSTOM_PREFIX "Enable support for user-generated message prefixes" OFF)
 option (WITH_GFLAGS "Use gflags" ON)
-option (WITH_GTEST "Use googletest" ON)
+option (WITH_GTEST "Use Google Test" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
 option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (WITH_UNWIND "Enable libunwind support" ON)
+
+cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
 
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
@@ -46,34 +69,18 @@ set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
-list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
-include (CheckCXXCompilerFlag)
-include (CheckCXXSourceCompiles)
-include (CheckCXXSourceRuns)
-include (CheckCXXSymbolExists)
-include (CheckFunctionExists)
-include (CheckIncludeFileCXX)
-include (CheckLibraryExists)
-include (CheckStructHasMember)
-include (CheckTypeSize)
-include (CMakePackageConfigHelpers)
-include (CMakePushCheckState)
-include (CPack)
-include (CTest)
-include (DetermineGflagsNamespace)
-include (GenerateExportHeader)
-include (GetCacheVariables)
-include (GNUInstallDirs)
-
 set (CMAKE_DEBUG_POSTFIX d)
 set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
-find_package (GTest)
+find_package (GTest NO_MODULE)
 
 if (GTest_FOUND)
   set (HAVE_LIB_GTEST 1)
 endif (GTest_FOUND)
+
+if (WITH_GMOCK AND TARGET GTest::gmock)
+  set (HAVE_LIB_GMOCK 1)
+endif (WITH_GMOCK AND TARGET GTest::gmock)
 
 if (WITH_GFLAGS)
   find_package (gflags 2.2.0)
@@ -615,9 +622,20 @@ if (_glog_CMake_MODULES)
   )
 endif (_glog_CMake_MODULES)
 
+add_library (glogbase OBJECT
+  src/base.h
+  src/base.cc
+)
+
+target_include_directories (glogbase PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 add_library (glog
-  ${GLOG_SRCS}
+  $<TARGET_OBJECTS:glogbase>
   ${_glog_BINARY_CMake_MODULES}
+  ${GLOG_SRCS}
 )
 
 add_library (glog::glog ALIAS glog)
@@ -657,6 +675,7 @@ set_target_properties (glog PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties (glog PROPERTIES SOVERSION 1)
 
 if (CYGWIN OR WIN32)
+  target_compile_definitions (glogbase PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
 endif (CYGWIN OR WIN32)
 
@@ -674,6 +693,10 @@ target_include_directories (glog BEFORE PUBLIC
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if (CYGWIN OR WIN32)
+  target_include_directories (glogbase PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/windows>"
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
+
   target_include_directories (glog PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/windows>"
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
@@ -691,10 +714,15 @@ if (BUILD_TESTING)
   set (_GLOG_TEST_LIBS glog::glog)
 
   if (HAVE_LIB_GTEST)
-    list (APPEND _GLOG_TEST_LIBS GTest::GTest)
+    list (APPEND _GLOG_TEST_LIBS GTest::gtest)
   endif (HAVE_LIB_GTEST)
 
+  if (HAVE_LIB_GMOCK)
+    list (APPEND _GLOG_TEST_LIBS GTest::gmock)
+  endif (HAVE_LIB_GMOCK)
+
   add_executable (logging_unittest
+    $<TARGET_OBJECTS:glogbase>
     src/logging_unittest.cc
   )
 

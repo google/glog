@@ -31,6 +31,7 @@
 //
 // logging_unittest.cc covers the functionality herein
 
+#include "base.h"
 #include "utilities.h"
 
 #include <stdarg.h>
