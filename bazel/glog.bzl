@@ -26,10 +26,10 @@ expand_template = rule(
 )
 
 def dict_union(x, y):
-  z = {}
-  z.update(x)
-  z.update(y)
-  return z
+    z = {}
+    z.update(x)
+    z.update(y)
+    return z
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
@@ -92,6 +92,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     darwin_only_copts = [
         # For stacktrace.
         "-DHAVE_DLADDR",
+        # Avoid deprecated syscall().
+        "-DHAVE_PTHREAD_THREADID_NP",
     ]
 
     windows_only_copts = [
@@ -139,13 +141,13 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "//conditions:default": [],
         }),
         hdrs = [
-                "src/glog/log_severity.h",
-                "src/glog/platform.h",
-                ":logging_h",
-                ":raw_logging_h",
-                ":stl_logging_h",
-                ":vlog_is_on_h",
-            ],
+            "src/glog/log_severity.h",
+            "src/glog/platform.h",
+            ":logging_h",
+            ":raw_logging_h",
+            ":stl_logging_h",
+            ":vlog_is_on_h",
+        ],
         strip_include_prefix = "src",
         defines = select({
             # GOOGLE_GLOG_DLL_DECL is normally set by export.h, but that's not
