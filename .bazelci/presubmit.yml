@@ -3,19 +3,23 @@ platforms:
   ubuntu1804:
     build_flags:
     - "--features=layering_check"
+    - "--copt=-Werror"
     build_targets:
     - "//..."
     test_flags:
     - "--features=layering_check"
+    - "--copt=-Werror"
     test_targets:
     - "//..."
   macos:
     build_flags:
     - "--features=layering_check"
+    - "--copt=-Werror"
     build_targets:
     - "//..."
     test_flags:
     - "--features=layering_check"
+    - "--copt=-Werror"
     test_targets:
     - "//..."
   windows:
@@ -24,9 +28,11 @@ platforms:
       BAZEL_VC: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC"
     build_flags:
     - "--features=layering_check"
+    - "--copt=/WX"
     build_targets:
     - "//..."
     test_flags:
     - "--features=layering_check"
+    - "--copt=/WX"
     test_targets:
     - "//..."
