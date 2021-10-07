@@ -29,7 +29,6 @@
 //
 // Author: Ray Sidney
 
-#include "base.h"
 #include "config.h"
 #include "utilities.h"
 

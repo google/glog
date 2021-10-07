@@ -158,6 +158,10 @@ pid_t GetTID();
 
 const std::string& MyUserName();
 
+// Get the part of filepath after the last path separator.
+// (Doesn't modify filepath, contrary to basename() in libgen.h.)
+const char* const_basename(const char* filepath);
+
 // Wrapper of __sync_val_compare_and_swap. If the GCC extension isn't
 // defined, we try the CPU specific logics (we only support x86 and
 // x86_64 for now) first, then use a naive implementation, which has a
