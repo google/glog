@@ -47,7 +47,7 @@ typedef struct {
 
 
 // Workaround for the malloc() in _Unwind_Backtrace() issue.
-static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context *uc, void *opq) {
+static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context */*uc*/, void */*opq*/) {
   return _URC_NO_REASON;
 }
 
