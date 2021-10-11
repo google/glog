@@ -71,6 +71,13 @@ jobs:
           '*/src/mock-log.h' \
           '/usr/*' \
           --output-file coverage.info
+
+        for file in src/glog/*.h.in; do
+          name=$(basename ${file})
+          name_we=${name%.h.in}
+          sed -i "s|build_${{matrix.build_type}}/glog/${name_we}.h\$|${file}|g" coverage.info
+        done
+
         lcov --list coverage.info
 
     - name: Upload Coverage to Coveralls
