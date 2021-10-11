@@ -43,6 +43,9 @@
 # include <sys/wait.h>
 #endif
 
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -51,9 +54,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "base/commandlineflags.h"
 #include <glog/logging.h>
@@ -128,7 +128,7 @@ static void BM_Check1(int n) {
     CHECK_GE(n, x);
   }
 }
-BENCHMARK(BM_Check1);
+BENCHMARK(BM_Check1)
 
 static void CheckFailure(int a, int b, const char* file, int line, const char* msg);
 static void BM_Check3(int n) {
@@ -143,7 +143,7 @@ static void BM_Check3(int n) {
     if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
   }
 }
-BENCHMARK(BM_Check3);
+BENCHMARK(BM_Check3)
 
 static void BM_Check2(int n) {
   if (n == 17) {
@@ -160,7 +160,7 @@ static void BM_Check2(int n) {
     CHECK(n >= x);
   }
 }
-BENCHMARK(BM_Check2);
+BENCHMARK(BM_Check2)
 
 static void CheckFailure(int, int, const char* /* file */, int /* line */,
                          const char* /* msg */) {
@@ -171,14 +171,14 @@ static void BM_logspeed(int n) {
     LOG(INFO) << "test message";
   }
 }
-BENCHMARK(BM_logspeed);
+BENCHMARK(BM_logspeed)
 
 static void BM_vlog(int n) {
   while (n-- > 0) {
     VLOG(1) << "test message";
   }
 }
-BENCHMARK(BM_vlog);
+BENCHMARK(BM_vlog)
 
 // Dynamically generate a prefix using the default format and write it to the stream.
 void PrefixAttacher(std::ostream &s, const LogMessageInfo &l, void* data) {
@@ -341,11 +341,11 @@ struct NewHook {
 };
 
 TEST(DeathNoAllocNewHook, logging) {
- // tests that NewHook used below works
- NewHook new_hook;
- ASSERT_DEATH({
-   new int;
- }, "unexpected new");
+  // tests that NewHook used below works
+  NewHook new_hook;
+  ASSERT_DEATH({
+    new int;
+  }, "unexpected new");
 }
 
 void TestRawLogging() {
@@ -690,7 +690,7 @@ static void GetFiles(const string& pattern, vector<string>* files) {
     files->push_back(dirname + data.cFileName);
   } while (FindNextFileA(handle, &data));
   BOOL result = FindClose(handle);
-  LOG_SYSRESULT(result);
+  LOG_SYSRESULT(result != 0);
 #else
 # error There is no way to do glob.
 #endif
@@ -880,7 +880,7 @@ static void TestErrno() {
 }
 
 static void TestOneTruncate(const char *path, int64 limit, int64 keep,
-                            int64 dsize, int64 ksize, int64 expect) {
+                            size_t dsize, size_t ksize, size_t expect) {
   int fd;
   CHECK_ERR(fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600));
 
@@ -888,15 +888,15 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   const size_t discard_size = strlen(discardstr), keep_size = strlen(keepstr);
 
   // Fill the file with the requested data; first discard data, then kept data
-  int64 written = 0;
+  size_t written = 0;
   while (written < dsize) {
-    int bytes = min<int64>(dsize - written, discard_size);
+    size_t bytes = min(dsize - written, discard_size);
     CHECK_ERR(write(fd, discardstr, bytes));
     written += bytes;
   }
   written = 0;
   while (written < ksize) {
-    int bytes = min<int64>(ksize - written, keep_size);
+    size_t bytes = min(ksize - written, keep_size);
     CHECK_ERR(write(fd, keepstr, bytes));
     written += bytes;
   }
@@ -906,19 +906,19 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
   // File should now be shorter
   struct stat statbuf;
   CHECK_ERR(fstat(fd, &statbuf));
-  CHECK_EQ(statbuf.st_size, expect);
+  CHECK_EQ(static_cast<size_t>(statbuf.st_size), expect);
   CHECK_ERR(lseek(fd, 0, SEEK_SET));
 
   // File should contain the suffix of the original file
-  const size_t buf_size = statbuf.st_size + 1;
+  const size_t buf_size = static_cast<size_t>(statbuf.st_size) + 1;
   char* buf = new char[buf_size];
   memset(buf, 0, buf_size);
   CHECK_ERR(read(fd, buf, buf_size));
 
   const char *p = buf;
-  int64 checked = 0;
+  size_t checked = 0;
   while (checked < expect) {
-    int bytes = min<int64>(expect - checked, keep_size);
+    size_t bytes = min(expect - checked, keep_size);
     CHECK(!memcmp(p, keepstr, bytes));
     checked += bytes;
   }
@@ -929,7 +929,7 @@ static void TestOneTruncate(const char *path, int64 limit, int64 keep,
 static void TestTruncate() {
 #ifdef HAVE_UNISTD_H
   fprintf(stderr, "==== Test log truncation\n");
-  string path = FLAGS_test_tmpdir + "/truncatefile";
+  string path = FLAGS_test_tmpdir + "/truncatefilecustom";
 
   // Test on a small file
   TestOneTruncate(path.c_str(), 10, 10, 10, 10, 10);
@@ -1113,7 +1113,7 @@ class TestLogSinkWriter : public Thread {
       // Normally this would be some more real/involved logging logic
       // where LOG() usage can't be eliminated,
       // e.g. pushing the message over with an RPC:
-      int messages_left = messages_.size();
+      size_t messages_left = messages_.size();
       mutex_.Unlock();
       SleepForMilliseconds(20);
       // May not use LOG while holding mutex_, because Buffer()
@@ -1168,7 +1168,7 @@ class TestWaitingLogSink : public LogSink {
                     const char* base_filename, int line,
                     const struct tm* tm_time,
                     const char* message, size_t message_len) {
-    send(severity, full_filename, base_filename, line, tm_time, message, message_len);
+    send(severity, full_filename, base_filename, line, tm_time, message, message_len, 0);
   }
 
   virtual void WaitTillSent() {

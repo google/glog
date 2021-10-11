@@ -78,8 +78,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     ]
 
     linux_or_darwin_copts = wasm_copts + [
-        # Symbols explicitly marked as not being exported
-        "-DGLOG_NO_EXPORT=__attribute__((visibility(\\\"hidden\\\")))",
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
         # For src/logging.cc to create symlinks.
@@ -100,7 +98,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     windows_only_copts = [
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
-        "-DGLOG_NO_EXPORT=",
         "-DHAVE_SNPRINTF",
         "-I" + src_windows,
     ]
@@ -119,8 +116,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         visibility = ["//visibility:public"],
         srcs = [
             ":config_h",
-            "src/base.cc",
-            "src/base.h",
             "src/base/commandlineflags.h",
             "src/base/googleinit.h",
             "src/base/mutex.h",

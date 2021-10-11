@@ -29,7 +29,6 @@
 
 #define _GNU_SOURCE 1 // needed for O_NOFOLLOW and pread()/pwrite()
 
-#include "base.h"
 #include "utilities.h"
 
 #include <algorithm>
@@ -380,6 +379,13 @@ struct LogMessage::LogMessageData  {
   void operator=(const LogMessageData&);
 };
 
+// A mutex that allows only one thread to log at a time, to keep things from
+// getting jumbled.  Some other very uncommon logging operations (like
+// changing the destination file for log messages of a given severity) also
+// lock this mutex.  Please be sure that anybody who might possibly need to
+// lock it does so.
+static Mutex log_mutex;
+
 // Number of messages sent at each severity.  Under log_mutex.
 int64 LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
 
@@ -389,6 +395,9 @@ static bool stop_writing = false;
 const char*const LogSeverityNames[NUM_SEVERITIES] = {
   "INFO", "WARNING", "ERROR", "FATAL"
 };
+
+// Has the user called SetExitOnDFatal(true)?
+static bool exit_on_dfatal = true;
 
 const char* GetLogSeverityName(LogSeverity severity) {
   return LogSeverityNames[severity];
@@ -2056,6 +2065,33 @@ void LogToStderr() {
   LogDestination::LogToStderr();
 }
 
+namespace base {
+namespace internal {
+
+bool GetExitOnDFatal();
+bool GetExitOnDFatal() {
+  MutexLock l(&log_mutex);
+  return exit_on_dfatal;
+}
+
+// Determines whether we exit the program for a LOG(DFATAL) message in
+// debug mode.  It does this by skipping the call to Fail/FailQuietly.
+// This is intended for testing only.
+//
+// This can have some effects on LOG(FATAL) as well.  Failure messages
+// are always allocated (rather than sharing a buffer), the crash
+// reason is not recorded, the "gwq" status message is not updated,
+// and the stack trace is not recorded.  The LOG(FATAL) *will* still
+// exit the program.  Since this function is used only in testing,
+// these differences are acceptable.
+void SetExitOnDFatal(bool value);
+void SetExitOnDFatal(bool value) {
+  MutexLock l(&log_mutex);
+  exit_on_dfatal = value;
+}
+
+}  // namespace internal
+}  // namespace base
 
 // Shell-escaping as we need to shell out ot /bin/mail.
 static const char kDontNeedShellEscapeChars[] =
