@@ -55,7 +55,7 @@ TEST(ScopedMockLogTest, InterceptsLog) {
   ScopedMockLog log;
 
   InSequence s;
-  EXPECT_CALL(log, Log(WARNING, HasSubstr("/mock-log_test.cc"), "Fishy."));
+  EXPECT_CALL(log, Log(WARNING, HasSubstr("/mock-log_unittest.cc"), "Fishy."));
   EXPECT_CALL(log, Log(INFO, _, "Working..."))
       .Times(2);
   EXPECT_CALL(log, Log(ERROR, _, "Bad!!"));
