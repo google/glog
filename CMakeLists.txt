@@ -921,6 +921,44 @@ if (BUILD_TESTING)
     FIXTURES_REQUIRED cmake_package_config)
   set_tests_properties (cmake_package_config_build PROPERTIES
     FIXTURES_REQUIRED "cmake_package_config;cmake_package_config_working")
+
+  add_executable (cleanup_immediately_unittest
+    src/cleanup_immediately_unittest.cc)
+
+  target_link_libraries (cleanup_immediately_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+  add_executable (cleanup_with_prefix_unittest
+    src/cleanup_with_prefix_unittest.cc)
+
+  target_link_libraries (cleanup_with_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+  set (CLEANUP_LOG_DIR ${CMAKE_CURRENT_BINARY_DIR}/cleanup_tests)
+
+  add_test (NAME cleanup_init COMMAND
+    ${CMAKE_COMMAND} -E make_directory ${CLEANUP_LOG_DIR})
+  add_test (NAME cleanup_logdir COMMAND
+    ${CMAKE_COMMAND} -E remove_directory ${CLEANUP_LOG_DIR})
+  add_test (NAME cleanup_immediately COMMAND
+    ${CMAKE_COMMAND}
+    -DLOGCLEANUP=$<TARGET_FILE:cleanup_immediately_unittest>
+    # NOTE The trailing slash is important
+    -DTEST_DIR=${CLEANUP_LOG_DIR}/
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCleanerTest1.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test (NAME cleanup_with_prefix COMMAND
+    ${CMAKE_COMMAND}
+    -DLOGCLEANUP=$<TARGET_FILE:cleanup_with_prefix_unittest>
+    -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCleanerTest2.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+  # Fixtures setup
+  set_tests_properties (cleanup_init PROPERTIES FIXTURES_SETUP logcleanuptest)
+  ## Fixtures cleanup
+  set_tests_properties (cleanup_logdir PROPERTIES FIXTURES_CLEANUP logcleanuptest)
+  # Fixture requirements
+  set_tests_properties (cleanup_immediately PROPERTIES FIXTURES_REQUIRED logcleanuptest)
+  set_tests_properties (cleanup_with_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
 endif (BUILD_TESTING)
 
 install (TARGETS glog
