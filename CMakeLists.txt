@@ -188,6 +188,8 @@ int main(void)
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
+cmake_push_check_state (RESET)
+set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
 check_cxx_source_compiles ("
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
@@ -199,6 +201,7 @@ int main(void)
   return 0;
 }
 " HAVE_RWLOCK)
+cmake_pop_check_state ()
 
 check_cxx_source_compiles ("
 __declspec(selectany) int a;
@@ -830,7 +833,7 @@ if (BUILD_TESTING)
 
   set_tests_properties (logging PROPERTIES TIMEOUT 30)
 
-# FIXME: Skip flaky test
+  # FIXME: Skip flaky test
   set_tests_properties (logging PROPERTIES SKIP_REGULAR_EXPRESSION
     "Check failed: time_ns within LogTimes::LOG_PERIOD_TOL_NS of LogTimes::LOG_PERIOD_NS")
 
@@ -854,6 +857,17 @@ if (BUILD_TESTING)
   if (TARGET symbolize_unittest)
     add_test (NAME symbolize COMMAND symbolize_unittest)
   endif (TARGET symbolize_unittest)
+
+  if (HAVE_LIB_GMOCK)
+    add_executable (mock-log_unittest
+      src/mock-log_unittest.cc
+      src/mock-log.h
+    )
+
+    target_link_libraries (mock-log_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+    add_test (NAME mock-log COMMAND mock-log_unittest)
+  endif (HAVE_LIB_GMOCK)
 
   # Generate an initial cache
 

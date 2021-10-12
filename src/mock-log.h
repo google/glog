@@ -72,7 +72,7 @@ class ScopedMockLog : public GOOGLE_NAMESPACE::LogSink {
   ScopedMockLog() { AddLogSink(this); }
 
   // When the object is destructed, it stops intercepting logs.
-  virtual ~ScopedMockLog() { RemoveLogSink(this); }
+  ~ScopedMockLog() { RemoveLogSink(this); }
 
   // Implements the mock method:
   //
