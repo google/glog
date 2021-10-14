@@ -1824,9 +1824,9 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   } else {
 
     // log this message to all log files of severity <= severity_
-    LogDestination::LogToAllLogfiles(data_->severity_, data_->timestamp_,
-                                     data_->message_text_,
-                                     data_->num_chars_to_log_);
+    // LogDestination::LogToAllLogfiles(data_->severity_, data_->timestamp_,
+    //                                  data_->message_text_,
+    //                                  data_->num_chars_to_log_);
 
     LogDestination::MaybeLogToStderr(data_->severity_, data_->message_text_,
                                      data_->num_chars_to_log_,
