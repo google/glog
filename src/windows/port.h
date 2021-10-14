@@ -1,10 +1,10 @@
 /* Copyright (c) 2008, Google Inc.
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
- * 
+ *
  *     * Redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer.
  *     * Redistributions in binary form must reproduce the above
@@ -14,7 +14,7 @@
  *     * Neither the name of Google Inc. nor the names of its
  * contributors may be used to endorse or promote products derived from
  * this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -54,13 +54,15 @@
 #include <io.h>              /* because we so often use open/close/etc */
 #include <direct.h>          /* for _getcwd() */
 #include <process.h>         /* for _getpid() */
-#include <stdio.h>           /* read in vsnprintf decl. before redifining it */
-#include <stdarg.h>          /* template_dictionary.cc uses va_copy */
-#include <string.h>          /* for _strnicmp(), strerror_s() */
-#include <time.h>            /* for localtime_s() */
+#include <cstdarg>          /* template_dictionary.cc uses va_copy */
+#include <cstdio>           /* read in vsnprintf decl. before redifining it */
+#include <cstring>          /* for _strnicmp(), strerror_s() */
+#include <ctime>            /* for localtime_s() */
 /* Note: the C++ #includes are all together at the bottom.  This file is
  * used by both C and C++ code, so we put all the C++ together.
  */
+
+#include "glog/logging.h"
 
 #ifdef _MSC_VER
 

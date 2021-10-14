@@ -29,7 +29,6 @@
 //
 // Author: Ray Sidney
 
-#include "config.h"
 #include "utilities.h"
 
 #include <fcntl.h>
@@ -44,16 +43,17 @@
 # include <sys/wait.h>
 #endif
 
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <fstream>
 #include <memory>
 #include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
@@ -180,6 +180,30 @@ static void BM_vlog(int n) {
 }
 BENCHMARK(BM_vlog);
 
+// Dynamically generate a prefix using the default format and write it to the stream.
+void PrefixAttacher(std::ostream &s, const LogMessageInfo &l, void* data) {
+  // Assert that `data` contains the expected contents before producing the
+  // prefix (otherwise causing the tests to fail):
+  if (data == NULL || *static_cast<string*>(data) != "good data") {
+    return;
+  }
+
+  s << l.severity[0]
+    << setw(4) << 1900 + l.time.year()
+    << setw(2) << 1 + l.time.month()
+    << setw(2) << l.time.day()
+    << ' '
+    << setw(2) << l.time.hour() << ':'
+    << setw(2) << l.time.min()  << ':'
+    << setw(2) << l.time.sec() << "."
+    << setw(6) << l.time.usec()
+    << ' '
+    << setfill(' ') << setw(5)
+    << l.thread_id << setfill('0')
+    << ' '
+    << l.filename << ':' << l.line_number << "]";
+}
+
 int main(int argc, char **argv) {
   FLAGS_colorlogtostderr = false;
   FLAGS_timestamp_in_logfile_name = true;
@@ -197,7 +221,10 @@ int main(int argc, char **argv) {
   LogWithLevels(0, 0, 0, 0);  // simulate "before global c-tors"
   const string early_stderr = GetCapturedTestStderr();
 
-  InitGoogleLogging(argv[0]);
+  // Setting a custom prefix generator (it will use the default format so that
+  // the golden outputs can be reused):
+  string prefix_attacher_data = "good data";
+  InitGoogleLogging(argv[0], &PrefixAttacher, static_cast<void*>(&prefix_attacher_data));
 
   RunSpecifiedBenchmarks();
 
@@ -229,7 +256,7 @@ int main(int argc, char **argv) {
 
   // TODO: The golden test portion of this test is very flakey.
   EXPECT_TRUE(
-      MungeAndDiffTestStderr(FLAGS_test_srcdir + "/src/logging_unittest.err"));
+      MungeAndDiffTestStderr(FLAGS_test_srcdir + "/src/logging_custom_prefix_unittest.err"));
 
   FLAGS_logtostderr = false;
 
@@ -310,11 +337,11 @@ struct NewHook {
 };
 
 TEST(DeathNoAllocNewHook, logging) {
-  // tests that NewHook used below works
-  NewHook new_hook;
-  ASSERT_DEATH({
-    new int;
-  }, "unexpected new");
+ // tests that NewHook used below works
+ NewHook new_hook;
+ ASSERT_DEATH({
+   new int;
+ }, "unexpected new");
 }
 
 void TestRawLogging() {

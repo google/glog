@@ -29,8 +29,8 @@
 
 #include "utilities.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 #include "config.h"
 #include "base/commandlineflags.h"
 #include "glog/logging.h"

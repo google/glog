@@ -41,7 +41,7 @@
 //     // that can't be accomplished e.g. via just VLOG(2) << ...;
 //   }
 //
-// The truth value that VLOG_IS_ON(level) returns is determined by 
+// The truth value that VLOG_IS_ON(level) returns is determined by
 // the three verbosity level flags:
 //   --v=<n>  Gives the default maximal active V-logging level;
 //            0 is the default.

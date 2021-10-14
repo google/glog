@@ -41,7 +41,7 @@ if (Unwind_LIBRARY)
   set (_Unwind_VERSION_HEADER ${Unwind_INCLUDE_DIR}/libunwind-common.h)
 
   if (EXISTS ${_Unwind_VERSION_HEADER})
-    FILE (READ ${_Unwind_VERSION_HEADER} _Unwind_VERSION_CONTENTS)
+    file (READ ${_Unwind_VERSION_HEADER} _Unwind_VERSION_CONTENTS)
 
     string (REGEX REPLACE ".*#define UNW_VERSION_MAJOR[ \t]+([0-9]+).*" "\\1"
       Unwind_VERSION_MAJOR "${_Unwind_VERSION_CONTENTS}")
@@ -50,9 +50,15 @@ if (Unwind_LIBRARY)
     string (REGEX REPLACE ".*#define UNW_VERSION_EXTRA[ \t]+([0-9]+).*" "\\1"
       Unwind_VERSION_PATCH "${_Unwind_VERSION_CONTENTS}")
 
-    set (Unwind_VERSION
-      ${Unwind_VERSION_MAJOR}.${Unwind_VERSION_MINOR}.${Unwind_VERSION_PATCH})
-    set (Unwind_VERSION_COMPONENTS 3)
+    set (Unwind_VERSION ${Unwind_VERSION_MAJOR}.${Unwind_VERSION_MINOR})
+
+    if (CMAKE_MATCH_0)
+      # Third version component may be empty
+      set (Unwind_VERSION ${Unwind_VERSION}.${Unwind_VERSION_PATCH})
+      set (Unwind_VERSION_COMPONENTS 3)
+    else (CMAKE_MATCH_0)
+      set (Unwind_VERSION_COMPONENTS 2)
+    endif (CMAKE_MATCH_0)
   endif (EXISTS ${_Unwind_VERSION_HEADER})
 endif (Unwind_LIBRARY)
 

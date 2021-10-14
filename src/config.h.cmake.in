@@ -82,14 +82,8 @@
 /* Define to 1 if you have the <stdint.h> header file. */
 #cmakedefine HAVE_STDINT_H ${HAVE_STDINT_H}
 
-/* Define to 1 if you have the <stdlib.h> header file. */
-#cmakedefine HAVE_STDLIB_H
-
 /* Define to 1 if you have the <strings.h> header file. */
 #cmakedefine HAVE_STRINGS_H
-
-/* Define to 1 if you have the <string.h> header file. */
-#cmakedefine HAVE_STRING_H
 
 /* Define to 1 if you have the <syscall.h> header file. */
 #cmakedefine HAVE_SYSCALL_H
@@ -200,6 +194,12 @@
 
 /* Check whether aligned_storage and alignof present */
 #cmakedefine HAVE_ALIGNED_STORAGE ${HAVE_ALIGNED_STORAGE}
+
+/* Check whether C++11 atomic is available */
+#cmakedefine HAVE_CXX11_ATOMIC ${HAVE_CXX11_ATOMIC}
+
+/* Check whether C++11 nullptr_t is available */
+#cmakedefine HAVE_CXX11_NULLPTR_T ${HAVE_CXX11_NULLPTR_T}
 
 /* Version number of package */
 #cmakedefine VERSION

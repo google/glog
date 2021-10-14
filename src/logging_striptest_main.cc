@@ -31,7 +31,7 @@
 
 // The common part of the striplog tests.
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <iosfwd>
 #include "glog/logging.h"

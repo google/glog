@@ -31,10 +31,9 @@
 //
 // Produce stack trace using libgcc
 
-extern "C" {
-#include <stdlib.h> // for NULL
+#include <cstdlib> // for NULL
 #include <unwind.h> // ABI defined unwinder
-}
+
 #include "stacktrace.h"
 
 _START_GOOGLE_NAMESPACE_

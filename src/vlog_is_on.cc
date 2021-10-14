@@ -34,9 +34,9 @@
 
 #include "utilities.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
+#include <cstring>
+#include <cstdlib>
+#include <cerrno>
 #include <cstdio>
 #include <string>
 #include "base/commandlineflags.h"

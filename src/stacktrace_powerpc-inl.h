@@ -35,7 +35,7 @@
 //    http://www.linux-foundation.org/spec/ELF/ppc64/PPC-elf64abi-1.9.html#STACK
 // Linux has similar code: http://patchwork.ozlabs.org/linuxppc/patch?id=8882
 
-#include <stdio.h>
+#include <cstdio>
 #include <stdint.h>   // for uintptr_t
 #include "stacktrace.h"
 

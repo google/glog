@@ -34,7 +34,7 @@
 //
 // Note that we only have partial C++0x support yet.
 
-#include <stdio.h>  // for NULL
+#include <cstdio>  // for NULL
 #include "utilities.h"
 #include "demangle.h"
 

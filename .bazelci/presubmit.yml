@@ -1,25 +1,41 @@
 ---
 platforms:
   ubuntu1604:
+    build_flags:
+    - "--features=layering_check"
     build_targets:
     - "..."
+    test_flags:
+    - "--features=layering_check"
     test_targets:
     - "..."
   ubuntu1804:
+    build_flags:
+    - "--features=layering_check"
     build_targets:
     - "..."
+    test_flags:
+    - "--features=layering_check"
     test_targets:
     - "..."
   macos:
+    build_flags:
+    - "--features=layering_check"
     build_targets:
     - "..."
+    test_flags:
+    - "--features=layering_check"
     test_targets:
     - "..."
   windows:
     # Optional: use VS 2017 instead of 2015.
     environment:
       BAZEL_VC: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC"
+    build_flags:
+    - "--features=layering_check"
     build_targets:
     - "..."
+    test_flags:
+    - "--features=layering_check"
     test_targets:
     - "..."

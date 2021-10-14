@@ -36,7 +36,7 @@
 #ifndef BASE_RAW_LOGGING_H_
 #define BASE_RAW_LOGGING_H_
 
-#include <time.h>
+#include <ctime>
 
 @ac_google_start_namespace@
 

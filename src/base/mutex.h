@@ -106,7 +106,7 @@
 
 #if defined(NO_THREADS)
   typedef int MutexType;      // to keep a lock-count
-#elif defined(_WIN32) || defined(__CYGWIN32__) || defined(__CYGWIN64__)
+#elif defined(_WIN32) || defined(__CYGWIN__)
 # ifndef WIN32_LEAN_AND_MEAN
 #  define WIN32_LEAN_AND_MEAN  // We only need minimal includes
 # endif
@@ -153,8 +153,8 @@
 
 // We need to include these header files after defining _XOPEN_SOURCE
 // as they may define the _XOPEN_SOURCE macro.
-#include <assert.h>
-#include <stdlib.h>      // for abort()
+#include <cassert>
+#include <cstdlib>      // for abort()
 
 #define MUTEX_NAMESPACE glog_internal_namespace_
 

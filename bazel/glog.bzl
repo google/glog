@@ -1,4 +1,4 @@
-# Implement a macro glog_library() that the BUILD file can load.
+# Implement a macro glog_library() that the BUILD.bazel file can load.
 
 # By default, glog is built with gflags support.  You can change this behavior
 # by using glog_library(with_gflags=0)
@@ -8,6 +8,28 @@
 #       https://github.com/google/glog/files/393474/BUILD.txt
 #
 # Known issue: the namespace parameter is not supported on Win32.
+
+def expand_template_impl(ctx):
+    ctx.actions.expand_template(
+        template = ctx.file.template,
+        output = ctx.outputs.out,
+        substitutions = ctx.attr.substitutions,
+    )
+
+expand_template = rule(
+    implementation = expand_template_impl,
+    attrs = {
+        "template": attr.label(mandatory = True, allow_single_file = True),
+        "substitutions": attr.string_dict(mandatory = True),
+        "out": attr.output(mandatory = True),
+    },
+)
+
+def dict_union(x, y):
+  z = {}
+  z.update(x)
+  z.update(y)
+  return z
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
@@ -26,9 +48,13 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     common_copts = [
         "-DGLOG_BAZEL_BUILD",
+        # Inject a C++ namespace.
+        "-DGOOGLE_NAMESPACE='%s'" % namespace,
+        "-DHAVE_CXX11_NULLPTR_T",
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
         "-DHAVE_UNWIND_H",
+        "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
     wasm_copts = [
@@ -37,8 +63,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-Wno-unused-function",
         "-Wno-unused-local-typedefs",
         "-Wno-unused-variable",
-        # Inject a C++ namespace.
-        "-DGOOGLE_NAMESPACE='%s'" % namespace,
         # Allows src/base/mutex.h to include pthread.h.
         "-DHAVE_PTHREAD",
         # Allows src/logging.cc to determine the host name.
@@ -50,12 +74,13 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # For logging.cc.
         "-DHAVE_PREAD",
         "-DHAVE___ATTRIBUTE__",
-        "-I%s/glog_internal" % gendir,
     ]
 
     linux_or_darwin_copts = wasm_copts + [
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
+        # For src/logging.cc to create symlinks.
+        "-DHAVE_UNISTD_H",
     ]
 
     freebsd_only_copts = [
@@ -69,13 +94,14 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     ]
 
     windows_only_copts = [
+        "-DGLOG_NO_ABBREVIATED_SEVERITIES",
         "-DHAVE_SNPRINTF",
         "-I" + src_windows,
     ]
 
     windows_only_srcs = [
         "src/glog/log_severity.h",
-        "src/windows/config.h",
+        "src/windows/dirent.h",
         "src/windows/port.cc",
         "src/windows/port.h",
     ]
@@ -86,6 +112,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         name = "glog",
         visibility = ["//visibility:public"],
         srcs = [
+            ":config_h",
             "src/base/commandlineflags.h",
             "src/base/googleinit.h",
             "src/base/mutex.h",
@@ -108,7 +135,21 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/vlog_is_on.cc",
         ] + select({
             "@bazel_tools//src/conditions:windows": windows_only_srcs,
-            "//conditions:default": [":config_h"],
+            "//conditions:default": [],
+        }),
+        hdrs = [
+                "src/glog/log_severity.h",
+                ":logging_h",
+                ":raw_logging_h",
+                ":stl_logging_h",
+                ":vlog_is_on_h",
+            ],
+        strip_include_prefix = "src",
+        defines = select({
+            # GOOGLE_GLOG_DLL_DECL is normally set by export.h, but that's not
+            # generated for Bazel.
+            "@bazel_tools//src/conditions:windows": ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
+            "//conditions:default": [],
         }),
         copts =
             select({
@@ -118,41 +159,17 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 ":wasm": common_copts + wasm_copts,
                 "//conditions:default": common_copts + linux_or_darwin_copts,
             }),
-        deps = [
-            ":glog_headers",
-        ] + gflags_deps,
-        **kwargs
-    )
-
-    # glog headers vary depending on the os.
-    native.cc_library(
-        name = "glog_headers",
-        deps = select({
-            "@bazel_tools//src/conditions:windows": [":windows_glog_headers"],
-            "//conditions:default": [":default_glog_headers"],
+        deps = gflags_deps + select({
+            "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
+            "//conditions:default": [],
         }),
-    )
-
-    native.cc_library(
-        name = "windows_glog_headers",
-        hdrs = native.glob(["src/windows/glog/*.h"]),
-        strip_include_prefix = "src/windows",
-        # We need to override the default GOOGLE_GLOG_DLL_DECL from
-        # src/windows/glog/*.h to match src/windows/config.h.
-        defines = ["GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)"],
-        deps = [":strip_include_prefix_hack"],
+        **kwargs
     )
 
     # Workaround https://github.com/bazelbuild/bazel/issues/6337 by declaring
     # the dependencies without strip_include_prefix.
     native.cc_library(
         name = "strip_include_prefix_hack",
-        hdrs = native.glob(["src/windows/*.h"]),
-    )
-
-    native.cc_library(
-        name = "default_glog_headers",
-        strip_include_prefix = "src",
         hdrs = [
             "src/glog/log_severity.h",
             ":logging_h",
@@ -161,54 +178,60 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             ":vlog_is_on_h",
         ],
     )
-    native.genrule(
+
+    expand_template(
         name = "config_h",
-        srcs = [
-            "src/config.h.cmake.in",
-        ],
-        outs = [
-            "glog_internal/config.h",
-        ],
-        cmd = "awk '{ gsub(/^#cmakedefine/, \"//cmakedefine\"); print; }' $< > $@",
+        template = "src/config.h.cmake.in",
+        out = "glog_internal/config.h",
+        substitutions = {"#cmakedefine": "//cmakedefine"},
     )
 
-    native.genrule(
-        name = "gen_sh",
-        outs = [
-            "gen.sh",
-        ],
-        cmd = r'''\
-#!/bin/sh
-cat > $@ <<"EOF"
-sed -e 's/@ac_cv_cxx_using_operator@/1/g' \
-    -e 's/@ac_cv_have_unistd_h@/1/g' \
-    -e 's/@ac_cv_have_stdint_h@/1/g' \
-    -e 's/@ac_cv_have_systypes_h@/1/g' \
-    -e 's/@ac_cv_have_libgflags@/{}/g' \
-    -e 's/@ac_cv_have_uint16_t@/1/g' \
-    -e 's/@ac_cv_have___builtin_expect@/1/g' \
-    -e 's/@ac_cv_have_.*@/0/g' \
-    -e 's/@ac_google_start_namespace@/namespace google {{/g' \
-    -e 's/@ac_google_end_namespace@/}}/g' \
-    -e 's/@ac_google_namespace@/google/g' \
-    -e 's/@ac_cv___attribute___noinline@/__attribute__((noinline))/g' \
-    -e 's/@ac_cv___attribute___noreturn@/__attribute__((noreturn))/g' \
-    -e 's/@ac_cv___attribute___printf_4_5@/__attribute__((__format__ (__printf__, 4, 5)))/g'
-EOF
-'''.format(int(with_gflags)),
-    )
+    common_config = {
+        "@ac_cv_cxx11_nullptr_t@": "1",
+        "@ac_cv_cxx_using_operator@": "1",
+        "@ac_cv_have_inttypes_h@": "0",
+        "@ac_cv_have_u_int16_t@": "0",
+        "@ac_cv_have_glog_export@": "0",
+        "@ac_google_start_namespace@": "namespace google {",
+        "@ac_google_end_namespace@": "}",
+        "@ac_google_namespace@": "google",
+    }
+
+    posix_config = dict_union(common_config, {
+        "@ac_cv_have_unistd_h@": "1",
+        "@ac_cv_have_stdint_h@": "1",
+        "@ac_cv_have_systypes_h@": "1",
+        "@ac_cv_have_uint16_t@": "1",
+        "@ac_cv_have___uint16@": "0",
+        "@ac_cv_have___builtin_expect@": "1",
+        "@ac_cv_have_libgflags@": "1" if with_gflags else "0",
+        "@ac_cv___attribute___noinline@": "__attribute__((noinline))",
+        "@ac_cv___attribute___noreturn@": "__attribute__((noreturn))",
+        "@ac_cv___attribute___printf_4_5@": "__attribute__((__format__(__printf__, 4, 5)))",
+    })
+
+    windows_config = dict_union(common_config, {
+        "@ac_cv_have_unistd_h@": "0",
+        "@ac_cv_have_stdint_h@": "0",
+        "@ac_cv_have_systypes_h@": "0",
+        "@ac_cv_have_uint16_t@": "0",
+        "@ac_cv_have___uint16@": "1",
+        "@ac_cv_have___builtin_expect@": "0",
+        "@ac_cv_have_libgflags@": "0",
+        "@ac_cv___attribute___noinline@": "",
+        "@ac_cv___attribute___noreturn@": "__declspec(noreturn)",
+        "@ac_cv___attribute___printf_4_5@": "",
+    })
 
     [
-        native.genrule(
+        expand_template(
             name = "%s_h" % f,
-            srcs = [
-                "src/glog/%s.h.in" % f,
-            ],
-            outs = [
-                "src/glog/%s.h" % f,
-            ],
-            cmd = "$(location :gen_sh) < $< > $@",
-            tools = [":gen_sh"],
+            template = "src/glog/%s.h.in" % f,
+            out = "src/glog/%s.h" % f,
+            substitutions = select({
+                "@bazel_tools//src/conditions:windows": windows_config,
+                "//conditions:default": posix_config,
+            }),
         )
         for f in [
             "vlog_is_on",

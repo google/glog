@@ -31,14 +31,14 @@
 
 #include "utilities.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
-#include <signal.h>
+#include <csignal>
 #ifdef HAVE_SYS_TIME_H
 # include <sys/time.h>
 #endif
-#include <time.h>
+#include <ctime>
 #if defined(HAVE_SYSCALL_H)
 #include <syscall.h>                 // for syscall()
 #elif defined(HAVE_SYS_SYSCALL_H)
