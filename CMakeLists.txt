@@ -665,11 +665,11 @@ if (FREERTOS)
     if (HAVE_FREERTOS_THREADS)
       target_include_directories (glog
         PRIVATE
-        /tools/Xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/include
-        /tools/Xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/arm/cortexr5/platform/ZynqMP
-        /tools/Xilinx/SDK/2019.1/data/embeddedsw/XilinxProcessorIPLib/drivers/common_v1_00_a/src
-        /tools/Xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/portable/GCC/ARM_CR5
-        /tools/Xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/common
+        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/include
+        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/arm/cortexr5/platform/ZynqMP
+        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/XilinxProcessorIPLib/drivers/common_v1_00_a/src
+        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/portable/GCC/ARM_CR5
+        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/common
         )
     endif (HAVE_FREERTOS_THREADS)
 endif (FREERTOS)
