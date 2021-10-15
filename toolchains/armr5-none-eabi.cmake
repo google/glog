@@ -11,8 +11,8 @@ SET(CMAKE_SYSTEM_VERSION 1)
 # set compiler
 set(CMAKE_C_COMPILER armr5-none-eabi-gcc)
 set(CMAKE_CXX_COMPILER armr5-none-eabi-g++)
-set(CMAKE_C_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -specs=nosys.specs -ffunction-sections -fdata-sections")
-set(CMAKE_CXX_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -fno-rtti -specs=nosys.specs -fno-exceptions -ffunction-sections -fdata-sections")
+set(CMAKE_C_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -ffunction-sections -fdata-sections")
+set(CMAKE_CXX_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -fno-exceptions -ffunction-sections -fdata-sections")
 set(CMAKE_EXE_LINKER_FLAGS "--specs=nosys.specs" CACHE INTERNAL "")
 
 # set c++ standard
