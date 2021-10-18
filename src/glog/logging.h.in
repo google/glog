@@ -152,6 +152,8 @@ struct LogMessageTime {
   const int& dayOfWeek() const { return time_struct.tm_wday; }
   const int& dayInYear() const { return time_struct.tm_yday; }
   const int& dst() const { return time_struct.tm_isdst; }
+  const long int& gmtoff() const { return time_struct.tm_gmtoff; }
+  const char *time_zone() const { return time_struct.tm_zone; }
 
   private:
     const struct::tm& time_struct;
