@@ -287,6 +287,7 @@ void TestLogging(bool check_counts) {
   int j = 1000;
   LOG(ERROR) << string("foo") << ' '<< j << ' ' << setw(10) << j << " "
              << setw(1) << hex << j;
+  LOG(INFO) << "foo " << std::setw(10) << 1.0;
 
   {
     google::LogMessage outer(__FILE__, __LINE__, GLOG_ERROR);
@@ -294,8 +295,6 @@ void TestLogging(bool check_counts) {
 
     LOG(ERROR) << "inner";
   }
-
-  LOG(INFO) << "foo " << std::setw(10) << 1.0;
 
   LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << "no prefix";
 
