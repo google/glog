@@ -502,7 +502,6 @@ class LogCleaner {
 
   bool enabled_;
   int overdue_days_;
-  char dir_delim_;  // filepath delimiter ('/' or '\\')
 };
 
 LogCleaner log_cleaner;
@@ -916,6 +915,13 @@ void SetApplicationFingerprint(const std::string& fingerprint) {
 
 namespace {
 
+// Directory delimiter; Windows supports both forward slashes and backslashes
+#ifdef GLOG_OS_WINDOWS
+const char possible_dir_delim[] = {'\\', '/'};
+#else
+const char possible_dir_delim[] = {'/'};
+#endif
+
 string PrettyDuration(int secs) {
   std::stringstream result;
   int mins = secs / 60;
@@ -1288,7 +1294,7 @@ void LogFileObject::Write(bool force_flush,
     }
 #endif
 
-    // Perform clean up for old logs
+    // Remove old logs
     if (log_cleaner.enabled()) {
       if (base_filename_selected_ && base_filename_.empty()) {
         return;
@@ -1300,17 +1306,11 @@ void LogFileObject::Write(bool force_flush,
   }
 }
 
-
-LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), dir_delim_('/') {
-#ifdef GLOG_OS_WINDOWS
-  dir_delim_ = '\\';
-#endif
-}
+LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7) {}
 
 void LogCleaner::Enable(int overdue_days) {
-  // Setting overdue_days to 0 day should not be allowed!
-  // Since all logs will be deleted immediately, which will cause troubles.
-  assert(overdue_days > 0);
+  // Setting overdue_days to 0 days will delete all logs.
+  assert(overdue_days >= 0);
 
   enabled_ = true;
   overdue_days_ = overdue_days;
@@ -1323,15 +1323,21 @@ void LogCleaner::Disable() {
 void LogCleaner::Run(bool base_filename_selected,
                      const string& base_filename,
                      const string& filename_extension) const {
-  assert(enabled_ && overdue_days_ > 0);
+  assert(enabled_ && overdue_days_ >= 0);
 
   vector<string> dirs;
 
-  if (base_filename_selected) {
-    string dir = base_filename.substr(0, base_filename.find_last_of(dir_delim_) + 1);
-    dirs.push_back(dir);
-  } else {
+  if (!base_filename_selected) {
     dirs = GetLoggingDirectories();
+  } else {
+    size_t pos = base_filename.find_last_of(possible_dir_delim, 0,
+                                            sizeof(possible_dir_delim));
+    if (pos != string::npos) {
+      string dir = base_filename.substr(0, pos + 1);
+      dirs.push_back(dir);
+    } else {
+      dirs.push_back(".");
+    }
   }
 
   for (size_t i = 0; i < dirs.size(); i++) {
@@ -1356,17 +1362,23 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
   DIR *dir;
   struct dirent *ent;
 
-  // If log_directory doesn't end with a slash, append a slash to it.
-  if (log_directory.at(log_directory.size() - 1) != dir_delim_) {
-    log_directory += dir_delim_;
-  }
 
-  if ((dir=opendir(log_directory.c_str()))) {
-    while ((ent=readdir(dir))) {
-      if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) {
+  if ((dir = opendir(log_directory.c_str()))) {
+    while ((ent = readdir(dir))) {
+      if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
         continue;
       }
-      string filepath = log_directory + ent->d_name;
+
+      string filepath = ent->d_name;
+      const char* const dir_delim_end =
+          possible_dir_delim + sizeof(possible_dir_delim);
+
+      if (!log_directory.empty() &&
+          std::find(possible_dir_delim, dir_delim_end,
+                    log_directory[log_directory.size() - 1]) != dir_delim_end) {
+        filepath = log_directory + filepath;
+      }
+
       if (IsLogFromCurrentProject(filepath, base_filename, filename_extension) &&
           IsLogLastModifiedOver(filepath, days)) {
         overdue_log_names.push_back(filepath);
@@ -1386,14 +1398,19 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
   string cleaned_base_filename;
 
+  const char* const dir_delim_end =
+      possible_dir_delim + sizeof(possible_dir_delim);
+
   size_t real_filepath_size = filepath.size();
   for (size_t i = 0; i < base_filename.size(); ++i) {
     const char& c = base_filename[i];
 
     if (cleaned_base_filename.empty()) {
       cleaned_base_filename += c;
-    } else if (c != dir_delim_ ||
-        c != cleaned_base_filename.at(cleaned_base_filename.size() - 1)) {
+    } else if (std::find(possible_dir_delim, dir_delim_end, c) ==
+                   dir_delim_end ||
+               (!cleaned_base_filename.empty() &&
+                c != cleaned_base_filename[cleaned_base_filename.size() - 1])) {
       cleaned_base_filename += c;
     }
   }
@@ -1457,10 +1474,10 @@ bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
   struct stat file_stat;
 
   if (stat(filepath.c_str(), &file_stat) == 0) {
-    // A day is 86400 seconds, so 7 days is 86400 * 7 = 604800 seconds.
+    const time_t seconds_in_a_day = 60 * 60 * 24;
     time_t last_modified_time = file_stat.st_mtime;
     time_t current_time = time(NULL);
-    return difftime(current_time, last_modified_time) > days * 86400;
+    return difftime(current_time, last_modified_time) > days * seconds_in_a_day;
   }
 
   // If failed to get file stat, don't return true!
