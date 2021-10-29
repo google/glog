@@ -73,7 +73,8 @@ IYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] Log if every 1
 WYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] log_if this
 IYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] array
 IYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] const array
-EYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] foo 1000 0000001000 3e8
+EYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] foo 1000       1000 3e8
+IYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] foo          1
 EYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] inner
 EYEARDATE TIME__ THREADID logging_custom_prefix_unittest.cc:LINE] outer
 no prefix
