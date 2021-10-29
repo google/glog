@@ -478,7 +478,6 @@ class LogFileObject : public base::Logger {
 class LogCleaner {
  public:
   LogCleaner();
-  virtual ~LogCleaner() {}
 
   void Enable(int overdue_days);
   void Disable();
@@ -486,7 +485,7 @@ class LogCleaner {
            const string& base_filename,
            const string& filename_extension) const;
 
-  inline bool enabled() const { return enabled_; }
+  bool enabled() const { return enabled_; }
 
  private:
   vector<string> GetOverdueLogNames(string log_directory,
@@ -1296,9 +1295,6 @@ void LogFileObject::Write(bool force_flush,
 
     // Remove old logs
     if (log_cleaner.enabled()) {
-      if (base_filename_selected_ && base_filename_.empty()) {
-        return;
-      }
       log_cleaner.Run(base_filename_selected_,
                       base_filename_,
                       filename_extension_);
@@ -1324,6 +1320,7 @@ void LogCleaner::Run(bool base_filename_selected,
                      const string& base_filename,
                      const string& filename_extension) const {
   assert(enabled_ && overdue_days_ >= 0);
+  assert(!base_filename_selected || !base_filename.empty());
 
   vector<string> dirs;
 
@@ -1361,7 +1358,6 @@ vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
   // Try to get all files within log_directory.
   DIR *dir;
   struct dirent *ent;
-
 
   if ((dir = opendir(log_directory.c_str()))) {
     while ((ent = readdir(dir))) {
