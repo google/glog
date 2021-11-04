@@ -1613,13 +1613,13 @@ void LogMessage::Init(const char* file,
   //    (log level, GMT year, month, date, time, thread_id, file basename, line)
   // We exclude the thread_id for the default thread.
   if (FLAGS_log_prefix && (line != kNoLogPrefix)) {
+      std::ios saved_fmt(NULL);
+      saved_fmt.copyfmt(stream());
+      stream().fill('0');
     #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       if (custom_prefix_callback == NULL) {
     #endif
-          std::ios saved_fmt(NULL);
-          saved_fmt.copyfmt(stream());
-          stream() << setfill('0')
-                   << LogSeverityNames[severity][0]
+          stream() << LogSeverityNames[severity][0]
                    << setw(4) << 1900+data_->tm_time_.tm_year
                    << setw(2) << 1+data_->tm_time_.tm_mon
                    << setw(2) << data_->tm_time_.tm_mday
@@ -1633,7 +1633,6 @@ void LogMessage::Init(const char* file,
                    << static_cast<unsigned int>(GetTID()) << setfill('0')
                    << ' '
                    << data_->basename_ << ':' << data_->line_ << "] ";
-          stream().copyfmt(saved_fmt);
     #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       } else {
         custom_prefix_callback(
@@ -1648,6 +1647,7 @@ void LogMessage::Init(const char* file,
         stream() << " ";
       }
     #endif
+      stream().copyfmt(saved_fmt);
   }
   data_->num_prefix_chars_ = data_->stream_.pcount();
 
