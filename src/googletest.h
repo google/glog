@@ -405,9 +405,12 @@ static inline string GetCapturedTestStderr() {
   return GetCapturedTestOutput(STDERR_FILENO);
 }
 
+static const std::size_t kLoggingPrefixLength = 9;
+
 // Check if the string is [IWEF](\d{8}|YEARDATE)
 static inline bool IsLoggingPrefix(const string& s) {
-  if (s.size() != 9) return false;
+  if (s.size() != kLoggingPrefixLength)
+    return false;
   if (!strchr("IWEF", s[0])) return false;
   for (size_t i = 1; i <= 8; ++i) {
     if (!isdigit(s[i]) && s[i] != "YEARDATE"[i-1]) return false;
@@ -421,17 +424,22 @@ static inline bool IsLoggingPrefix(const string& s) {
 //     I20200102 030405 logging_unittest.cc:345] RAW: vlog -1
 //  => IYEARDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
 static inline string MungeLine(const string& line) {
-  std::istringstream iss(line);
   string before, logcode_date, time, thread_lineinfo;
-  iss >> logcode_date;
-  while (!IsLoggingPrefix(logcode_date)) {
-    before += " " + logcode_date;
-    if (!(iss >> logcode_date)) {
-      // We cannot find the header of log output.
-      return before;
+  std::size_t begin_of_logging_prefix = 0;
+  for (; begin_of_logging_prefix + kLoggingPrefixLength < line.size();
+       ++begin_of_logging_prefix) {
+    if (IsLoggingPrefix(
+            line.substr(begin_of_logging_prefix, kLoggingPrefixLength))) {
+      break;
     }
   }
-  if (!before.empty()) before += " ";
+  if (begin_of_logging_prefix + kLoggingPrefixLength >= line.size()) {
+    return line;
+  } else if (begin_of_logging_prefix > 0) {
+    before = line.substr(0, begin_of_logging_prefix - 1);
+  }
+  std::istringstream iss(line.substr(begin_of_logging_prefix));
+  iss >> logcode_date;
   iss >> time;
   iss >> thread_lineinfo;
   CHECK(!thread_lineinfo.empty());
