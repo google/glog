@@ -1,7 +1,7 @@
 Google Logging Library
 ======================
 
-|Linux Github actions| |Windows Github actions| |macOS Github actions| |Total alerts| |Language grade: C++| |Coveralls|
+|Linux Github actions| |Windows Github actions| |macOS Github actions| |Total alerts| |Language grade: C++| |Codecov|
 
 Google Logging (glog) is a C++98 library that implements application-level
 logging. The library provides logging APIs based on C++-style streams and
@@ -865,15 +865,15 @@ Submitting a Patch
    request <https://help.github.com/articles/creating-a-pull-request>`__.
 
 
-.. |Linux Github actions| image:: https://github.com/google/glog/actions/workflows/linux-builds.yml/badge.svg
+.. |Linux Github actions| image:: https://github.com/google/glog/actions/workflows/linux.yml/badge.svg
    :target: https://github.com/google/glog/actions
-.. |Windows Github actions| image:: https://github.com/google/glog/actions/workflows/windows-builds.yml/badge.svg
+.. |Windows Github actions| image:: https://github.com/google/glog/actions/workflows/windows.yml/badge.svg
    :target: https://github.com/google/glog/actions
-.. |macOS Github actions| image:: https://github.com/google/glog/actions/workflows/macos-builds.yml/badge.svg
+.. |macOS Github actions| image:: https://github.com/google/glog/actions/workflows/macos.yml/badge.svg
    :target: https://github.com/google/glog/actions
 .. |Total alerts| image:: https://img.shields.io/lgtm/alerts/g/google/glog.svg?logo=lgtm&logoWidth=18
    :target: https://lgtm.com/projects/g/google/glog/alerts/
 .. |Language grade: C++| image:: https://img.shields.io/lgtm/grade/cpp/g/google/glog.svg?logo=lgtm&logoWidth=18)
    :target: https://lgtm.com/projects/g/google/glog/context:cpp
-.. |Coveralls| image:: https://coveralls.io/repos/github/google/glog/badge.svg?branch=master
-   :target: https://coveralls.io/github/google/glog?branch=master
+.. |Codecov| image:: https://codecov.io/gh/google/glog/branch/master/graph/badge.svg?token=8an420vNju
+   :target: https://codecov.io/gh/google/glog

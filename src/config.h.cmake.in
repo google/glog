@@ -40,6 +40,9 @@
 /* define if you have google gtest library */
 #cmakedefine HAVE_LIB_GTEST
 
+/* define if you have dbghelp library */
+#cmakedefine HAVE_DBGHELP
+
 /* define if you have libunwind */
 #cmakedefine HAVE_LIB_UNWIND
 

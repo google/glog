@@ -1325,6 +1325,7 @@ static bool ParseTopLevelMangledName(State *state) {
 // The demangler entry point.
 bool Demangle(const char *mangled, char *out, size_t out_size) {
 #if defined(GLOG_OS_WINDOWS)
+#if defined(HAVE_DBGHELP)
   // When built with incremental linking, the Windows debugger
   // library provides a more complicated `Symbol->Name` with the
   // Incremental Linking Table offset, which looks like
@@ -1346,6 +1347,12 @@ bool Demangle(const char *mangled, char *out, size_t out_size) {
   } // Else the symbol wasn't inside a set of parentheses
   // We use the ANSI version to ensure the string type is always `char *`.
   return UnDecorateSymbolName(mangled, out, out_size, UNDNAME_COMPLETE);
+#else
+  (void)mangled;
+  (void)out;
+  (void)out_size;
+  return false;
+#endif
 #else
   State state;
   InitState(&state, mangled, out, out_size);

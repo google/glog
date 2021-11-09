@@ -1246,7 +1246,7 @@ TEST(DVLog, Basic) {
   // We are expecting that nothing is logged.
   EXPECT_CALL(log, Log(_, _, _)).Times(0);
 #else
-  EXPECT_CALL(log, Log(INFO, __FILE__, "debug log"));
+  EXPECT_CALL(log, Log(GLOG_INFO, __FILE__, "debug log"));
 #endif
 
   FLAGS_v = 1;
@@ -1267,13 +1267,13 @@ TEST(LogAtLevel, Basic) {
   ScopedMockLog log;
 
   // The function version outputs "logging.h" as a file name.
-  EXPECT_CALL(log, Log(WARNING, StrNe(__FILE__), "function version"));
-  EXPECT_CALL(log, Log(INFO, __FILE__, "macro version"));
+  EXPECT_CALL(log, Log(GLOG_WARNING, StrNe(__FILE__), "function version"));
+  EXPECT_CALL(log, Log(GLOG_INFO, __FILE__, "macro version"));
 
-  int severity = WARNING;
+  int severity = GLOG_WARNING;
   LogAtLevel(severity, "function version");
 
-  severity = INFO;
+  severity = GLOG_INFO;
   // We can use the macro version as a C++ stream.
   LOG_AT_LEVEL(severity) << "macro" << ' ' << "version";
 }
@@ -1294,9 +1294,9 @@ TEST(TestExitOnDFatal, ToBeOrNotToBe) {
     // downgraded to ERROR if not debugging.
     const LogSeverity severity =
 #ifdef NDEBUG
-        ERROR;
+        GLOG_ERROR;
 #else
-        FATAL;
+        GLOG_FATAL;
 #endif
     EXPECT_CALL(log, Log(severity, __FILE__, "This should not be fatal"));
     LOG(DFATAL) << "This should not be fatal";

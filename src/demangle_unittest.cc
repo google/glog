@@ -64,6 +64,7 @@ static const char *DemangleIt(const char * const mangled) {
 
 #if defined(GLOG_OS_WINDOWS)
 
+#if defined(HAVE_DBGHELP) && !defined(NDEBUG)
 TEST(Demangle, Windows) {
   EXPECT_STREQ(
     "public: static void __cdecl Foo::func(int)",
@@ -75,6 +76,7 @@ TEST(Demangle, Windows) {
     "int __cdecl foobarArray(int * const)",
     DemangleIt("?foobarArray@@YAHQAH@Z"));
 }
+#endif
 
 #else
 

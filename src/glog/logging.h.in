@@ -144,7 +144,7 @@ struct LogMessageTime {
   const time_t& timestamp() const { return ts; }
   const int& sec() const { return time_struct.tm_sec; }
   const int32_t& usec() const { return usecs; }
-  const int& min() const { return time_struct.tm_min; }
+  const int& (min)() const { return time_struct.tm_min; }
   const int& hour() const { return time_struct.tm_hour; }
   const int& day() const { return time_struct.tm_mday; }
   const int& month() const { return time_struct.tm_mon; }
