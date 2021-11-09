@@ -638,16 +638,16 @@ add_library (glog
 add_library (glog::glog ALIAS glog)
 
 if (Unwind_FOUND)
-  target_link_libraries (glog PUBLIC unwind::unwind)
+  target_link_libraries (glog PRIVATE unwind::unwind)
   set (Unwind_DEPENDENCY "find_dependency (Unwind ${Unwind_VERSION})")
 endif (Unwind_FOUND)
 
 if (HAVE_DBGHELP)
-   target_link_libraries (glog PUBLIC dbghelp)
+  target_link_libraries (glog PRIVATE dbghelp)
 endif (HAVE_DBGHELP)
 
 if (HAVE_PTHREAD)
-  target_link_libraries (glog PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries (glog PRIVATE ${CMAKE_THREAD_LIBS_INIT})
 endif (HAVE_PTHREAD)
 
 if (gflags_FOUND)
@@ -665,8 +665,8 @@ if (gflags_FOUND)
 endif (gflags_FOUND)
 
 if (ANDROID)
-  target_link_libraries (glog PUBLIC log)
-endif()
+  target_link_libraries (glog PRIVATE log)
+endif (ANDROID)
 
 set_target_properties (glog PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties (glog PROPERTIES SOVERSION 1)
@@ -899,6 +899,7 @@ if (BUILD_TESTING)
 
   add_test (NAME cmake_package_config_build COMMAND
     ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
+                     --config $<CONFIG>
   )
 
   add_test (NAME cmake_package_config_cleanup COMMAND ${CMAKE_COMMAND} -E

@@ -292,7 +292,7 @@ pid_t GetTID() {
 #if defined GLOG_OS_LINUX
   return getpid();  // Linux:  getpid returns thread ID when gettid is absent
 #elif defined GLOG_OS_WINDOWS && !defined GLOG_OS_CYGWIN
-  return GetCurrentThreadId();
+  return static_cast<pid_t>(GetCurrentThreadId());
 #elif defined(HAVE_PTHREAD)
   // If none of the techniques above worked, we use pthread_self().
   return (pid_t)(uintptr_t)pthread_self();

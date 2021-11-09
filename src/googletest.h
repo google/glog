@@ -565,7 +565,7 @@ class Thread {
     handle_ = CreateThread(NULL,
                            0,
                            &Thread::InvokeThreadW,
-                           (LPVOID)this,
+                           this,
                            0,
                            &th_);
     CHECK(handle_) << "CreateThread";
@@ -594,7 +594,7 @@ class Thread {
   }
 
 #if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
-  static DWORD InvokeThreadW(void* self) {
+  static DWORD __stdcall InvokeThreadW(LPVOID self) {
     InvokeThread(self);
     return 0;
   }
