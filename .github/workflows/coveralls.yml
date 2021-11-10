@@ -1,0 +1,5 @@
+name: Coveralls
+
+on:
+  workflow_run:
+    workflows: [Linux]
