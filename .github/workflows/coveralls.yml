@@ -7,21 +7,10 @@ on:
       - completed
 
 jobs:
-  coveralls:
+  finish:
     runs-on: ubuntu-latest
     env:
       NODE_COVERALLS_DEBUG: 1
-    steps:
-      - name: Upload Coverage to Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: ./coverage.info
-          parallel: true
-
-  finish:
-    needs: coveralls
-    runs-on: ubuntu-latest
 
     steps:
       - name: Coveralls Finished
