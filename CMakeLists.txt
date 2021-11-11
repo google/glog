@@ -1022,12 +1022,18 @@ configure_file (glog-modules.cmake.in
 install (CODE
 "
 set (glog_FULL_CMake_DATADIR \"\\\${CMAKE_CURRENT_LIST_DIR}/${glog_REL_CMake_DATADIR}\")
+set (glog_DATADIR_DESTINATION ${_glog_CMake_INSTALLDIR})
+
+if (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
+  set (glog_DATADIR_DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${glog_DATADIR_DESTINATION}\")
+endif (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
+
 configure_file (\"${CMAKE_CURRENT_SOURCE_DIR}/glog-modules.cmake.in\"
   \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\" @ONLY)
 file (INSTALL
   \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\"
   DESTINATION
-  \"\${CMAKE_INSTALL_PREFIX}/${_glog_CMake_INSTALLDIR}\")
+  \"\${glog_DATADIR_DESTINATION}\")
 "
   COMPONENT Development
 )
