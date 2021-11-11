@@ -1027,7 +1027,7 @@ configure_file (\"${CMAKE_CURRENT_SOURCE_DIR}/glog-modules.cmake.in\"
 file (INSTALL
   \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\"
   DESTINATION
-  \"${_glog_CMake_INSTALLDIR}\")
+  \"\${CMAKE_INSTALL_PREFIX}/${_glog_CMake_INSTALLDIR}\")
 "
   COMPONENT Development
 )
