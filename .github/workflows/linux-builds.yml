@@ -50,12 +50,32 @@ jobs:
           -DBUILD_SHARED_LIBS=${{matrix.shared}} \
           -DCMAKE_CXX_STANDARD=${{matrix.std}} \
           -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-          -DCMAKE_PREFIX_PATH=./install \
+          -DCMAKE_INSTALL_PREFIX:PATH=./install \
           -DWITH_CUSTOM_PREFIX=${{matrix.custom_prefix}}
+
     - name: Build
       run: |
         cmake --build build_${{matrix.build_type}} \
               --config ${{matrix.build_type}}
+
+    - name: Install
+      run: |
+        cmake --build build_${{matrix.build_type}} \
+              --config ${{matrix.build_type}} \
+              --target install
+
+    - name: Test CMake Package
+      run: |
+        if [[ ${{matrix.build_type}} == "Debug" ]]; then
+          export CXXFLAGS=--coverage
+        fi
+        cmake -S src/package_config_unittest/working_config \
+              -B build_${{matrix.build_type}}_package \
+              -DCMAKE_PREFIX_PATH=./build_${{matrix.build_type}}/install \
+              -G Ninja
+        cmake --build build_${{matrix.build_type}}_package \
+              --config ${{matrix.build_type}}
+
     - name: Test
       run: |
         ctest --test-dir build_${{matrix.build_type}} -j$(nproc) --output-on-failure
