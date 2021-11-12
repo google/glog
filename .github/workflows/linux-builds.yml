@@ -41,21 +41,59 @@ jobs:
           -G Ninja
         cmake --build build-googletest --target install
 
+    - name: Setup Environment
+      if: ${{matrix.build_type == 'Debug'}}
+      run: |
+        echo 'CXXFLAGS=--coverage' >> $GITHUB_ENV
+
     - name: Configure
       run: |
-        if [[ ${{matrix.build_type}} == "Debug" ]]; then
-          export CXXFLAGS=--coverage
-        fi
         cmake -S . -B build_${{matrix.build_type}} -G Ninja \
           -DBUILD_SHARED_LIBS=${{matrix.shared}} \
           -DCMAKE_CXX_STANDARD=${{matrix.std}} \
           -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-          -DCMAKE_PREFIX_PATH=./install \
+          -DCMAKE_INSTALL_PREFIX:PATH=./install \
           -DWITH_CUSTOM_PREFIX=${{matrix.custom_prefix}}
+
     - name: Build
       run: |
         cmake --build build_${{matrix.build_type}} \
               --config ${{matrix.build_type}}
+
+    - name: Install
+      run: |
+        cmake --build build_${{matrix.build_type}} \
+              --config ${{matrix.build_type}} \
+              --target install
+
+        cmake build_${{matrix.build_type}} -G Ninja \
+              -DCMAKE_INSTALL_INCLUDEDIR=${{runner.workspace}}/foo/include \
+              -DCMAKE_INSTALL_LIBDIR=${{runner.workspace}}/foo/lib \
+              -DCMAKE_INSTALL_DATAROOTDIR=${{runner.workspace}}/foo/share
+        cmake --build build_${{matrix.build_type}} \
+              --config ${{matrix.build_type}} \
+              --target install
+
+    - name: Test CMake Package (relative GNUInstallDirs)
+      run: |
+        cmake -S src/package_config_unittest/working_config \
+              -B build_${{matrix.build_type}}_package \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              -DCMAKE_PREFIX_PATH=./build_${{matrix.build_type}}/install \
+              -G Ninja
+        cmake --build build_${{matrix.build_type}}_package \
+              --config ${{matrix.build_type}}
+
+    - name: Test CMake Package (absolute GNUInstallDirs)
+      run: |
+        cmake -S src/package_config_unittest/working_config \
+              -B build_${{matrix.build_type}}_package_foo \
+              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+              -DCMAKE_PREFIX_PATH=${{runner.workspace}}/foo \
+              -G Ninja
+        cmake --build build_${{matrix.build_type}}_package_foo \
+              --config ${{matrix.build_type}}
+
     - name: Test
       run: |
         ctest --test-dir build_${{matrix.build_type}} -j$(nproc) --output-on-failure
