@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_COVERALLS_DEBUG: 1
-      COVERALLS_SERVICE_JOB_ID: GCC-C++-${{steps.date.outputs.date}}-${{github.run_number}}
 
     steps:
       - name: Coveralls Finished
@@ -19,3 +18,5 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true
+        env:
+          COVERALLS_SERVICE_JOB_ID: glog-${{steps.date.outputs.date}}-${{github.run_number}}
