@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NODE_COVERALLS_DEBUG: 1
+      COVERALLS_SERVICE_JOB_ID: GCC-C++-${{steps.date.outputs.date}}-${{github.run_number}}
 
     steps:
       - name: Coveralls Finished
