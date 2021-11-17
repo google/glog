@@ -2167,7 +2167,9 @@ static bool SendEmailInternal(const char*dest, const char *subject,
     string cmd =
         logmailer + " -s" +
         ShellEscape(subject) + " " + ShellEscape(dest);
-    VLOG(4) << "Mailing command: " << cmd;
+    if (use_logging) {
+        VLOG(4) << "Mailing command: " << cmd;
+    }
 
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != NULL) {
