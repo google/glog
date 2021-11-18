@@ -116,7 +116,7 @@ class ScopedMockLog : public GOOGLE_NAMESPACE::LogSink {
   virtual void send(GOOGLE_NAMESPACE::LogSeverity severity,
                     const char* full_filename,
                     const char* /*base_filename*/, int /*line*/,
-                    const tm* /*tm_time*/,
+                    const LogMessageTime & /*logmsgtime*/,
                     const char* message, size_t message_len) {
     // We are only interested in the log severity, full file name, and
     // log message.

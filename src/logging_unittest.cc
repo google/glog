@@ -521,17 +521,10 @@ class TestLogSinkImpl : public LogSink {
   vector<string> errors;
   virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
-                    const struct tm* tm_time,
-                    const char* message, size_t message_len, int usecs) {
-    errors.push_back(
-      ToString(severity, base_filename, line, tm_time, message, message_len, usecs));
-  }
-  virtual void send(LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct tm* tm_time,
+                    const LogMessageTime &logmsgtime,
                     const char* message, size_t message_len) {
-    send(severity, full_filename, base_filename, line,
-         tm_time, message, message_len, 0);
+    errors.push_back(
+      ToString(severity, base_filename, line, logmsgtime, message, message_len));
   }
 };
 
@@ -1242,22 +1235,15 @@ class TestWaitingLogSink : public LogSink {
 
   virtual void send(LogSeverity severity, const char* /* full_filename */,
                     const char* base_filename, int line,
-                    const struct tm* tm_time,
-                    const char* message, size_t message_len, int usecs) {
+                    const LogMessageTime &logmsgtime,
+                    const char* message, size_t message_len) {
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
     if (pthread_equal(tid_, pthread_self())) {
       writer_.Buffer(ToString(severity, base_filename, line,
-                              tm_time, message, message_len, usecs));
+                              logmsgtime, message, message_len));
     }
-  }
-
-  virtual void send(LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct tm* tm_time,
-                    const char* message, size_t message_len) {
-    send(severity, full_filename, base_filename, line, tm_time, message, message_len, 0);
   }
 
   virtual void WaitTillSent() {
