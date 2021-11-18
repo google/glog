@@ -135,30 +135,40 @@ typedef unsigned __int64 uint64;
 
 @ac_google_end_namespace@
 
-#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 struct LogMessageTime {
-  explicit LogMessageTime (const struct::tm& time_struct_,
-                           const time_t& timestamp_, const int32_t& usecs_):
-      time_struct(time_struct_), ts(timestamp_), usecs(usecs_) {}
+  LogMessageTime(): time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
 
-  const time_t& timestamp() const { return ts; }
-  const int& sec() const { return time_struct.tm_sec; }
-  const int32_t& usec() const { return usecs; }
-  const int& (min)() const { return time_struct.tm_min; }
-  const int& hour() const { return time_struct.tm_hour; }
-  const int& day() const { return time_struct.tm_mday; }
-  const int& month() const { return time_struct.tm_mon; }
-  const int& year() const { return time_struct.tm_year; }
-  const int& dayOfWeek() const { return time_struct.tm_wday; }
-  const int& dayInYear() const { return time_struct.tm_yday; }
-  const int& dst() const { return time_struct.tm_isdst; }
+  void setTimeInfo(struct::tm time_struct, time_t timestamp, int32_t usecs){
+    time_struct_ = time_struct;
+    timestamp_ = timestamp;
+    usecs_ = usecs;
+
+    CalcGmtOffset();
+  }
+
+  const time_t& timestamp() const { return timestamp_; }
+  const int& sec() const { return time_struct_.tm_sec; }
+  const int32_t& usec() const { return usecs_; }
+  const int& (min)() const { return time_struct_.tm_min; }
+  const int& hour() const { return time_struct_.tm_hour; }
+  const int& day() const { return time_struct_.tm_mday; }
+  const int& month() const { return time_struct_.tm_mon; }
+  const int& year() const { return time_struct_.tm_year; }
+  const int& dayOfWeek() const { return time_struct_.tm_wday; }
+  const int& dayInYear() const { return time_struct_.tm_yday; }
+  const int& dst() const { return time_struct_.tm_isdst; }
+  const long int& gmtoff() const { return gmtoffset_; }
 
   private:
-    const struct::tm& time_struct;
-    const time_t& ts;
-    const int32_t& usecs;
+    struct::tm time_struct_; // Time of creation of LogMessage
+    time_t timestamp_;       // Time of creation of LogMessage in seconds
+    int32_t usecs_;          // Time of creation of LogMessage - microseconds part
+    long int gmtoffset_;
+
+    void CalcGmtOffset();
 };
 
+#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 struct LogMessageInfo {
   explicit LogMessageInfo(const char* const severity_,
                           const char* const filename_,
@@ -1552,6 +1562,10 @@ public:
   // Must be called without the log_mutex held.  (L < log_mutex)
   static int64 num_messages(int severity);
 
+  const LogMessageTime& getLogMessageTime() const {
+    return logmsgtime_;
+  }
+
   struct LogMessageData;
 
 private:
@@ -1577,6 +1591,7 @@ private:
   // LogMessage uses less stack space.
   LogMessageData* allocated_;
   LogMessageData* data_;
+  LogMessageTime logmsgtime_;
 
   friend class LogDestination;
 
@@ -1721,17 +1736,7 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   // during this call.
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
-                    const struct ::tm* tm_time,
-                    const char* message, size_t message_len, int32 /*usecs*/) {
-    send(severity, full_filename, base_filename, line,
-         tm_time, message, message_len);
-  }
-  // This send() signature is obsolete.
-  // New implementations should define this in terms of
-  // the above send() method.
-  virtual void send(LogSeverity severity, const char* full_filename,
-                    const char* base_filename, int line,
-                    const struct ::tm* tm_time,
+                    const LogMessageTime &logmsgtime,
                     const char* message, size_t message_len) = 0;
 
   // Redefine this to implement waiting for
@@ -1752,16 +1757,8 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   // Returns the normal text output of the log message.
   // Can be useful to implement send().
   static std::string ToString(LogSeverity severity, const char* file, int line,
-                              const struct ::tm* tm_time,
-                              const char* message, size_t message_len,
-                              int32 usecs);
-
-  // Obsolete
-  static std::string ToString(LogSeverity severity, const char* file, int line,
-                              const struct ::tm* tm_time,
-                              const char* message, size_t message_len) {
-    return ToString(severity, file, line, tm_time, message, message_len, 0);
-  }
+                              const LogMessageTime &logmsgtime,
+                              const char* message, size_t message_len);
 };
 
 // Add or remove a LogSink as a consumer of logging data.  Thread-safe.

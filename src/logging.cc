@@ -363,9 +363,6 @@ struct LogMessage::LogMessageData  {
     std::vector<std::string>* outvec_; // NULL or vector to push message onto
     std::string* message_;             // NULL or string to write message into
   };
-  time_t timestamp_;            // Time of creation of LogMessage
-  struct ::tm tm_time_;         // Time of creation of LogMessage
-  int32 usecs_;                   // Time of creation of LogMessage - microseconds part
   size_t num_prefix_chars_;     // # of chars of prefix in this message
   size_t num_chars_to_log_;     // # of chars of msg to send to log
   size_t num_chars_to_syslog_;  // # of chars of msg to send to syslog
@@ -571,10 +568,9 @@ class LogDestination {
                          const char *full_filename,
                          const char *base_filename,
                          int line,
-                         const struct ::tm* tm_time,
+                         const LogMessageTime &logmsgtime,
                          const char* message,
-                         size_t message_len,
-                         int32 usecs);
+                         size_t message_len);
 
   // Wait for all registered sinks via WaitTillSent
   // including the optional one in "data".
@@ -854,15 +850,14 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
                                        const char *full_filename,
                                        const char *base_filename,
                                        int line,
-                                       const struct ::tm* tm_time,
+                                       const LogMessageTime &logmsgtime,
                                        const char* message,
-                                       size_t message_len,
-                                       int32 usecs) {
+                                       size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
   if (sinks_) {
     for (size_t i = sinks_->size(); i-- > 0; ) {
       (*sinks_)[i]->send(severity, full_filename, base_filename,
-                         line, tm_time, message, message_len, usecs);
+                         line, logmsgtime, message, message_len);
     }
   }
 }
@@ -1608,12 +1603,15 @@ void LogMessage::Init(const char* file,
   data_->sink_ = NULL;
   data_->outvec_ = NULL;
   WallTime now = WallTime_Now();
-  data_->timestamp_ = static_cast<time_t>(now);
+  time_t timestamp_now = static_cast<time_t>(now);
+  std::tm time_struct;
   if(FLAGS_log_utc_time)
-    gmtime_r(&data_->timestamp_, &data_->tm_time_);
+    gmtime_r(&timestamp_now, &time_struct);
   else
-    localtime_r(&data_->timestamp_, &data_->tm_time_);
-  data_->usecs_ = static_cast<int32>((now - data_->timestamp_) * 1000000);
+    localtime_r(&timestamp_now, &time_struct);
+
+  logmsgtime_.setTimeInfo(time_struct, timestamp_now, 
+                          static_cast<int32>((now - timestamp_now) * 1000000));
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
@@ -1633,14 +1631,14 @@ void LogMessage::Init(const char* file,
       if (custom_prefix_callback == NULL) {
     #endif
           stream() << LogSeverityNames[severity][0]
-                   << setw(4) << 1900+data_->tm_time_.tm_year
-                   << setw(2) << 1+data_->tm_time_.tm_mon
-                   << setw(2) << data_->tm_time_.tm_mday
+                   << setw(4) << 1900 + logmsgtime_.year()
+                   << setw(2) << 1 + logmsgtime_.month()
+                   << setw(2) << logmsgtime_.day()
                    << ' '
-                   << setw(2) << data_->tm_time_.tm_hour  << ':'
-                   << setw(2) << data_->tm_time_.tm_min   << ':'
-                   << setw(2) << data_->tm_time_.tm_sec   << "."
-                   << setw(6) << data_->usecs_
+                   << setw(2) << logmsgtime_.hour() << ':'
+                   << setw(2) << logmsgtime_.min() << ':'
+                   << setw(2) << logmsgtime_.sec() << "."
+                   << setw(6) << logmsgtime_.usec()
                    << ' '
                    << setfill(' ') << setw(5)
                    << static_cast<unsigned int>(GetTID()) << setfill('0')
@@ -1652,9 +1650,7 @@ void LogMessage::Init(const char* file,
                 stream(),
                 LogMessageInfo(LogSeverityNames[severity],
                                data_->basename_, data_->line_, GetTID(),
-                               LogMessageTime(data_->tm_time_,
-                                              data_->timestamp_,
-                                              data_->usecs_)),
+                               logmsgtime_),
                 custom_prefix_callback_data
                 );
         stream() << " ";
@@ -1800,15 +1796,14 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     // this could be protected by a flag if necessary.
     LogDestination::LogToSinks(data_->severity_,
                                data_->fullname_, data_->basename_,
-                               data_->line_, &data_->tm_time_,
+                               data_->line_, logmsgtime_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_ -
-                                data_->num_prefix_chars_ - 1),
-                               data_->usecs_);
+                                data_->num_prefix_chars_ - 1) );
   } else {
 
     // log this message to all log files of severity <= severity_
-    LogDestination::LogToAllLogfiles(data_->severity_, data_->timestamp_,
+    LogDestination::LogToAllLogfiles(data_->severity_, logmsgtime_.timestamp(),
                                      data_->message_text_,
                                      data_->num_chars_to_log_);
 
@@ -1819,11 +1814,10 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                     data_->num_chars_to_log_);
     LogDestination::LogToSinks(data_->severity_,
                                data_->fullname_, data_->basename_,
-                               data_->line_, &data_->tm_time_,
+                               data_->line_, logmsgtime_,
                                data_->message_text_ + data_->num_prefix_chars_,
                                (data_->num_chars_to_log_
-                                - data_->num_prefix_chars_ - 1),
-                               data_->usecs_);
+                                - data_->num_prefix_chars_ - 1) );
     // NOTE: -1 removes trailing \n
   }
 
@@ -1842,7 +1836,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                 sizeof(fatal_message)-1);
       memcpy(fatal_message, data_->message_text_, copy);
       fatal_message[copy] = '\0';
-      fatal_time = data_->timestamp_;
+      fatal_time = logmsgtime_.timestamp();
     }
 
     if (!FLAGS_logtostderr) {
@@ -1904,11 +1898,10 @@ void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                data_->message_text_[data_->num_chars_to_log_-1] == '\n', "");
     data_->sink_->send(data_->severity_, data_->fullname_, data_->basename_,
-                       data_->line_, &data_->tm_time_,
+                       data_->line_, logmsgtime_,
                        data_->message_text_ + data_->num_prefix_chars_,
                        (data_->num_chars_to_log_ -
-                        data_->num_prefix_chars_ - 1),
-                       data_->usecs_);
+                        data_->num_prefix_chars_ - 1) );
   }
 }
 
@@ -2034,20 +2027,20 @@ void LogSink::WaitTillSent() {
 }
 
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
-                         const struct ::tm* tm_time,
-                         const char* message, size_t message_len, int32 usecs) {
+                         const LogMessageTime &logmsgtime,
+                         const char* message, size_t message_len) {
   ostringstream stream(string(message, message_len));
   stream.fill('0');
 
   stream << LogSeverityNames[severity][0]
-         << setw(4) << 1900+tm_time->tm_year
-         << setw(2) << 1+tm_time->tm_mon
-         << setw(2) << tm_time->tm_mday
+         << setw(4) << 1900 + logmsgtime.year()
+         << setw(2) << 1 + logmsgtime.month()
+         << setw(2) << logmsgtime.day()
          << ' '
-         << setw(2) << tm_time->tm_hour << ':'
-         << setw(2) << tm_time->tm_min << ':'
-         << setw(2) << tm_time->tm_sec << '.'
-         << setw(6) << usecs
+         << setw(2) << logmsgtime.hour() << ':'
+         << setw(2) << logmsgtime.min() << ':'
+         << setw(2) << logmsgtime.sec() << '.'
+         << setw(6) << logmsgtime.usec()
          << ' '
          << setfill(' ') << setw(5) << GetTID() << setfill('0')
          << ' '
@@ -2566,3 +2559,22 @@ void DisableLogCleaner() {
 }
 
 _END_GOOGLE_NAMESPACE_
+
+void LogMessageTime::CalcGmtOffset() {
+  std::tm gmt_struct;
+  int isDst = 0;
+  if ( FLAGS_log_utc_time ) {
+    localtime_r(&timestamp_, &gmt_struct);
+    isDst = gmt_struct.tm_isdst;
+    gmt_struct = time_struct_;
+  } else {
+    isDst = time_struct_.tm_isdst;
+    gmtime_r(&timestamp_, &gmt_struct);
+  }
+
+  time_t gmt_sec = mktime(&gmt_struct);
+  const long hour_secs = 3600;
+  // If the Daylight Saving Time(isDst) is active subtract an hour from the current timestamp.
+  gmtoffset_ = static_cast<long int>(timestamp_ - gmt_sec + (isDst ? hour_secs : 0) ) ;
+}
+
