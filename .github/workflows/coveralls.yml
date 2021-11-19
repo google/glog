@@ -38,7 +38,9 @@ jobs:
 
       - name: Unpack artifacts
         run: |
-          unzip '*.zip'
+          for file in *.zip; do
+            unzip "$file" -d ${file%.zip}
+          done
 
       - name: Generate Coverage
         run: |
