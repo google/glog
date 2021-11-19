@@ -8,14 +8,40 @@ on:
 
 jobs:
   finish:
+    defaults:
+      run:
+        shell: bash
     runs-on: ubuntu-latest
-    env:
-      NODE_COVERALLS_DEBUG: 1
-      COVERALLS_SERVICE_JOB_ID: glog-${{github.run_number}}
+
+    - name: Generate Coverage
+      run: |
+        lcov --directory . --capture --output-file coverage.info
+        lcov --remove coverage.info \
+          '*/install/include/*' \
+          '*/msys64/mingw32/*' \
+          '*/msys64/mingw64/*' \
+          '*/src/*_unittest.cc' \
+          '*/src/googletest.h' \
+          '*/src/mock-log.h' \
+          '/usr/*' \
+          --output-file coverage.info
+
+        readarray -t build_dirs < <(ls -d build*/)
+
+        for file in src/glog/*.h.in; do
+          name=$(basename ${file})
+          name_we=${name%.h.in}
+
+          for build_dir in ${build_dirs[@]}; do
+            sed -i "s|${build_dir%/}/glog/${name_we}.h\$|${file}|g" coverage.info
+          done
+        done
+
+        lcov --list coverage.info
 
     steps:
-      - name: Coveralls Finished
+      - name: Upload Coverage to Coveralls
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          parallel-finished: true
+          path-to-lcov: ./coverage.info
