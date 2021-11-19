@@ -13,6 +13,30 @@ jobs:
         shell: bash
     runs-on: ubuntu-latest
 
+    steps:
+      - name: 'Download artifacts'
+        uses: actions/github-script@v3.1.0
+        with:
+          script: |
+            var artifacts = await github.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: ${{github.event.workflow_run.id}},
+            });
+            var matchArtifacts = artifacts.data.artifacts;
+            matchArtifacts.forEach(artifact => {
+              var download = await github.actions.downloadArtifact({
+                 owner: context.repo.owner,
+                 repo: context.repo.repo,
+                 artifact_id: artifact.id,
+                 archive_format: 'zip',
+              });
+              var fs = require('fs');
+              fs.writeFileSync('${{github.workspace}}/' + artifact.name + '.zip', Buffer.from(download.data));
+            });
+      - run: |
+          unzip *.zip
+
     - name: Generate Coverage
       run: |
         lcov --directory . --capture --output-file coverage.info
@@ -39,7 +63,6 @@ jobs:
 
         lcov --list coverage.info
 
-    steps:
       - name: Upload Coverage to Coveralls
         uses: coverallsapp/github-action@master
         with:
