@@ -48,7 +48,7 @@ jobs:
       - name: Unpack Artifacts
         run: |
           for file in *.zip; do
-            unzip "$file" -d "${file%.zip}"
+            unzip "$file" -d "build_${file%.zip}"
           done
 
       - name: Generate Coverage
@@ -64,7 +64,7 @@ jobs:
             '/usr/*' \
             --output-file coverage.info
 
-          readarray -t build_dirs < <(ls -d build*/)
+          readarray -t build_dirs < <(ls -d build_*/)
 
           for file in src/glog/*.h.in; do
             name=$(basename ${file})
