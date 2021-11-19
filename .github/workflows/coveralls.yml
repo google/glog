@@ -24,7 +24,7 @@ jobs:
                run_id: ${{github.event.workflow_run.id}},
             });
             var matchArtifacts = artifacts.data.artifacts;
-            matchArtifacts.forEach(artifact => {
+            for (artifact of matchArtifacts) {
               var download = await github.actions.downloadArtifact({
                  owner: context.repo.owner,
                  repo: context.repo.repo,
@@ -33,7 +33,7 @@ jobs:
               });
               var fs = require('fs');
               fs.writeFileSync('${{github.workspace}}/' + artifact.name + '.zip', Buffer.from(download.data));
-            });
+            }
 
       - name: Unpack artifacts
         run: |
