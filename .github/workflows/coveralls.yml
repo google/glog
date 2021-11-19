@@ -38,7 +38,7 @@ jobs:
 
       - name: Unpack artifacts
         run: |
-          ls *.zip | xargs unzip
+          unzip '*.zip'
 
       - name: Generate Coverage
         run: |
