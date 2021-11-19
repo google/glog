@@ -15,7 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'Download artifacts'
+      - name: Setup Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lcov
+
+      - name: Download Artifacts
         uses: actions/github-script@v3.1.0
         with:
           script: |
@@ -36,10 +43,10 @@ jobs:
               fs.writeFileSync('${{github.workspace}}/' + artifact.name + '.zip', Buffer.from(download.data));
             }
 
-      - name: Unpack artifacts
+      - name: Unpack Artifacts
         run: |
           for file in *.zip; do
-            unzip "$file" -d ${file%.zip}
+            unzip "$file" -d "${file%.zip}"
           done
 
       - name: Generate Coverage
