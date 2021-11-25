@@ -223,7 +223,7 @@ there is no ``NDEBUG`` macro defined), but avoids halting the program in
 production by automatically reducing the severity to ``ERROR``.
 
 Unless otherwise specified, glog writes to the filename
-``/tmp/\<program name\>.\<hostname\>.\<user name\>.log.\<severity level\>.\<date\>.\<time\>.\<pid\>``
+``/tmp/\<program name\>.\<hostname\>.\<user name\>.log.\<severity level\>.\<date\>-\<time\>.\<pid\>``
 (e.g.,
 ``/tmp/hello_world.example.com.hamaji.log.INFO.20080709-222411.10474``).
 By default, glog copies the log messages of severity level ``ERROR`` or
