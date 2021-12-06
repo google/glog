@@ -42,12 +42,13 @@ jobs:
           CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.build_type}} \
-                -G "${{matrix.generator}}" \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_CXX_FLAGS_DEBUG=-pedantic-errors  \
                 -DCMAKE_CXX_FLAGS_RELEASE=-pedantic-errors \
                 -DCMAKE_CXX_STANDARD=${{matrix.std}} \
-                -DCMAKE_CXX_STANDARD_REQUIRED=ON
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -G "${{matrix.generator}}" \
+                -Werror
 
       - name: Build
         run: |

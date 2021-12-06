@@ -68,7 +68,8 @@ jobs:
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install \
             -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} \
-            -G Ninja
+            -G Ninja \
+            -Werror
 
       - name: Build
         run: |

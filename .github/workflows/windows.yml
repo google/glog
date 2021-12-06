@@ -42,7 +42,8 @@ jobs:
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON `
                 -DCMAKE_INSTALL_PREFIX:PATH=./install `
                 -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} `
-                -G "${{matrix.generator}}"
+                -G "${{matrix.generator}}" `
+                -Werror
 
       - name: Build
         run: cmake --build build_${{matrix.build_type}} `
@@ -112,7 +113,8 @@ jobs:
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_INSTALL_PREFIX:PATH=./install \
                 -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} \
-                -G Ninja
+                -G Ninja \
+                -Werror
 
       - name: Build
         run: |

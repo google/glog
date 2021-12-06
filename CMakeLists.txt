@@ -8,6 +8,10 @@ if (POLICY CMP0063)
   cmake_policy (SET CMP0063 NEW)
 endif (POLICY CMP0063)
 
+if (POLICY CMP0074)
+  cmake_policy (SET CMP0074 NEW)
+endif (POLICY CMP0074)
+
 project(glog VERSION 0.6.0 LANGUAGES CXX)
 
 set (CPACK_PACKAGE_NAME glog)
