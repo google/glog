@@ -83,5 +83,6 @@ jobs:
         if: matrix.build_type == 'Debug'
         uses: codecov/codecov-action@v2
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
