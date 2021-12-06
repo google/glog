@@ -6,6 +6,9 @@ jobs:
   build-android:
     name: NDK-C++${{matrix.std}}-${{matrix.abi}}-${{matrix.build_type}}
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: true
       matrix:
@@ -22,7 +25,6 @@ jobs:
         version: 1.10.0
 
     - name: Configure
-      shell: bash
       run: |
         cmake -S . -B build_${{matrix.abi}} \
               -DANDROID_ABI=${{matrix.abi}} \
@@ -33,7 +35,8 @@ jobs:
               -DCMAKE_CXX_STANDARD=${{matrix.std}} \
               -DCMAKE_CXX_STANDARD_REQUIRED=ON \
               -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
-              -G Ninja
+              -G Ninja \
+              -Werror
 
     - name: Build
       run: |
