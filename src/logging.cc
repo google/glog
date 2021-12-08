@@ -1322,7 +1322,7 @@ void LogCleaner::Run(bool base_filename_selected,
   if (!base_filename_selected) {
     dirs = GetLoggingDirectories();
   } else {
-    size_t pos = base_filename.find_last_of(possible_dir_delim, 0,
+    size_t pos = base_filename.find_last_of(possible_dir_delim, string::npos,
                                             sizeof(possible_dir_delim));
     if (pos != string::npos) {
       string dir = base_filename.substr(0, pos + 1);

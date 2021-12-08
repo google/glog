@@ -932,10 +932,15 @@ if (BUILD_TESTING)
 
   target_link_libraries (cleanup_immediately_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
-  add_executable (cleanup_with_prefix_unittest
-    src/cleanup_with_prefix_unittest.cc)
+  add_executable (cleanup_with_absolute_prefix_unittest
+    src/cleanup_with_absolute_prefix_unittest.cc)
 
-  target_link_libraries (cleanup_with_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (cleanup_with_absolute_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+
+  add_executable (cleanup_with_relative_prefix_unittest
+    src/cleanup_with_relative_prefix_unittest.cc)
+
+  target_link_libraries (cleanup_with_relative_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
 
   set (CLEANUP_LOG_DIR ${CMAKE_CURRENT_BINARY_DIR}/cleanup_tests)
 
@@ -950,11 +955,18 @@ if (BUILD_TESTING)
     -DTEST_DIR=${CLEANUP_LOG_DIR}/
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCleanerTest1.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  add_test (NAME cleanup_with_prefix COMMAND
+  add_test (NAME cleanup_with_absolute_prefix COMMAND
     ${CMAKE_COMMAND}
-    -DLOGCLEANUP=$<TARGET_FILE:cleanup_with_prefix_unittest>
+    -DLOGCLEANUP=$<TARGET_FILE:cleanup_with_absolute_prefix_unittest>
     -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/
     -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCleanerTest2.cmake
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_test (NAME cleanup_with_relative_prefix COMMAND
+    ${CMAKE_COMMAND}
+    -DLOGCLEANUP=$<TARGET_FILE:cleanup_with_relative_prefix_unittest>
+    -DTEST_DIR=${CMAKE_CURRENT_BINARY_DIR}/
+    -DTEST_SUBDIR=test_subdir/
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/RunCleanerTest3.cmake
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   # Fixtures setup
@@ -963,7 +975,8 @@ if (BUILD_TESTING)
   set_tests_properties (cleanup_logdir PROPERTIES FIXTURES_CLEANUP logcleanuptest)
   # Fixture requirements
   set_tests_properties (cleanup_immediately PROPERTIES FIXTURES_REQUIRED logcleanuptest)
-  set_tests_properties (cleanup_with_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
+  set_tests_properties (cleanup_with_absolute_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
+  set_tests_properties (cleanup_with_relative_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
 endif (BUILD_TESTING)
 
 install (TARGETS glog
