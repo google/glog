@@ -55,7 +55,7 @@ using testing::StrNe;
 
 using namespace GOOGLE_NAMESPACE;
 
-TEST(CleanImmediatelyWithPrefix, logging) {
+TEST(CleanImmediatelyWithAbsolutePrefix, logging) {
   google::EnableLogCleaner(0);
   google::SetLogFilenameExtension(".barfoo");
   google::SetLogDestination(GLOG_INFO, "test_cleanup_");
