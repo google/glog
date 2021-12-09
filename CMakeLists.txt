@@ -1,18 +1,10 @@
-cmake_minimum_required (VERSION 3.0)
-
-if (POLICY CMP0042)
-  cmake_policy (SET CMP0042 NEW)
-endif (POLICY CMP0042)
-
-if (POLICY CMP0063)
-  cmake_policy (SET CMP0063 NEW)
-endif (POLICY CMP0063)
-
-if (POLICY CMP0074)
-  cmake_policy (SET CMP0074 NEW)
-endif (POLICY CMP0074)
-
-project(glog VERSION 0.6.0 LANGUAGES CXX)
+cmake_minimum_required (VERSION 3.16)
+project (glog
+  VERSION 0.6.0
+  DESCRIPTION "C++ implementation of the Google logging module"
+  HOMEPAGE_URL https://github.com/google/glog
+  LANGUAGES CXX
+)
 
 set (CPACK_PACKAGE_NAME glog)
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Google logging library")
