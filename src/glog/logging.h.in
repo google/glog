@@ -135,7 +135,7 @@ typedef unsigned __int64 uint64;
 
 @ac_google_end_namespace@
 
-struct LogMessageTime {
+struct GOOGLE_GLOG_DLL_DECL LogMessageTime {
   LogMessageTime(): time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
 
   void setTimeInfo(struct::tm time_struct, time_t timestamp, int32_t usecs){
@@ -1940,7 +1940,14 @@ class GOOGLE_GLOG_DLL_DECL NullStreamFatal : public NullStream {
   NullStreamFatal() { }
   NullStreamFatal(const char* file, int line, const CheckOpString& result) :
       NullStream(file, line, result) { }
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4722)
+#endif // _MSC_VER
   @ac_cv___attribute___noreturn@ ~NullStreamFatal() throw () { _exit(1); }
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif // _MSC_VER
 };
 
 // Install a signal handler that will dump signal information and a stack
