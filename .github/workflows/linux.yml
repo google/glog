@@ -60,7 +60,14 @@ jobs:
           echo 'CXXFLAGS=--coverage' >> $GITHUB_ENV
           echo 'GTest_ROOT=${{github.workspace}}/gtest' >> $GITHUB_ENV
 
+      - name: Setup C++98 Environment
+        if: matrix.std == '98'
+        run: |
+          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
+
       - name: Configure
+        env:
+          CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.build_type}} \
             -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \

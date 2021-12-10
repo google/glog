@@ -100,9 +100,14 @@ jobs:
             mingw-w64-${{matrix.env}}-gflags
             mingw-w64-${{matrix.env}}-ninja
 
+      - name: Setup C++98 Environment
+        if: matrix.std == '98'
+        run: |
+          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
+
       - name: Configure
         env:
-          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Werror -Wno-error=variadic-macros -Wno-error=long-long
+          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
         run: |
           if [[ ${{matrix.build_type}} == "Debug" ]]; then
             export CXXFLAGS="--coverage ${CXXFLAGS}"
