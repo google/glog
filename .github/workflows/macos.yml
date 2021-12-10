@@ -31,11 +31,6 @@ jobs:
         run: |
           echo 'CXXFLAGS=--coverage' >> $GITHUB_ENV
 
-      - name: Setup C++98 Environment
-        if: matrix.std == '98'
-        run: |
-          echo 'CXXFLAGS=-Wall -Wextra -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}' >> $GITHUB_ENV
-
       - name: Configure
         shell: bash
         env:

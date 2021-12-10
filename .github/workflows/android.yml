@@ -17,28 +17,35 @@ jobs:
         build_type: [Debug, Release]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Setup Ninja
-      uses: ashutoshvarma/setup-ninja@master
-      with:
-        version: 1.10.0
+      - name: Setup Ninja
+        uses: ashutoshvarma/setup-ninja@master
+        with:
+          version: 1.10.0
 
-    - name: Configure
-      run: |
-        cmake -S . -B build_${{matrix.abi}} \
-              -DANDROID_ABI=${{matrix.abi}} \
-              -DANDROID_NATIVE_API_LEVEL=28 \
-              -DANDROID_STL=c++_shared \
-              -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-              -DCMAKE_CXX_EXTENSIONS=OFF \
-              -DCMAKE_CXX_STANDARD=${{matrix.std}} \
-              -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-              -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
-              -G Ninja \
-              -Werror
+      - name: Setup C++98 Environment
+        if: matrix.std == '98'
+        run: |
+          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
-    - name: Build
-      run: |
-        cmake --build build_${{matrix.abi}} \
-              --config ${{matrix.build_type}}
+      - name: Configure
+        env:
+          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
+        run: |
+          cmake -S . -B build_${{matrix.abi}} \
+                -DANDROID_ABI=${{matrix.abi}} \
+                -DANDROID_NATIVE_API_LEVEL=28 \
+                -DANDROID_STL=c++_shared \
+                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
+                -DCMAKE_CXX_EXTENSIONS=OFF \
+                -DCMAKE_CXX_STANDARD=${{matrix.std}} \
+                -DCMAKE_CXX_STANDARD_REQUIRED=ON \
+                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
+                -G Ninja \
+                -Werror
+
+      - name: Build
+        run: |
+          cmake --build build_${{matrix.abi}} \
+                --config ${{matrix.build_type}}
