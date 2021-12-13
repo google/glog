@@ -476,8 +476,10 @@ class LogCleaner {
  public:
   LogCleaner();
 
-  void Enable(int overdue_days);
+  // Setting overdue_days to 0 days will delete all logs.
+  void Enable(unsigned int overdue_days);
   void Disable();
+
   void Run(bool base_filename_selected,
            const string& base_filename,
            const string& filename_extension) const;
@@ -486,7 +488,7 @@ class LogCleaner {
 
  private:
   vector<string> GetOverdueLogNames(string log_directory,
-                                    int days,
+                                    unsigned int days,
                                     const string& base_filename,
                                     const string& filename_extension) const;
 
@@ -494,10 +496,11 @@ class LogCleaner {
                                const string& base_filename,
                                const string& filename_extension) const;
 
-  bool IsLogLastModifiedOver(const string& filepath, int days) const;
+  bool IsLogLastModifiedOver(const string& filepath,
+                             unsigned int days) const;
 
   bool enabled_;
-  int overdue_days_;
+  unsigned int overdue_days_;
 };
 
 LogCleaner log_cleaner;
@@ -1299,10 +1302,7 @@ void LogFileObject::Write(bool force_flush,
 
 LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7) {}
 
-void LogCleaner::Enable(int overdue_days) {
-  // Setting overdue_days to 0 days will delete all logs.
-  assert(overdue_days >= 0);
-
+void LogCleaner::Enable(unsigned int overdue_days) {
   enabled_ = true;
   overdue_days_ = overdue_days;
 }
@@ -1314,7 +1314,7 @@ void LogCleaner::Disable() {
 void LogCleaner::Run(bool base_filename_selected,
                      const string& base_filename,
                      const string& filename_extension) const {
-  assert(enabled_ && overdue_days_ >= 0);
+  assert(enabled_);
   assert(!base_filename_selected || !base_filename.empty());
 
   vector<string> dirs;
@@ -1344,7 +1344,7 @@ void LogCleaner::Run(bool base_filename_selected,
 }
 
 vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
-                                              int days,
+                                              unsigned int days,
                                               const string& base_filename,
                                               const string& filename_extension) const {
   // The names of overdue logs.
@@ -1460,7 +1460,8 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
   return true;
 }
 
-bool LogCleaner::IsLogLastModifiedOver(const string& filepath, int days) const {
+bool LogCleaner::IsLogLastModifiedOver(const string& filepath,
+                                       unsigned int days) const {
   // Try to get the last modified time of this file.
   struct stat file_stat;
 
@@ -2550,7 +2551,7 @@ void ShutdownGoogleLogging() {
   logging_directories_list = NULL;
 }
 
-void EnableLogCleaner(int overdue_days) {
+void EnableLogCleaner(unsigned int overdue_days) {
   log_cleaner.Enable(overdue_days);
 }
 
