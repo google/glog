@@ -47,7 +47,7 @@ _START_GOOGLE_NAMESPACE_
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
 template<bool STRICT_UNWINDING>
 static void **NextStackFrame(void **old_sp) {
-  void **new_sp = (void **) *old_sp;
+  void **new_sp = static_cast<void **>(*old_sp);
 
   // Check that the transition from frame pointer old_sp to frame
   // pointer new_sp isn't clearly bogus

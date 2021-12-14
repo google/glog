@@ -49,7 +49,7 @@ _START_GOOGLE_NAMESPACE_
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
 template<bool STRICT_UNWINDING>
 static void **NextStackFrame(void **old_sp) {
-  void **new_sp = (void **) *old_sp;
+  void **new_sp = static_cast<void **>(*old_sp);
 
   // Check that the transition from frame pointer old_sp to frame
   // pointer new_sp isn't clearly bogus
@@ -83,8 +83,9 @@ static void **NextStackFrame(void **old_sp) {
     //       is already on its last leg, so it's ok to be slow here.
     static int page_size = getpagesize();
     void *new_sp_aligned = (void *)((uintptr_t)new_sp & ~(page_size - 1));
-    if (msync(new_sp_aligned, page_size, MS_ASYNC) == -1)
+    if (msync(new_sp_aligned, page_size, MS_ASYNC) == -1) {
       return NULL;
+    }
   }
 #endif
   return new_sp;

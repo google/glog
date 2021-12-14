@@ -1004,7 +1004,7 @@ GLOG_CONSTEXPR int64_t LOG_PERIOD_TOL_NS = 500000;    // 500us
 // called, since it is also the array size and will be indexed by the stream
 // operator.
 GLOG_CONSTEXPR size_t MAX_CALLS = 10;
-}  // namespace LogStreamTimes
+}  // namespace LogTimes
 
 #if defined(HAVE_CXX11_CHRONO) && __cplusplus >= 201103L
 struct LogTimeRecorder {

@@ -70,17 +70,20 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   skip_count++;         // Do not include the "GetStackTrace" frame
 
   while (n < max_depth) {
-    int ret = unw_get_reg(&cursor, UNW_REG_IP, (unw_word_t *) &ip);
-    if (ret < 0)
+    int ret =
+        unw_get_reg(&cursor, UNW_REG_IP, reinterpret_cast<unw_word_t *>(&ip));
+    if (ret < 0) {
       break;
+    }
     if (skip_count > 0) {
       skip_count--;
     } else {
       result[n++] = ip;
     }
     ret = unw_step(&cursor);
-    if (ret <= 0)
+    if (ret <= 0) {
       break;
+    }
   }
 
   g_tl_entered = false;

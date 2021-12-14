@@ -839,8 +839,9 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
   if ( FLAGS_logtostderr ) {           // global flag: never log to file
     ColoredWriteToStderr(severity, message, len);
   } else {
-    for (int i = severity; i >= 0; --i)
+    for (int i = severity; i >= 0; --i) {
       LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
+    }
   }
 }
 
@@ -1254,8 +1255,9 @@ void LogFileObject::Write(bool force_flush,
       bytes_since_flush_ += message_len;
     }
   } else {
-    if ( CycleClock_Now() >= next_flush_time_ )
+    if (CycleClock_Now() >= next_flush_time_) {
       stop_writing = false;  // check to see if disk has free space.
+    }
     return;  // no need to flush
   }
 
@@ -1691,8 +1693,9 @@ ostream& LogMessage::stream() {
 // Flush buffered message, called by the destructor, or any other function
 // that needs to synchronize the log.
 void LogMessage::Flush() {
-  if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel)
+  if (data_->has_been_flushed_ || data_->severity_ < FLAGS_minloglevel) {
     return;
+  }
 
   data_->num_chars_to_log_ = data_->stream_.pcount();
   data_->num_chars_to_syslog_ =
@@ -1833,8 +1836,9 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
 
     if (!FLAGS_logtostderr) {
       for (int i = 0; i < NUM_SEVERITIES; ++i) {
-        if ( LogDestination::log_destinations_[i] )
+        if (LogDestination::log_destinations_[i]) {
           LogDestination::log_destinations_[i]->logger_->Write(true, 0, "", 0);
+        }
       }
     }
 
@@ -2191,8 +2195,9 @@ static bool SendEmailInternal(const char*dest, const char *subject,
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != NULL) {
       // Add the body if we have one
-      if (body)
+      if (body) {
         fwrite(body, sizeof(char), strlen(body), pipe);
+      }
       bool ok = pclose(pipe) != -1;
       if ( !ok ) {
         if ( use_logging ) {
@@ -2524,7 +2529,7 @@ void MakeCheckOpValueString(std::ostream* os, const char& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "char value " << (short)v;
+    (*os) << "char value " << static_cast<short>(v);
   }
 }
 
@@ -2533,7 +2538,7 @@ void MakeCheckOpValueString(std::ostream* os, const signed char& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "signed char value " << (short)v;
+    (*os) << "signed char value " << static_cast<short>(v);
   }
 }
 
@@ -2542,7 +2547,7 @@ void MakeCheckOpValueString(std::ostream* os, const unsigned char& v) {
   if (v >= 32 && v <= 126) {
     (*os) << "'" << v << "'";
   } else {
-    (*os) << "unsigned char value " << (unsigned short)v;
+    (*os) << "unsigned char value " << static_cast<unsigned short>(v);
   }
 }
 

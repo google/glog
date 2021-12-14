@@ -147,8 +147,11 @@ static void VLOG2Initializer() {
       VModuleInfo* info = new VModuleInfo;
       info->module_pattern = pattern;
       info->vlog_level = module_level;
-      if (head)  tail->next = info;
-      else  head = info;
+      if (head) {
+        tail->next = info;
+      } else {
+        head = info;
+      }
       tail = info;
     }
     // Skip past this entry
