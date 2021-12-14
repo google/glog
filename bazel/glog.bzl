@@ -154,9 +154,12 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             # generated for Bazel.
             "@bazel_tools//src/conditions:windows": [
                 "GOOGLE_GLOG_DLL_DECL=__declspec(dllexport)",
+                "GLOG_DEPRECATED=__declspec(deprecated)",
                 "GLOG_NO_ABBREVIATED_SEVERITIES",
             ],
-            "//conditions:default": [],
+            "//conditions:default": [
+                "GLOG_DEPRECATED=__attribute__((deprecated))",
+            ],
         }),
         copts =
             select({

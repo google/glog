@@ -487,8 +487,7 @@ class LogCleaner {
   bool enabled() const { return enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(string log_directory,
-                                    unsigned int days,
+  vector<string> GetOverdueLogNames(string log_directory, unsigned int days,
                                     const string& base_filename,
                                     const string& filename_extension) const;
 
@@ -496,8 +495,7 @@ class LogCleaner {
                                const string& base_filename,
                                const string& filename_extension) const;
 
-  bool IsLogLastModifiedOver(const string& filepath,
-                             unsigned int days) const;
+  bool IsLogLastModifiedOver(const string& filepath, unsigned int days) const;
 
   bool enabled_;
   unsigned int overdue_days_;
@@ -567,12 +565,9 @@ class LogDestination {
                                const char* message, size_t len);
 
   // Send logging info to all registered sinks.
-  static void LogToSinks(LogSeverity severity,
-                         const char *full_filename,
-                         const char *base_filename,
-                         int line,
-                         const LogMessageTime &logmsgtime,
-                         const char* message,
+  static void LogToSinks(LogSeverity severity, const char* full_filename,
+                         const char* base_filename, int line,
+                         const LogMessageTime& logmsgtime, const char* message,
                          size_t message_len);
 
   // Wait for all registered sinks via WaitTillSent
@@ -850,10 +845,9 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
 }
 
 inline void LogDestination::LogToSinks(LogSeverity severity,
-                                       const char *full_filename,
-                                       const char *base_filename,
-                                       int line,
-                                       const LogMessageTime &logmsgtime,
+                                       const char* full_filename,
+                                       const char* base_filename, int line,
+                                       const LogMessageTime& logmsgtime,
                                        const char* message,
                                        size_t message_len) {
   ReaderMutexLock l(&sink_mutex_);
@@ -1134,10 +1128,11 @@ void LogFileObject::Write(bool force_flush,
     rollover_attempt_ = 0;
 
     struct ::tm tm_time;
-    if (FLAGS_log_utc_time)
-        gmtime_r(&timestamp, &tm_time);
-    else
-        localtime_r(&timestamp, &tm_time);
+    if (FLAGS_log_utc_time) {
+      gmtime_r(&timestamp, &tm_time);
+    } else {
+      localtime_r(&timestamp, &tm_time);
+    }
 
     // The logfile's filename will have the date/time & pid in it
     ostringstream time_pid_stream;
@@ -1343,10 +1338,9 @@ void LogCleaner::Run(bool base_filename_selected,
   }
 }
 
-vector<string> LogCleaner::GetOverdueLogNames(string log_directory,
-                                              unsigned int days,
-                                              const string& base_filename,
-                                              const string& filename_extension) const {
+vector<string> LogCleaner::GetOverdueLogNames(
+    string log_directory, unsigned int days, const string& base_filename,
+    const string& filename_extension) const {
   // The names of overdue logs.
   vector<string> overdue_log_names;
 
@@ -1605,14 +1599,7 @@ void LogMessage::Init(const char* file,
   data_->outvec_ = NULL;
   WallTime now = WallTime_Now();
   time_t timestamp_now = static_cast<time_t>(now);
-  std::tm time_struct;
-  if(FLAGS_log_utc_time)
-    gmtime_r(&timestamp_now, &time_struct);
-  else
-    localtime_r(&timestamp_now, &time_struct);
-
-  logmsgtime_.setTimeInfo(time_struct, timestamp_now, 
-                          static_cast<int32>((now - timestamp_now) * 1000000));
+  logmsgtime_ = LogMessageTime(timestamp_now, now);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
@@ -1672,6 +1659,10 @@ void LogMessage::Init(const char* file,
     }
 #endif
   }
+}
+
+const LogMessageTime& LogMessage::getLogMessageTime() const {
+  return logmsgtime_;
 }
 
 LogMessage::~LogMessage() {
@@ -2023,13 +2014,45 @@ void SetLogSymlink(LogSeverity severity, const char* symlink_basename) {
 LogSink::~LogSink() {
 }
 
+void LogSink::send(LogSeverity severity, const char* full_filename,
+                   const char* base_filename, int line,
+                   const LogMessageTime& time, const char* message,
+                   size_t message_len) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif  // __GNUC__
+  send(severity, full_filename, base_filename, line, &time.tm(), message,
+       message_len);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#pragma warning(pop)
+#endif  // __GNUC__
+}
+
+void LogSink::send(LogSeverity severity, const char* full_filename,
+                   const char* base_filename, int line, const std::tm* t,
+                   const char* message, size_t message_len) {
+  (void)severity;
+  (void)full_filename;
+  (void)base_filename;
+  (void)line;
+  (void)t;
+  (void)message;
+  (void)message_len;
+}
+
 void LogSink::WaitTillSent() {
   // noop default
 }
 
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
-                         const LogMessageTime &logmsgtime,
-                         const char* message, size_t message_len) {
+                         const LogMessageTime& logmsgtime, const char* message,
+                         size_t message_len) {
   ostringstream stream(string(message, message_len));
   stream.fill('0');
 
@@ -2559,7 +2582,31 @@ void DisableLogCleaner() {
   log_cleaner.Disable();
 }
 
-_END_GOOGLE_NAMESPACE_
+LogMessageTime::LogMessageTime()
+    : time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
+
+LogMessageTime::LogMessageTime(std::tm t) {
+  std::time_t timestamp = std::mktime(&t);
+  init(t, timestamp, 0);
+}
+
+LogMessageTime::LogMessageTime(std::time_t timestamp, WallTime now) {
+  std::tm t;
+  if (FLAGS_log_utc_time)
+    gmtime_r(&timestamp, &t);
+  else
+    localtime_r(&timestamp, &t);
+  init(t, timestamp, now);
+}
+
+void LogMessageTime::init(const std::tm& t, std::time_t timestamp,
+                          WallTime now) {
+  time_struct_ = t;
+  timestamp_ = timestamp;
+  usecs_ = static_cast<int32>((now - timestamp) * 1000000);
+
+  CalcGmtOffset();
+}
 
 void LogMessageTime::CalcGmtOffset() {
   std::tm gmt_struct;
@@ -2579,3 +2626,4 @@ void LogMessageTime::CalcGmtOffset() {
   gmtoffset_ = static_cast<long int>(timestamp_ - gmt_sec + (isDst ? hour_secs : 0) ) ;
 }
 
+_END_GOOGLE_NAMESPACE_
