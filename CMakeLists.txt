@@ -697,7 +697,7 @@ target_compile_definitions (glogbase PUBLIC
   PRIVATE GOOGLE_GLOG_IS_A_DLL)
 
 generate_export_header (glog
-  EXPORT_MACRO_NAME GOOGLE_GLOG_DLL_DECL
+  EXPORT_MACRO_NAME GLOG_EXPORT
   EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/glog/export.h)
 
 string (STRIP "${glog_libraries_options_for_static_linking}" glog_libraries_options_for_static_linking)
