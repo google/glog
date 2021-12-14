@@ -43,16 +43,7 @@
 //   whenever an ERROR occurs in production.
 // FATAL:
 //   Use for undesired and unexpected events that the program cannot recover
-//   from. 
-
-// Annoying stuff for windows -- makes sure clients can import these functions
-#ifndef GOOGLE_GLOG_DLL_DECL
-# if defined(_WIN32) && !defined(__CYGWIN__)
-#   define GOOGLE_GLOG_DLL_DECL  __declspec(dllimport)
-# else
-#   define GOOGLE_GLOG_DLL_DECL
-# endif
-#endif
+//   from.
 
 // Variables of type LogSeverity are widely taken to lie in the range
 // [0, NUM_SEVERITIES-1].  Be careful to preserve this assumption if
@@ -76,7 +67,7 @@ const int INFO = GLOG_INFO, WARNING = GLOG_WARNING,
 #define DFATAL_LEVEL FATAL
 #endif
 
-extern GOOGLE_GLOG_DLL_DECL const char* const LogSeverityNames[NUM_SEVERITIES];
+extern GLOG_EXPORT const char* const LogSeverityNames[NUM_SEVERITIES];
 
 // NDEBUG usage helpers related to (RAW_)DCHECK:
 //

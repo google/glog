@@ -122,11 +122,11 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
  * name vsnprintf, since windows defines that (but not snprintf (!)).
  */
 #ifndef HAVE_SNPRINTF
-extern int GOOGLE_GLOG_DLL_DECL snprintf(char *str, size_t size,
-                                       const char *format, ...);
+extern int GLOG_EXPORT snprintf(char* str, size_t size, const char* format,
+                                ...);
 #endif
-extern int GOOGLE_GLOG_DLL_DECL safe_vsnprintf(char *str, size_t size,
-                          const char *format, va_list ap);
+extern int GLOG_EXPORT safe_vsnprintf(char* str, size_t size,
+                                      const char* format, va_list ap);
 #define vsnprintf(str, size, format, ap)  safe_vsnprintf(str, size, format, ap)
 #ifndef va_copy
 #define va_copy(dst, src)  (dst) = (src)
@@ -158,11 +158,12 @@ enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
 #endif // HAVE_PTHREAD
 
 #ifndef HAVE_LOCALTIME_R
-extern GOOGLE_GLOG_DLL_DECL struct tm* localtime_r(const time_t* timep, struct tm* result);
+extern GLOG_EXPORT struct tm* localtime_r(const time_t* timep,
+                                          struct tm* result);
 #endif // not HAVE_LOCALTIME_R
 
 #ifndef HAVE_GMTIME_R
-extern GOOGLE_GLOG_DLL_DECL struct tm* gmtime_r(const time_t* timep, struct tm* result);
+extern GLOG_EXPORT struct tm* gmtime_r(const time_t* timep, struct tm* result);
 #endif // not HAVE_GMTIME_R
 
 inline char* strerror_r(int errnum, char* buf, size_t buflen) {

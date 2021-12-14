@@ -54,7 +54,7 @@ _START_GOOGLE_NAMESPACE_
 //           ....       ...
 //
 // "result" must not be NULL.
-GOOGLE_GLOG_DLL_DECL int GetStackTrace(void** result, int max_depth, int skip_count);
+GLOG_EXPORT int GetStackTrace(void** result, int max_depth, int skip_count);
 
 _END_GOOGLE_NAMESPACE_
 
