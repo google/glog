@@ -404,7 +404,8 @@ static void MaybeCancelLastSeparator(State *state) {
 // "mangled_cur" is anonymous namespace.
 static bool IdentifierIsAnonymousNamespace(State *state, int length) {
   static const char anon_prefix[] = "_GLOBAL__N_";
-  return (length > (int)sizeof(anon_prefix) - 1 &&  // Should be longer.
+  return (length >
+              static_cast<int>(sizeof(anon_prefix)) - 1 &&  // Should be longer.
           StrPrefix(state->mangled_cur, anon_prefix));
 }
 

@@ -106,7 +106,8 @@ TEST(Symbolize, Symbolize) {
 
   // The name of an internal linkage symbol is not specified; allow either a
   // mangled or an unmangled name here.
-  const char *static_func_symbol = TrySymbolize((void *)(&static_func));
+  const char *static_func_symbol =
+      TrySymbolize(reinterpret_cast<void *>(&static_func));
 
 #if !defined(_MSC_VER) || !defined(NDEBUG)
   CHECK(NULL != static_func_symbol);
@@ -281,7 +282,7 @@ TEST(Symbolize, SymbolizeStackConsumption) {
   int stack_consumed;
   const char* symbol;
 
-  symbol = SymbolizeStackConsumption((void *)(&nonstatic_func),
+  symbol = SymbolizeStackConsumption(reinterpret_cast<void *>(&nonstatic_func),
                                      &stack_consumed);
   EXPECT_STREQ("nonstatic_func", symbol);
   EXPECT_GT(stack_consumed, 0);
@@ -289,7 +290,7 @@ TEST(Symbolize, SymbolizeStackConsumption) {
 
   // The name of an internal linkage symbol is not specified; allow either a
   // mangled or an unmangled name here.
-  symbol = SymbolizeStackConsumption((void *)(&static_func),
+  symbol = SymbolizeStackConsumption(reinterpret_cast<void *>(&static_func),
                                      &stack_consumed);
   CHECK(NULL != symbol);
   EXPECT_TRUE(strcmp("static_func", symbol) == 0 ||
@@ -304,7 +305,8 @@ TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
   int stack_consumed;
   const char* symbol;
 
-  symbol = SymbolizeStackConsumption((void *)(&Foo::func), &stack_consumed);
+  symbol = SymbolizeStackConsumption(reinterpret_cast<void *>(&Foo::func),
+                                     &stack_consumed);
 
   EXPECT_STREQ("Foo::func()", symbol);
   EXPECT_GT(stack_consumed, 0);

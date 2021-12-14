@@ -207,9 +207,10 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   // We assume pthread_t is an integral number or a pointer, rather
   // than a complex struct.  In some environments, pthread_self()
   // returns an uint64 but in some other environments pthread_self()
-  // returns a pointer.  Hence we use C-style cast here, rather than
-  // reinterpret/static_cast, to support both types of environments.
-  formatter.AppendUint64((uintptr_t)pthread_self(), 16);
+  // returns a pointer.
+  pthread_t id = pthread_self();
+  formatter.AppendUint64(
+      reinterpret_cast<uint64>(reinterpret_cast<const char*>(id)), 16);
   formatter.AppendString(") ");
   // Only linux has the PID of the signal sender in si_pid.
 #ifdef GLOG_OS_LINUX
@@ -366,8 +367,9 @@ bool IsFailureSignalHandlerInstalled() {
   memset(&sig_action, 0, sizeof(sig_action));
   sigemptyset(&sig_action.sa_mask);
   sigaction(SIGABRT, NULL, &sig_action);
-  if (sig_action.sa_sigaction == &FailureSignalHandler)
+  if (sig_action.sa_sigaction == &FailureSignalHandler) {
     return true;
+  }
 #elif defined(GLOG_OS_WINDOWS)
   return kFailureSignalHandlerInstalled;
 #endif  // HAVE_SIGACTION

@@ -68,7 +68,7 @@ class StackTraceInit {
 static StackTraceInit module_initializer;  // Force initialization
 
 static _Unwind_Reason_Code GetOneFrame(struct _Unwind_Context *uc, void *opq) {
-  trace_arg_t *targ = (trace_arg_t *) opq;
+  trace_arg_t *targ = static_cast<trace_arg_t *>(opq);
 
   if (targ->skip_count > 0) {
     targ->skip_count--;
@@ -76,16 +76,18 @@ static _Unwind_Reason_Code GetOneFrame(struct _Unwind_Context *uc, void *opq) {
     targ->result[targ->count++] = (void *) _Unwind_GetIP(uc);
   }
 
-  if (targ->count == targ->max_depth)
+  if (targ->count == targ->max_depth) {
     return _URC_END_OF_STACK;
+  }
 
   return _URC_NO_REASON;
 }
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  if (!ready_to_run)
+  if (!ready_to_run) {
     return 0;
+  }
 
   trace_arg_t targ;
 

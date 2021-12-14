@@ -99,7 +99,7 @@ static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
   if (Demangle(out, demangled, sizeof(demangled))) {
     // Demangling succeeded. Copy to out if the space allows.
     size_t len = strlen(demangled);
-    if (len + 1 <= (size_t)out_size) {  // +1 for '\0'.
+    if (len + 1 <= static_cast<size_t>(out_size)) {  // +1 for '\0'.
       SAFE_ASSERT(len < sizeof(demangled));
       memmove(out, demangled, len + 1);
     }
@@ -382,7 +382,7 @@ struct FileDescriptor {
   int get() { return fd_; }
 
  private:
-  explicit FileDescriptor(const FileDescriptor&);
+  FileDescriptor(const FileDescriptor &);
   void operator=(const FileDescriptor&);
 };
 
@@ -458,7 +458,7 @@ class LineReader {
   }
 
  private:
-  explicit LineReader(const LineReader&);
+  LineReader(const LineReader &);
   void operator=(const LineReader&);
 
   char *FindLineFeed() {
@@ -674,8 +674,9 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
 static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t padding) {
   // Make sure we can write at least one NUL byte.
   size_t n = 1;
-  if (n > sz)
+  if (n > sz) {
     return NULL;
+  }
 
   if (base < 2 || base > 16) {
     buf[0] = '\000';
@@ -698,8 +699,9 @@ static char *itoa_r(uintptr_t i, char *buf, size_t sz, unsigned base, size_t pad
     *ptr++ = "0123456789abcdef"[i % base];
     i /= base;
 
-    if (padding > 0)
+    if (padding > 0) {
       padding--;
+    }
   } while (i > 0 || padding > 0);
 
   // Terminate the output with a NUL character.
