@@ -19,12 +19,9 @@ jobs:
         build_type: [Debug, Release]
         extra: [no-custom-prefix, custom-prefix]
         lib: [shared, static]
-        msvc: [VS-15-2017, VS-16-2019, VS-17-2022]
+        msvc: [VS-16-2019, VS-17-2022]
         std: [98, 11, 14, 17, 20]
         include:
-          - msvc: VS-15-2017
-            os: windows-2016
-            generator: 'Visual Studio 15 2017'
           - msvc: VS-16-2019
             os: windows-2019
             generator: 'Visual Studio 16 2019'
