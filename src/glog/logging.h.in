@@ -133,23 +133,17 @@ typedef unsigned __int64 uint64;
 #error Do not know how to define a 32-bit integer quantity on your system
 #endif
 
-@ac_google_end_namespace@
+typedef double WallTime;
 
 struct GOOGLE_GLOG_DLL_DECL LogMessageTime {
-  LogMessageTime(): time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
-
-  void setTimeInfo(struct::tm time_struct, time_t timestamp, int32_t usecs){
-    time_struct_ = time_struct;
-    timestamp_ = timestamp;
-    usecs_ = usecs;
-
-    CalcGmtOffset();
-  }
+  LogMessageTime();
+  LogMessageTime(std::tm t);
+  LogMessageTime(std::time_t timestamp, WallTime now);
 
   const time_t& timestamp() const { return timestamp_; }
   const int& sec() const { return time_struct_.tm_sec; }
   const int32_t& usec() const { return usecs_; }
-  const int& (min)() const { return time_struct_.tm_min; }
+  const int&(min)() const { return time_struct_.tm_min; }
   const int& hour() const { return time_struct_.tm_hour; }
   const int& day() const { return time_struct_.tm_mday; }
   const int& month() const { return time_struct_.tm_mon; }
@@ -158,14 +152,16 @@ struct GOOGLE_GLOG_DLL_DECL LogMessageTime {
   const int& dayInYear() const { return time_struct_.tm_yday; }
   const int& dst() const { return time_struct_.tm_isdst; }
   const long int& gmtoff() const { return gmtoffset_; }
+  const std::tm& tm() const { return time_struct_; }
 
-  private:
-    struct::tm time_struct_; // Time of creation of LogMessage
-    time_t timestamp_;       // Time of creation of LogMessage in seconds
-    int32_t usecs_;          // Time of creation of LogMessage - microseconds part
-    long int gmtoffset_;
+ private:
+  void init(const std::tm& t, std::time_t timestamp, WallTime now);
+  std::tm time_struct_;  // Time of creation of LogMessage
+  time_t timestamp_;     // Time of creation of LogMessage in seconds
+  int32_t usecs_;        // Time of creation of LogMessage - microseconds part
+  long int gmtoffset_;
 
-    void CalcGmtOffset();
+  void CalcGmtOffset();
 };
 
 #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
@@ -187,7 +183,11 @@ struct LogMessageInfo {
 };
 
 typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, void* data);
+
 #endif
+
+@ac_google_end_namespace@
+
 
 // The global value of GOOGLE_STRIP_LOG. All the messages logged to
 // LOG(XXX) with severity less than GOOGLE_STRIP_LOG will not be displayed.
@@ -1562,9 +1562,7 @@ public:
   // Must be called without the log_mutex held.  (L < log_mutex)
   static int64 num_messages(int severity);
 
-  const LogMessageTime& getLogMessageTime() const {
-    return logmsgtime_;
-  }
+  const LogMessageTime& getLogMessageTime() const;
 
   struct LogMessageData;
 
@@ -1736,8 +1734,13 @@ class GOOGLE_GLOG_DLL_DECL LogSink {
   // during this call.
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
-                    const LogMessageTime &logmsgtime,
-                    const char* message, size_t message_len) = 0;
+                    const LogMessageTime& logmsgtime, const char* message,
+                    size_t message_len);
+  // Provide an overload for compatibility purposes
+  GLOG_DEPRECATED
+  virtual void send(LogSeverity severity, const char* full_filename,
+                    const char* base_filename, int line, const std::tm* t,
+                    const char* message, size_t message_len);
 
   // Redefine this to implement waiting for
   // the sink's logging logic to complete.

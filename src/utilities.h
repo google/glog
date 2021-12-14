@@ -147,8 +147,6 @@ const char* ProgramInvocationShortName();
 int64 CycleClock_Now();
 
 int64 UsecToCycles(int64 usec);
-
-typedef double WallTime;
 WallTime WallTime_Now();
 
 int32 GetMainThreadPid();
