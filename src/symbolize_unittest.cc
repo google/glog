@@ -71,7 +71,7 @@ static const char *TrySymbolize(void *pc) {
 #if defined(__GNUC__) && !defined(__OPENCC__)
 #  if __GNUC__ >= 4
 #    define TEST_WITH_MODERN_GCC
-#    if __i386__  // always_inline isn't supported for x86_64 with GCC 4.1.0.
+#    if defined(__i386__) && __i386__  // always_inline isn't supported for x86_64 with GCC 4.1.0.
 #      undef always_inline
 #      define always_inline __attribute__((always_inline))
 #      define HAVE_ALWAYS_INLINE

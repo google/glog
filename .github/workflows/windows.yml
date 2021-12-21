@@ -104,7 +104,7 @@ jobs:
 
       - name: Configure
         env:
-          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
+          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
         run: |
           if [[ ${{matrix.build_type}} == "Debug" ]]; then
             export CXXFLAGS="--coverage ${CXXFLAGS}"
