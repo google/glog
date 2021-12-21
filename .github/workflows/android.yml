@@ -31,7 +31,7 @@ jobs:
 
       - name: Configure
         env:
-          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
+          CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.abi}} \
                 -DANDROID_ABI=${{matrix.abi}} \

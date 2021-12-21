@@ -145,7 +145,11 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
     HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
 cmake_push_check_state (RESET)
-set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+
+if (Threads_FOUND)
+  set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+endif (Threads_FOUND)
+
 check_cxx_symbol_exists (pthread_threadid_np "pthread.h" HAVE_PTHREAD_THREADID_NP)
 cmake_pop_check_state ()
 

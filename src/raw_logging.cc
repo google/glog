@@ -68,6 +68,16 @@
 
 _START_GOOGLE_NAMESPACE_
 
+#if defined(__GNUC__)
+#define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck) \
+  __attribute__((format(archetype, stringIndex, firstToCheck)))
+#define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex) \
+  __attribute__((format_arg(stringIndex)))
+#else
+#define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck)
+#define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex)
+#endif
+
 // CAVEAT: vsnprintf called from *DoRawLog below has some (exotic) code paths
 // that invoke malloc() and getenv() that might acquire some locks.
 // If this becomes a problem we should reimplement a subset of vsnprintf
@@ -76,6 +86,7 @@ _START_GOOGLE_NAMESPACE_
 // Helper for RawLog__ below.
 // *DoRawLog writes to *buf of *size and move them past the written portion.
 // It returns true iff there was no overflow or error.
+GLOG_ATTRIBUTE_FORMAT(printf, 3, 4)
 static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
@@ -90,7 +101,14 @@ static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
 // Helper for RawLog__ below.
 inline static bool VADoRawLog(char** buf, size_t* size,
                               const char* format, va_list ap) {
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
   int n = vsnprintf(*buf, *size, format, ap);
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
   if (n < 0 || static_cast<size_t>(n) > *size) return false;
   *size -= static_cast<size_t>(n);
   *buf += n;
@@ -102,6 +120,7 @@ static bool crashed = false;
 static CrashReason crash_reason;
 static char crash_buf[kLogBufSize + 1] = { 0 };  // Will end in '\0'
 
+GLOG_ATTRIBUTE_FORMAT(printf, 4, 5)
 void RawLog__(LogSeverity severity, const char* file, int line,
               const char* format, ...) {
   if (!(FLAGS_logtostderr || severity >= FLAGS_stderrthreshold ||

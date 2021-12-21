@@ -34,7 +34,7 @@ jobs:
       - name: Configure
         shell: bash
         env:
-          CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Werror ${{env.CXXFLAGS}}
+          CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.build_type}} \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
