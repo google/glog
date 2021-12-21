@@ -94,6 +94,10 @@ if (Unwind_FOUND)
   set (HAVE_LIB_UNWIND 1)
 else (Unwind_FOUND)
   check_include_file_cxx (unwind.h HAVE_UNWIND_H)
+  # Check whether linking actually succeeds. ARM toolchains of LLVM unwind
+  # implementation do not necessarily provide the _Unwind_Backtrace function
+  # which causes the previous check to succeed but the linking to fail.
+  check_cxx_symbol_exists (_Unwind_Backtrace unwind.h HAVE__UNWIND_BACKTRACE)
 endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)

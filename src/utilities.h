@@ -88,8 +88,8 @@
 
 #if defined(HAVE_LIB_UNWIND)
 # define STACKTRACE_H "stacktrace_libunwind-inl.h"
-#elif defined(HAVE_UNWIND_H)
-# define STACKTRACE_H "stacktrace_x86_64-inl.h"
+#elif defined(HAVE__UNWIND_BACKTRACE)
+# define STACKTRACE_H "stacktrace_unwind-inl.h"
 #elif !defined(NO_FRAME_POINTER)
 # if defined(__i386__) && __GNUC__ >= 2
 #  define STACKTRACE_H "stacktrace_x86-inl.h"

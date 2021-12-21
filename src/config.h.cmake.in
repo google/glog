@@ -118,6 +118,9 @@
 /* Define if you have the <unwind.h> header file. */
 #cmakedefine HAVE_UNWIND_H
 
+/* Define if you linking to _Unwind_Backtrace is possible. */
+#cmakedefine HAVE__UNWIND_BACKTRACE
+
 /* define if the compiler supports using expression for operator */
 #cmakedefine HAVE_USING_OPERATOR
 
