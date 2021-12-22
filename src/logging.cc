@@ -1625,8 +1625,9 @@ void LogMessage::Init(const char* file,
       if (custom_prefix_callback == NULL) {
     #endif
           stream() << LogSeverityNames[severity][0];
-          if (FLAGS_log_year_in_prefix)
-              stream() << setw(4) << 1900 + logmsgtime_.year();
+          if (FLAGS_log_year_in_prefix) {
+            stream() << setw(4) << 1900 + logmsgtime_.year();
+          }
           stream() << setw(2) << 1 + logmsgtime_.month()
                    << setw(2) << logmsgtime_.day()
                    << ' '
