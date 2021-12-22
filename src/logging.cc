@@ -1226,7 +1226,7 @@ void LogFileObject::Write(bool force_flush,
     if(!g_application_fingerprint.empty()) {
       file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
     }
-    string date_time_format = FLAGS_log_year_in_prefix
+    const char* const date_time_format = FLAGS_log_year_in_prefix
                                   ? "yyyymmdd hh:mm:ss.uuuuuu"
                                   : "mmdd hh:mm:ss.uuuuuu";
     file_header_stream << "Running duration (h:mm:ss): "
