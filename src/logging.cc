@@ -144,6 +144,8 @@ GLOG_DEFINE_string(alsologtoemail, "",
                    "in addition to logfiles");
 GLOG_DEFINE_bool(log_prefix, true,
                  "Prepend the log prefix to the start of each log line");
+GLOG_DEFINE_bool(log_year_in_prefix, true,
+                 "Set whether the year should be included in the log prefix");
 GLOG_DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
                   "actually get logged anywhere");
 GLOG_DEFINE_int32(logbuflevel, 0,
@@ -1224,10 +1226,12 @@ void LogFileObject::Write(bool force_flush,
     if(!g_application_fingerprint.empty()) {
       file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
     }
-
+    const char* const date_time_format = FLAGS_log_year_in_prefix
+                                  ? "yyyymmdd hh:mm:ss.uuuuuu"
+                                  : "mmdd hh:mm:ss.uuuuuu";
     file_header_stream << "Running duration (h:mm:ss): "
                        << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
-                       << "Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu "
+                       << "Log line format: [IWEF]" << date_time_format << " "
                        << "threadid file:line] msg" << '\n';
     const string& file_header_string = file_header_stream.str();
 
@@ -1620,9 +1624,11 @@ void LogMessage::Init(const char* file,
     #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       if (custom_prefix_callback == NULL) {
     #endif
-          stream() << LogSeverityNames[severity][0]
-                   << setw(4) << 1900 + logmsgtime_.year()
-                   << setw(2) << 1 + logmsgtime_.month()
+          stream() << LogSeverityNames[severity][0];
+          if (FLAGS_log_year_in_prefix) {
+            stream() << setw(4) << 1900 + logmsgtime_.year();
+          }
+          stream() << setw(2) << 1 + logmsgtime_.month()
                    << setw(2) << logmsgtime_.day()
                    << ' '
                    << setw(2) << logmsgtime_.hour() << ':'

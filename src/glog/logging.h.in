@@ -430,6 +430,9 @@ DECLARE_int32(stderrthreshold);
 // Set whether the log prefix should be prepended to each line of output.
 DECLARE_bool(log_prefix);
 
+// Set whether the year should be included in the log prefix.
+DECLARE_bool(log_year_in_prefix);
+
 // Log messages at a level <= this flag are buffered.
 // Log messages at a higher level are flushed immediately.
 DECLARE_int32(logbuflevel);
