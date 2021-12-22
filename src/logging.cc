@@ -144,6 +144,8 @@ GLOG_DEFINE_string(alsologtoemail, "",
                    "in addition to logfiles");
 GLOG_DEFINE_bool(log_prefix, true,
                  "Prepend the log prefix to the start of each log line");
+GLOG_DEFINE_bool(log_year_in_prefix, true,
+                 "The log prefix should be contain the year in each line of output");
 GLOG_DEFINE_int32(minloglevel, 0, "Messages logged at a lower level than this don't "
                   "actually get logged anywhere");
 GLOG_DEFINE_int32(logbuflevel, 0,
