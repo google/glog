@@ -1224,10 +1224,12 @@ void LogFileObject::Write(bool force_flush,
     if(!g_application_fingerprint.empty()) {
       file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
     }
-
+    string date_time_format = FLAGS_log_year_in_prefix
+                                  ? "yyyymmdd hh:mm:ss.uuuuuu"
+                                  : "mmdd hh:mm:ss.uuuuuu";
     file_header_stream << "Running duration (h:mm:ss): "
                        << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
-                       << "Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu "
+                       << "Log line format: [IWEF]" << date_time_format << " "
                        << "threadid file:line] msg" << '\n';
     const string& file_header_string = file_header_stream.str();
 
