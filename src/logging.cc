@@ -1507,7 +1507,7 @@ LogMessage::LogMessageData::LogMessageData()
 }
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
-                       uint64 ctr, void (LogMessage::*send_method)())
+                       int64 ctr, void (LogMessage::*send_method)())
     : allocated_(NULL) {
   Init(file, line, severity, send_method);
   data_->stream_.set_ctr(ctr);
@@ -1987,10 +1987,9 @@ ostream& operator<<(ostream &os, const PRIVATE_Counter&) {
 }
 
 ErrnoLogMessage::ErrnoLogMessage(const char* file, int line,
-                                 LogSeverity severity, uint64 ctr,
+                                 LogSeverity severity, int64 ctr,
                                  void (LogMessage::*send_method)())
-    : LogMessage(file, line, severity, ctr, send_method) {
-}
+    : LogMessage(file, line, severity, ctr, send_method) {}
 
 ErrnoLogMessage::~ErrnoLogMessage() {
   // Don't access errno directly because it may have been altered
