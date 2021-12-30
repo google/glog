@@ -154,6 +154,10 @@ GLOG_DEFINE_int32(logbuflevel, 0,
                   " ...)");
 GLOG_DEFINE_int32(logbufsecs, 30,
                   "Buffer log messages for at most this many seconds");
+
+GLOG_DEFINE_int32(logcleansecs, 60 * 5, // every 5 minutes
+                  "Clean overdue logs every this many seconds");
+
 GLOG_DEFINE_int32(logemaillevel, 999,
                   "Email log messages logged at this level or higher"
                   " (0 means email all; 3 means email FATAL only;"
@@ -484,9 +488,12 @@ class LogCleaner {
   void Enable(unsigned int overdue_days);
   void Disable();
 
+  // update next_cleanup_time_
+  void UpdateCleanUpTime();
+
   void Run(bool base_filename_selected,
            const string& base_filename,
-           const string& filename_extension) const;
+           const string& filename_extension);
 
   bool enabled() const { return enabled_; }
 
@@ -503,6 +510,7 @@ class LogCleaner {
 
   bool enabled_;
   unsigned int overdue_days_;
+  int64 next_cleanup_time_;         // cycle count at which to clean overdue log
 };
 
 LogCleaner log_cleaner;
@@ -1303,7 +1311,7 @@ void LogFileObject::Write(bool force_flush,
   }
 }
 
-LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7) {}
+LogCleaner::LogCleaner() : enabled_(false), overdue_days_(7), next_cleanup_time_(0) {}
 
 void LogCleaner::Enable(unsigned int overdue_days) {
   enabled_ = true;
@@ -1314,11 +1322,23 @@ void LogCleaner::Disable() {
   enabled_ = false;
 }
 
+void LogCleaner::UpdateCleanUpTime() {
+  const int64 next = (FLAGS_logcleansecs
+                      * 1000000);  // in usec
+  next_cleanup_time_ = CycleClock_Now() + UsecToCycles(next);
+}
+
 void LogCleaner::Run(bool base_filename_selected,
                      const string& base_filename,
-                     const string& filename_extension) const {
+                     const string& filename_extension) {
   assert(enabled_);
   assert(!base_filename_selected || !base_filename.empty());
+
+  // avoid scanning logs too frequently
+  if (CycleClock_Now() < next_cleanup_time_) {
+    return;
+  }
+  UpdateCleanUpTime();
 
   vector<string> dirs;
 

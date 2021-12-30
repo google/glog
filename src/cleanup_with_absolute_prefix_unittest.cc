@@ -64,6 +64,10 @@ TEST(CleanImmediatelyWithAbsolutePrefix, logging) {
     LOG(INFO) << "cleanup test";
   }
 
+  for (unsigned i = 0; i < 10; ++i) {
+    LOG(ERROR) << "cleanup test";
+  }
+
   google::DisableLogCleaner();
 }
 
