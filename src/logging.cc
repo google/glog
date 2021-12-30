@@ -1662,7 +1662,7 @@ void LogMessage::Init(const char* file,
     char fileline[128];
     snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
 #ifdef HAVE_STACKTRACE
-    if (!strcmp(FLAGS_log_backtrace_at.c_str(), fileline)) {
+    if (FLAGS_log_backtrace_at == fileline) {
       string stacktrace;
       DumpStackTraceToString(&stacktrace);
       stream() << " (stacktrace:\n" << stacktrace << ") ";
@@ -2290,7 +2290,7 @@ const vector<string>& GetLoggingDirectories() {
 
     if ( !FLAGS_log_dir.empty() ) {
       // A dir was specified, we should use it
-      logging_directories_list->push_back(FLAGS_log_dir.c_str());
+      logging_directories_list->push_back(FLAGS_log_dir);
     } else {
       GetTempDirectories(logging_directories_list);
 #ifdef GLOG_OS_WINDOWS
