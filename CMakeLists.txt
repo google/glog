@@ -79,7 +79,7 @@ if (WITH_GMOCK AND TARGET GTest::gmock)
 endif (WITH_GMOCK AND TARGET GTest::gmock)
 
 if (WITH_GFLAGS)
-  find_package (gflags 2.2.0)
+  find_package (gflags 2.2.2)
 
   if (gflags_FOUND)
     set (HAVE_LIB_GFLAGS 1)
