@@ -238,7 +238,7 @@ static ssize_t pwrite(int fd, void* buf, size_t count, off_t offset) {
 static void GetHostName(string* hostname) {
 #if defined(HAVE_SYS_UTSNAME_H)
   struct utsname buf;
-  if (0 != uname(&buf)) {
+  if (uname(&buf) < 0) {
     // ensure null termination on failure
     *buf.nodename = '\0';
   }
