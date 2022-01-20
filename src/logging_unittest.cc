@@ -731,39 +731,6 @@ static void TestBasenameAppendWhenNoTimestamp() {
   DeleteFiles(dest + "*");
 }
 
-static void TestTwoProcessesWrite() {
-// test only implemented for platforms with fork & wait; the actual implementation relies on flock
-#if defined(HAVE_SYS_WAIT_H) && defined(HAVE_UNISTD_H) && defined(HAVE_FCNTL)
-  fprintf(stderr, "==== Test setting log file basename and two processes writing - second should fail\n");
-  const string dest = FLAGS_test_tmpdir + "/logging_test_basename_two_processes_writing";
-  DeleteFiles(dest + "*");
-
-  //make both processes write into the same file (easier test)
-  FLAGS_timestamp_in_logfile_name=false;
-  SetLogDestination(GLOG_INFO, dest.c_str());
-  LOG(INFO) << "message to new base, parent";
-  FlushLogFiles(GLOG_INFO);
-
-  pid_t pid = fork();
-  CHECK_ERR(pid);
-  if (pid == 0) {
-    LOG(INFO) << "message to new base, child - should only appear on STDERR not on the file";
-    ShutdownGoogleLogging(); //for children proc
-    exit(0);
-  } else if (pid > 0) {
-    wait(NULL);
-  }
-  FLAGS_timestamp_in_logfile_name=true;
-
-  CheckFile(dest, "message to new base, parent");
-  CheckFile(dest, "message to new base, child - should only appear on STDERR not on the file", false);
-
-  // Release
-  LogToStderr();
-  DeleteFiles(dest + "*");
-#endif
-}
-
 static void TestSymlink() {
 #ifndef OS_WINDOWS
   fprintf(stderr, "==== Test setting log file symlink\n");
