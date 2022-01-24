@@ -533,26 +533,6 @@ configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
 configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
 
-if (WITH_PKGCONFIG)
-  set (VERSION ${PROJECT_VERSION})
-  set (prefix ${CMAKE_INSTALL_PREFIX})
-  set (exec_prefix ${CMAKE_INSTALL_FULL_BINDIR})
-  set (libdir ${CMAKE_INSTALL_FULL_LIBDIR})
-  set (includedir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
-
-  configure_file (
-    "${PROJECT_SOURCE_DIR}/libglog.pc.in"
-    "${PROJECT_BINARY_DIR}/libglog.pc"
-    @ONLY
-  )
-
-  unset (VERSION)
-  unset (prefix)
-  unset (exec_prefix)
-  unset (libdir)
-  unset (includedir)
-endif (WITH_PKGCONFIG)
-
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
 
 set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
@@ -641,17 +621,25 @@ add_library (glog
 
 add_library (glog::glog ALIAS glog)
 
+set (glog_libraries_options_for_static_linking)
+
 if (Unwind_FOUND)
   target_link_libraries (glog PRIVATE unwind::unwind)
+  set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -lunwind")
   set (Unwind_DEPENDENCY "find_dependency (Unwind ${Unwind_VERSION})")
 endif (Unwind_FOUND)
 
 if (HAVE_DBGHELP)
   target_link_libraries (glog PRIVATE dbghelp)
+  set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -ldbghelp")
 endif (HAVE_DBGHELP)
 
 if (HAVE_PTHREAD)
   target_link_libraries (glog PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+
+  if (CMAKE_THREAD_LIBS_INIT)
+    set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} ${CMAKE_THREAD_LIBS_INIT}")
+  endif (CMAKE_THREAD_LIBS_INIT)
 endif (HAVE_PTHREAD)
 
 if (gflags_FOUND)
@@ -662,6 +650,8 @@ if (gflags_FOUND)
     target_link_libraries (glog PUBLIC gflags)
   endif (TARGET gflags::gflags)
 
+  set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -lgflags")
+
   target_compile_definitions (glog PRIVATE
     GFLAGS_DLL_DECLARE_FLAG=GOOGLE_GLOG_DLL_DECL
     GFLAGS_DLL_DEFINE_FLAG=GOOGLE_GLOG_DLL_DECL
@@ -670,6 +660,7 @@ endif (gflags_FOUND)
 
 if (ANDROID)
   target_link_libraries (glog PRIVATE log)
+  set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -llog")
 endif (ANDROID)
 
 set_target_properties (glog PROPERTIES VERSION ${PROJECT_VERSION})
@@ -713,6 +704,28 @@ target_compile_definitions (glogbase PUBLIC
 generate_export_header (glog
   EXPORT_MACRO_NAME GOOGLE_GLOG_DLL_DECL
   EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/glog/export.h)
+
+string (STRIP "${glog_libraries_options_for_static_linking}" glog_libraries_options_for_static_linking)
+
+if (WITH_PKGCONFIG)
+  set (VERSION ${PROJECT_VERSION})
+  set (prefix ${CMAKE_INSTALL_PREFIX})
+  set (exec_prefix ${CMAKE_INSTALL_FULL_BINDIR})
+  set (libdir ${CMAKE_INSTALL_FULL_LIBDIR})
+  set (includedir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
+
+  configure_file (
+    "${PROJECT_SOURCE_DIR}/libglog.pc.in"
+    "${PROJECT_BINARY_DIR}/libglog.pc"
+    @ONLY
+  )
+
+  unset (VERSION)
+  unset (prefix)
+  unset (exec_prefix)
+  unset (libdir)
+  unset (includedir)
+endif (WITH_PKGCONFIG)
 
 # Unit testing
 
