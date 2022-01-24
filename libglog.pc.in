@@ -7,4 +7,5 @@ Name: libglog
 Description: Google Log (glog) C++ logging framework
 Version: @VERSION@
 Libs: -L${libdir} -lglog
+Libs.private: @glog_libraries_options_for_static_linking@
 Cflags: -I${includedir}
