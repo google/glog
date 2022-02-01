@@ -37,7 +37,7 @@ include (GNUInstallDirs)
 option (BUILD_SHARED_LIBS "Build shared libraries" ON)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
-option (WITH_CUSTOM_PREFIX "Enable support for user-generated message prefixes" OFF)
+option (WITH_CUSTOM_PREFIX "Enable support for user-generated message prefixes" ON)
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_GTEST "Use Google Test" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
