@@ -185,6 +185,7 @@ BENCHMARK(BM_vlog)
 int main(int argc, char **argv) {
   FLAGS_colorlogtostderr = false;
   FLAGS_timestamp_in_logfile_name = true;
+  FLAGS_stderrthreshold = 0;
 #ifdef HAVE_LIB_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
