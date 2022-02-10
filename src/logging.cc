@@ -741,6 +741,7 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
 
 static void ColoredWriteToStderr(LogSeverity severity,
                                  const char* message, size_t len) {
+  FILE *output_file = severity < FLAGS_stderrthreshold? stdout : stderr;
   const GLogColor color =
       (LogDestination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
       SeverityToColor(severity) : COLOR_DEFAULT;
@@ -748,31 +749,32 @@ static void ColoredWriteToStderr(LogSeverity severity,
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
   if (COLOR_DEFAULT == color) {
-    fwrite(message, len, 1, stderr);
+    fwrite(message, len, 1, output_file);
     return;
   }
 #ifdef GLOG_OS_WINDOWS
-  const HANDLE stderr_handle = GetStdHandle(STD_ERROR_HANDLE);
+  const HANDLE std_handle = GetStdHandle(
+      severity<FLAGS_stderrthreshold ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
 
   // Gets the current text color.
   CONSOLE_SCREEN_BUFFER_INFO buffer_info;
-  GetConsoleScreenBufferInfo(stderr_handle, &buffer_info);
+  GetConsoleScreenBufferInfo(std_handle, &buffer_info);
   const WORD old_color_attrs = buffer_info.wAttributes;
 
   // We need to flush the stream buffers into the console before each
   // SetConsoleTextAttribute call lest it affect the text that is already
   // printed but has not yet reached the console.
-  fflush(stderr);
-  SetConsoleTextAttribute(stderr_handle,
+  fflush(output_file);
+  SetConsoleTextAttribute(std_handle,
                           GetColorAttribute(color) | FOREGROUND_INTENSITY);
-  fwrite(message, len, 1, stderr);
-  fflush(stderr);
+  fwrite(message, len, 1, output_file);
+  fflush(output_file);
   // Restores the text color.
-  SetConsoleTextAttribute(stderr_handle, old_color_attrs);
+  SetConsoleTextAttribute(std_handle, old_color_attrs);
 #else
-  fprintf(stderr, "\033[0;3%sm", GetAnsiColorCode(color));
-  fwrite(message, len, 1, stderr);
-  fprintf(stderr, "\033[m");  // Resets the terminal to default.
+  fprintf(output_file, "\033[0;3%sm", GetAnsiColorCode(color));
+  fwrite(message, len, 1, output_file);
+  fprintf(output_file, "\033[m");  // Resets the terminal to default.
 #endif  // GLOG_OS_WINDOWS
 }
 
