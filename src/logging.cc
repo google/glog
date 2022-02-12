@@ -122,6 +122,10 @@ GLOG_DEFINE_bool(alsologtostderr, BoolFromEnv("GOOGLE_ALSOLOGTOSTDERR", false),
                  "log messages go to stderr in addition to logfiles");
 GLOG_DEFINE_bool(colorlogtostderr, false,
                  "color messages logged to stderr (if supported by terminal)");
+GLOG_DEFINE_bool(colorlogtostdout, false,
+                 "color messages logged to stdout (if supported by terminal)");
+GLOG_DEFINE_bool(logtostdout, BoolFromEnv("GOOGLE_LOGTOSTDOUT", false),
+                 "log messages go to stdout instead of logfiles");
 #ifdef GLOG_OS_LINUX
 GLOG_DEFINE_bool(drop_log_memory, true, "Drop in-memory buffers of log contents. "
                  "Logs can grow very quickly and they are rarely read before they "
@@ -739,41 +743,61 @@ inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
   LogDestination::addresses_ = addresses;
 }
 
-static void ColoredWriteToStderr(LogSeverity severity,
-                                 const char* message, size_t len) {
-  const GLogColor color =
-      (LogDestination::terminal_supports_color() && FLAGS_colorlogtostderr) ?
-      SeverityToColor(severity) : COLOR_DEFAULT;
+static void ColoredWriteToStderrOrStdout(FILE* output, LogSeverity severity,
+                                         const char* message, size_t len) {
+  bool is_stdout = (output == stdout);
+  const GLogColor color = (LogDestination::terminal_supports_color() &&
+                           ((!is_stdout && FLAGS_colorlogtostderr) ||
+                            (is_stdout && FLAGS_colorlogtostdout)))
+                              ? SeverityToColor(severity)
+                              : COLOR_DEFAULT;
 
   // Avoid using cerr from this module since we may get called during
   // exit code, and cerr may be partially or fully destroyed by then.
   if (COLOR_DEFAULT == color) {
-    fwrite(message, len, 1, stderr);
+    fwrite(message, len, 1, output);
     return;
   }
 #ifdef GLOG_OS_WINDOWS
-  const HANDLE stderr_handle = GetStdHandle(STD_ERROR_HANDLE);
+  const HANDLE output_handle =
+      GetStdHandle(is_stdout ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE);
 
   // Gets the current text color.
   CONSOLE_SCREEN_BUFFER_INFO buffer_info;
-  GetConsoleScreenBufferInfo(stderr_handle, &buffer_info);
+  GetConsoleScreenBufferInfo(output_handle, &buffer_info);
   const WORD old_color_attrs = buffer_info.wAttributes;
 
   // We need to flush the stream buffers into the console before each
   // SetConsoleTextAttribute call lest it affect the text that is already
   // printed but has not yet reached the console.
-  fflush(stderr);
-  SetConsoleTextAttribute(stderr_handle,
+  fflush(output);
+  SetConsoleTextAttribute(output_handle,
                           GetColorAttribute(color) | FOREGROUND_INTENSITY);
-  fwrite(message, len, 1, stderr);
-  fflush(stderr);
+  fwrite(message, len, 1, output);
+  fflush(output);
   // Restores the text color.
-  SetConsoleTextAttribute(stderr_handle, old_color_attrs);
+  SetConsoleTextAttribute(output_handle, old_color_attrs);
 #else
-  fprintf(stderr, "\033[0;3%sm", GetAnsiColorCode(color));
-  fwrite(message, len, 1, stderr);
-  fprintf(stderr, "\033[m");  // Resets the terminal to default.
+  fprintf(output, "\033[0;3%sm", GetAnsiColorCode(color));
+  fwrite(message, len, 1, output);
+  fprintf(output, "\033[m");  // Resets the terminal to default.
 #endif  // GLOG_OS_WINDOWS
+}
+
+static void ColoredWriteToStdout(LogSeverity severity, const char* message,
+                                 size_t len) {
+  FILE* output = stdout;
+  // We also need to send logs to the stderr when the severity is
+  // higher or equal to the stderr threshold.
+  if (severity >= FLAGS_stderrthreshold) {
+    output = stderr;
+  }
+  ColoredWriteToStderrOrStdout(output, severity, message, len);
+}
+
+static void ColoredWriteToStderr(LogSeverity severity, const char* message,
+                                 size_t len) {
+  ColoredWriteToStderrOrStdout(stderr, severity, message, len);
 }
 
 static void WriteToStderr(const char* message, size_t len) {
@@ -847,8 +871,9 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
                                              time_t timestamp,
                                              const char* message,
                                              size_t len) {
-
-  if ( FLAGS_logtostderr ) {           // global flag: never log to file
+  if (FLAGS_logtostdout) {  // global flag: never log to file
+    ColoredWriteToStdout(severity, message, len);
+  } else if (FLAGS_logtostderr) {  // global flag: never log to file
     ColoredWriteToStderr(severity, message, len);
   } else {
     for (int i = severity; i >= 0; --i) {
@@ -1812,9 +1837,14 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   // global flag: never log to file if set.  Also -- don't log to a
   // file if we haven't parsed the command line flags to get the
   // program name.
-  if (FLAGS_logtostderr || !IsGoogleLoggingInitialized()) {
-    ColoredWriteToStderr(data_->severity_,
-                         data_->message_text_, data_->num_chars_to_log_);
+  if (FLAGS_logtostderr || FLAGS_logtostdout || !IsGoogleLoggingInitialized()) {
+    if (FLAGS_logtostdout) {
+      ColoredWriteToStdout(data_->severity_, data_->message_text_,
+                           data_->num_chars_to_log_);
+    } else {
+      ColoredWriteToStderr(data_->severity_, data_->message_text_,
+                           data_->num_chars_to_log_);
+    }
 
     // this could be protected by a flag if necessary.
     LogDestination::LogToSinks(data_->severity_,
@@ -1824,7 +1854,6 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                (data_->num_chars_to_log_ -
                                 data_->num_prefix_chars_ - 1) );
   } else {
-
     // log this message to all log files of severity <= severity_
     LogDestination::LogToAllLogfiles(data_->severity_, logmsgtime_.timestamp(),
                                      data_->message_text_,
@@ -1862,7 +1891,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
       fatal_time = logmsgtime_.timestamp();
     }
 
-    if (!FLAGS_logtostderr) {
+    if (!FLAGS_logtostderr && !FLAGS_logtostdout) {
       for (int i = 0; i < NUM_SEVERITIES; ++i) {
         if (LogDestination::log_destinations_[i]) {
           LogDestination::log_destinations_[i]->logger_->Write(true, 0, "", 0);

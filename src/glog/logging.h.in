@@ -428,6 +428,12 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
 // Set whether appending a timestamp to the log file name
 DECLARE_bool(timestamp_in_logfile_name);
 
+// Set whether log messages go to stdout instead of logfiles
+DECLARE_bool(logtostdout);
+
+// Set color messages logged to stdout (if supported by terminal).
+DECLARE_bool(colorlogtostdout);
+
 // Set whether log messages go to stderr instead of logfiles
 DECLARE_bool(logtostderr);
 
