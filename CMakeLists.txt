@@ -651,11 +651,6 @@ if (gflags_FOUND)
   endif (TARGET gflags::gflags)
 
   set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -lgflags")
-
-  target_compile_definitions (glog PRIVATE
-    GFLAGS_DLL_DECLARE_FLAG=GOOGLE_GLOG_DLL_DECL
-    GFLAGS_DLL_DEFINE_FLAG=GOOGLE_GLOG_DLL_DECL
-  )
 endif (gflags_FOUND)
 
 if (ANDROID)
