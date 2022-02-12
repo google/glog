@@ -185,9 +185,7 @@ BENCHMARK(BM_vlog)
 int main(int argc, char **argv) {
   FLAGS_colorlogtostderr = false;
   FLAGS_timestamp_in_logfile_name = true;
-#ifdef HAVE_LIB_GFLAGS
-  ParseCommandLineFlags(&argc, &argv, true);
-#endif
+
   // Make sure stderr is not buffered as stderr seems to be buffered
   // on recent windows.
   setbuf(stderr, NULL);
@@ -212,6 +210,10 @@ int main(int argc, char **argv) {
   InitGoogleTest(&argc, argv);
 #ifdef HAVE_LIB_GMOCK
   InitGoogleMock(&argc, argv);
+#endif
+
+#ifdef HAVE_LIB_GFLAGS
+  ParseCommandLineFlags(&argc, &argv, true);
 #endif
 
   // so that death tests run before we use threads

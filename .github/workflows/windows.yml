@@ -11,7 +11,7 @@ jobs:
         shell: powershell
     env:
       CL: /MP
-      CXXFLAGS: /WX
+      CXXFLAGS: /WX /permissive-
     strategy:
       fail-fast: true
       matrix:
@@ -20,7 +20,8 @@ jobs:
         extra: [no-custom-prefix, custom-prefix]
         lib: [shared, static]
         msvc: [VS-16-2019, VS-17-2022]
-        std: [98, 11, 14, 17, 20]
+        # Visual Studio 17 2022 does not support C++11 and older language standard
+        std: [14, 17, 20]
         include:
           - msvc: VS-16-2019
             os: windows-2019
@@ -32,6 +33,67 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Cache GTest
+        id: cache-gtest
+        uses: actions/cache@v2
+        with:
+          path: gtest/
+          key: ${{runner.os}}-gtest-1.11-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
+
+      - name: Download GTest
+        if: steps.cache-gtest.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip", "release-1.11.0.zip")
+          Expand-Archive release-1.11.0.zip .
+
+      - name: Build GTest
+        if: steps.cache-gtest.outputs.cache-hit != 'true'
+        run: |
+          cmake -S googletest-release-1.11.0 -B build-googletest `
+                -A ${{matrix.arch}} `
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+                -Dgtest_force_shared_crt=ON `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gtest
+          cmake --build build-googletest `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Cache gflags
+        id: cache-gflags
+        uses: actions/cache@v2
+        with:
+          path: gflags/
+          key: ${{runner.os}}-gflags-2.2.2-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
+
+      - name: Download gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/gflags/gflags/archive/refs/tags/v2.2.2.zip", "v2.2.2.zip")
+          Expand-Archive v2.2.2.zip .
+
+      - name: Build gflags
+        if: steps.cache-gflags.outputs.cache-hit != 'true'
+        run: |
+          cmake -S gflags-2.2.2 -B build-gflags `
+                -A ${{matrix.arch}} `
+                -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
+                -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/gflags
+          cmake --build build-gflags `
+                --config ${{matrix.build_type}} `
+                --target install
+
+      - name: Setup Environment
+        run: |
+          echo "GTest_ROOT=$((Get-Item .).FullName)/gtest" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "gflags_ROOT=$((Get-Item .).FullName)/gflags" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "${{github.workspace}}/gtest/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "${{github.workspace}}/gflags/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Setup Release Environment
+        if: matrix.build_type != 'Debug'
+        run: |
+          echo "CXXFLAGS=/Zi ${{env.CXXFLAGS}}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
       - name: Configure
         run: |
           cmake -S . -B build_${{matrix.build_type}} `
@@ -40,7 +102,10 @@ jobs:
                 -DCMAKE_CXX_EXTENSIONS=OFF `
                 -DCMAKE_CXX_STANDARD=${{matrix.std}} `
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON `
+                -DCMAKE_EXE_LINKER_FLAGS='/NOIMPLIB' `
+                -DCMAKE_EXE_LINKER_FLAGS_RELEASE='/INCREMENTAL:NO /DEBUG' `
                 -DCMAKE_INSTALL_PREFIX:PATH=./install `
+                -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' `
                 -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} `
                 -G "${{matrix.generator}}" `
                 -Werror
@@ -65,7 +130,7 @@ jobs:
 
   build-mingw:
     name: ${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       BUILDDIR: 'build_${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}'
     defaults:
@@ -102,14 +167,15 @@ jobs:
         run: |
           echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
+      - name: Setup Environment
+        if: matrix.build_type == 'Debug'
+        run: |
+          echo 'CXXFLAGS=--coverage ${{env.CXXFLAGS}}' >> $GITHUB_ENV
+
       - name: Configure
         env:
           CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
         run: |
-          if [[ ${{matrix.build_type}} == "Debug" ]]; then
-            export CXXFLAGS="--coverage ${CXXFLAGS}"
-          fi
-
           cmake -S . -B build_${{matrix.build_type}}/ \
                 -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
