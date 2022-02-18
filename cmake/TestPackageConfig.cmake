@@ -23,7 +23,7 @@ execute_process (
   # modified again (e.g., for MinGW AppVeyor CI builds) by adding back the
   # directory containing git.exe. Incidently, the Git installation directory
   # also contains sh.exe which causes MinGW Makefile generation to fail.
-  COMMAND ${CMAKE_COMMAND} env PATH=${PATH}
+  COMMAND ${CMAKE_COMMAND} -E env PATH=${PATH}
   ${CMAKE_COMMAND} -C ${INITIAL_CACHE}
     -G ${GENERATOR}
     ${_ADDITIONAL_ARGS}
