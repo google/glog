@@ -1819,7 +1819,7 @@ GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
 void TestOnly_ClearLoggingDirectoriesList();
 
 // Returns a set of existing temporary directories, which will be a
-// subset of the directories returned by GetLogginDirectories().
+// subset of the directories returned by GetLoggingDirectories().
 // Thread-safe.
 GLOG_EXPORT void GetExistingTempDirectories(
     std::vector<std::string>* list);
