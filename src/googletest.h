@@ -130,7 +130,7 @@ void InitGoogleTest(int*, char**) {}
     if (abs(val1 - val2) > abs_error) {                                        \
       fprintf(stderr, "Check failed: %s within %s of %s\n", #val1, #abs_error, \
               #val2);                                                          \
-      exit(1);                                                                 \
+      exit(EXIT_FAILURE);                                                      \
     }                                                                          \
   } while (0)
 
@@ -138,7 +138,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                  \
     if (!(cond)) {                                      \
       fprintf(stderr, "Check failed: %s\n", #cond);     \
-      exit(1);                                          \
+      exit(EXIT_FAILURE);                               \
     }                                                   \
   } while (0)
 
@@ -148,7 +148,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                                  \
     if (!((val1) op (val2))) {                                          \
       fprintf(stderr, "Check failed: %s %s %s\n", #val1, #op, #val2);   \
-      exit(1);                                                          \
+      exit(EXIT_FAILURE);                                               \
     }                                                                   \
   } while (0)
 
@@ -161,7 +161,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                          \
     if (!isnan(arg)) {                                          \
       fprintf(stderr, "Check failed: isnan(%s)\n", #arg);       \
-      exit(1);                                                  \
+      exit(EXIT_FAILURE);                                       \
     }                                                           \
   } while (0)
 
@@ -169,7 +169,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                          \
     if (!isinf(arg)) {                                          \
       fprintf(stderr, "Check failed: isinf(%s)\n", #arg);       \
-      exit(1);                                                  \
+      exit(EXIT_FAILURE);                                       \
     }                                                           \
   } while (0)
 
@@ -177,7 +177,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                                  \
     if (((val1) < (val2) - 0.001 || (val1) > (val2) + 0.001)) {         \
       fprintf(stderr, "Check failed: %s == %s\n", #val1, #val2);        \
-      exit(1);                                                          \
+      exit(EXIT_FAILURE);                                               \
     }                                                                   \
   } while (0)
 
@@ -185,7 +185,7 @@ void InitGoogleTest(int*, char**) {}
   do {                                                                  \
     if (strcmp((val1), (val2)) != 0) {                                  \
       fprintf(stderr, "Check failed: streq(%s, %s)\n", #val1, #val2);   \
-      exit(1);                                                          \
+      exit(EXIT_FAILURE);                                               \
     }                                                                   \
   } while (0)
 
@@ -239,7 +239,7 @@ static inline void CalledAbort() {
     g_logging_fail_func = original_logging_fail_func;                   \
     if (!g_called_abort) {                                              \
       fprintf(stderr, "Function didn't die (%s): %s\n", msg, #fn);      \
-      exit(1);                                                          \
+      exit(EXIT_FAILURE);                                               \
     }                                                                   \
   } while (0)
 #endif

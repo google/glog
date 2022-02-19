@@ -783,7 +783,7 @@ static void TestTwoProcessesWrite() {
   if (pid == 0) {
     LOG(INFO) << "message to new base, child - should only appear on STDERR not on the file";
     ShutdownGoogleLogging(); //for children proc
-    exit(0);
+    exit(EXIT_SUCCESS);
   } else if (pid > 0) {
     wait(NULL);
   }

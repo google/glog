@@ -623,7 +623,7 @@ by :cpp:`InstallFailureFunction`.
 
    void YourFailureFunction() {
      // Reports something...
-     exit(1);
+     exit(EXIT_FAILURE);
    }
 
    int main(int argc, char* argv[]) {
