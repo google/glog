@@ -124,7 +124,7 @@
 #define RAW_LOG_FATAL(...) \
   do { \
     @ac_google_namespace@::RawLogStub__(0, __VA_ARGS__);        \
-    exit(1); \
+    exit(EXIT_FAILURE); \
   } while (0)
 #endif // STRIP_LOG <= 3
 
