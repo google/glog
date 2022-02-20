@@ -353,6 +353,9 @@ static inline void CaptureTestOutput(int fd, const string & filename) {
   CHECK(s_captured_streams[fd] == NULL);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
 }
+static inline void CaptureTestStdout() {
+  CaptureTestOutput(STDOUT_FILENO, FLAGS_test_tmpdir + "/captured.out");
+}
 static inline void CaptureTestStderr() {
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
 }
@@ -507,9 +510,13 @@ static inline void WriteToFile(const string& body, const string& file) {
   fclose(fp);
 }
 
-static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
-  CapturedStream* cap = s_captured_streams[STDERR_FILENO];
-  CHECK(cap) << ": did you forget CaptureTestStderr()?";
+static inline bool MungeAndDiffTest(const string& golden_filename,
+                                    CapturedStream* cap) {
+  if (cap == s_captured_streams[STDOUT_FILENO]) {
+    CHECK(cap) << ": did you forget CaptureTestStdout()?";
+  } else {
+    CHECK(cap) << ": did you forget CaptureTestStderr()?";
+  }
 
   cap->StopCapture();
 
@@ -537,6 +544,14 @@ static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
   }
   LOG(INFO) << "Diff was successful";
   return true;
+}
+
+static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
+  return MungeAndDiffTest(golden_filename, s_captured_streams[STDERR_FILENO]);
+}
+
+static inline bool MungeAndDiffTestStdout(const string& golden_filename) {
+  return MungeAndDiffTest(golden_filename, s_captured_streams[STDOUT_FILENO]);
 }
 
 // Save flags used from logging_unittest.cc.
