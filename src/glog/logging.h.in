@@ -1070,11 +1070,11 @@ namespace google {
 #if __cplusplus >= 201103L && @ac_cv_cxx11_chrono@ && @ac_cv_cxx11_atomic@ // Have <chrono> and <atomic>
 #define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
   GLOG_CONSTEXPR std::chrono::nanoseconds LOG_TIME_PERIOD = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(seconds)); \
-  static std::atomic<int64> LOG_PREVIOUS_TIME_RAW; \
+  static std::atomic<@ac_google_namespace@::int64> LOG_PREVIOUS_TIME_RAW; \
   GLOG_IFDEF_THREAD_SANITIZER( \
-          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_TIME_PERIOD, sizeof(int64), "")); \
+          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_TIME_PERIOD, sizeof(@ac_google_namespace@::int64), "")); \
   GLOG_IFDEF_THREAD_SANITIZER( \
-          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_PREVIOUS_TIME_RAW, sizeof(int64), "")); \
+          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_PREVIOUS_TIME_RAW, sizeof(@ac_google_namespace@::int64), "")); \
   const auto LOG_CURRENT_TIME = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()); \
   const auto LOG_PREVIOUS_TIME = LOG_PREVIOUS_TIME_RAW.load(std::memory_order_relaxed); \
   const auto LOG_TIME_DELTA = LOG_CURRENT_TIME - std::chrono::nanoseconds(LOG_PREVIOUS_TIME); \
@@ -1097,13 +1097,13 @@ namespace google {
     if (LOG_TIME_DELTA > LOG_TIME_PERIOD) InterlockedExchange64(&LOG_PREVIOUS_TIME.QuadPart, currTime.QuadPart); \
   } \
   if (LOG_TIME_DELTA > LOG_TIME_PERIOD) \
-    google::LogMessage( \
-        __FILE__, __LINE__, google::GLOG_ ## severity).stream()
+    @ac_google_namespace@::LogMessage( \
+        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity).stream()
 #else
 #define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
-  GLOG_CONSTEXPR int64 LOG_TIME_PERIOD(seconds * 1000000000); \
-  static int64 LOG_PREVIOUS_TIME; \
-  int64 LOG_TIME_DELTA = 0; \
+  GLOG_CONSTEXPR @ac_google_namespace@::int64 LOG_TIME_PERIOD(seconds * 1000000000); \
+  static @ac_google_namespace@::int64 LOG_PREVIOUS_TIME; \
+  @ac_google_namespace@::int64 LOG_TIME_DELTA = 0; \
   { \
     timespec currentTime = {}; \
     clock_gettime(CLOCK_MONOTONIC, &currentTime); \
