@@ -46,6 +46,12 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         values = {"cpu": "wasm"},
     )
 
+    # Detect when building with clang-cl on Windows.
+    native.config_setting(
+        name = "clang-cl",
+        values = {"compiler": "clang-cl"},
+    )
+
     common_copts = [
         "-DGLOG_BAZEL_BUILD",
         # Inject a C++ namespace.
@@ -100,10 +106,16 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     ]
 
     windows_only_copts = [
+        # Override -DGLOG_EXPORT= from the cc_library's defines.
         "-DGLOG_EXPORT=__declspec(dllexport)",
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
         "-DHAVE_SNPRINTF",
         "-I" + src_windows,
+    ]
+
+    clang_cl_only_copts = [
+        # Allow the override of -DGLOG_EXPORT.
+        "-Wno-macro-redefined",
     ]
 
     windows_only_srcs = [
@@ -173,6 +185,10 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
                 ":wasm": common_copts + wasm_copts,
                 "//conditions:default": common_copts + linux_or_darwin_copts,
+            }) +
+            select({
+                ":clang-cl": clang_cl_only_copts,
+                "//conditions:default": []
             }),
         deps = gflags_deps + select({
             "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
