@@ -51,7 +51,7 @@ tasks:
     - "--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl"
     - "--extra_execution_platforms=//:x64_windows-clang-cl"
     - "--features=layering_check"
-    - "--copt=/WX"
+    - "--copt=-Wno-macro-redefined"
     build_targets:
     - "//..."
     test_flags:
@@ -59,6 +59,6 @@ tasks:
     - "--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl"
     - "--extra_execution_platforms=//:x64_windows-clang-cl"
     - "--features=layering_check"
-    - "--copt=/WX"
+    - "--copt=-Wno-macro-redefined"
     test_targets:
     - "//..."
