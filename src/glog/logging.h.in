@@ -1116,44 +1116,38 @@ namespace google {
 
 #if @ac_cv_cxx11_atomic@ && __cplusplus >= 201103L
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
-  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  static std::atomic<int> LOG_OCCURRENCES(1); \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
+  int LOG_OCCURRENCES_MOD_N = LOG_OCCURRENCES.fetch_add(1, std::memory_order_relaxed) % n; \
+  if (LOG_OCCURRENCES_MOD_N == 1 || n == 1) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
-  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  static std::atomic<int> LOG_OCCURRENCES(1); \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
-  ++LOG_OCCURRENCES; \
+  int LOG_OCCURRENCES_MOD_N = LOG_OCCURRENCES.fetch_add(1, std::memory_order_relaxed) % n; \
   if ((condition) && \
-      ((LOG_OCCURRENCES_MOD_N=(LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
+      (LOG_OCCURRENCES_MOD_N == 1 || n == 1)) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
                  &what_to_do).stream()
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
-  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
+  static std::atomic<int> LOG_OCCURRENCES(1); \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), "")); \
-  ++LOG_OCCURRENCES; \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
+  int LOG_OCCURRENCES_MOD_N = LOG_OCCURRENCES.fetch_add(1, std::memory_order_relaxed) % n; \
+  if (LOG_OCCURRENCES_MOD_N == 1 || n == 1) \
     @ac_google_namespace@::ErrnoLogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
-  static std::atomic<int> LOG_OCCURRENCES(0); \
+  static std::atomic<int> LOG_OCCURRENCES(1); \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
-  if (LOG_OCCURRENCES <= n) \
-    ++LOG_OCCURRENCES; \
-  if (LOG_OCCURRENCES <= n) \
+  int LOG_OCCURRENCES_MOD_N = LOG_OCCURRENCES.fetch_add(1, std::memory_order_relaxed); \
+  if (LOG_OCCURRENCES_MOD_N <= n) \
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
