@@ -43,6 +43,9 @@
 #ifdef HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
+#if (!defined(NO_THREADS) && __cplusplus >= 201103L)
+#include <thread>
+#endif
 
 #include <cstdio>
 #include <cstdlib>
@@ -116,6 +119,9 @@ static void TestErrno();
 static void TestTruncate();
 static void TestCustomLoggerDeletionOnShutdown();
 static void TestLogPeriodically();
+#if (!defined(NO_THREADS) && __cplusplus >= 201103L)
+static void TestMultiThreadOccasionalLogging();
+#endif
 
 static int x = -1;
 static void BM_Check1(int n) {
@@ -235,6 +241,9 @@ int main(int argc, char **argv) {
   TestCHECK();
   TestDCHECK();
   TestSTREQ();
+#if (!defined(NO_THREADS) && __cplusplus >= 201103L)
+  TestMultiThreadOccasionalLogging();
+#endif
 
   // TODO: The golden test portion of this test is very flakey.
   EXPECT_TRUE(
@@ -322,6 +331,26 @@ void TestLogging(bool check_counts) {
     CHECK_EQ(base_num_errors  + 17, LogMessage::num_messages(GLOG_ERROR));
   }
 }
+
+#if (!defined(NO_THREADS) && __cplusplus >= 201103L)
+void TestMultiThreadOccasionalLogging() {
+  int64 base_num_infos = LogMessage::num_messages(GLOG_INFO);
+  int64 base_num_errors = LogMessage::num_messages(GLOG_ERROR);
+  std::vector<std::thread> threads;
+  threads.reserve(500);
+  for (int i = 0; i < 500; ++i) {
+    threads.emplace_back([]() {
+        PLOG_EVERY_N(INFO, 2) << "Plog every 2, iteration " << COUNTER;
+        LOG_FIRST_N(ERROR, 1) << "Log the first iteration " << COUNTER;
+    });
+  }
+  for (auto &thread: threads) {
+    thread.join();
+  }
+  CHECK_EQ(base_num_infos + 250, LogMessage::num_messages(GLOG_INFO));
+  CHECK_EQ(base_num_errors + 1, LogMessage::num_messages(GLOG_ERROR));
+}
+#endif
 
 static void NoAllocNewHook() {
   LOG(FATAL) << "unexpected new";
