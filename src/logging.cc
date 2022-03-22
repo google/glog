@@ -58,11 +58,12 @@
 #ifdef HAVE_SYSLOG_H
 # include <syslog.h>
 #endif
-#include <vector>
-#include <cerrno>                   // for errno
-#include <sstream>
+#include <cctype>  // for std::isspace
+#include <cerrno>  // for errno
 #include <regex>
-#include <cctype> // for std::isspace
+#include <set>
+#include <sstream>
+#include <vector>
 #ifdef GLOG_OS_WINDOWS
 #include "windows/dirent.h"
 #else
@@ -81,15 +82,16 @@
 #include <android/log.h>
 #endif
 
-using std::string;
-using std::vector;
-using std::setw;
-using std::setfill;
-using std::hex;
 using std::dec;
+using std::hex;
 using std::min;
+using std::multiset;
 using std::ostream;
 using std::ostringstream;
+using std::setfill;
+using std::setw;
+using std::string;
+using std::vector;
 
 using std::FILE;
 using std::fwrite;
@@ -200,6 +202,15 @@ GLOG_DEFINE_string(log_link, "", "Put additional links to the log "
 GLOG_DEFINE_uint32(max_log_size, 1800,
                    "approx. maximum log file size (in MB). A value of 0 will "
                    "be silently overridden to 1.");
+
+GLOG_DEFINE_string(
+    log_rolling_policy, "size",
+    "log file rolling policy, support size-based and time-based."
+    " The available values are size, day and hour, if use time-based policy,"
+    " the maximum log file size also control by max_log_size");
+
+GLOG_DEFINE_uint32(max_logfile_num, 10,
+                   "maximum history log file num after rolling");
 
 GLOG_DEFINE_bool(stop_logging_if_full_disk, false,
                  "Stop attempting to log to disk if the disk is full.");
@@ -433,6 +444,12 @@ void* custom_prefix_callback_data = nullptr;
 
 namespace {
 
+struct Filetime {
+  std::string name;
+  std::time_t time;
+  bool operator<(const Filetime& o) const { return time < o.time; }
+};
+
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
  public:
@@ -463,6 +480,10 @@ class LogFileObject : public base::Logger {
   // acquiring lock_.
   void FlushUnlocked();
 
+  // check the logfiles rolling by size or date, and remve the oldest ones
+  // according to FLAGS_max_logfile_num
+  void CheckHistoryFileNum();
+
  private:
   static const uint32 kRolloverAttemptFrequency = 0x20;
 
@@ -476,14 +497,24 @@ class LogFileObject : public base::Logger {
   uint32 bytes_since_flush_{0};
   uint32 dropped_mem_length_{0};
   uint32 file_length_{0};
-  unsigned int rollover_attempt_;
+  uint32 rollover_attempt_;
   int64 next_flush_time_{0};  // cycle count at which to flush log
   WallTime start_time_;
+  std::multiset<Filetime> file_list_;
+  bool initialized_;
+  std::tm tm_time_;
 
   // Actually create a logfile using the value of base_filename_ and the
   // optional argument time_pid_string
   // REQUIRES: lock_ is held
   bool CreateLogfile(const string& time_pid_string);
+
+  // Actually create a logfile using full file name and flags
+  bool CreateLogfileInternal(const char* filename, int flags);
+
+  // Check if log file is getting too big or match the date time condition, If
+  // so, rollover.
+  bool CheckNeedRollLogFiles(time_t timestamp);
 };
 
 // Encapsulate all log cleaner related states
@@ -989,7 +1020,8 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
 
       rollover_attempt_(kRolloverAttemptFrequency - 1),
 
-      start_time_(WallTime_Now()) {
+      start_time_(WallTime_Now()),
+      initialized_(false) {
   assert(severity >= 0);
   assert(severity < NUM_SEVERITIES);
 }
@@ -1050,19 +1082,7 @@ void LogFileObject::FlushUnlocked(){
   next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
 }
 
-bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_;
-  if (FLAGS_timestamp_in_logfile_name) {
-    string_filename += time_pid_string;
-  }
-  string_filename += filename_extension_;
-  const char* filename = string_filename.c_str();
-  //only write to files, create if non-existant.
-  int flags = O_WRONLY | O_CREAT;
-  if (FLAGS_timestamp_in_logfile_name) {
-    //demand that the file is unique for our timestamp (fail if it exists).
-    flags = flags | O_EXCL;
-  }
+bool LogFileObject::CreateLogfileInternal(const char* filename, int flags) {
   int fd = open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode));
   if (fd == -1) return false;
 #ifdef HAVE_FCNTL
@@ -1077,8 +1097,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   // This will work after a fork as it is not inherited (not stored in the fd).
   // Lock will not be lost because the file is opened with exclusive lock
   // (write) and we will never read from it inside the process.
-  // TODO: windows implementation of this (as flock is not available on
-  // mingw).
+  // TODO windows implementation of this (as flock is not available on mingw).
   static struct flock w_lock;
 
   w_lock.l_type = F_WRLCK;
@@ -1095,11 +1114,11 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 
   //fdopen in append mode so if the file exists it will fseek to the end
   file_ = fdopen(fd, "a");  // Make a FILE*.
-  if (file_ == nullptr) {   // Man, we're screwed!
+  if (file_ == nullptr) {      // Man, we're screwed!
       close(fd);
       if (FLAGS_timestamp_in_logfile_name) {
       unlink(filename);  // Erase the half-baked evidence: an unusable log file, only if we just created it.
-    }
+      }
     return false;
   }
 #ifdef GLOG_OS_WINDOWS
@@ -1111,6 +1130,29 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     }
   }
 #endif
+  return true;
+}
+
+bool LogFileObject::CreateLogfile(const string& time_pid_string) {
+  string string_filename = base_filename_;
+  if (FLAGS_timestamp_in_logfile_name) {
+    string_filename += time_pid_string;
+  }
+  string_filename += filename_extension_;
+  const char* filename = string_filename.c_str();
+  // only write to files, create if non-existant.
+  int flags = O_WRONLY | O_CREAT;
+  if (FLAGS_timestamp_in_logfile_name) {
+    // demand that the file is unique for our timestamp (fail if it exists).
+    flags = flags | O_EXCL;
+  }
+  bool success = CreateLogfileInternal(filename, flags);
+  if (!success) {
+    return false;
+  }
+  Filetime ft;
+  ft.name = string_filename;
+  file_list_.insert(ft);
   // We try to create a symlink called <program_name>.<severity>,
   // which is easier to use.  (Every time we create a new logfile,
   // we destroy the old symlink and create a new one, so it always
@@ -1152,6 +1194,78 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   return true;  // Everything worked
 }
 
+void LogFileObject::CheckHistoryFileNum() {
+  struct dirent* entry;
+  DIR* dp;
+
+  const vector<string>& log_dirs = GetLoggingDirectories();
+  if (log_dirs.empty()) return;
+
+  // list file in log dir
+  dp = opendir(log_dirs[0].c_str());
+  if (dp == nullptr) {
+    fprintf(stderr, "open log dir %s fail\n", log_dirs[0].c_str());
+    return;
+  }
+
+  file_list_.clear();
+  while ((entry = readdir(dp)) != nullptr) {
+    if (DT_DIR == entry->d_type || DT_LNK == entry->d_type) {
+      continue;
+    }
+    std::string filename = entry->d_name;
+
+    if (filename.find(symlink_basename_ + '.' + LogSeverityNames[severity_]) ==
+        0) {
+      std::string filepath = log_dirs[0] + "/" + filename;
+
+      struct stat fstat;
+      if (::stat(filepath.c_str(), &fstat) < 0) {
+        fprintf(stderr, "state %s fail\n", filepath.c_str());
+        closedir(dp);
+        return;
+      }
+
+      Filetime file_time;
+      file_time.time = fstat.st_mtime;
+      file_time.name = filepath;
+      file_list_.insert(file_time);
+    }
+  }
+  closedir(dp);
+
+  while (FLAGS_max_logfile_num > 0 &&
+         file_list_.size() >= FLAGS_max_logfile_num) {
+    unlink(file_list_.begin()->name.c_str());
+    file_list_.erase(file_list_.begin());
+  }
+}
+
+bool LogFileObject::CheckNeedRollLogFiles(time_t timestamp) {
+  bool roll_needed = false;
+  struct ::tm tm_time;
+  if (FLAGS_log_rolling_policy == "day") {
+    localtime_r(&timestamp, &tm_time);
+    if (tm_time.tm_year != tm_time_.tm_year ||
+        tm_time.tm_mon != tm_time_.tm_mon ||
+        tm_time.tm_mday != tm_time_.tm_mday) {
+      roll_needed = true;
+    }
+  } else if (FLAGS_log_rolling_policy == "hour") {
+    localtime_r(&timestamp, &tm_time);
+    if (tm_time.tm_year != tm_time_.tm_year ||
+        tm_time.tm_mon != tm_time_.tm_mon ||
+        tm_time.tm_mday != tm_time_.tm_mday ||
+        tm_time.tm_hour != tm_time_.tm_hour) {
+      roll_needed = true;
+    }
+  } else if (file_length_ >> 20U >= MaxLogSize() || PidHasChanged()) {
+    roll_needed = true;
+  }
+
+  return roll_needed;
+}
+
 void LogFileObject::Write(bool force_flush,
                           time_t timestamp,
                           const char* message,
@@ -1162,12 +1276,26 @@ void LogFileObject::Write(bool force_flush,
   if (base_filename_selected_ && base_filename_.empty()) {
     return;
   }
-
-  if (file_length_ >> 20U >= MaxLogSize() || PidHasChanged()) {
+  bool roll_needed = CheckNeedRollLogFiles(timestamp);
+  if (roll_needed) {
     if (file_ != nullptr) fclose(file_);
     file_ = nullptr;
     file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
     rollover_attempt_ = kRolloverAttemptFrequency - 1;
+  }
+  if ((file_ == nullptr) && (!initialized_) &&
+      (FLAGS_log_rolling_policy == "size")) {
+    CheckHistoryFileNum();
+    if (!file_list_.empty()) {
+      std::multiset<Filetime>::iterator it = file_list_.end();
+      it--;
+      const char* filename = it->name.c_str();
+      int flags = O_WRONLY | O_CREAT | O_APPEND;
+      bool success = CreateLogfileInternal(filename, flags);
+      if (success) {
+        initialized_ = true;
+      }
+    }
   }
 
   // If there's no destination file, make one before outputting
@@ -1178,6 +1306,16 @@ void LogFileObject::Write(bool force_flush,
     if (++rollover_attempt_ != kRolloverAttemptFrequency) return;
     rollover_attempt_ = 0;
 
+    if (!initialized_) {
+      CheckHistoryFileNum();
+      initialized_ = true;
+    } else {
+      while (FLAGS_max_logfile_num > 0 &&
+             file_list_.size() >= FLAGS_max_logfile_num) {
+        unlink(file_list_.begin()->name.c_str());
+        file_list_.erase(file_list_.begin());
+      }
+    }
     struct ::tm tm_time;
     if (FLAGS_log_utc_time) {
       gmtime_r(&timestamp, &tm_time);
@@ -1188,15 +1326,16 @@ void LogFileObject::Write(bool force_flush,
     // The logfile's filename will have the date/time & pid in it
     ostringstream time_pid_stream;
     time_pid_stream.fill('0');
-    time_pid_stream << 1900+tm_time.tm_year
-                    << setw(2) << 1+tm_time.tm_mon
-                    << setw(2) << tm_time.tm_mday
-                    << '-'
-                    << setw(2) << tm_time.tm_hour
-                    << setw(2) << tm_time.tm_min
-                    << setw(2) << tm_time.tm_sec
-                    << '.'
-                    << GetMainThreadPid();
+    time_pid_stream << 1900 + tm_time.tm_year << setw(2) << 1 + tm_time.tm_mon
+                    << setw(2) << tm_time.tm_mday;
+    if (FLAGS_log_rolling_policy == "hour") {
+      time_pid_stream << setw(2) << tm_time.tm_hour;
+    } else if (FLAGS_log_rolling_policy != "day") {
+      time_pid_stream << '-' << setw(2) << tm_time.tm_hour << setw(2)
+                      << tm_time.tm_min << setw(2) << tm_time.tm_sec;
+    }
+    time_pid_stream << '.' << GetMainThreadPid();
+    tm_time_ = tm_time;
     const string& time_pid_string = time_pid_stream.str();
 
     if (base_filename_selected_) {
