@@ -33,7 +33,7 @@ def dict_union(x, y):
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
-        repo_name = native.repository_name().lstrip("@")
+        repo_name = native.repository_name()[1:] # Strip the first leading @
         gendir = "$(GENDIR)/external/" + repo_name
         src_windows = "external/%s/src/windows" % repo_name
     else:
