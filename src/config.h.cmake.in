@@ -181,7 +181,7 @@
 #cmakedefine SIZEOF_VOID_P ${SIZEOF_VOID_P}
 
 /* Define to 1 if you have the ANSI C header files. */
-#cmakedefine STDC_HEADERS
+#cmakedefine STDC_HEADERS 1
 
 /* the namespace where STL code like vector<> is defined */
 #cmakedefine STL_NAMESPACE ${STL_NAMESPACE}
