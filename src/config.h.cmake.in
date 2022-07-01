@@ -180,9 +180,6 @@
 /* The size of `void *', as computed by sizeof. */
 #cmakedefine SIZEOF_VOID_P ${SIZEOF_VOID_P}
 
-/* Define to 1 if you have the ANSI C header files. */
-#cmakedefine STDC_HEADERS
-
 /* the namespace where STL code like vector<> is defined */
 #cmakedefine STL_NAMESPACE ${STL_NAMESPACE}
 
