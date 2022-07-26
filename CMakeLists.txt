@@ -192,20 +192,22 @@ int main(void)
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
-cmake_push_check_state (RESET)
-set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
-check_cxx_source_compiles ("
-#define _XOPEN_SOURCE 500
-#include <pthread.h>
-int main(void)
-{
-  pthread_rwlock_t l;
-  pthread_rwlock_init(&l, NULL);
-  pthread_rwlock_rdlock(&l);
-  return 0;
-}
-" HAVE_RWLOCK)
-cmake_pop_check_state ()
+if (WITH_THREADS)
+  cmake_push_check_state (RESET)
+  set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+  check_cxx_source_compiles ("
+  #define _XOPEN_SOURCE 500
+  #include <pthread.h>
+  int main(void)
+  {
+    pthread_rwlock_t l;
+    pthread_rwlock_init(&l, NULL);
+    pthread_rwlock_rdlock(&l);
+    return 0;
+  }
+  " HAVE_RWLOCK)
+  cmake_pop_check_state ()
+endif (WITH_THREADS)
 
 check_cxx_source_compiles ("
 __declspec(selectany) int a;
