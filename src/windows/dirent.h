@@ -237,11 +237,10 @@ struct _wdirent {
     /* File name */
     wchar_t d_name[PATH_MAX+1];
 };
-typedef struct _wdirent _wdirent;
 
 struct _WDIR {
     /* Current directory entry */
-    struct _wdirent ent;
+    _wdirent ent;
 
     /* Private file data */
     WIN32_FIND_DATAW data;
@@ -255,7 +254,6 @@ struct _WDIR {
     /* Initial directory name */
     wchar_t *patt;
 };
-typedef struct _WDIR _WDIR;
 
 /* Multi-byte character version */
 struct dirent {
@@ -277,14 +275,11 @@ struct dirent {
     /* File name */
     char d_name[PATH_MAX+1];
 };
-typedef struct dirent dirent;
 
 struct DIR {
     struct dirent ent;
     struct _WDIR *wdirp;
 };
-typedef struct DIR DIR;
-
 
 /* Dirent functions */
 static DIR *opendir (const char *dirname);

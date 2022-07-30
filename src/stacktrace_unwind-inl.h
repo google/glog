@@ -38,13 +38,12 @@
 
 _START_GOOGLE_NAMESPACE_
 
-typedef struct {
+struct trace_arg_t {
   void **result;
   int max_depth;
   int skip_count;
   int count;
-} trace_arg_t;
-
+};
 
 // Workaround for the malloc() in _Unwind_Backtrace() issue.
 static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context */*uc*/, void */*opq*/) {
