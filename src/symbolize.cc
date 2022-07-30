@@ -94,12 +94,12 @@ void InstallSymbolizeOpenObjectFileCallback(
 // where the input symbol is demangled in-place.
 // To keep stack consumption low, we would like this function to not
 // get inlined.
-static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, int out_size) {
+static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, size_t out_size) {
   char demangled[256];  // Big enough for sane demangled symbols.
   if (Demangle(out, demangled, sizeof(demangled))) {
     // Demangling succeeded. Copy to out if the space allows.
     size_t len = strlen(demangled);
-    if (len + 1 <= static_cast<size_t>(out_size)) {  // +1 for '\0'.
+    if (len + 1 <= out_size) {  // +1 for '\0'.
       SAFE_ASSERT(len < sizeof(demangled));
       memmove(out, demangled, len + 1);
     }
@@ -896,7 +896,7 @@ private:
 };
 
 static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
-                                                      int out_size) {
+                                                    size_t out_size) {
   const static SymInitializer symInitializer;
   if (!symInitializer.ready) {
     return false;
@@ -911,7 +911,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   // This could break if a symbol has Unicode in it.
   BOOL ret = SymFromAddr(symInitializer.process,
                          reinterpret_cast<DWORD64>(pc), 0, symbol);
-  if (ret == 1 && static_cast<int>(symbol->NameLen) < out_size) {
+  if (ret == 1 && static_cast<ssize_t>(symbol->NameLen) < out_size) {
     // `NameLen` does not include the null terminating character.
     strncpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
     out[static_cast<size_t>(symbol->NameLen)] = '\0';

@@ -58,16 +58,21 @@ static void **NextStackFrame(void **old_sp) {
     // at a greater address that the current one.
     if (new_sp <= old_sp) return NULL;
     // Assume stack frames larger than 100,000 bytes are bogus.
-    if ((uintptr_t)new_sp - (uintptr_t)old_sp > 100000) return NULL;
+    if (reinterpret_cast<uintptr_t>(new_sp) -
+            reinterpret_cast<uintptr_t>(old_sp) >
+        100000)
+      return NULL;
   } else {
     // In the non-strict mode, allow discontiguous stack frames.
     // (alternate-signal-stacks for example).
     if (new_sp == old_sp) return NULL;
     // And allow frames upto about 1MB.
-    if ((new_sp > old_sp)
-        && ((uintptr_t)new_sp - (uintptr_t)old_sp > 1000000)) return NULL;
+    if ((new_sp > old_sp) && (reinterpret_cast<uintptr_t>(new_sp) -
+                                  reinterpret_cast<uintptr_t>(old_sp) >
+                              1000000))
+      return NULL;
   }
-  if ((uintptr_t)new_sp & (sizeof(void *) - 1)) return NULL;
+  if (reinterpret_cast<uintptr_t>(new_sp) & (sizeof(void *) - 1)) return NULL;
 #ifdef __i386__
   // On 64-bit machines, the stack pointer can be very close to
   // 0xffffffff, so we explicitly check for a pointer into the
@@ -82,8 +87,10 @@ static void **NextStackFrame(void **old_sp) {
     // Note: NextStackFrame<false>() is only called while the program
     //       is already on its last leg, so it's ok to be slow here.
     static int page_size = getpagesize();
-    void *new_sp_aligned = (void *)((uintptr_t)new_sp & ~(page_size - 1));
-    if (msync(new_sp_aligned, page_size, MS_ASYNC) == -1) {
+    void *new_sp_aligned =
+        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(new_sp) &
+                                 static_cast<uintptr_t>(~(page_size - 1)));
+    if (msync(new_sp_aligned, static_cast<size_t>(page_size), MS_ASYNC) == -1) {
       return NULL;
     }
   }
@@ -128,7 +135,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 
   int n = 0;
   while (sp && n < max_depth) {
-    if (*(sp+1) == (void *)0) {
+    if (*(sp + 1) == NULL) {
       // In 64-bit code, we often see a frame that
       // points to itself and has a return address of 0.
       break;

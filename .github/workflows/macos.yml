@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build-macos:
     name: AppleClang-C++${{matrix.std}}-${{matrix.build_type}}
-    runs-on: macos-10.15
+    runs-on: macos-12
     strategy:
       fail-fast: true
       matrix:

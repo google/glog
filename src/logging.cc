@@ -1050,7 +1050,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     //demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
   }
-  int fd = open(filename, flags, FLAGS_logfile_mode);
+  int fd = open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode));
   if (fd == -1) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
@@ -1319,7 +1319,8 @@ void LogFileObject::Write(bool force_flush,
         // 'posix_fadvise' introduced in API 21:
         // * https://android.googlesource.com/platform/bionic/+/6880f936173081297be0dc12f687d341b86a4cfa/libc/libc.map.txt#732
 # else
-        posix_fadvise(fileno(file_), dropped_mem_length_, this_drop_length,
+        posix_fadvise(fileno(file_), static_cast<off_t>(dropped_mem_length_),
+                      static_cast<off_t>(this_drop_length),
                       POSIX_FADV_DONTNEED);
 # endif
         dropped_mem_length_ = total_drop_length;

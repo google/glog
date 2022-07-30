@@ -36,7 +36,7 @@
 #include <glog/logging.h>
 #include "stacktrace.h"
 
-#ifdef HAVE_EXECINFO_H
+#ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
 # include <execinfo.h>
 #endif
 
@@ -131,7 +131,7 @@ static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
   CHECK_LE(size, STACK_LEN);
 
   if (1) {
-#ifdef HAVE_EXECINFO_H
+#ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
     char **strings = backtrace_symbols(stack, size);
     printf("Obtained %d stack frames.\n", size);
     for (int i = 0; i < size; i++) {
