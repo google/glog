@@ -174,7 +174,7 @@ void DumpTimeInfo() {
 }
 
 // TODO(hamaji): Use signal instead of sigaction?
-#ifdef HAVE_SIGACTION
+#if defined(HAVE_STACKTRACE) && defined(HAVE_SIGACTION)
 
 // Dumps information about the signal to STDERR.
 void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
@@ -332,11 +332,15 @@ void FailureSignalHandler(int signal_number,
   const int depth = GetStackTrace(stack, ARRAYSIZE(stack), 1);
 # ifdef HAVE_SIGACTION
   DumpSignalInfo(signal_number, signal_info);
+#elif !defined(GLOG_OS_WINDOWS)
+  (void)signal_info;
 # endif
   // Dump the stack traces.
   for (int i = 0; i < depth; ++i) {
     DumpStackFrameInfo("    ", stack[i]);
   }
+#elif !defined(GLOG_OS_WINDOWS)
+  (void)signal_info;
 #endif
 
   // *** TRANSITION ***

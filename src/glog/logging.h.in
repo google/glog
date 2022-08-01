@@ -116,6 +116,14 @@ typedef unsigned __int64 uint64;
 #error Do not know how to define a 32-bit integer quantity on your system
 #endif
 
+#if !(@ac_cv_have_ssize_t@)
+typedef ptrdiff_t ssize_t;
+#endif
+
+#if !(@ac_cv_have_mode_t@)
+typedef int mode_t;
+#endif
+
 typedef double WallTime;
 
 struct GLOG_EXPORT LogMessageTime {

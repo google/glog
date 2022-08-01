@@ -16,8 +16,11 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H
 
-/* Define to 1 if you have the <execinfo.h> header file. */
-#cmakedefine HAVE_EXECINFO_H
+/* Define if you have the `backtrace' function in <execinfo.h> */
+#cmakedefine HAVE_EXECINFO_BACKTRACE
+
+/* Define if you have the `backtrace_symbols' function in <execinfo.h> */
+#cmakedefine HAVE_EXECINFO_BACKTRACE_SYMBOLS
 
 /* Define if you have the `fcntl' function */
 #cmakedefine HAVE_FCNTL

@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.16)
 project (glog
-  VERSION 0.6.0
+  VERSION 0.7.0
   DESCRIPTION "C++ implementation of the Google logging module"
   HOMEPAGE_URL https://github.com/google/glog
   LANGUAGES CXX
@@ -101,7 +101,6 @@ else (Unwind_FOUND)
 endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
-check_include_file_cxx (execinfo.h HAVE_EXECINFO_H)
 check_include_file_cxx (glob.h HAVE_GLOB_H)
 check_include_file_cxx (inttypes.h HAVE_INTTYPES_H)
 check_include_file_cxx (memory.h HAVE_MEMORY_H)
@@ -128,6 +127,8 @@ check_include_file_cxx ("unordered_map" HAVE_UNORDERED_MAP)
 check_include_file_cxx ("unordered_set" HAVE_UNORDERED_SET)
 
 check_type_size ("unsigned __int16" HAVE___UINT16 LANGUAGE CXX)
+check_type_size (mode_t HAVE_MODE_T LANGUAGE CXX)
+check_type_size (ssize_t HAVE_SSIZE_T LANGUAGE CXX)
 check_type_size (u_int16_t HAVE_U_INT16_T LANGUAGE CXX)
 check_type_size (uint16_t HAVE_UINT16_T LANGUAGE CXX)
 
@@ -137,6 +138,10 @@ check_function_exists (pread HAVE_PREAD)
 check_function_exists (pwrite HAVE_PWRITE)
 check_function_exists (sigaction HAVE_SIGACTION)
 check_function_exists (sigaltstack HAVE_SIGALTSTACK)
+
+check_cxx_symbol_exists (backtrace execinfo.h HAVE_EXECINFO_BACKTRACE)
+check_cxx_symbol_exists (backtrace_symbols execinfo.h
+  HAVE_EXECINFO_BACKTRACE_SYMBOLS)
 
 # NOTE gcc does not fail if you pass a non-existent -Wno-* option as an
 # argument. However, it will happily fail if you pass the corresponding -W*
@@ -389,6 +394,18 @@ else (HAVE_UINT16_T)
   set (ac_cv_have_uint16_t 0)
 endif (HAVE_UINT16_T)
 
+if (HAVE_SSIZE_T)
+  set (ac_cv_have_ssize_t 1)
+else (HAVE_SSIZE_T)
+  set (ac_cv_have_ssize_t 0)
+endif (HAVE_SSIZE_T)
+
+if (HAVE_MODE_T)
+  set (ac_cv_have_mode_t 1)
+else (HAVE_MODE_T)
+  set (ac_cv_have_mode_t 0)
+endif (HAVE_MODE_T)
+
 if (HAVE_UNISTD_H)
   set (ac_cv_have_unistd_h 1)
 else (HAVE_UNISTD_H)
@@ -438,9 +455,9 @@ else (HAVE_CXX11_NULLPTR_T)
   set (ac_cv_cxx11_nullptr_t 0)
 endif (HAVE_CXX11_NULLPTR_T)
 
-if (HAVE_EXECINFO_H)
+if (HAVE_EXECINFO_BACKTRACE AND HAVE_EXECINFO_BACKTRACE_SYMBOLS)
   set (HAVE_STACKTRACE 1)
-endif (HAVE_EXECINFO_H)
+endif (HAVE_EXECINFO_BACKTRACE AND HAVE_EXECINFO_BACKTRACE_SYMBOLS)
 
 if (HAVE_CXX11_ATOMIC)
   set (ac_cv_cxx11_atomic 1)
@@ -844,6 +861,9 @@ if (BUILD_TESTING)
   add_test (NAME logging COMMAND logging_unittest)
 
   set_tests_properties (logging PROPERTIES TIMEOUT 30)
+  # MacOS diff is not deterministic: use the output to determine whether the
+  # test passed.
+  set_tests_properties (logging PROPERTIES PASS_REGULAR_EXPRESSION ".*\nPASS\n.*")
 
   # FIXME: Skip flaky test
   set_tests_properties (logging PROPERTIES SKIP_REGULAR_EXPRESSION

@@ -100,7 +100,7 @@
 # endif
 #endif
 
-#if !defined(STACKTRACE_H) && defined(HAVE_EXECINFO_H)
+#if !defined(STACKTRACE_H) && defined(HAVE_EXECINFO_BACKTRACE)
 # define STACKTRACE_H "stacktrace_generic-inl.h"
 #endif
 

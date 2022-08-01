@@ -9,6 +9,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      NDK_VERSION: 25.0.8775105
     strategy:
       fail-fast: true
       matrix:
@@ -29,19 +31,26 @@ jobs:
         run: |
           echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
+      - name: Setup NDK
+        env:
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+        run: |
+          echo 'y' | ${{env.ANDROID_SDK_ROOT}}/cmdline-tools/latest/bin/sdkmanager --install 'ndk;${{env.NDK_VERSION}}'
+
       - name: Configure
         env:
           CXXFLAGS: -Wall -Wextra -Wpedantic -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.abi}} \
-                -DANDROID_ABI=${{matrix.abi}} \
-                -DANDROID_NATIVE_API_LEVEL=28 \
-                -DANDROID_STL=c++_shared \
+                -DCMAKE_ANDROID_API=28 \
+                -DCMAKE_ANDROID_ARCH_ABI=${{matrix.abi}} \
+                -DCMAKE_ANDROID_NDK=/usr/local/lib/android/sdk/ndk/${{env.NDK_VERSION}} \
+                -DCMAKE_ANDROID_STL_TYPE=c++_shared \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
                 -DCMAKE_CXX_STANDARD=${{matrix.std}} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-                -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_HOME}/build/cmake/android.toolchain.cmake \
+                -DCMAKE_SYSTEM_NAME=Android \
                 -G Ninja \
                 -Werror
 

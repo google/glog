@@ -232,29 +232,33 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     }
 
     posix_config = dict_union(common_config, {
-        "@ac_cv_have_unistd_h@": "1",
-        "@ac_cv_have_stdint_h@": "1",
-        "@ac_cv_have_systypes_h@": "1",
-        "@ac_cv_have_uint16_t@": "1",
-        "@ac_cv_have___uint16@": "0",
-        "@ac_cv_have___builtin_expect@": "1",
-        "@ac_cv_have_libgflags@": "1" if with_gflags else "0",
         "@ac_cv___attribute___noinline@": "__attribute__((noinline))",
         "@ac_cv___attribute___noreturn@": "__attribute__((noreturn))",
         "@ac_cv___attribute___printf_4_5@": "__attribute__((__format__(__printf__, 4, 5)))",
+        "@ac_cv_have___builtin_expect@": "1",
+        "@ac_cv_have___uint16@": "0",
+        "@ac_cv_have_libgflags@": "1" if with_gflags else "0",
+        "@ac_cv_have_mode_t@": "1",
+        "@ac_cv_have_ssize_t@": "1",
+        "@ac_cv_have_stdint_h@": "1",
+        "@ac_cv_have_systypes_h@": "1",
+        "@ac_cv_have_uint16_t@": "1",
+        "@ac_cv_have_unistd_h@": "1",
     })
 
     windows_config = dict_union(common_config, {
-        "@ac_cv_have_unistd_h@": "0",
-        "@ac_cv_have_stdint_h@": "0",
-        "@ac_cv_have_systypes_h@": "0",
-        "@ac_cv_have_uint16_t@": "0",
-        "@ac_cv_have___uint16@": "1",
-        "@ac_cv_have___builtin_expect@": "0",
-        "@ac_cv_have_libgflags@": "0",
         "@ac_cv___attribute___noinline@": "",
         "@ac_cv___attribute___noreturn@": "__declspec(noreturn)",
         "@ac_cv___attribute___printf_4_5@": "",
+        "@ac_cv_have___builtin_expect@": "0",
+        "@ac_cv_have___uint16@": "1",
+        "@ac_cv_have_libgflags@": "0",
+        "@ac_cv_have_mode_t@": "0",
+        "@ac_cv_have_ssize_t@": "0",
+        "@ac_cv_have_stdint_h@": "0",
+        "@ac_cv_have_systypes_h@": "0",
+        "@ac_cv_have_uint16_t@": "0",
+        "@ac_cv_have_unistd_h@": "0",
     })
 
     [
