@@ -97,7 +97,7 @@
 
 @ac_google_start_namespace@
 
-#if @ac_cv_have_uint16_t@      // the C99 format
+#if @ac_cv_have_stdint_h@      // the C99 format
 typedef int32_t int32;
 typedef uint32_t uint32;
 typedef int64_t int64;
@@ -1822,8 +1822,8 @@ GLOG_EXPORT void SetEmailLogging(LogSeverity min_severity,
 
 // A simple function that sends email. dest is a commma-separated
 // list of addressess.  Thread-safe.
-GLOG_EXPORT bool SendEmail(const char *dest,
-                                    const char *subject, const char *body);
+GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
+                           const char* body);
 
 GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
 

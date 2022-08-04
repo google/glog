@@ -118,11 +118,11 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}
 
-/* Define if you have the <unwind.h> header file. */
-#cmakedefine HAVE_UNWIND_H
-
 /* Define if you linking to _Unwind_Backtrace is possible. */
 #cmakedefine HAVE__UNWIND_BACKTRACE
+
+/* Define if you linking to _Unwind_GetIP is possible. */
+#cmakedefine HAVE__UNWIND_GETIP
 
 /* define if the compiler supports using expression for operator */
 #cmakedefine HAVE_USING_OPERATOR

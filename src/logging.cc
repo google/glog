@@ -2188,6 +2188,7 @@ void SetExitOnDFatal(bool value) {
 }  // namespace internal
 }  // namespace base
 
+#ifndef GLOG_OS_EMSCRIPTEN
 // Shell-escaping as we need to shell out ot /bin/mail.
 static const char kDontNeedShellEscapeChars[] =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -2222,14 +2223,14 @@ static string ShellEscape(const string& src) {
   }
   return result;
 }
-
+#endif
 
 // use_logging controls whether the logging functions LOG/VLOG are used
 // to log errors.  It should be set to false when the caller holds the
 // log_mutex.
 static bool SendEmailInternal(const char*dest, const char *subject,
                               const char*body, bool use_logging) {
-#ifndef __EMSCRIPTEN__
+#ifndef GLOG_OS_EMSCRIPTEN
   if (dest && *dest) {
     if ( use_logging ) {
       VLOG(1) << "Trying to send TITLE:" << subject
@@ -2275,6 +2276,12 @@ static bool SendEmailInternal(const char*dest, const char *subject,
       }
     }
   }
+#else
+  (void)dest;
+  (void)subject;
+  (void)body;
+  (void)use_logging;
+  LOG(WARNING) << "Email support not available; not sending message";
 #endif
   return false;
 }

@@ -73,7 +73,7 @@ static _Unwind_Reason_Code GetOneFrame(struct _Unwind_Context *uc, void *opq) {
   if (targ->skip_count > 0) {
     targ->skip_count--;
   } else {
-    targ->result[targ->count++] = (void *) _Unwind_GetIP(uc);
+    targ->result[targ->count++] = reinterpret_cast<void *>(_Unwind_GetIP(uc));
   }
 
   if (targ->count == targ->max_depth) {
