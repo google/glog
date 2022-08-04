@@ -50,6 +50,8 @@
 #define GLOG_OS_NETBSD
 #elif defined(__OpenBSD__)
 #define GLOG_OS_OPENBSD
+#elif defined(__EMSCRIPTEN__)
+#define GLOG_OS_EMSCRIPTEN
 #else
 // TODO(hamaji): Add other platforms.
 #error Platform not supported by glog. Please consider to contribute platform information by submitting a pull request on Github.

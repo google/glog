@@ -93,11 +93,11 @@ find_package (Unwind)
 if (Unwind_FOUND)
   set (HAVE_LIB_UNWIND 1)
 else (Unwind_FOUND)
-  check_include_file_cxx (unwind.h HAVE_UNWIND_H)
   # Check whether linking actually succeeds. ARM toolchains of LLVM unwind
   # implementation do not necessarily provide the _Unwind_Backtrace function
   # which causes the previous check to succeed but the linking to fail.
   check_cxx_symbol_exists (_Unwind_Backtrace unwind.h HAVE__UNWIND_BACKTRACE)
+  check_cxx_symbol_exists (_Unwind_GetIP unwind.h HAVE__UNWIND_GETIP)
 endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
@@ -197,9 +197,10 @@ int main(void)
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
-cmake_push_check_state (RESET)
-set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
-check_cxx_source_compiles ("
+if (Threads_FOUND)
+  cmake_push_check_state (RESET)
+  set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
+  check_cxx_source_compiles ("
 #define _XOPEN_SOURCE 500
 #include <pthread.h>
 int main(void)
@@ -209,8 +210,9 @@ int main(void)
   pthread_rwlock_rdlock(&l);
   return 0;
 }
-" HAVE_RWLOCK)
-cmake_pop_check_state ()
+  " HAVE_RWLOCK)
+  cmake_pop_check_state ()
+endif (Threads_FOUND)
 
 check_cxx_source_compiles ("
 __declspec(selectany) int a;
