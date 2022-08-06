@@ -699,12 +699,8 @@ class LogSink;  // defined below
 #define LOG_STRING(severity, outvec) \
   LOG_TO_STRING_##severity(static_cast<std::vector<std::string>*>(outvec)).stream()
 
-#define LOG_IF(severity, condition) \
-  static_cast<void>(0),             \
-  !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
-#define SYSLOG_IF(severity, condition) \
-  static_cast<void>(0),                \
-  !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & SYSLOG(severity)
+#define LOG_IF(severity, condition) if(condition) LOG(severity)
+#define SYSLOG_IF(severity, condition) if(condition) SYSLOG(severity)
 
 #define LOG_ASSERT(condition)  \
   LOG_IF(FATAL, !(condition)) << "Assert failed: " #condition
@@ -1001,9 +997,7 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
       __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, counter, \
       &@ac_google_namespace@::LogMessage::SendToLog)
 
-#define PLOG_IF(severity, condition) \
-  static_cast<void>(0),              \
-  !(condition) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & PLOG(severity)
+#define PLOG_IF(severity, condition) if(condition) PLOG(severity)
 
 // A CHECK() macro that postpends errno if the condition is false. E.g.
 //
@@ -1335,30 +1329,17 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 #else  // !DCHECK_IS_ON()
 
-#define DLOG(severity)  \
-  static_cast<void>(0), \
-  true ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+#define DLOG(severity) if((false)) LOG(severity)
 
-#define DVLOG(verboselevel)             \
-  static_cast<void>(0),                 \
-  (true || !VLOG_IS_ON(verboselevel)) ? \
-      (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(INFO)
+#define DVLOG(verboselevel) if((false) && VLOG_IS_ON(verboselevel)) LOG(INFO)
 
-#define DLOG_IF(severity, condition) \
-  static_cast<void>(0),              \
-  (true || !(condition)) ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+#define DLOG_IF(severity, condition) if((false) && (condition)) LOG(severity)
 
-#define DLOG_EVERY_N(severity, n) \
-  static_cast<void>(0),           \
-  true ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+#define DLOG_EVERY_N(severity, n) if((false)) LOG(severity)
 
-#define DLOG_IF_EVERY_N(severity, condition, n) \
-  static_cast<void>(0),                         \
-  (true || !(condition))? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+#define DLOG_IF_EVERY_N(severity, condition, n) if((false) && (condition)) LOG(severity)
 
-#define DLOG_ASSERT(condition) \
-  static_cast<void>(0),        \
-  true ? (void) 0 : LOG_ASSERT(condition)
+#define DLOG_ASSERT(condition) if((false)) LOG_ASSERT(condition)
 
 // MSVC warning C4127: conditional expression is constant
 #define DCHECK(condition) \
@@ -1700,19 +1681,6 @@ class GLOG_EXPORT ErrnoLogMessage : public LogMessage {
  private:
   ErrnoLogMessage(const ErrnoLogMessage&);
   void operator=(const ErrnoLogMessage&);
-};
-
-
-// This class is used to explicitly ignore values in the conditional
-// logging macros.  This avoids compiler warnings like "value computed
-// is not used" and "statement has no effect".
-
-class GLOG_EXPORT LogMessageVoidify {
- public:
-  LogMessageVoidify() { }
-  // This has to be an operator with a precedence lower than << but
-  // higher than ?:
-  void operator&(std::ostream&) { }
 };
 
 
