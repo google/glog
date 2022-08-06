@@ -1321,17 +1321,17 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 
 #else  // !DCHECK_IS_ON()
 
-#define DLOG(severity) if(false) LOG(severity)
+#define DLOG(severity) if((false)) LOG(severity)
 
-#define DVLOG(verboselevel) if(false && VLOG_IS_ON(verboselevel)) LOG(INFO)
+#define DVLOG(verboselevel) if((false) && VLOG_IS_ON(verboselevel)) LOG(INFO)
 
-#define DLOG_IF(severity, condition) if(false && (condition)) LOG(severity)
+#define DLOG_IF(severity, condition) if((false) && (condition)) LOG(severity)
 
-#define DLOG_EVERY_N(severity, n) if(false) LOG(severity)
+#define DLOG_EVERY_N(severity, n) if((false)) LOG(severity)
 
-#define DLOG_IF_EVERY_N(severity, condition, n) if(false && (condition)) LOG(severity)
+#define DLOG_IF_EVERY_N(severity, condition, n) if((false) && (condition)) LOG(severity)
 
-#define DLOG_ASSERT(condition) if(false) LOG_ASSERT(condition)
+#define DLOG_ASSERT(condition) if((false)) LOG_ASSERT(condition)
 
 // MSVC warning C4127: conditional expression is constant
 #define DCHECK(condition) \
