@@ -913,59 +913,59 @@ if (BUILD_TESTING)
 
   if (GLOG_ENABLE_INSTALL)
 
-  # Generate an initial cache
+    # Generate an initial cache
 
-  get_cache_variables (_CACHEVARS)
+    get_cache_variables (_CACHEVARS)
 
-  set (_INITIAL_CACHE
-    ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/glog_package_config_initial_cache.cmake)
+    set (_INITIAL_CACHE
+      ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/glog_package_config_initial_cache.cmake)
 
-  # Package config test
+    # Package config test
 
-  add_test (NAME cmake_package_config_init COMMAND ${CMAKE_COMMAND}
-    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config
-    -DINITIAL_CACHE=${_INITIAL_CACHE}
-    -DCACHEVARS=${_CACHEVARS}
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestInitPackageConfig.cmake
-  )
+    add_test (NAME cmake_package_config_init COMMAND ${CMAKE_COMMAND}
+      -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config
+      -DINITIAL_CACHE=${_INITIAL_CACHE}
+      -DCACHEVARS=${_CACHEVARS}
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestInitPackageConfig.cmake
+    )
 
-  add_test (NAME cmake_package_config_generate COMMAND ${CMAKE_COMMAND}
-    -DGENERATOR=${CMAKE_GENERATOR}
-    -DGENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
-    -DGENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
-    -DINITIAL_CACHE=${_INITIAL_CACHE}
-    -DPACKAGE_DIR=${CMAKE_CURRENT_BINARY_DIR}
-    -DPATH=$ENV{PATH}
-    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/package_config_unittest/working_config
-    -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestPackageConfig.cmake
-  )
+    add_test (NAME cmake_package_config_generate COMMAND ${CMAKE_COMMAND}
+      -DGENERATOR=${CMAKE_GENERATOR}
+      -DGENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+      -DGENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+      -DINITIAL_CACHE=${_INITIAL_CACHE}
+      -DPACKAGE_DIR=${CMAKE_CURRENT_BINARY_DIR}
+      -DPATH=$ENV{PATH}
+      -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/src/package_config_unittest/working_config
+      -DTEST_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
+      -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/TestPackageConfig.cmake
+    )
 
-  add_test (NAME cmake_package_config_build COMMAND
-    ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
-                     --config $<CONFIG>
-  )
+    add_test (NAME cmake_package_config_build COMMAND
+      ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_BINARY_DIR}/test_package_config/working_config
+                       --config $<CONFIG>
+    )
 
-  add_test (NAME cmake_package_config_cleanup COMMAND ${CMAKE_COMMAND} -E
-    remove_directory
-    ${CMAKE_CURRENT_BINARY_DIR}/test_package_config
-  )
+    add_test (NAME cmake_package_config_cleanup COMMAND ${CMAKE_COMMAND} -E
+      remove_directory
+      ${CMAKE_CURRENT_BINARY_DIR}/test_package_config
+    )
 
-  # Fixtures setup
-  set_tests_properties (cmake_package_config_init PROPERTIES FIXTURES_SETUP
-    cmake_package_config)
-  set_tests_properties (cmake_package_config_generate PROPERTIES FIXTURES_SETUP
-    cmake_package_config_working)
+    # Fixtures setup
+    set_tests_properties (cmake_package_config_init PROPERTIES FIXTURES_SETUP
+      cmake_package_config)
+    set_tests_properties (cmake_package_config_generate PROPERTIES FIXTURES_SETUP
+      cmake_package_config_working)
 
-  # Fixtures cleanup
-  set_tests_properties (cmake_package_config_cleanup PROPERTIES FIXTURES_CLEANUP
-    cmake_package_config)
+    # Fixtures cleanup
+    set_tests_properties (cmake_package_config_cleanup PROPERTIES FIXTURES_CLEANUP
+      cmake_package_config)
 
-  # Fixture requirements
-  set_tests_properties (cmake_package_config_generate PROPERTIES
-    FIXTURES_REQUIRED cmake_package_config)
-  set_tests_properties (cmake_package_config_build PROPERTIES
-    FIXTURES_REQUIRED "cmake_package_config;cmake_package_config_working")
+    # Fixture requirements
+    set_tests_properties (cmake_package_config_generate PROPERTIES
+      FIXTURES_REQUIRED cmake_package_config)
+    set_tests_properties (cmake_package_config_build PROPERTIES
+      FIXTURES_REQUIRED "cmake_package_config;cmake_package_config_working")
 
   endif (GLOG_ENABLE_INSTALL)
 
@@ -1023,96 +1023,96 @@ endif (BUILD_TESTING)
 
 if (GLOG_ENABLE_INSTALL)
 
-install (TARGETS glog
-  EXPORT glog-targets
-  RUNTIME DESTINATION ${_glog_CMake_BINDIR}
-  PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog
-  LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
-  ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
+  install (TARGETS glog
+    EXPORT glog-targets
+    RUNTIME DESTINATION ${_glog_CMake_BINDIR}
+    PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog
+    LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
+    ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
 
-if (WITH_PKGCONFIG)
-  install (
-    FILES "${PROJECT_BINARY_DIR}/libglog.pc"
-    DESTINATION "${_glog_CMake_LIBDIR}/pkgconfig"
+  if (WITH_PKGCONFIG)
+    install (
+      FILES "${PROJECT_BINARY_DIR}/libglog.pc"
+      DESTINATION "${_glog_CMake_LIBDIR}/pkgconfig"
+    )
+  endif (WITH_PKGCONFIG)
+
+  set (glog_CMake_VERSION 3.0)
+
+  if (gflags_FOUND)
+    # Ensure clients locate only the package config and not third party find
+    # modules having the same name. This avoid cmake_policy PUSH/POP errors.
+    if (CMAKE_VERSION VERSION_LESS 3.9)
+      set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION})")
+    else (CMAKE_VERSION VERSION_LESS 3.9)
+      # Passing additional find_package arguments to find_dependency is possible
+      # starting with CMake 3.9.
+      set (glog_CMake_VERSION 3.9)
+      set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION} NO_MODULE)")
+    endif (CMAKE_VERSION VERSION_LESS 3.9)
+  endif (gflags_FOUND)
+
+  configure_package_config_file (glog-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
+    INSTALL_DESTINATION ${_glog_CMake_INSTALLDIR}
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+  write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
+    COMPATIBILITY SameMajorVersion)
+
+  export (TARGETS glog NAMESPACE glog:: FILE glog-targets.cmake)
+  export (PACKAGE glog)
+
+  get_filename_component (_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
+
+  # Directory containing the find modules relative to the config install
+  # directory.
+  file (RELATIVE_PATH glog_REL_CMake_MODULES
+    ${_PREFIX}/${_glog_CMake_INSTALLDIR}
+    ${_PREFIX}/${_glog_CMake_DATADIR}/glog-modules.cmake)
+
+  get_filename_component (glog_REL_CMake_DATADIR ${glog_REL_CMake_MODULES}
+    DIRECTORY)
+
+  set (glog_FULL_CMake_DATADIR
+    ${CMAKE_CURRENT_BINARY_DIR}/${_glog_CMake_DATADIR})
+
+  configure_file (glog-modules.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/glog-modules.cmake @ONLY)
+
+  install (CODE
+  "
+  set (glog_FULL_CMake_DATADIR \"\\\${CMAKE_CURRENT_LIST_DIR}/${glog_REL_CMake_DATADIR}\")
+  set (glog_DATADIR_DESTINATION ${_glog_CMake_INSTALLDIR})
+
+  if (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
+    set (glog_DATADIR_DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${glog_DATADIR_DESTINATION}\")
+  endif (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
+
+  configure_file (\"${CMAKE_CURRENT_SOURCE_DIR}/glog-modules.cmake.in\"
+    \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\" @ONLY)
+  file (INSTALL
+    \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\"
+    DESTINATION
+    \"\${glog_DATADIR_DESTINATION}\")
+  "
+    COMPONENT Development
   )
-endif (WITH_PKGCONFIG)
 
-set (glog_CMake_VERSION 3.0)
+  install (FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
+    DESTINATION ${_glog_CMake_INSTALLDIR})
 
-if (gflags_FOUND)
-  # Ensure clients locate only the package config and not third party find
-  # modules having the same name. This avoid cmake_policy PUSH/POP errors.
-  if (CMAKE_VERSION VERSION_LESS 3.9)
-    set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION})")
-  else (CMAKE_VERSION VERSION_LESS 3.9)
-    # Passing additional find_package arguments to find_dependency is possible
-    # starting with CMake 3.9.
-    set (glog_CMake_VERSION 3.9)
-    set (gflags_DEPENDENCY "find_dependency (gflags ${gflags_VERSION} NO_MODULE)")
-  endif (CMAKE_VERSION VERSION_LESS 3.9)
-endif (gflags_FOUND)
+  # Find modules in share/glog/cmake
+  install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/glog
+    COMPONENT Development
+    FILES_MATCHING PATTERN "*.cmake"
+  )
 
-configure_package_config_file (glog-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
-  INSTALL_DESTINATION ${_glog_CMake_INSTALLDIR}
-  NO_CHECK_REQUIRED_COMPONENTS_MACRO)
-
-write_basic_package_version_file (
-  ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
-  COMPATIBILITY SameMajorVersion)
-
-export (TARGETS glog NAMESPACE glog:: FILE glog-targets.cmake)
-export (PACKAGE glog)
-
-get_filename_component (_PREFIX "${CMAKE_INSTALL_PREFIX}" ABSOLUTE)
-
-# Directory containing the find modules relative to the config install
-# directory.
-file (RELATIVE_PATH glog_REL_CMake_MODULES
-  ${_PREFIX}/${_glog_CMake_INSTALLDIR}
-  ${_PREFIX}/${_glog_CMake_DATADIR}/glog-modules.cmake)
-
-get_filename_component (glog_REL_CMake_DATADIR ${glog_REL_CMake_MODULES}
-  DIRECTORY)
-
-set (glog_FULL_CMake_DATADIR
-  ${CMAKE_CURRENT_BINARY_DIR}/${_glog_CMake_DATADIR})
-
-configure_file (glog-modules.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/glog-modules.cmake @ONLY)
-
-install (CODE
-"
-set (glog_FULL_CMake_DATADIR \"\\\${CMAKE_CURRENT_LIST_DIR}/${glog_REL_CMake_DATADIR}\")
-set (glog_DATADIR_DESTINATION ${_glog_CMake_INSTALLDIR})
-
-if (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
-  set (glog_DATADIR_DESTINATION \"\${CMAKE_INSTALL_PREFIX}/\${glog_DATADIR_DESTINATION}\")
-endif (NOT IS_ABSOLUTE ${_glog_CMake_INSTALLDIR})
-
-configure_file (\"${CMAKE_CURRENT_SOURCE_DIR}/glog-modules.cmake.in\"
-  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\" @ONLY)
-file (INSTALL
-  \"${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/glog-modules.cmake\"
-  DESTINATION
-  \"\${glog_DATADIR_DESTINATION}\")
-"
-  COMPONENT Development
-)
-
-install (FILES
-  ${CMAKE_CURRENT_BINARY_DIR}/glog-config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/glog-config-version.cmake
-  DESTINATION ${_glog_CMake_INSTALLDIR})
-
-# Find modules in share/glog/cmake
-install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
-  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/glog
-  COMPONENT Development
-  FILES_MATCHING PATTERN "*.cmake"
-)
-
-install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
-  ${_glog_CMake_INSTALLDIR})
+  install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
+    ${_glog_CMake_INSTALLDIR})
 
 endif (GLOG_ENABLE_INSTALL)
