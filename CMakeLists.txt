@@ -34,7 +34,15 @@ include (GenerateExportHeader)
 include (GetCacheVariables)
 include (GNUInstallDirs)
 
-option (BUILD_SHARED_LIBS "Build shared libraries" ON)
+# When glog is included as a subproject, do not apply standalone defaults.
+if (NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  set(_glog_standalone OFF)
+else ()
+  set(_glog_standalone ON)
+  option (BUILD_SHARED_LIBS "Build shared libraries" ON)
+endif ()
+
+option(GLOG_ENABLE_INSTALL "glog: Enable install rules" ${_glog_standalone})
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_CUSTOM_PREFIX "Enable support for user-generated message prefixes" ON)
@@ -903,6 +911,8 @@ if (BUILD_TESTING)
     add_test (NAME mock-log COMMAND mock-log_unittest)
   endif (HAVE_LIB_GMOCK)
 
+  if (GLOG_ENABLE_INSTALL)
+
   # Generate an initial cache
 
   get_cache_variables (_CACHEVARS)
@@ -957,6 +967,8 @@ if (BUILD_TESTING)
   set_tests_properties (cmake_package_config_build PROPERTIES
     FIXTURES_REQUIRED "cmake_package_config;cmake_package_config_working")
 
+  endif (GLOG_ENABLE_INSTALL)
+
   add_executable (cleanup_immediately_unittest
     src/cleanup_immediately_unittest.cc)
 
@@ -1008,6 +1020,8 @@ if (BUILD_TESTING)
   set_tests_properties (cleanup_with_absolute_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
   set_tests_properties (cleanup_with_relative_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
 endif (BUILD_TESTING)
+
+if (GLOG_ENABLE_INSTALL)
 
 install (TARGETS glog
   EXPORT glog-targets
@@ -1100,3 +1114,5 @@ install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
 
 install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
   ${_glog_CMake_INSTALLDIR})
+
+endif (GLOG_ENABLE_INSTALL)
