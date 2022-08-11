@@ -146,6 +146,8 @@ DEFINE_int32(stderrthreshold,
 GLOG_DEFINE_string(alsologtoemail, "",
                    "log messages go to these email addresses "
                    "in addition to logfiles");
+GLOG_DEFINE_bool(log_file_header, true,
+                 "Write the file header at the start of each log file");
 GLOG_DEFINE_bool(log_prefix, true,
                  "Prepend the log prefix to the start of each log line");
 GLOG_DEFINE_bool(log_year_in_prefix, true,
@@ -1244,35 +1246,37 @@ void LogFileObject::Write(bool force_flush,
     }
 
     // Write a header message into the log file
-    ostringstream file_header_stream;
-    file_header_stream.fill('0');
-    file_header_stream << "Log file created at: "
-                       << 1900+tm_time.tm_year << '/'
-                       << setw(2) << 1+tm_time.tm_mon << '/'
-                       << setw(2) << tm_time.tm_mday
-                       << ' '
-                       << setw(2) << tm_time.tm_hour << ':'
-                       << setw(2) << tm_time.tm_min << ':'
-                       << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
-                       << "Running on machine: "
-                       << LogDestination::hostname() << '\n';
+    if (FLAGS_log_file_header) {
+      ostringstream file_header_stream;
+      file_header_stream.fill('0');
+      file_header_stream << "Log file created at: "
+                         << 1900+tm_time.tm_year << '/'
+                         << setw(2) << 1+tm_time.tm_mon << '/'
+                         << setw(2) << tm_time.tm_mday
+                         << ' '
+                         << setw(2) << tm_time.tm_hour << ':'
+                         << setw(2) << tm_time.tm_min << ':'
+                         << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
+                         << "Running on machine: "
+                         << LogDestination::hostname() << '\n';
 
-    if(!g_application_fingerprint.empty()) {
-      file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
+      if(!g_application_fingerprint.empty()) {
+        file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
+      }
+      const char* const date_time_format = FLAGS_log_year_in_prefix
+                                               ? "yyyymmdd hh:mm:ss.uuuuuu"
+                                               : "mmdd hh:mm:ss.uuuuuu";
+      file_header_stream << "Running duration (h:mm:ss): "
+                         << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
+                         << "Log line format: [IWEF]" << date_time_format << " "
+                         << "threadid file:line] msg" << '\n';
+      const string& file_header_string = file_header_stream.str();
+
+      const size_t header_len = file_header_string.size();
+      fwrite(file_header_string.data(), 1, header_len, file_);
+      file_length_ += header_len;
+      bytes_since_flush_ += header_len;
     }
-    const char* const date_time_format = FLAGS_log_year_in_prefix
-                                             ? "yyyymmdd hh:mm:ss.uuuuuu"
-                                             : "mmdd hh:mm:ss.uuuuuu";
-    file_header_stream << "Running duration (h:mm:ss): "
-                       << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
-                       << "Log line format: [IWEF]" << date_time_format << " "
-                       << "threadid file:line] msg" << '\n';
-    const string& file_header_string = file_header_stream.str();
-
-    const size_t header_len = file_header_string.size();
-    fwrite(file_header_string.data(), 1, header_len, file_);
-    file_length_ += header_len;
-    bytes_since_flush_ += header_len;
   }
 
   // Write to LOG file
