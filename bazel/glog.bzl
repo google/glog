@@ -208,11 +208,17 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # "logging_custom_prefix", # Broken
         # "logging", # Broken
         # "mock-log", # Broken
-        "signalhandler",
+        # "signalhandler", # Pointless
         "stacktrace",
         "stl_logging",
         "symbolize",
         "utilities",
+    ]
+
+    test_only_copts = [
+        "-DTEST_SRC_DIR=\\\"%s/tests\\\"" % gendir,
+        "-DHAVE_STACKTRACE",
+        "-Wno-macro-redefined",
     ]
 
     for test_name in test_list:
@@ -224,7 +230,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
                 "src/" + test_name + "_unittest.cc",
             ],
             defines = final_lib_defines,
-            copts = final_lib_copts,
+            copts = final_lib_copts + test_only_copts,
             deps = [
                 ":glog",
                 "@com_github_google_googletest//:gtest",
