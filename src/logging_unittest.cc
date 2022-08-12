@@ -853,6 +853,11 @@ static void TestExtension() {
 struct MyLogger : public base::Logger {
   string data;
 
+  explicit MyLogger(bool* set_on_destruction)
+      : set_on_destruction_(set_on_destruction) {}
+
+  ~MyLogger() { *set_on_destruction_ = true; }
+
   virtual void Write(bool /* should_flush */,
                      time_t /* timestamp */,
                      const char* message,
@@ -863,19 +868,25 @@ struct MyLogger : public base::Logger {
   virtual void Flush() { }
 
   virtual uint32 LogSize() { return data.length(); }
+
+ private:
+  bool* set_on_destruction_;
 };
 
 static void TestWrapper() {
   fprintf(stderr, "==== Test log wrapper\n");
 
-  MyLogger my_logger;
+  bool custom_logger_deleted = false;
+  MyLogger* my_logger = new MyLogger(&custom_logger_deleted);
   base::Logger* old_logger = base::GetLogger(GLOG_INFO);
-  base::SetLogger(GLOG_INFO, &my_logger);
+  base::SetLogger(GLOG_INFO, my_logger);
   LOG(INFO) << "Send to wrapped logger";
+  CHECK(strstr(my_logger->data.c_str(), "Send to wrapped logger") != NULL);
   FlushLogFiles(GLOG_INFO);
-  base::SetLogger(GLOG_INFO, old_logger);
 
-  CHECK(strstr(my_logger.data.c_str(), "Send to wrapped logger") != NULL);
+  EXPECT_FALSE(custom_logger_deleted);
+  base::SetLogger(GLOG_INFO, old_logger);
+  EXPECT_TRUE(custom_logger_deleted);
 }
 
 static void TestErrno() {
