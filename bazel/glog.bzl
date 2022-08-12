@@ -33,7 +33,7 @@ def dict_union(x, y):
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
-        repo_name = native.repository_name()[1:] # Strip the first leading @
+        repo_name = native.repository_name()[1:]  # Strip the first leading @
         gendir = "$(GENDIR)/external/" + repo_name
         src_windows = "external/%s/src/windows" % repo_name
     else:
@@ -76,6 +76,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
         "-DHAVE_UNWIND_H",
+        "-DHAVE__UNWIND_BACKTRACE",
+        "-DHAVE__UNWIND_GETIP",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
@@ -188,7 +190,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             }) +
             select({
                 ":clang-cl": clang_cl_only_copts,
-                "//conditions:default": []
+                "//conditions:default": [],
             }),
         deps = gflags_deps + select({
             "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
