@@ -596,7 +596,8 @@ DECLARE_bool(log_utc_time);
     LPSTR message = NULL; \
     LPSTR msg = reinterpret_cast<LPSTR>(&message); \
     DWORD message_length = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | \
-                         FORMAT_MESSAGE_FROM_SYSTEM, \
+                         FORMAT_MESSAGE_FROM_SYSTEM | \
+                         FORMAT_MESSAGE_IGNORE_INSERTS, \
                          0, result, 0, msg, 100, NULL); \
     if (message_length > 0) { \
       @ac_google_namespace@::LogMessage(__FILE__, __LINE__, @ac_google_namespace@::GLOG_ERROR, 0, \
