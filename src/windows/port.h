@@ -84,7 +84,7 @@
 #define getcwd  _getcwd
 #define open    _open
 #define read    _read
-#define write   _write
+#define write(fd, p, n) _write(fd, p, n)
 #define lseek   _lseek
 #define close   _close
 #define popen   _popen

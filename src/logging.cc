@@ -2133,12 +2133,14 @@ void LogSink::WaitTillSent() {
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
                          const LogMessageTime& logmsgtime, const char* message,
                          size_t message_len) {
-  ostringstream stream(string(message, message_len));
+  ostringstream stream;
   stream.fill('0');
 
-  stream << LogSeverityNames[severity][0]
-         << setw(4) << 1900 + logmsgtime.year()
-         << setw(2) << 1 + logmsgtime.month()
+  stream << LogSeverityNames[severity][0];
+  if (FLAGS_log_year_in_prefix) {
+    stream << setw(4) << 1900 + logmsgtime.year();
+  }
+  stream << setw(2) << 1 + logmsgtime.month()
          << setw(2) << logmsgtime.day()
          << ' '
          << setw(2) << logmsgtime.hour() << ':'
@@ -2150,7 +2152,9 @@ string LogSink::ToString(LogSeverity severity, const char* file, int line,
          << ' '
          << file << ':' << line << "] ";
 
-  stream << string(message, message_len);
+  // A call to `write' is enclosed in parenthneses to prevent possible macro
+  // expansion.  On Windows, `write' could be a macro defined for portability.
+  (stream.write)(message, static_cast<std::streamsize>(message_len));
   return stream.str();
 }
 
