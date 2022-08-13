@@ -649,7 +649,10 @@ LogDestination::~LogDestination() {
 }
 
 void LogDestination::SetLoggerImpl(base::Logger* logger) {
-  if (logger_ == logger) return;
+  if (logger_ == logger) {
+    // Prevent releasing currently held sink on reset
+    return;
+  }
 
   if (logger_ && logger_ != &fileobject_) {
     // Delete user-specified logger set via SetLogger().
