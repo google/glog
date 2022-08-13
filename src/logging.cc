@@ -594,6 +594,10 @@ class LogDestination {
 
   static LogDestination* log_destination(LogSeverity severity);
 
+  base::Logger* GetLoggerImpl() const { return logger_; }
+  void SetLoggerImpl(base::Logger* logger);
+  void ResetLoggerImpl() { SetLoggerImpl(&fileobject_); }
+
   LogFileObject fileobject_;
   base::Logger* logger_;      // Either &fileobject_, or wrapper around it
 
@@ -643,10 +647,20 @@ LogDestination::LogDestination(LogSeverity severity,
 }
 
 LogDestination::~LogDestination() {
+  ResetLoggerImpl();
+}
+
+void LogDestination::SetLoggerImpl(base::Logger* logger) {
+  if (logger_ == logger) {
+    // Prevent releasing currently held sink on reset
+    return;
+  }
+
   if (logger_ && logger_ != &fileobject_) {
     // Delete user-specified logger set via SetLogger().
     delete logger_;
   }
+  logger_ = logger;
 }
 
 inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
@@ -2021,12 +2035,12 @@ void LogMessage::SendToSyslogAndLog() {
 
 base::Logger* base::GetLogger(LogSeverity severity) {
   MutexLock l(&log_mutex);
-  return LogDestination::log_destination(severity)->logger_;
+  return LogDestination::log_destination(severity)->GetLoggerImpl();
 }
 
 void base::SetLogger(LogSeverity severity, base::Logger* logger) {
   MutexLock l(&log_mutex);
-  LogDestination::log_destination(severity)->logger_ = logger;
+  LogDestination::log_destination(severity)->SetLoggerImpl(logger);
 }
 
 // L < log_mutex.  Acquires and releases mutex_.
