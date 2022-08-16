@@ -33,7 +33,7 @@ def dict_union(x, y):
 
 def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
-        repo_name = native.repository_name()[1:] # Strip the first leading @
+        repo_name = native.repository_name()[1:]  # Strip the first leading @
         gendir = "$(GENDIR)/external/" + repo_name
         src_windows = "external/%s/src/windows" % repo_name
     else:
@@ -75,7 +75,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
-        "-DHAVE_UNWIND_H",
+        "-DHAVE__UNWIND_BACKTRACE",
+        "-DHAVE__UNWIND_GETIP",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
@@ -127,6 +128,31 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     gflags_deps = ["@com_github_gflags_gflags//:gflags"] if with_gflags else []
 
+    final_lib_defines = select({
+        # GLOG_EXPORT is normally set by export.h, but that's not
+        # generated for Bazel.
+        "@bazel_tools//src/conditions:windows": [
+            "GLOG_EXPORT=",
+            "GLOG_DEPRECATED=__declspec(deprecated)",
+            "GLOG_NO_ABBREVIATED_SEVERITIES",
+        ],
+        "//conditions:default": [
+            "GLOG_DEPRECATED=__attribute__((deprecated))",
+            "GLOG_EXPORT=__attribute__((visibility(\\\"default\\\")))",
+        ],
+    })
+
+    final_lib_copts = select({
+        "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
+        "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
+        "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
+        ":wasm": common_copts + wasm_copts,
+        "//conditions:default": common_copts + linux_or_darwin_copts,
+    }) + select({
+        ":clang-cl": clang_cl_only_copts,
+        "//conditions:default": [],
+    })
+
     native.cc_library(
         name = "glog",
         visibility = ["//visibility:public"],
@@ -165,37 +191,50 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             ":vlog_is_on_h",
         ],
         strip_include_prefix = "src",
-        defines = select({
-            # GLOG_EXPORT is normally set by export.h, but that's not
-            # generated for Bazel.
-            "@bazel_tools//src/conditions:windows": [
-                "GLOG_EXPORT=",
-                "GLOG_DEPRECATED=__declspec(deprecated)",
-                "GLOG_NO_ABBREVIATED_SEVERITIES",
-            ],
-            "//conditions:default": [
-                "GLOG_DEPRECATED=__attribute__((deprecated))",
-                "GLOG_EXPORT=__attribute__((visibility(\\\"default\\\")))",
-            ],
-        }),
-        copts =
-            select({
-                "@bazel_tools//src/conditions:windows": common_copts + windows_only_copts,
-                "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
-                "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
-                ":wasm": common_copts + wasm_copts,
-                "//conditions:default": common_copts + linux_or_darwin_copts,
-            }) +
-            select({
-                ":clang-cl": clang_cl_only_copts,
-                "//conditions:default": []
-            }),
+        defines = final_lib_defines,
+        copts = final_lib_copts,
         deps = gflags_deps + select({
             "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
             "//conditions:default": [],
         }),
         **kwargs
     )
+
+    test_list = [
+        "cleanup_immediately",
+        "cleanup_with_absolute_prefix",
+        "cleanup_with_relative_prefix",
+        # "demangle", # Broken
+        # "logging_custom_prefix", # Broken
+        # "logging", # Broken
+        # "mock-log", # Broken
+        # "signalhandler", # Pointless
+        "stacktrace",
+        "stl_logging",
+        "symbolize",
+        "utilities",
+    ]
+
+    test_only_copts = [
+        "-DTEST_SRC_DIR=\\\"%s/tests\\\"" % gendir,
+    ]
+
+    for test_name in test_list:
+        native.cc_test(
+            name = test_name + "_test",
+            visibility = ["//visibility:public"],
+            srcs = [
+                "src/googletest.h",
+                "src/" + test_name + "_unittest.cc",
+            ],
+            defines = final_lib_defines,
+            copts = final_lib_copts + test_only_copts,
+            deps = [
+                ":glog",
+                "@com_github_google_googletest//:gtest",
+            ],
+            **kwargs
+        )
 
     # Workaround https://github.com/bazelbuild/bazel/issues/6337 by declaring
     # the dependencies without strip_include_prefix.
