@@ -233,6 +233,12 @@ int main(int, char ** argv) {
 
 #else
 int main() {
+
+#ifdef GLOG_BAZEL_BUILD
+  printf("HAVE_STACKTRACE is expected to be defined in Bazel tests\n");
+  exit(EXIT_FAILURE);
+#endif  // GLOG_BAZEL_BUILD
+
   printf("PASS (no stacktrace support)\n");
   return 0;
 }

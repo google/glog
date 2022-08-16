@@ -217,7 +217,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     test_only_copts = [
         "-DTEST_SRC_DIR=\\\"%s/tests\\\"" % gendir,
-        "-DHAVE_STACKTRACE",
     ]
 
     for test_name in test_list:
