@@ -455,6 +455,9 @@ DECLARE_bool(colorlogtostderr);
 // stderr in addition to log files.
 DECLARE_int32(stderrthreshold);
 
+// Set whether the log file header should be written upon creating a file.
+DECLARE_bool(log_file_header);
+
 // Set whether the log prefix should be prepended to each line of output.
 DECLARE_bool(log_prefix);
 

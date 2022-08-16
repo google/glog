@@ -146,6 +146,8 @@ DEFINE_int32(stderrthreshold,
 GLOG_DEFINE_string(alsologtoemail, "",
                    "log messages go to these email addresses "
                    "in addition to logfiles");
+GLOG_DEFINE_bool(log_file_header, true,
+                 "Write the file header at the start of each log file");
 GLOG_DEFINE_bool(log_prefix, true,
                  "Prepend the log prefix to the start of each log line");
 GLOG_DEFINE_bool(log_year_in_prefix, true,
@@ -592,6 +594,10 @@ class LogDestination {
 
   static LogDestination* log_destination(LogSeverity severity);
 
+  base::Logger* GetLoggerImpl() const { return logger_; }
+  void SetLoggerImpl(base::Logger* logger);
+  void ResetLoggerImpl() { SetLoggerImpl(&fileobject_); }
+
   LogFileObject fileobject_;
   base::Logger* logger_;      // Either &fileobject_, or wrapper around it
 
@@ -641,10 +647,20 @@ LogDestination::LogDestination(LogSeverity severity,
 }
 
 LogDestination::~LogDestination() {
+  ResetLoggerImpl();
+}
+
+void LogDestination::SetLoggerImpl(base::Logger* logger) {
+  if (logger_ == logger) {
+    // Prevent releasing currently held sink on reset
+    return;
+  }
+
   if (logger_ && logger_ != &fileobject_) {
     // Delete user-specified logger set via SetLogger().
     delete logger_;
   }
+  logger_ = logger;
 }
 
 inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
@@ -1244,35 +1260,37 @@ void LogFileObject::Write(bool force_flush,
     }
 
     // Write a header message into the log file
-    ostringstream file_header_stream;
-    file_header_stream.fill('0');
-    file_header_stream << "Log file created at: "
-                       << 1900+tm_time.tm_year << '/'
-                       << setw(2) << 1+tm_time.tm_mon << '/'
-                       << setw(2) << tm_time.tm_mday
-                       << ' '
-                       << setw(2) << tm_time.tm_hour << ':'
-                       << setw(2) << tm_time.tm_min << ':'
-                       << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
-                       << "Running on machine: "
-                       << LogDestination::hostname() << '\n';
+    if (FLAGS_log_file_header) {
+      ostringstream file_header_stream;
+      file_header_stream.fill('0');
+      file_header_stream << "Log file created at: "
+                         << 1900+tm_time.tm_year << '/'
+                         << setw(2) << 1+tm_time.tm_mon << '/'
+                         << setw(2) << tm_time.tm_mday
+                         << ' '
+                         << setw(2) << tm_time.tm_hour << ':'
+                         << setw(2) << tm_time.tm_min << ':'
+                         << setw(2) << tm_time.tm_sec << (FLAGS_log_utc_time ? " UTC\n" : "\n")
+                         << "Running on machine: "
+                         << LogDestination::hostname() << '\n';
 
-    if(!g_application_fingerprint.empty()) {
-      file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
+      if(!g_application_fingerprint.empty()) {
+        file_header_stream << "Application fingerprint: " << g_application_fingerprint << '\n';
+      }
+      const char* const date_time_format = FLAGS_log_year_in_prefix
+                                               ? "yyyymmdd hh:mm:ss.uuuuuu"
+                                               : "mmdd hh:mm:ss.uuuuuu";
+      file_header_stream << "Running duration (h:mm:ss): "
+                         << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
+                         << "Log line format: [IWEF]" << date_time_format << " "
+                         << "threadid file:line] msg" << '\n';
+      const string& file_header_string = file_header_stream.str();
+
+      const size_t header_len = file_header_string.size();
+      fwrite(file_header_string.data(), 1, header_len, file_);
+      file_length_ += header_len;
+      bytes_since_flush_ += header_len;
     }
-    const char* const date_time_format = FLAGS_log_year_in_prefix
-                                             ? "yyyymmdd hh:mm:ss.uuuuuu"
-                                             : "mmdd hh:mm:ss.uuuuuu";
-    file_header_stream << "Running duration (h:mm:ss): "
-                       << PrettyDuration(static_cast<int>(WallTime_Now() - start_time_)) << '\n'
-                       << "Log line format: [IWEF]" << date_time_format << " "
-                       << "threadid file:line] msg" << '\n';
-    const string& file_header_string = file_header_stream.str();
-
-    const size_t header_len = file_header_string.size();
-    fwrite(file_header_string.data(), 1, header_len, file_);
-    file_length_ += header_len;
-    bytes_since_flush_ += header_len;
   }
 
   // Write to LOG file
@@ -2017,12 +2035,12 @@ void LogMessage::SendToSyslogAndLog() {
 
 base::Logger* base::GetLogger(LogSeverity severity) {
   MutexLock l(&log_mutex);
-  return LogDestination::log_destination(severity)->logger_;
+  return LogDestination::log_destination(severity)->GetLoggerImpl();
 }
 
 void base::SetLogger(LogSeverity severity, base::Logger* logger) {
   MutexLock l(&log_mutex);
-  LogDestination::log_destination(severity)->logger_ = logger;
+  LogDestination::log_destination(severity)->SetLoggerImpl(logger);
 }
 
 // L < log_mutex.  Acquires and releases mutex_.
@@ -2115,12 +2133,14 @@ void LogSink::WaitTillSent() {
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
                          const LogMessageTime& logmsgtime, const char* message,
                          size_t message_len) {
-  ostringstream stream(string(message, message_len));
+  ostringstream stream;
   stream.fill('0');
 
-  stream << LogSeverityNames[severity][0]
-         << setw(4) << 1900 + logmsgtime.year()
-         << setw(2) << 1 + logmsgtime.month()
+  stream << LogSeverityNames[severity][0];
+  if (FLAGS_log_year_in_prefix) {
+    stream << setw(4) << 1900 + logmsgtime.year();
+  }
+  stream << setw(2) << 1 + logmsgtime.month()
          << setw(2) << logmsgtime.day()
          << ' '
          << setw(2) << logmsgtime.hour() << ':'
@@ -2132,7 +2152,9 @@ string LogSink::ToString(LogSeverity severity, const char* file, int line,
          << ' '
          << file << ':' << line << "] ";
 
-  stream << string(message, message_len);
+  // A call to `write' is enclosed in parenthneses to prevent possible macro
+  // expansion.  On Windows, `write' could be a macro defined for portability.
+  (stream.write)(message, static_cast<std::streamsize>(message_len));
   return stream.str();
 }
 
