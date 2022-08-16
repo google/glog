@@ -6,6 +6,10 @@ jobs:
   build-macos:
     name: AppleClang-C++${{matrix.std}}-${{matrix.build_type}}
     runs-on: macos-12
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     strategy:
       fail-fast: true
       matrix:

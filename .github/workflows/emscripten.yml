@@ -9,6 +9,10 @@ jobs:
         shell: bash
     name: Emscripten-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ubuntu-22.04
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     container: emscripten/emsdk
     strategy:
       fail-fast: true
@@ -19,6 +23,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp
 
       - name: Setup Dependencies
         run: |
@@ -50,3 +59,8 @@ jobs:
         run: |
           cmake --build build_${{matrix.build_type}} \
                 --config ${{matrix.build_type}}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: language:cpp

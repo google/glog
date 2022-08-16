@@ -6,6 +6,10 @@ jobs:
   build-msvc:
     name: ${{matrix.msvc}}-${{matrix.arch}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ${{matrix.os}}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     defaults:
       run:
         shell: powershell
@@ -30,6 +34,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp
 
       - name: Cache GTest
         id: cache-gtest
@@ -125,9 +134,18 @@ jobs:
                 --config ${{matrix.build_type}} `
                 --target install
 
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: language:cpp
+
   build-mingw:
     name: ${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: windows-2022
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
     env:
       BUILDDIR: 'build_${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}'
     defaults:
@@ -148,6 +166,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: cpp
+
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
@@ -223,3 +247,8 @@ jobs:
           files: build_${{matrix.build_type}}/coverage.xml
           fail_ci_if_error: true
           verbose: true
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: language:cpp
