@@ -211,7 +211,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # "signalhandler", # Pointless
         "stacktrace",
         "stl_logging",
-        "symbolize",
+        # "symbolize", # Broken
         "utilities",
     ]
 
