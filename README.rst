@@ -197,7 +197,7 @@ conan
 ~~~~~
 
 You can download and install glog using the `conan
-https://conan.io>`__ package manager:
+<https://conan.io>`__ package manager:
 
 .. code:: bash
 
@@ -207,7 +207,7 @@ https://conan.io>`__ package manager:
 The glog recipe in conan center is kept up to date by conan center index community
 contributors. If the version is out of date, please create an
 issue or pull request on the `conan-center-index
-https://github.com/conan-io/conan-center-index`__ repository.
+<https://github.com/conan-io/conan-center-index>`__ repository.
 
 User Guide
 ----------
