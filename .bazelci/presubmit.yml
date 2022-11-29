@@ -47,13 +47,15 @@ tasks:
     environment:
       BAZEL_VC: "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\VC"
     build_flags:
-    - "--noincompatible_enable_cc_toolchain_resolution"
+    - "--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl"
+    - "--extra_execution_platforms=//:x64_windows-clang-cl"
     - "--compiler=clang-cl"
     - "--features=layering_check"
     build_targets:
     - "//..."
     test_flags:
-    - "--noincompatible_enable_cc_toolchain_resolution"
+    - "--extra_toolchains=@local_config_cc//:cc-toolchain-x64_windows-clang-cl"
+    - "--extra_execution_platforms=//:x64_windows-clang-cl"
     - "--compiler=clang-cl"
     - "--features=layering_check"
     test_targets:
