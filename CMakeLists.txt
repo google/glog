@@ -47,6 +47,9 @@ option (WITH_UNWIND "Enable libunwind support" ON)
 
 cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
 
+set (WITH_FUZZING none CACHE STRING "Fuzzing engine")
+set_property (CACHE WITH_FUZZING PROPERTY STRINGS none libfuzzer ossfuzz)
+
 if (NOT WITH_UNWIND)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
 endif (NOT WITH_UNWIND)
@@ -747,6 +750,22 @@ if (WITH_PKGCONFIG)
 endif (WITH_PKGCONFIG)
 
 # Unit testing
+
+if (NOT WITH_FUZZING STREQUAL "none")
+  add_executable (fuzz_demangle
+    src/fuzz_demangle.cc
+  )
+
+  if (WITH_FUZZING STREQUAL "ossfuzz")
+    set (LIB_FUZZING_ENGINE $ENV{LIB_FUZZING_ENGINE})
+    target_link_libraries (fuzz_demangle PRIVATE glog ${LIB_FUZZING_ENGINE})
+  elseif (WITH_FUZZING STREQUAL "libfuzzer")
+    target_compile_options (fuzz_demangle PRIVATE -fsanitize=fuzzer)
+    target_link_libraries (fuzz_demangle PRIVATE glog)
+  else (WITH_FUZZING STREQUAL "libfuzzer")
+    message (FATAL_ERROR "Unsupported fuzzing engine ${WITH_FUZZING}")
+  endif (WITH_FUZZING STREQUAL "ossfuzz")
+endif (NOT WITH_FUZZING STREQUAL "none")
 
 if (BUILD_TESTING)
   add_library (glogtest STATIC
