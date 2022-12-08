@@ -190,6 +190,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             ":stl_logging_h",
             ":vlog_is_on_h",
         ],
+        includes = ["."],
         strip_include_prefix = "src",
         defines = final_lib_defines,
         copts = final_lib_copts,
