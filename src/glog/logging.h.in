@@ -471,6 +471,9 @@ DECLARE_int32(logbuflevel);
 // Sets the maximum number of seconds which logs may be buffered for.
 DECLARE_int32(logbufsecs);
 
+// Sets Clean overdue logs every this many seconds
+DECLARE_int32(logcleansecs);
+
 // Log suppression level: messages logged at a lower level than this
 // are suppressed.
 DECLARE_int32(minloglevel);
