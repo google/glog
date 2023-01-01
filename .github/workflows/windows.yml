@@ -31,11 +31,11 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache GTest
         id: cache-gtest
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: gtest/
           key: ${{runner.os}}-gtest-1.11-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
@@ -60,7 +60,7 @@ jobs:
 
       - name: Cache gflags
         id: cache-gflags
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: gflags/
           key: ${{runner.os}}-gflags-2.2.2-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
@@ -151,7 +151,7 @@ jobs:
            env: x86_64
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
@@ -227,7 +227,7 @@ jobs:
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
