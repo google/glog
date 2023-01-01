@@ -18,7 +18,7 @@ jobs:
         std: [98, 11, 14, 17, 20]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup Dependencies
         run: |
@@ -33,7 +33,7 @@ jobs:
 
       - name: Cache GTest
         id: cache-gtest
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: gtest/
           key: ${{runner.os}}-gtest-1.11
@@ -143,7 +143,7 @@ jobs:
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
