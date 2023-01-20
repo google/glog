@@ -265,6 +265,8 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "@ac_cv_have_inttypes_h@": "0",
         "@ac_cv_have_u_int16_t@": "0",
         "@ac_cv_have_glog_export@": "0",
+        "@ac_cv_have_thread_local_storage@": "1",
+        "@ac_cv_thread_local_specifier@": "thread_local",
         "@ac_google_start_namespace@": "namespace google {",
         "@ac_google_end_namespace@": "}",
         "@ac_google_namespace@": "google",

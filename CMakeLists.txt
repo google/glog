@@ -467,6 +467,13 @@ else (HAVE_CXX11_ATOMIC)
   set (ac_cv_cxx11_atomic 0)
 endif (HAVE_CXX11_ATOMIC)
 
+if (DEFINED GLOG_THREAD_LOCAL_STORAGE)
+  set (ac_cv_have_thread_local_storage 1)
+  set (ac_cv_thread_local_specifier ${GLOG_THREAD_LOCAL_STORAGE})
+else (DEFINED GLOG_THREAD_LOCAL_STORAGE)
+  set (ac_cv_have_thread_local_storage 0)
+endif (DEFINED GLOG_THREAD_LOCAL_STORAGE)
+
 if (WITH_SYMBOLIZE)
   if (WIN32 OR CYGWIN)
     cmake_push_check_state (RESET)
