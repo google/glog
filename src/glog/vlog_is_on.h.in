@@ -75,6 +75,8 @@
 #define VLOG_IS_ON(verboselevel)                                \
   __extension__  \
   ({ static @ac_google_namespace@::SiteFlag vlocal__ = {NULL, NULL, 0, NULL};       \
+     GLOG_IFDEF_THREAD_SANITIZER( \
+             AnnotateBenignRaceSized(__FILE__, __LINE__, &vlocal__, sizeof(@ac_google_namespace@::SiteFlag), "")); \
      @ac_google_namespace@::int32 verbose_level__ = (verboselevel);                    \
      (vlocal__.level == NULL ? @ac_google_namespace@::InitVLOG3__(&vlocal__, &FLAGS_v, \
                         __FILE__, verbose_level__) : *vlocal__.level >= verbose_level__); \
