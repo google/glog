@@ -625,7 +625,7 @@ class Thread {
 #endif
 };
 
-static inline void SleepForMilliseconds(unsigned t) {
+static inline void SleepForMilliseconds(long t) {
 #ifndef GLOG_OS_WINDOWS
 # if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
   const struct timespec req = {0, t * 1000 * 1000};
