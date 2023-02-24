@@ -503,15 +503,25 @@ if (WITH_SYMBOLIZE)
     if (HAVE_SYMBOLIZE)
       set (HAVE_STACKTRACE 1)
     endif (HAVE_SYMBOLIZE)
-  elseif (UNIX OR (APPLE AND HAVE_DLADDR))
+  elseif (UNIX)
+    cmake_push_check_state (RESET)
+    check_cxx_source_compiles ([=[
+    int main()
+    {
+      #ifndef __ELF__
+      #error __ELF__ not defined
+      #endif
+    }
+    ]=] HAVE_SYMBOLIZE)
+    cmake_pop_check_state ()
+  elseif (APPLE AND HAVE_DLADDR)
     set (HAVE_SYMBOLIZE 1)
   endif (WIN32 OR CYGWIN)
 endif (WITH_SYMBOLIZE)
 
 # CMake manages symbolize availability. The definition is necessary only when
-# building the library. Switch to add_compile_definitions once we drop support
-# for CMake below version 3.12.
-add_definitions (-DGLOG_NO_SYMBOLIZE_DETECTION)
+# building the library.
+add_compile_definitions (GLOG_NO_SYMBOLIZE_DETECTION)
 
 check_cxx_source_compiles ("
 #include <cstdlib>
