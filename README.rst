@@ -49,7 +49,7 @@ Building from Source
 --------------------
 
 glog supports multiple build systems for compiling the project from
-source: `Bazel <#bazel>`__, `CMake <#cmake>`__, and `vcpkg <#vcpkg>`__.
+source: `Bazel <#bazel>`__, `CMake <#cmake>`__, `vcpkg <#vcpkg>`__, and `conan <#conan>`__.
 
 Bazel
 ~~~~~
@@ -192,6 +192,22 @@ You can download and install glog using the `vcpkg
 The glog port in vcpkg is kept up to date by Microsoft team members and
 community contributors. If the version is out of date, please create an
 issue or pull request on the vcpkg repository.
+
+conan
+~~~~~
+
+You can download and install glog using the `conan
+<https://conan.io>`__ package manager:
+
+.. code:: bash
+
+   pip install conan
+   conan install -r conancenter glob/<glob-version>@
+
+The glog recipe in conan center is kept up to date by conan center index community
+contributors. If the version is out of date, please create an
+issue or pull request on the `conan-center-index
+<https://github.com/conan-io/conan-center-index>`__ repository.
 
 User Guide
 ----------
