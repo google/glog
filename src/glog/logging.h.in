@@ -155,7 +155,6 @@ struct GLOG_EXPORT LogMessageTime {
   void CalcGmtOffset();
 };
 
-#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 struct LogMessageInfo {
   explicit LogMessageInfo(const char* const severity_,
                           const char* const filename_,
@@ -174,8 +173,6 @@ struct LogMessageInfo {
 };
 
 typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, void* data);
-
-#endif
 
 @ac_google_end_namespace@
 
@@ -632,11 +629,9 @@ DECLARE_bool(log_utc_time);
 // specified by argv0 in log outputs.
 GLOG_EXPORT void InitGoogleLogging(const char* argv0);
 
-#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 GLOG_EXPORT void InitGoogleLogging(const char* argv0,
                                    CustomPrefixCallback prefix_callback,
                                    void* prefix_callback_data = NULL);
-#endif
 
 // Check if google's logging library has been initialized.
 GLOG_EXPORT bool IsGoogleLoggingInitialized();

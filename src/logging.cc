@@ -420,14 +420,12 @@ static bool SendEmailInternal(const char*dest, const char *subject,
 base::Logger::~Logger() {
 }
 
-#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 namespace  {
   // Optional user-configured callback to print custom prefixes.
   CustomPrefixCallback custom_prefix_callback = NULL;
   // User-provided data to pass to the callback:
   void* custom_prefix_callback_data = NULL;
 }
-#endif
 
 namespace {
 
@@ -1687,9 +1685,7 @@ void LogMessage::Init(const char* file,
       std::ios saved_fmt(NULL);
       saved_fmt.copyfmt(stream());
       stream().fill('0');
-    #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       if (custom_prefix_callback == NULL) {
-    #endif
           stream() << LogSeverityNames[severity][0];
           if (FLAGS_log_year_in_prefix) {
             stream() << setw(4) << 1900 + logmsgtime_.year();
@@ -1706,7 +1702,6 @@ void LogMessage::Init(const char* file,
                    << static_cast<unsigned int>(GetTID()) << setfill('0')
                    << ' '
                    << data_->basename_ << ':' << data_->line_ << "] ";
-    #ifdef GLOG_CUSTOM_PREFIX_SUPPORT
       } else {
         custom_prefix_callback(
                 stream(),
@@ -1717,7 +1712,6 @@ void LogMessage::Init(const char* file,
                 );
         stream() << " ";
       }
-    #endif
       stream().copyfmt(saved_fmt);
   }
   data_->num_prefix_chars_ = data_->stream_.pcount();
@@ -2649,7 +2643,6 @@ void InitGoogleLogging(const char* argv0) {
   glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
 }
 
-#ifdef GLOG_CUSTOM_PREFIX_SUPPORT
 void InitGoogleLogging(const char* argv0,
                        CustomPrefixCallback prefix_callback,
                        void* prefix_callback_data) {
@@ -2657,7 +2650,6 @@ void InitGoogleLogging(const char* argv0,
   custom_prefix_callback_data = prefix_callback_data;
   InitGoogleLogging(argv0);
 }
-#endif
 
 void ShutdownGoogleLogging() {
   glog_internal_namespace_::ShutdownGoogleLoggingUtilities();

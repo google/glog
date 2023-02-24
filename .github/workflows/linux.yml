@@ -7,13 +7,12 @@ jobs:
     defaults:
       run:
         shell: bash
-    name: GCC-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}
+    name: GCC-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
-        extra: [no-custom-prefix, custom-prefix]
         lib: [shared, static]
         std: [98, 11, 14, 17, 20]
 
@@ -74,7 +73,6 @@ jobs:
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install \
-            -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} \
             -G Ninja \
             -Werror
 

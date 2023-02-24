@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-msvc:
-    name: ${{matrix.msvc}}-${{matrix.arch}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}
+    name: ${{matrix.msvc}}-${{matrix.arch}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ${{matrix.os}}
     defaults:
       run:
@@ -17,7 +17,6 @@ jobs:
       matrix:
         arch: [Win32, x64]
         build_type: [Debug, Release]
-        extra: [no-custom-prefix, custom-prefix]
         lib: [shared, static]
         msvc: [VS-16-2019, VS-17-2022]
         # Visual Studio 17 2022 does not support C++11 and older language standard
@@ -106,7 +105,6 @@ jobs:
                 -DCMAKE_EXE_LINKER_FLAGS_RELEASE='/INCREMENTAL:NO /DEBUG' `
                 -DCMAKE_INSTALL_PREFIX:PATH=./install `
                 -DCMAKE_MSVC_RUNTIME_LIBRARY='MultiThreaded$<$<CONFIG:Debug>:Debug>DLL' `
-                -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} `
                 -G "${{matrix.generator}}" `
                 -Werror
 
@@ -129,10 +127,10 @@ jobs:
                 --target install
 
   build-mingw:
-    name: ${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}
+    name: ${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: windows-2022
     env:
-      BUILDDIR: 'build_${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}-${{matrix.extra}}'
+      BUILDDIR: 'build_${{matrix.sys}}-${{matrix.env}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}'
     defaults:
       run:
         shell: msys2 {0}
@@ -140,7 +138,6 @@ jobs:
       fail-fast: true
       matrix:
         build_type: [Debug]
-        extra: [no-custom-prefix, custom-prefix]
         lib: [shared, static]
         std: [98, 11, 14, 17, 20]
         sys: [mingw32, mingw64]
@@ -183,7 +180,6 @@ jobs:
                 -DCMAKE_CXX_STANDARD=${{matrix.std}} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -DCMAKE_INSTALL_PREFIX:PATH=./install \
-                -DWITH_CUSTOM_PREFIX=${{matrix.extra == 'custom-prefix'}} \
                 -G Ninja \
                 -Werror
 
