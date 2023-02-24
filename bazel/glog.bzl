@@ -53,11 +53,10 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     )
 
     common_copts = [
+        "-std=c++14",
         "-DGLOG_BAZEL_BUILD",
         # Inject a C++ namespace.
         "-DGOOGLE_NAMESPACE='%s'" % namespace,
-        "-DHAVE_CXX11_NULLPTR_T",
-        "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
         "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
@@ -255,12 +254,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     )
 
     common_config = {
-        "@ac_cv_cxx11_atomic@": "1",
-        "@ac_cv_cxx11_constexpr@": "1",
-        "@ac_cv_cxx11_chrono@": "1",
-        "@ac_cv_cxx11_nullptr_t@": "1",
-        "@ac_cv_cxx_using_operator@": "1",
-        "@ac_cv_have_inttypes_h@": "0",
         "@ac_cv_have_u_int16_t@": "0",
         "@ac_cv_have_glog_export@": "0",
         "@ac_google_start_namespace@": "namespace google {",
@@ -270,31 +263,23 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
 
     posix_config = dict_union(common_config, {
         "@ac_cv___attribute___noinline@": "__attribute__((noinline))",
-        "@ac_cv___attribute___noreturn@": "__attribute__((noreturn))",
         "@ac_cv___attribute___printf_4_5@": "__attribute__((__format__(__printf__, 4, 5)))",
         "@ac_cv_have___builtin_expect@": "1",
-        "@ac_cv_have___uint16@": "0",
         "@ac_cv_have_libgflags@": "1" if with_gflags else "0",
         "@ac_cv_have_mode_t@": "1",
         "@ac_cv_have_ssize_t@": "1",
-        "@ac_cv_have_stdint_h@": "1",
         "@ac_cv_have_systypes_h@": "1",
-        "@ac_cv_have_uint16_t@": "1",
         "@ac_cv_have_unistd_h@": "1",
     })
 
     windows_config = dict_union(common_config, {
         "@ac_cv___attribute___noinline@": "",
-        "@ac_cv___attribute___noreturn@": "__declspec(noreturn)",
         "@ac_cv___attribute___printf_4_5@": "",
         "@ac_cv_have___builtin_expect@": "0",
-        "@ac_cv_have___uint16@": "1",
         "@ac_cv_have_libgflags@": "0",
         "@ac_cv_have_mode_t@": "0",
         "@ac_cv_have_ssize_t@": "0",
-        "@ac_cv_have_stdint_h@": "0",
         "@ac_cv_have_systypes_h@": "0",
-        "@ac_cv_have_uint16_t@": "0",
         "@ac_cv_have_unistd_h@": "0",
     })
 

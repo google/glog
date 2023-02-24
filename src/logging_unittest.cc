@@ -187,7 +187,7 @@ BENCHMARK(BM_vlog)
 void PrefixAttacher(std::ostream &s, const LogMessageInfo &l, void* data) {
   // Assert that `data` contains the expected contents before producing the
   // prefix (otherwise causing the tests to fail):
-  if (data == NULL || *static_cast<string*>(data) != "good data") {
+  if (data == nullptr || *static_cast<string*>(data) != "good data") {
     return;
   }
 
@@ -213,13 +213,13 @@ int main(int argc, char **argv) {
 
   // Make sure stderr is not buffered as stderr seems to be buffered
   // on recent windows.
-  setbuf(stderr, NULL);
+  setbuf(stderr, nullptr);
 
   // Test some basics before InitGoogleLogging:
   CaptureTestStderr();
   LogWithLevels(FLAGS_v, FLAGS_stderrthreshold,
                 FLAGS_logtostderr, FLAGS_alsologtostderr);
-  LogWithLevels(0, 0, 0, 0);  // simulate "before global c-tors"
+  LogWithLevels(0, 0, false, false);  // simulate "before global c-tors"
   const string early_stderr = GetCapturedTestStderr();
 
   EXPECT_FALSE(IsGoogleLoggingInitialized());
@@ -359,9 +359,7 @@ struct NewHook {
   NewHook() {
     g_new_hook = &NoAllocNewHook;
   }
-  ~NewHook() {
-    g_new_hook = NULL;
-  }
+  ~NewHook() { g_new_hook = nullptr; }
 };
 
 TEST(DeathNoAllocNewHook, logging) {
@@ -373,7 +371,7 @@ TEST(DeathNoAllocNewHook, logging) {
 }
 
 void TestRawLogging() {
-  string* foo = new string("foo ");
+  auto* foo = new string("foo ");
   string huge_str(50000, 'a');
 
   FlagSaver saver;
@@ -388,7 +386,7 @@ void TestRawLogging() {
   RAW_LOG(INFO, "%s", const_s);
   void* p = reinterpret_cast<void*>(PTR_TEST_VALUE);
   RAW_LOG(INFO, "ptr %p", p);
-  p = NULL;
+  p = nullptr;
   RAW_LOG(INFO, "ptr %p", p);
   int j = 1000;
   RAW_LOG(ERROR, "%s%d%c%010d%s%1x", foo->c_str(), j, ' ', j, " ", j);
@@ -531,7 +529,7 @@ TEST(DeathRawCHECK, logging) {
 
 void TestLogString() {
   vector<string> errors;
-  vector<string> *no_errors = NULL;
+  vector<string>* no_errors = nullptr;
 
   LOG_STRING(INFO, &errors) << "LOG_STRING: " << "collected info";
   LOG_STRING(WARNING, &errors) << "LOG_STRING: " << "collected warning";
@@ -539,16 +537,17 @@ void TestLogString() {
 
   LOG_STRING(INFO, no_errors) << "LOG_STRING: " << "reported info";
   LOG_STRING(WARNING, no_errors) << "LOG_STRING: " << "reported warning";
-  LOG_STRING(ERROR, NULL) << "LOG_STRING: " << "reported error";
+  LOG_STRING(ERROR, nullptr) << "LOG_STRING: "
+                             << "reported error";
 
-  for (size_t i = 0; i < errors.size(); ++i) {
-    LOG(INFO) << "Captured by LOG_STRING:  " << errors[i];
+  for (auto& error : errors) {
+    LOG(INFO) << "Captured by LOG_STRING:  " << error;
   }
 }
 
 void TestLogToString() {
   string error;
-  string* no_error = NULL;
+  string* no_error = nullptr;
 
   LOG_TO_STRING(INFO, &error) << "LOG_TO_STRING: " << "collected info";
   LOG(INFO) << "Captured by LOG_TO_STRING:  " << error;
@@ -559,16 +558,17 @@ void TestLogToString() {
 
   LOG_TO_STRING(INFO, no_error) << "LOG_TO_STRING: " << "reported info";
   LOG_TO_STRING(WARNING, no_error) << "LOG_TO_STRING: " << "reported warning";
-  LOG_TO_STRING(ERROR, NULL) << "LOG_TO_STRING: " << "reported error";
+  LOG_TO_STRING(ERROR, nullptr) << "LOG_TO_STRING: "
+                                << "reported error";
 }
 
 class TestLogSinkImpl : public LogSink {
  public:
   vector<string> errors;
-  virtual void send(LogSeverity severity, const char* /* full_filename */,
-                    const char* base_filename, int line,
-                    const LogMessageTime &logmsgtime,
-                    const char* message, size_t message_len) {
+  void send(LogSeverity severity, const char* /* full_filename */,
+            const char* base_filename, int line,
+            const LogMessageTime& logmsgtime, const char* message,
+            size_t message_len) override {
     errors.push_back(
       ToString(severity, base_filename, line, logmsgtime, message, message_len));
   }
@@ -576,7 +576,7 @@ class TestLogSinkImpl : public LogSink {
 
 void TestLogSink() {
   TestLogSinkImpl sink;
-  LogSink *no_sink = NULL;
+  LogSink* no_sink = nullptr;
 
   LOG_TO_SINK(&sink, INFO) << "LOG_TO_SINK: " << "collected info";
   LOG_TO_SINK(&sink, WARNING) << "LOG_TO_SINK: " << "collected warning";
@@ -584,7 +584,8 @@ void TestLogSink() {
 
   LOG_TO_SINK(no_sink, INFO) << "LOG_TO_SINK: " << "reported info";
   LOG_TO_SINK(no_sink, WARNING) << "LOG_TO_SINK: " << "reported warning";
-  LOG_TO_SINK(NULL, ERROR) << "LOG_TO_SINK: " << "reported error";
+  LOG_TO_SINK(nullptr, ERROR) << "LOG_TO_SINK: "
+                              << "reported error";
 
   LOG_TO_SINK_BUT_NOT_TO_LOGFILE(&sink, INFO)
       << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "collected info";
@@ -597,13 +598,13 @@ void TestLogSink() {
       << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed info";
   LOG_TO_SINK_BUT_NOT_TO_LOGFILE(no_sink, WARNING)
       << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed warning";
-  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(NULL, ERROR)
-      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: " << "thrashed error";
+  LOG_TO_SINK_BUT_NOT_TO_LOGFILE(nullptr, ERROR)
+      << "LOG_TO_SINK_BUT_NOT_TO_LOGFILE: "
+      << "thrashed error";
 
   LOG(INFO) << "Captured by LOG_TO_SINK:";
-  for (size_t i = 0; i < sink.errors.size(); ++i) {
-    LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream()
-      << sink.errors[i];
+  for (auto& error : sink.errors) {
+    LogMessage("foo", LogMessage::kNoLogPrefix, GLOG_INFO).stream() << error;
   }
 }
 
@@ -653,7 +654,7 @@ void TestDCHECK() {
   DCHECK_GT(2, 1);
   DCHECK_LT(1, 2);
 
-  int64* orig_ptr = new int64;
+  auto* orig_ptr = new int64;
   int64* ptr = DCHECK_NOTNULL(orig_ptr);
   CHECK_EQ(ptr, orig_ptr);
   delete orig_ptr;
@@ -661,24 +662,24 @@ void TestDCHECK() {
 
 void TestSTREQ() {
   CHECK_STREQ("this", "this");
-  CHECK_STREQ(NULL, NULL);
+  CHECK_STREQ(nullptr, nullptr);
   CHECK_STRCASEEQ("this", "tHiS");
-  CHECK_STRCASEEQ(NULL, NULL);
+  CHECK_STRCASEEQ(nullptr, nullptr);
   CHECK_STRNE("this", "tHiS");
-  CHECK_STRNE("this", NULL);
+  CHECK_STRNE("this", nullptr);
   CHECK_STRCASENE("this", "that");
-  CHECK_STRCASENE(NULL, "that");
+  CHECK_STRCASENE(nullptr, "that");
   CHECK_STREQ((string("a")+"b").c_str(), "ab");
   CHECK_STREQ(string("test").c_str(),
               (string("te") + string("st")).c_str());
 }
 
 TEST(DeathSTREQ, logging) {
-  ASSERT_DEATH(CHECK_STREQ(NULL, "this"), "");
+  ASSERT_DEATH(CHECK_STREQ(nullptr, "this"), "");
   ASSERT_DEATH(CHECK_STREQ("this", "siht"), "");
-  ASSERT_DEATH(CHECK_STRCASEEQ(NULL, "siht"), "");
+  ASSERT_DEATH(CHECK_STRCASEEQ(nullptr, "siht"), "");
   ASSERT_DEATH(CHECK_STRCASEEQ("this", "siht"), "");
-  ASSERT_DEATH(CHECK_STRNE(NULL, NULL), "");
+  ASSERT_DEATH(CHECK_STRNE(nullptr, nullptr), "");
   ASSERT_DEATH(CHECK_STRNE("this", "this"), "");
   ASSERT_DEATH(CHECK_STREQ((string("a")+"b").c_str(), "abc"), "");
 }
@@ -695,7 +696,7 @@ TEST(CheckNOTNULL, Simple) {
 }
 
 TEST(DeathCheckNN, Simple) {
-  ASSERT_DEATH(CHECK_NOTNULL(static_cast<void *>(NULL)), "");
+  ASSERT_DEATH(CHECK_NOTNULL(static_cast<void*>(nullptr)), "");
 }
 
 // Get list of file names that match pattern
@@ -703,7 +704,7 @@ static void GetFiles(const string& pattern, vector<string>* files) {
   files->clear();
 #if defined(HAVE_GLOB_H)
   glob_t g;
-  const int r = glob(pattern.c_str(), 0, NULL, &g);
+  const int r = glob(pattern.c_str(), 0, nullptr, &g);
   CHECK((r == 0) || (r == GLOB_NOMATCH)) << ": error matching " << pattern;
   for (size_t i = 0; i < g.gl_pathc; i++) {
     files->push_back(string(g.gl_pathv[i]));
@@ -735,8 +736,8 @@ static void GetFiles(const string& pattern, vector<string>* files) {
 static void DeleteFiles(const string& pattern) {
   vector<string> files;
   GetFiles(pattern, &files);
-  for (size_t i = 0; i < files.size(); i++) {
-    CHECK(unlink(files[i].c_str()) == 0) << ": " << strerror(errno);
+  for (auto& file : files) {
+    CHECK(unlink(file.c_str()) == 0) << ": " << strerror(errno);
   }
 }
 
@@ -747,13 +748,13 @@ static void CheckFile(const string& name, const string& expected_string, const b
   CHECK_EQ(files.size(), 1UL);
 
   FILE* file = fopen(files[0].c_str(), "r");
-  CHECK(file != NULL) << ": could not open " << files[0];
+  CHECK(file != nullptr) << ": could not open " << files[0];
   char buf[1000];
-  while (fgets(buf, sizeof(buf), file) != NULL) {
+  while (fgets(buf, sizeof(buf), file) != nullptr) {
     char* first = strstr(buf, expected_string.c_str());
-    //if first == NULL, not found.
-    //Terser than if (checkInFileOrNot && first != NULL || !check...
-    if (checkInFileOrNot != (first == NULL)) {
+    // if first == nullptr, not found.
+    // Terser than if (checkInFileOrNot && first != nullptr || !check...
+    if (checkInFileOrNot != (first == nullptr)) {
       fclose(file);
       return;
     }
@@ -824,7 +825,7 @@ static void TestTwoProcessesWrite() {
     ShutdownGoogleLogging(); //for children proc
     exit(EXIT_SUCCESS);
   } else if (pid > 0) {
-    wait(NULL);
+    wait(nullptr);
   }
   FLAGS_timestamp_in_logfile_name=true;
 
@@ -871,7 +872,7 @@ static void TestExtension() {
   vector<string> filenames;
   GetFiles(dest + "*", &filenames);
   CHECK_EQ(filenames.size(), 1UL);
-  CHECK(strstr(filenames[0].c_str(), "specialextension") != NULL);
+  CHECK(strstr(filenames[0].c_str(), "specialextension") != nullptr);
 
   // Release file handle for the destination file to unlock the file in Windows.
   LogToStderr();
@@ -884,18 +885,16 @@ struct MyLogger : public base::Logger {
   explicit MyLogger(bool* set_on_destruction)
       : set_on_destruction_(set_on_destruction) {}
 
-  ~MyLogger() { *set_on_destruction_ = true; }
+  ~MyLogger() override { *set_on_destruction_ = true; }
 
-  virtual void Write(bool /* should_flush */,
-                     time_t /* timestamp */,
-                     const char* message,
-                     size_t length) {
+  void Write(bool /* should_flush */, time_t /* timestamp */,
+             const char* message, size_t length) override {
     data.append(message, length);
   }
 
-  virtual void Flush() { }
+  void Flush() override {}
 
-  virtual uint32 LogSize() { return data.length(); }
+  uint32 LogSize() override { return data.length(); }
 
  private:
   bool* set_on_destruction_;
@@ -905,11 +904,11 @@ static void TestWrapper() {
   fprintf(stderr, "==== Test log wrapper\n");
 
   bool custom_logger_deleted = false;
-  MyLogger* my_logger = new MyLogger(&custom_logger_deleted);
+  auto* my_logger = new MyLogger(&custom_logger_deleted);
   base::Logger* old_logger = base::GetLogger(GLOG_INFO);
   base::SetLogger(GLOG_INFO, my_logger);
   LOG(INFO) << "Send to wrapped logger";
-  CHECK(strstr(my_logger->data.c_str(), "Send to wrapped logger") != NULL);
+  CHECK(strstr(my_logger->data.c_str(), "Send to wrapped logger") != nullptr);
   FlushLogFiles(GLOG_INFO);
 
   EXPECT_FALSE(custom_logger_deleted);
@@ -1022,17 +1021,14 @@ struct RecordDeletionLogger : public base::Logger {
   {
     *set_on_destruction_ = false;
   }
-  virtual ~RecordDeletionLogger() {
-    *set_on_destruction_ = true;
-  }
-  virtual void Write(bool force_flush,
-                     time_t timestamp,
-                     const char* message,
-                     size_t length) {
+  ~RecordDeletionLogger() override { *set_on_destruction_ = true; }
+  void Write(bool force_flush, time_t timestamp, const char* message,
+             size_t length) override {
     wrapped_logger_->Write(force_flush, timestamp, message, length);
   }
-  virtual void Flush() { wrapped_logger_->Flush(); }
-  virtual uint32 LogSize() { return wrapped_logger_->LogSize(); }
+  void Flush() override { wrapped_logger_->Flush(); }
+  uint32 LogSize() override { return wrapped_logger_->LogSize(); }
+
  private:
   bool* set_on_destruction_;
   base::Logger* wrapped_logger_;
@@ -1054,20 +1050,19 @@ namespace LogTimes {
 // between total running time of 100ms and the period of 10ms. The period is
 // large enough such that any CPU and OS scheduling variation shouldn't affect
 // the results from the ideal case by more than 5% (500us or 0.5ms)
-GLOG_CONSTEXPR int64_t LOG_PERIOD_NS     = 10000000;  // 10ms
-GLOG_CONSTEXPR int64_t LOG_PERIOD_TOL_NS = 500000;    // 500us
+constexpr int64_t LOG_PERIOD_NS = 10000000;    // 10ms
+constexpr int64_t LOG_PERIOD_TOL_NS = 500000;  // 500us
 
 // Set an upper limit for the number of times the stream operator can be
 // called. Make sure not to exceed this number of times the stream operator is
 // called, since it is also the array size and will be indexed by the stream
 // operator.
-GLOG_CONSTEXPR size_t MAX_CALLS = 10;
+constexpr size_t MAX_CALLS = 10;
 }  // namespace LogTimes
 
-#if defined(HAVE_CXX11_CHRONO) && __cplusplus >= 201103L
 struct LogTimeRecorder {
-  LogTimeRecorder() : m_streamTimes(0) {}
-  size_t m_streamTimes;
+  LogTimeRecorder() = default;
+  size_t m_streamTimes{0};
   std::chrono::steady_clock::time_point m_callTimes[LogTimes::MAX_CALLS];
 };
 // The stream operator is called by LOG_EVERY_T every time a logging event
@@ -1083,45 +1078,13 @@ int64 elapsedTime_ns(const std::chrono::steady_clock::time_point& begin,
   return std::chrono::duration_cast<std::chrono::nanoseconds>((end - begin))
           .count();
 }
-#elif defined(GLOG_OS_WINDOWS)
-struct LogTimeRecorder {
-  LogTimeRecorder() : m_streamTimes(0) {}
-  size_t m_streamTimes;
-  LARGE_INTEGER m_callTimes[LogTimes::MAX_CALLS];
-};
-std::ostream& operator<<(std::ostream& stream, LogTimeRecorder& t) {
-  QueryPerformanceCounter(&t.m_callTimes[t.m_streamTimes++]);
-  return stream;
-}
-// get elapsed time in nanoseconds
-int64 elapsedTime_ns(const LARGE_INTEGER& begin, const LARGE_INTEGER& end) {
-  LARGE_INTEGER freq;
-  QueryPerformanceFrequency(&freq);
-  return (end.QuadPart - begin.QuadPart) * LONGLONG(1000000000) / freq.QuadPart;
-}
-#else
-struct LogTimeRecorder {
-  LogTimeRecorder() : m_streamTimes(0) {}
-  size_t m_streamTimes;
-  timespec m_callTimes[LogTimes::MAX_CALLS];
-};
-std::ostream& operator<<(std::ostream& stream, LogTimeRecorder& t) {
-  clock_gettime(CLOCK_MONOTONIC, &t.m_callTimes[t.m_streamTimes++]);
-  return stream;
-}
-// get elapsed time in nanoseconds
-int64 elapsedTime_ns(const timespec& begin, const timespec& end) {
-  return (end.tv_sec - begin.tv_sec) * 1000000000 +
-         (end.tv_nsec - begin.tv_nsec);
-}
-#endif
 
 static void TestLogPeriodically() {
   fprintf(stderr, "==== Test log periodically\n");
 
   LogTimeRecorder timeLogger;
 
-  GLOG_CONSTEXPR double LOG_PERIOD_SEC = LogTimes::LOG_PERIOD_NS * 1e-9;
+  constexpr double LOG_PERIOD_SEC = LogTimes::LOG_PERIOD_NS * 1e-9;
 
   while (timeLogger.m_streamTimes < LogTimes::MAX_CALLS) {
       LOG_EVERY_T(INFO, LOG_PERIOD_SEC)
@@ -1136,8 +1099,7 @@ static void TestLogPeriodically() {
             timeLogger.m_callTimes[i - 1], timeLogger.m_callTimes[i]);
   }
 
-  for (size_t idx = 0; idx < LogTimes::MAX_CALLS - 1; ++idx) {
-    int64 time_ns = nsBetweenCalls[idx];
+  for (long time_ns : nsBetweenCalls) {
     EXPECT_NEAR(time_ns, LogTimes::LOG_PERIOD_NS, LogTimes::LOG_PERIOD_TOL_NS);
   }
 }
@@ -1188,8 +1150,7 @@ static vector<string> global_messages;
 // It's free to use LOG() itself.
 class TestLogSinkWriter : public Thread {
  public:
-
-  TestLogSinkWriter() : should_exit_(false) {
+  TestLogSinkWriter() {
     SetJoinable(true);
     Start();
   }
@@ -1231,8 +1192,8 @@ class TestLogSinkWriter : public Thread {
   bool HaveWork() { return !messages_.empty() || should_exit_; }
 
   // Thread body; CAN use LOG() here!
-  virtual void Run() {
-    while (1) {
+  void Run() override {
+    while (true) {
       mutex_.Lock();
       while (!HaveWork()) {
         mutex_.Unlock();
@@ -1269,7 +1230,7 @@ class TestLogSinkWriter : public Thread {
   // data ---------------
 
   Mutex mutex_;
-  bool should_exit_;
+  bool should_exit_{false};
   queue<string> messages_;  // messages to be logged
 };
 
@@ -1283,7 +1244,7 @@ class TestWaitingLogSink : public LogSink {
     tid_ = pthread_self();  // for thread-specific behavior
     AddLogSink(this);
   }
-  ~TestWaitingLogSink() {
+  ~TestWaitingLogSink() override {
     RemoveLogSink(this);
     writer_.Stop();
     writer_.Join();
@@ -1291,10 +1252,10 @@ class TestWaitingLogSink : public LogSink {
 
   // (re)define LogSink interface
 
-  virtual void send(LogSeverity severity, const char* /* full_filename */,
-                    const char* base_filename, int line,
-                    const LogMessageTime &logmsgtime,
-                    const char* message, size_t message_len) {
+  void send(LogSeverity severity, const char* /* full_filename */,
+            const char* base_filename, int line,
+            const LogMessageTime& logmsgtime, const char* message,
+            size_t message_len) override {
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
@@ -1304,7 +1265,7 @@ class TestWaitingLogSink : public LogSink {
     }
   }
 
-  virtual void WaitTillSent() {
+  void WaitTillSent() override {
     // Wait for Writer thread if we are the original logging thread.
     if (pthread_equal(tid_, pthread_self()))  writer_.Wait();
   }
@@ -1331,8 +1292,8 @@ static void TestLogSinkWaitTillSent() {
     LOG(WARNING) << "Message 3";
     SleepForMilliseconds(60);
   }
-  for (size_t i = 0; i < global_messages.size(); ++i) {
-    LOG(INFO) << "Sink capture: " << global_messages[i];
+  for (auto& global_message : global_messages) {
+    LOG(INFO) << "Sink capture: " << global_message;
   }
   CHECK_EQ(global_messages.size(), 3UL);
 }
@@ -1342,11 +1303,11 @@ TEST(Strerror, logging) {
   char *msg = strdup(strerror(errcode));
   const size_t buf_size = strlen(msg) + 1;
   char *buf = new char[buf_size];
-  CHECK_EQ(posix_strerror_r(errcode, NULL, 0), -1);
+  CHECK_EQ(posix_strerror_r(errcode, nullptr, 0), -1);
   buf[0] = 'A';
   CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
   CHECK_EQ(buf[0], 'A');
-  CHECK_EQ(posix_strerror_r(errcode, NULL, buf_size), -1);
+  CHECK_EQ(posix_strerror_r(errcode, nullptr, buf_size), -1);
 #if defined(GLOG_OS_MACOSX) || defined(GLOG_OS_FREEBSD) || defined(GLOG_OS_OPENBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.

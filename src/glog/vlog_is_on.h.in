@@ -1,4 +1,4 @@
-// Copyright (c) 1999, 2007, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -63,6 +63,8 @@
 
 #include <glog/log_severity.h>
 
+#include <cstddef>
+
 #if defined(__GNUC__)
 // We emit an anonymous static int* variable at every VLOG_IS_ON(n) site.
 // (Normally) the first time every VLOG_IS_ON(n) site is hit,
@@ -98,7 +100,7 @@ extern GLOG_EXPORT int SetVLOGLevel(const char* module_pattern, int log_level);
 struct SiteFlag {
   @ac_google_namespace@::int32* level;
   const char* base_name;
-  size_t base_len;
+  std::size_t base_len;
   SiteFlag* next;
 };
 

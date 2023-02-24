@@ -135,13 +135,14 @@
 #define EnvToString(envname, dflt)   \
   (!getenv(envname) ? (dflt) : getenv(envname))
 
-#define EnvToBool(envname, dflt)   \
-  (!getenv(envname) ? (dflt) : memchr("tTyY1\0", getenv(envname)[0], 6) != NULL)
+#define EnvToBool(envname, dflt) \
+  (!getenv(envname) ? (dflt)     \
+                    : memchr("tTyY1\0", getenv(envname)[0], 6) != nullptr)
 
-#define EnvToInt(envname, dflt)  \
-  (!getenv(envname) ? (dflt) : strtol(getenv(envname), NULL, 10))
+#define EnvToInt(envname, dflt) \
+  (!getenv(envname) ? (dflt) : strtol(getenv(envname), nullptr, 10))
 
-#define EnvToUInt(envname, dflt)  \
-  (!getenv(envname) ? (dflt) : strtoul(getenv(envname), NULL, 10))
+#define EnvToUInt(envname, dflt) \
+  (!getenv(envname) ? (dflt) : strtoul(getenv(envname), nullptr, 10))
 
 #endif  // BASE_COMMANDLINEFLAGS_H__

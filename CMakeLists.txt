@@ -104,10 +104,8 @@ endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
 check_include_file_cxx (glob.h HAVE_GLOB_H)
-check_include_file_cxx (inttypes.h HAVE_INTTYPES_H)
 check_include_file_cxx (memory.h HAVE_MEMORY_H)
 check_include_file_cxx (pwd.h HAVE_PWD_H)
-check_include_file_cxx (stdint.h HAVE_STDINT_H)
 check_include_file_cxx (strings.h HAVE_STRINGS_H)
 check_include_file_cxx (sys/stat.h HAVE_SYS_STAT_H)
 check_include_file_cxx (sys/syscall.h HAVE_SYS_SYSCALL_H)
@@ -120,19 +118,8 @@ check_include_file_cxx (syslog.h HAVE_SYSLOG_H)
 check_include_file_cxx (ucontext.h HAVE_UCONTEXT_H)
 check_include_file_cxx (unistd.h HAVE_UNISTD_H)
 
-check_include_file_cxx ("ext/hash_map" HAVE_EXT_HASH_MAP)
-check_include_file_cxx ("ext/hash_set" HAVE_EXT_HASH_SET)
-check_include_file_cxx ("ext/slist" HAVE_EXT_SLIST)
-check_include_file_cxx ("tr1/unordered_map" HAVE_TR1_UNORDERED_MAP)
-check_include_file_cxx ("tr1/unordered_set" HAVE_TR1_UNORDERED_SET)
-check_include_file_cxx ("unordered_map" HAVE_UNORDERED_MAP)
-check_include_file_cxx ("unordered_set" HAVE_UNORDERED_SET)
-
-check_type_size ("unsigned __int16" HAVE___UINT16 LANGUAGE CXX)
 check_type_size (mode_t HAVE_MODE_T LANGUAGE CXX)
 check_type_size (ssize_t HAVE_SSIZE_T LANGUAGE CXX)
-check_type_size (u_int16_t HAVE_U_INT16_T LANGUAGE CXX)
-check_type_size (uint16_t HAVE_UINT16_T LANGUAGE CXX)
 
 check_function_exists (dladdr HAVE_DLADDR)
 check_function_exists (fcntl HAVE_FCNTL)
@@ -221,82 +208,8 @@ __declspec(selectany) int a;
 int main(void) { return 0; }
 " HAVE___DECLSPEC)
 
-check_cxx_source_compiles ("
-#include <vector>
-vector<int> t; int main() { }
-" STL_NO_NAMESPACE)
-
-check_cxx_source_compiles ("
-#include <vector>
-std::vector<int> t; int main() { }
-" STL_STD_NAMESPACE)
-
-check_cxx_source_compiles ("
-#include <iostream>
-std::ostream& operator<<(std::ostream&, struct s);
-using ::operator<<;
-int main() { }
-" HAVE_USING_OPERATOR)
-
-check_cxx_source_compiles ("
-namespace Outer { namespace Inner { int i = 0; }}
-using namespace Outer::Inner;;
-int main() { return i; }
-" HAVE_NAMESPACES)
-
-check_cxx_source_compiles ("
-__thread int tls;
-int main() { }
-" HAVE_GCC_TLS)
-
-check_cxx_source_compiles ("
-__declspec(thread) int tls;
-int main() { }
-" HAVE_MSVC_TLS)
-
-check_cxx_source_compiles ("
-thread_local int tls;
-int main() { }
-" HAVE_CXX11_TLS)
-
-check_cxx_source_compiles ("
-#include <type_traits>
-std::aligned_storage<sizeof(char), alignof(char)>::type data;
-int main() { }
-" HAVE_ALIGNED_STORAGE)
-
-check_cxx_source_compiles ("
-#include <atomic>
-std::atomic<int> i;
-int main() { }
-" HAVE_CXX11_ATOMIC)
-
-check_cxx_source_compiles ("
-constexpr int x = 0;
-int main() { }
-" HAVE_CXX11_CONSTEXPR)
-
-check_cxx_source_compiles ("
-#include <chrono>
-std::chrono::seconds s;
-int main() { }
-" HAVE_CXX11_CHRONO)
-
-check_cxx_source_compiles ("
-#include <cstddef>
-void foo(std::nullptr_t) {}
-int main(void) { foo(nullptr); }
-" HAVE_CXX11_NULLPTR_T)
-
 if (WITH_TLS)
-  # Cygwin does not support the thread attribute. Don't bother.
-  if (HAVE_GCC_TLS)
-    set (GLOG_THREAD_LOCAL_STORAGE "__thread")
-  elseif (HAVE_MSVC_TLS)
-    set (GLOG_THREAD_LOCAL_STORAGE "__declspec(thread)")
-  elseif (HAVE_CXX11_TLS)
-    set (GLOG_THREAD_LOCAL_STORAGE thread_local)
-  endif (HAVE_GCC_TLS)
+  set (GLOG_THREAD_LOCAL_STORAGE 1)
 endif (WITH_TLS)
 
 set (_PC_FIELDS
@@ -345,28 +258,10 @@ int main(void)
   endforeach (_PC_FIELD)
 endif  (HAVE_UCONTEXT_H AND NOT PC_FROM_UCONTEXT)
 
-if (STL_STD_NAMESPACE)
-  set (STL_NAMESPACE std)
-else (STL_STD_NAMESPACE)
-  set (STL_NAMESPACE "")
-endif (STL_STD_NAMESPACE)
-
 set (GOOGLE_NAMESPACE google)
 set (_START_GOOGLE_NAMESPACE_ "namespace ${GOOGLE_NAMESPACE} {")
 set (_END_GOOGLE_NAMESPACE_ "}")
 set (ac_cv_have_glog_export 1)
-
-if (HAVE___UINT16)
-  set (ac_cv_have___uint16 1)
-else (HAVE___UINT16)
-  set (ac_cv_have___uint16 0)
-endif (HAVE___UINT16)
-
-if (HAVE_INTTYPES_H)
-  set (ac_cv_have_inttypes_h 1)
-else (HAVE_INTTYPES_H)
-  set (ac_cv_have_inttypes_h 0)
-endif (HAVE_INTTYPES_H)
 
 if (HAVE_LIB_GFLAGS)
   set (ac_cv_have_libgflags 1)
@@ -374,29 +269,11 @@ else (HAVE_LIB_GFLAGS)
   set (ac_cv_have_libgflags 0)
 endif (HAVE_LIB_GFLAGS)
 
-if (HAVE_STDINT_H)
-  set (ac_cv_have_stdint_h 1)
-else (HAVE_STDINT_H)
-  set (ac_cv_have_stdint_h 0)
-endif (HAVE_STDINT_H)
-
 if (HAVE_SYS_TYPES_H)
   set (ac_cv_have_systypes_h 1)
 else (HAVE_SYS_TYPES_H)
   set (ac_cv_have_systypes_h 0)
 endif (HAVE_SYS_TYPES_H)
-
-if (HAVE_U_INT16_T)
-  set (ac_cv_have_u_int16_t 1)
-else (HAVE_U_INT16_T)
-  set (ac_cv_have_u_int16_t 0)
-endif (HAVE_U_INT16_T)
-
-if (HAVE_UINT16_T)
-  set (ac_cv_have_uint16_t 1)
-else (HAVE_UINT16_T)
-  set (ac_cv_have_uint16_t 0)
-endif (HAVE_UINT16_T)
 
 if (HAVE_SSIZE_T)
   set (ac_cv_have_ssize_t 1)
@@ -421,11 +298,9 @@ set (ac_google_end_namespace ${_END_GOOGLE_NAMESPACE_})
 set (ac_google_start_namespace ${_START_GOOGLE_NAMESPACE_})
 
 if (HAVE___ATTRIBUTE__)
-  set (ac_cv___attribute___noreturn "__attribute__((noreturn))")
   set (ac_cv___attribute___noinline "__attribute__((noinline))")
   set (ac_cv___attribute___printf_4_5 "__attribute__((__format__(__printf__, 4, 5)))")
 elseif (HAVE___DECLSPEC)
-  set (ac_cv___attribute___noreturn "__declspec(noreturn)")
   #set (ac_cv___attribute___noinline "__declspec(noinline)")
 endif (HAVE___ATTRIBUTE__)
 
@@ -435,39 +310,9 @@ else (HAVE___BUILTIN_EXPECT)
   set (ac_cv_have___builtin_expect 0)
 endif (HAVE___BUILTIN_EXPECT)
 
-if (HAVE_USING_OPERATOR)
-  set (ac_cv_cxx_using_operator 1)
-else (HAVE_USING_OPERATOR)
-  set (ac_cv_cxx_using_operator 0)
-endif (HAVE_USING_OPERATOR)
-
-if (HAVE_CXX11_CONSTEXPR)
-  set (ac_cv_cxx11_constexpr 1)
-else (HAVE_CXX11_CONSTEXPR)
-  set (ac_cv_cxx11_constexpr 0)
-endif (HAVE_CXX11_CONSTEXPR)
-
-if (HAVE_CXX11_CHRONO)
-  set (ac_cv_cxx11_chrono 1)
-else (HAVE_CXX11_CHRONO)
-  set (ac_cv_cxx11_chrono 0)
-endif (HAVE_CXX11_CHRONO)
-
-if (HAVE_CXX11_NULLPTR_T)
-  set (ac_cv_cxx11_nullptr_t 1)
-else (HAVE_CXX11_NULLPTR_T)
-  set (ac_cv_cxx11_nullptr_t 0)
-endif (HAVE_CXX11_NULLPTR_T)
-
 if (HAVE_EXECINFO_BACKTRACE AND HAVE_EXECINFO_BACKTRACE_SYMBOLS)
   set (HAVE_STACKTRACE 1)
 endif (HAVE_EXECINFO_BACKTRACE AND HAVE_EXECINFO_BACKTRACE_SYMBOLS)
-
-if (HAVE_CXX11_ATOMIC)
-  set (ac_cv_cxx11_atomic 1)
-else (HAVE_CXX11_ATOMIC)
-  set (ac_cv_cxx11_atomic 0)
-endif (HAVE_CXX11_ATOMIC)
 
 if (WITH_SYMBOLIZE)
   if (WIN32 OR CYGWIN)
@@ -645,10 +490,12 @@ add_library (glog_internal OBJECT
   ${_glog_BINARY_CMake_MODULES}
   ${GLOG_SRCS}
 )
+target_compile_features (glog_internal PUBLIC $<TARGET_PROPERTY:glog,COMPILE_FEATURES>)
 
 add_library (glog
   $<TARGET_OBJECTS:glog_internal>
 )
+target_compile_features (glog PUBLIC cxx_std_14)
 
 add_library (glog::glog ALIAS glog)
 
@@ -805,21 +652,6 @@ if (BUILD_TESTING)
     set_property (TARGET stl_logging_unittest APPEND PROPERTY COMPILE_OPTIONS
       -Wno-deprecated)
   endif (HAVE_NO_DEPRECATED)
-
-  if (HAVE_UNORDERED_MAP AND HAVE_UNORDERED_SET)
-    target_compile_definitions (stl_logging_unittest PRIVATE
-      GLOG_STL_LOGGING_FOR_UNORDERED)
-  endif (HAVE_UNORDERED_MAP AND HAVE_UNORDERED_SET)
-
-  if (HAVE_TR1_UNORDERED_MAP AND HAVE_TR1_UNORDERED_SET)
-    target_compile_definitions (stl_logging_unittest PRIVATE
-      GLOG_STL_LOGGING_FOR_TR1_UNORDERED)
-  endif (HAVE_TR1_UNORDERED_MAP AND HAVE_TR1_UNORDERED_SET)
-
-  if (HAVE_EXT_HASH_MAP AND HAVE_EXT_HASH_SET)
-    target_compile_definitions (stl_logging_unittest PRIVATE
-      GLOG_STL_LOGGING_FOR_EXT_HASH)
-  endif (HAVE_EXT_HASH_MAP AND HAVE_EXT_HASH_SET)
 
   if (HAVE_EXT_SLIST)
     target_compile_definitions (stl_logging_unittest PRIVATE

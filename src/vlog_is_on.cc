@@ -74,7 +74,7 @@ GLOG_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
                               const char* str, size_t str_len) {
   size_t p = 0;
   size_t s = 0;
-  while (1) {
+  while (true) {
     if (p == patt_len  &&  s == str_len) return true;
     if (p == patt_len) return false;
     if (s == str_len) return p+1 == patt_len  &&  pattern[p] == '*';
@@ -120,8 +120,8 @@ struct VModuleInfo {
 static Mutex vmodule_lock;
 // Pointer to head of the VModuleInfo list.
 // It's a map from module pattern to logging level for those module(s).
-static VModuleInfo* vmodule_list = 0;
-static SiteFlag* cached_site_list = 0;
+static VModuleInfo* vmodule_list = nullptr;
+static SiteFlag* cached_site_list = nullptr;
 
 // Boolean initialization flag.
 static bool inited_vmodule = false;
@@ -134,13 +134,13 @@ static void VLOG2Initializer() {
   inited_vmodule = false;
   const char* vmodule = FLAGS_vmodule.c_str();
   const char* sep;
-  VModuleInfo* head = NULL;
-  VModuleInfo* tail = NULL;
-  while ((sep = strchr(vmodule, '=')) != NULL) {
+  VModuleInfo* head = nullptr;
+  VModuleInfo* tail = nullptr;
+  while ((sep = strchr(vmodule, '=')) != nullptr) {
     string pattern(vmodule, static_cast<size_t>(sep - vmodule));
     int module_level;
     if (sscanf(sep, "=%d", &module_level) == 1) {
-      VModuleInfo* info = new VModuleInfo;
+      auto* info = new VModuleInfo;
       info->module_pattern = pattern;
       info->vlog_level = module_level;
       if (head) {
@@ -152,7 +152,7 @@ static void VLOG2Initializer() {
     }
     // Skip past this entry
     vmodule = strchr(sep, ',');
-    if (vmodule == NULL) break;
+    if (vmodule == nullptr) break;
     vmodule++;  // Skip past ","
   }
   if (head) {  // Put them into the list at the head:
@@ -169,8 +169,8 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
   bool found = false;
   {
     MutexLock l(&vmodule_lock);  // protect whole read-modify-write
-    for (const VModuleInfo* info = vmodule_list;
-         info != NULL; info = info->next) {
+    for (const VModuleInfo* info = vmodule_list; info != nullptr;
+         info = info->next) {
       if (info->module_pattern == module_pattern) {
         if (!found) {
           result = info->vlog_level;
@@ -186,7 +186,7 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
       }
     }
     if (!found) {
-      VModuleInfo* info = new VModuleInfo;
+      auto* info = new VModuleInfo;
       info->module_pattern = module_pattern;
       info->vlog_level = log_level;
       info->next = vmodule_list;
@@ -242,7 +242,8 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
 
   base = base ? (base+1) : fname;
   const char* base_end = strchr(base, '.');
-  size_t base_length = base_end ? size_t(base_end - base) : strlen(base);
+  size_t base_length =
+      base_end ? static_cast<size_t>(base_end - base) : strlen(base);
 
   // Trim out trailing "-inl" if any
   if (base_length >= 4 && (memcmp(base+base_length-4, "-inl", 4) == 0)) {
@@ -254,8 +255,8 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
 
   // find target in vector of modules, replace site_flag_value with
   // a module-specific verbose level, if any.
-  for (const VModuleInfo* info = vmodule_list;
-       info != NULL; info = info->next) {
+  for (const VModuleInfo* info = vmodule_list; info != nullptr;
+       info = info->next) {
     if (SafeFNMatch_(info->module_pattern.c_str(), info->module_pattern.size(),
                      base, base_length)) {
       site_flag_value = &info->vlog_level;

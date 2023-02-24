@@ -53,7 +53,7 @@ _START_GOOGLE_NAMESPACE_
 //      result[1]       main
 //           ....       ...
 //
-// "result" must not be NULL.
+// "result" must not be nullptr.
 GLOG_EXPORT int GetStackTrace(void** result, int max_depth, int skip_count);
 
 _END_GOOGLE_NAMESPACE_
