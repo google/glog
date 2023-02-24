@@ -46,10 +46,10 @@
 _START_GOOGLE_NAMESPACE_
 
 #if !defined(GLOG_OS_WINDOWS)
-typedef struct {
+struct AbbrevPair {
   const char *abbrev;
   const char *real_name;
-} AbbrevPair;
+};
 
 // List of operators from Itanium C++ ABI.
 static const AbbrevPair kOperatorList[] = {
@@ -148,7 +148,7 @@ static const AbbrevPair kSubstitutionList[] = {
 };
 
 // State needed for demangling.
-typedef struct {
+struct State {
   const char *mangled_cur;   // Cursor of mangled name.
   char *out_cur;             // Cursor of output string.
   const char *out_begin;     // Beginning of output string.
@@ -158,7 +158,7 @@ typedef struct {
   short nest_level;          // For nested names.
   bool append;               // Append flag.
   bool overflowed;           // True if output gets overflowed.
-} State;
+};
 
 // We don't use strlen() in libc since it's not guaranteed to be async
 // signal safe.
