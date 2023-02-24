@@ -1,7 +1,7 @@
 Google Logging Library
 ======================
 
-|Linux Github actions| |Windows Github actions| |macOS Github actions| |Total alerts| |Language grade: C++| |Codecov|
+|Linux Github actions| |Windows Github actions| |macOS Github actions| |Codecov|
 
 Google Logging (glog) is a C++98 library that implements application-level
 logging. The library provides logging APIs based on C++-style streams and
@@ -871,9 +871,5 @@ Submitting a Patch
    :target: https://github.com/google/glog/actions
 .. |macOS Github actions| image:: https://github.com/google/glog/actions/workflows/macos.yml/badge.svg
    :target: https://github.com/google/glog/actions
-.. |Total alerts| image:: https://img.shields.io/lgtm/alerts/g/google/glog.svg?logo=lgtm&logoWidth=18
-   :target: https://lgtm.com/projects/g/google/glog/alerts/
-.. |Language grade: C++| image:: https://img.shields.io/lgtm/grade/cpp/g/google/glog.svg?logo=lgtm&logoWidth=18)
-   :target: https://lgtm.com/projects/g/google/glog/context:cpp
 .. |Codecov| image:: https://codecov.io/gh/google/glog/branch/master/graph/badge.svg?token=8an420vNju
    :target: https://codecov.io/gh/google/glog
