@@ -40,7 +40,6 @@ jobs:
           cmake -S . -B build_${{matrix.build_type}} \
             -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
             -DCMAKE_AR=$(which emar) \
-            -DCMAKE_C_COMPILER=$(which emcc) \
             -DCMAKE_CXX_COMPILER=$(which em++) \
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
