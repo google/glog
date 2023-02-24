@@ -59,7 +59,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_CXX11_NULLPTR_T",
         "-DHAVE_STDINT_H",
         "-DHAVE_STRING_H",
-        "-DGLOG_CUSTOM_PREFIX_SUPPORT",
         "-I%s/glog_internal" % gendir,
     ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
 
@@ -205,7 +204,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "cleanup_with_absolute_prefix",
         "cleanup_with_relative_prefix",
         # "demangle", # Broken
-        # "logging_custom_prefix", # Broken
         # "logging", # Broken
         # "mock-log", # Broken
         # "signalhandler", # Pointless

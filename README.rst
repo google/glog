@@ -534,8 +534,7 @@ Custom Log Prefix Format
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 glog supports changing the format of the prefix attached to log messages by
-receiving a user-provided callback to be used to generate such strings.  That
-feature must be enabled at compile time by the ``WITH_CUSTOM_PREFIX`` flag.
+receiving a user-provided callback to be used to generate such strings.
 
 For each log entry, the callback will be invoked with a ``LogMessageInfo``
 struct containing the severity, filename, line number, thread ID, and time of
