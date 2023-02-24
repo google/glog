@@ -639,13 +639,13 @@ if (CYGWIN OR WIN32)
   )
 endif (CYGWIN OR WIN32)
 
-add_library (glogbase OBJECT
+add_library (glog_internal OBJECT
   ${_glog_BINARY_CMake_MODULES}
   ${GLOG_SRCS}
 )
 
 add_library (glog
-  $<TARGET_OBJECTS:glogbase>
+  $<TARGET_OBJECTS:glog_internal>
 )
 
 add_library (glog::glog ALIAS glog)
@@ -708,7 +708,7 @@ target_include_directories (glog BEFORE PUBLIC
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if (CYGWIN OR WIN32)
-  target_include_directories (glogbase PUBLIC
+  target_include_directories (glog_internal PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/windows>"
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 
@@ -719,9 +719,9 @@ endif (CYGWIN OR WIN32)
 
 set_target_properties (glog PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
 
-target_include_directories (glogbase PUBLIC
+target_include_directories (glog_internal PUBLIC
   $<TARGET_PROPERTY:glog,INCLUDE_DIRECTORIES>)
-target_compile_definitions (glogbase PUBLIC
+target_compile_definitions (glog_internal PUBLIC
   $<TARGET_PROPERTY:glog,COMPILE_DEFINITIONS>
   PRIVATE GOOGLE_GLOG_IS_A_DLL)
 
@@ -755,7 +755,7 @@ endif (WITH_PKGCONFIG)
 
 if (BUILD_TESTING)
   add_library (glogtest STATIC
-    $<TARGET_OBJECTS:glogbase>
+    $<TARGET_OBJECTS:glog_internal>
   )
 
   target_include_directories (glogtest PUBLIC
