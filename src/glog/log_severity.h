@@ -1,4 +1,4 @@
-// Copyright (c) 2007, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
 // Variables of type LogSeverity are widely taken to lie in the range
 // [0, NUM_SEVERITIES-1].  Be careful to preserve this assumption if
 // you ever need to change their values or add a new severity.
-typedef int LogSeverity;
+using LogSeverity = int;
 
 const int GLOG_INFO = 0, GLOG_WARNING = 1, GLOG_ERROR = 2, GLOG_FATAL = 3,
   NUM_SEVERITIES = 4;

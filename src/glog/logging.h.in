@@ -1,4 +1,4 @@
-// Copyright (c) 2022, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,11 +36,8 @@
 #ifndef GLOG_LOGGING_H
 #define GLOG_LOGGING_H
 
-#if @ac_cv_cxx11_chrono@ && __cplusplus >= 201103L
-#include <chrono>
-#endif
-
 #include <cerrno>
+#include <chrono>
 #include <cstddef>
 #include <cstdlib>
 #include <cstring>
@@ -75,46 +72,23 @@
 // Note: these commands below may look like "#if 1" or "#if 0", but
 // that's because they were constructed that way at ./configure time.
 // Look at logging.h.in to see how they're calculated (based on your config).
-#if @ac_cv_have_stdint_h@
-#include <stdint.h>             // the normal place uint16_t is defined
-#endif
+#include <cstdint>  // the normal place uint16_t is defined
 #if @ac_cv_have_systypes_h@
 #include <sys/types.h>          // the normal place u_int16_t is defined
-#endif
-#if @ac_cv_have_inttypes_h@
-#include <inttypes.h>           // a third place for uint16_t or u_int16_t
 #endif
 
 #if @ac_cv_have_libgflags@
 #include <gflags/gflags.h>
 #endif
 
-#if @ac_cv_cxx11_atomic@ && __cplusplus >= 201103L
 #include <atomic>
-#elif defined(GLOG_OS_WINDOWS)
-#include <Windows.h>
-#endif
 
 @ac_google_start_namespace@
 
-#if @ac_cv_have_stdint_h@      // the C99 format
-typedef int32_t int32;
-typedef uint32_t uint32;
-typedef int64_t int64;
-typedef uint64_t uint64;
-#elif @ac_cv_have_u_int16_t@   // the BSD format
-typedef int32_t int32;
-typedef u_int32_t uint32;
-typedef int64_t int64;
-typedef u_int64_t uint64;
-#elif @ac_cv_have___uint16@    // the windows (vc7) format
-typedef __int32 int32;
-typedef unsigned __int32 uint32;
-typedef __int64 int64;
-typedef unsigned __int64 uint64;
-#else
-#error Do not know how to define a 32-bit integer quantity on your system
-#endif
+    typedef std::int32_t int32;
+typedef std::uint32_t uint32;
+typedef std::int64_t int64;
+typedef std::uint64_t uint64;
 
 #if !(@ac_cv_have_ssize_t@)
 typedef ptrdiff_t ssize_t;
@@ -743,13 +717,11 @@ inline unsigned short GetReferenceableValue(unsigned short     t) { return t; }
 inline int            GetReferenceableValue(int                t) { return t; }
 inline unsigned int   GetReferenceableValue(unsigned int       t) { return t; }
 inline long           GetReferenceableValue(long               t) { return t; }
-inline unsigned long  GetReferenceableValue(unsigned long      t) { return t; }
-#if __cplusplus >= 201103L
+inline unsigned long GetReferenceableValue(unsigned long t) { return t; }
 inline long long      GetReferenceableValue(long long          t) { return t; }
 inline unsigned long long GetReferenceableValue(unsigned long long t) {
   return t;
 }
-#endif
 
 // This is a dummy class to define the following operator.
 struct DummyClassToDefineOperator {};
@@ -782,12 +754,10 @@ void MakeCheckOpValueString(std::ostream* os, const signed char& v);
 template <> GLOG_EXPORT
 void MakeCheckOpValueString(std::ostream* os, const unsigned char& v);
 
-// This is required because nullptr is only present in c++ 11 and later.
-#if @ac_cv_cxx11_nullptr_t@ && __cplusplus >= 201103L
 // Provide printable value for nullptr_t
-template <> GLOG_EXPORT
-void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& v);
-#endif
+template <>
+GLOG_EXPORT void MakeCheckOpValueString(std::ostream* os,
+                                        const std::nullptr_t& v);
 
 // Build the error message string. Specify no inlining for code size.
 template <typename T1, typename T2>
@@ -1031,12 +1001,6 @@ PLOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN((invocation) == -1))    \
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
-#if @ac_cv_cxx11_constexpr@ && __cplusplus >= 201103L
-#define GLOG_CONSTEXPR constexpr
-#else
-#define GLOG_CONSTEXPR const
-#endif
-
 #define LOG_TIME_PERIOD LOG_EVERY_N_VARNAME(timePeriod_, __LINE__)
 #define LOG_PREVIOUS_TIME_RAW LOG_EVERY_N_VARNAME(previousTimeRaw_, __LINE__)
 #define LOG_TIME_DELTA LOG_EVERY_N_VARNAME(deltaTime_, __LINE__)
@@ -1074,54 +1038,34 @@ extern "C" void AnnotateBenignRaceSized(
 namespace google {
 #endif
 
-#if __cplusplus >= 201103L && @ac_cv_cxx11_chrono@ && @ac_cv_cxx11_atomic@ // Have <chrono> and <atomic>
-#define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
-  GLOG_CONSTEXPR std::chrono::nanoseconds LOG_TIME_PERIOD = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<double>(seconds)); \
-  static std::atomic<@ac_google_namespace@::int64> LOG_PREVIOUS_TIME_RAW; \
-  GLOG_IFDEF_THREAD_SANITIZER( \
-          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_TIME_PERIOD, sizeof(@ac_google_namespace@::int64), "")); \
-  GLOG_IFDEF_THREAD_SANITIZER( \
-          AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_PREVIOUS_TIME_RAW, sizeof(@ac_google_namespace@::int64), "")); \
-  const auto LOG_CURRENT_TIME = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()); \
-  const auto LOG_PREVIOUS_TIME = LOG_PREVIOUS_TIME_RAW.load(std::memory_order_relaxed); \
-  const auto LOG_TIME_DELTA = LOG_CURRENT_TIME - std::chrono::nanoseconds(LOG_PREVIOUS_TIME); \
-  if (LOG_TIME_DELTA > LOG_TIME_PERIOD) \
-    LOG_PREVIOUS_TIME_RAW.store(std::chrono::duration_cast<std::chrono::nanoseconds>(LOG_CURRENT_TIME).count(), std::memory_order_relaxed); \
-  if (LOG_TIME_DELTA > LOG_TIME_PERIOD) @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity).stream()
-#elif defined(GLOG_OS_WINDOWS)
-#define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
-  GLOG_CONSTEXPR LONGLONG LOG_TIME_PERIOD = (seconds) * LONGLONG(1000000000); \
-  static LARGE_INTEGER LOG_PREVIOUS_TIME; \
-  LONGLONG LOG_TIME_DELTA; \
-  { \
-    LARGE_INTEGER currTime; \
-    LARGE_INTEGER freq; \
-    QueryPerformanceCounter(&currTime); \
-    QueryPerformanceFrequency(&freq); \
-    InterlockedCompareExchange64(&LOG_PREVIOUS_TIME.QuadPart, currTime.QuadPart, 0); \
-    LOG_TIME_DELTA = (currTime.QuadPart - LOG_PREVIOUS_TIME.QuadPart) * LONGLONG(1000000000) / freq.QuadPart; \
-    if (LOG_TIME_DELTA > LOG_TIME_PERIOD) InterlockedExchange64(&LOG_PREVIOUS_TIME.QuadPart, currTime.QuadPart); \
-  } \
-  if (LOG_TIME_DELTA > LOG_TIME_PERIOD) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity).stream()
-#else
-#define SOME_KIND_OF_LOG_EVERY_T(severity, seconds) \
-  GLOG_CONSTEXPR @ac_google_namespace@::int64 LOG_TIME_PERIOD(seconds * 1000000000); \
-  static @ac_google_namespace@::int64 LOG_PREVIOUS_TIME; \
-  @ac_google_namespace@::int64 LOG_TIME_DELTA = 0; \
-  { \
-    timespec currentTime = {}; \
-    clock_gettime(CLOCK_MONOTONIC, &currentTime); \
-    LOG_TIME_DELTA = (currentTime.tv_sec * 1000000000 + currentTime.tv_nsec) - LOG_PREVIOUS_TIME; \
-  } \
-  if (LOG_TIME_DELTA > LOG_TIME_PERIOD) __sync_add_and_fetch(&LOG_PREVIOUS_TIME, LOG_TIME_DELTA); \
-  if (LOG_TIME_DELTA > LOG_TIME_PERIOD) @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity).stream()
-#endif
+#define SOME_KIND_OF_LOG_EVERY_T(severity, seconds)                            \
+  constexpr std::chrono::nanoseconds LOG_TIME_PERIOD =                         \
+      std::chrono::duration_cast<std::chrono::nanoseconds>(                    \
+          std::chrono::duration<double>(seconds));                             \
+  static std::atomic<@ac_google_namespace@ ::int64> LOG_PREVIOUS_TIME_RAW;    \
+  GLOG_IFDEF_THREAD_SANITIZER(                                                 \
+      AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_TIME_PERIOD,            \
+                              sizeof(@ac_google_namespace @ ::int64), ""));    \
+  GLOG_IFDEF_THREAD_SANITIZER(                                                 \
+      AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_PREVIOUS_TIME_RAW,      \
+                              sizeof(@ac_google_namespace @ ::int64), ""));    \
+  const auto LOG_CURRENT_TIME =                                                \
+      std::chrono::duration_cast<std::chrono::nanoseconds>(                    \
+          std::chrono::steady_clock::now().time_since_epoch());                \
+  const auto LOG_PREVIOUS_TIME =                                               \
+      LOG_PREVIOUS_TIME_RAW.load(std::memory_order_relaxed);                   \
+  const auto LOG_TIME_DELTA =                                                  \
+      LOG_CURRENT_TIME - std::chrono::nanoseconds(LOG_PREVIOUS_TIME);          \
+  if (LOG_TIME_DELTA > LOG_TIME_PERIOD)                                        \
+    LOG_PREVIOUS_TIME_RAW.store(                                               \
+        std::chrono::duration_cast<std::chrono::nanoseconds>(LOG_CURRENT_TIME) \
+            .count(),                                                          \
+        std::memory_order_relaxed);                                            \
+  if (LOG_TIME_DELTA > LOG_TIME_PERIOD)                                        \
+  @ac_google_namespace@ ::LogMessage(                                         \
+      __FILE__, __LINE__, @ac_google_namespace@ ::GLOG_##severity)            \
+      .stream()
 
-#if @ac_cv_cxx11_atomic@ && __cplusplus >= 201103L
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
   static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0); \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), "")); \
@@ -1164,94 +1108,6 @@ namespace google {
     @ac_google_namespace@::LogMessage( \
         __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
         &what_to_do).stream()
-
-#elif defined(GLOG_OS_WINDOWS)
-
-#define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
-  static volatile unsigned LOG_OCCURRENCES = 0; \
-  static volatile unsigned LOG_OCCURRENCES_MOD_N = 0; \
-  InterlockedIncrement(&LOG_OCCURRENCES); \
-  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
-    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-
-#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
-  static volatile unsigned LOG_OCCURRENCES = 0; \
-  static volatile unsigned LOG_OCCURRENCES_MOD_N = 0; \
-  InterlockedIncrement(&LOG_OCCURRENCES); \
-  if ((condition) && \
-    ((InterlockedIncrement(&LOG_OCCURRENCES_MOD_N), \
-     (LOG_OCCURRENCES_MOD_N > n && InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n))), \
-     LOG_OCCURRENCES_MOD_N == 1)) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-                 &what_to_do).stream()
-
-#define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
-  static volatile unsigned LOG_OCCURRENCES = 0; \
-  static volatile unsigned LOG_OCCURRENCES_MOD_N = 0; \
-  InterlockedIncrement(&LOG_OCCURRENCES); \
-  if (InterlockedIncrement(&LOG_OCCURRENCES_MOD_N) > n) \
-    InterlockedExchangeSubtract(&LOG_OCCURRENCES_MOD_N, n); \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
-    @ac_google_namespace@::ErrnoLogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-
-#define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
-  static volatile unsigned LOG_OCCURRENCES = 0; \
-  if (LOG_OCCURRENCES <= n) \
-    InterlockedIncrement(&LOG_OCCURRENCES); \
-  if (LOG_OCCURRENCES <= n) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-
-#else
-
-#define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
-  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) > n) \
-    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-
-#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
-  if ((condition) && \
-      (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) || true) && \
-      ((LOG_OCCURRENCES_MOD_N >= n && __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n)) || true) && \
-      LOG_OCCURRENCES_MOD_N == (1 % n)) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-                 &what_to_do).stream()
-
-#define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
-  __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
-  if (__sync_add_and_fetch(&LOG_OCCURRENCES_MOD_N, 1) > n) \
-    __sync_sub_and_fetch(&LOG_OCCURRENCES_MOD_N, n); \
-  if (LOG_OCCURRENCES_MOD_N == 1) \
-    @ac_google_namespace@::ErrnoLogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-
-#define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do) \
-  static int LOG_OCCURRENCES = 0; \
-  if (LOG_OCCURRENCES <= n) \
-    __sync_add_and_fetch(&LOG_OCCURRENCES, 1); \
-  if (LOG_OCCURRENCES <= n) \
-    @ac_google_namespace@::LogMessage( \
-        __FILE__, __LINE__, @ac_google_namespace@::GLOG_ ## severity, LOG_OCCURRENCES, \
-        &what_to_do).stream()
-#endif
 
 namespace glog_internal_namespace_ {
 template <bool>
@@ -1575,7 +1431,7 @@ public:
   void SendToSyslogAndLog();  // Actually dispatch to syslog and the logs
 
   // Call abort() or similar to perform LOG(FATAL) crash.
-  static void @ac_cv___attribute___noreturn@ Fail();
+  [[noreturn]] static void Fail();
 
   std::ostream& stream();
 
@@ -1626,7 +1482,7 @@ class GLOG_EXPORT LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line);
   LogMessageFatal(const char* file, int line, const CheckOpString& result);
-  @ac_cv___attribute___noreturn@ ~LogMessageFatal();
+  [[noreturn]] ~LogMessageFatal();
 };
 
 // A non-macro interface to the log facility; (useful
@@ -1641,17 +1497,6 @@ inline void LogAtLevel(int const severity, std::string const &msg) {
 // LOG macros, 2. this macro can be used as C++ stream.
 #define LOG_AT_LEVEL(severity) @ac_google_namespace@::LogMessage(__FILE__, __LINE__, severity).stream()
 
-// Check if it's compiled in C++11 mode.
-//
-// GXX_EXPERIMENTAL_CXX0X is defined by gcc and clang up to at least
-// gcc-4.7 and clang-3.1 (2011-12-13).  __cplusplus was defined to 1
-// in gcc before 4.7 (Crosstool 16) and clang before 3.1, but is
-// defined according to the language version in effect thereafter.
-// Microsoft Visual Studio 14 (2015) sets __cplusplus==199711 despite
-// reasonably good C++11 support, so we set LANG_CXX for it and
-// newer versions (_MSC_VER >= 1900).
-#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L || \
-     (defined(_MSC_VER) && _MSC_VER >= 1900)) && !defined(__UCLIBCXX_MAJOR__)
 // Helper for CHECK_NOTNULL().
 //
 // In C++11, all cases can be handled by a single function. Since the value
@@ -1667,18 +1512,6 @@ T CheckNotNull(const char* file, int line, const char* names, T&& t) {
  }
  return std::forward<T>(t);
 }
-
-#else
-
-// A small helper for CHECK_NOTNULL().
-template <typename T>
-T* CheckNotNull(const char *file, int line, const char *names, T* t) {
-  if (t == NULL) {
-    LogMessageFatal(file, line, new std::string(names));
-  }
-  return t;
-}
-#endif
 
 // Allow folks to put a counter in the LOG_EVERY_X()'ed messages. This
 // only works if ostream is a LogStream. If the ostream is not a
@@ -1967,7 +1800,7 @@ class GLOG_EXPORT NullStreamFatal : public NullStream {
 #pragma warning(push)
 #pragma warning(disable : 4722)
 #endif // _MSC_VER
-  @ac_cv___attribute___noreturn@ ~NullStreamFatal() throw () { _exit(EXIT_FAILURE); }
+  [[noreturn]] ~NullStreamFatal() throw() { _exit(EXIT_FAILURE); }
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif // _MSC_VER

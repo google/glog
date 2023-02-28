@@ -72,7 +72,7 @@ class ScopedMockLog : public GOOGLE_NAMESPACE::LogSink {
   ScopedMockLog() { AddLogSink(this); }
 
   // When the object is destructed, it stops intercepting logs.
-  ~ScopedMockLog() { RemoveLogSink(this); }
+  ~ScopedMockLog() override { RemoveLogSink(this); }
 
   // Implements the mock method:
   //
@@ -113,11 +113,10 @@ class ScopedMockLog : public GOOGLE_NAMESPACE::LogSink {
   // be running simultaneously, we ensure thread-safety of the exchange between
   // send() and WaitTillSent(), and that for each message, LOG(), send(),
   // WaitTillSent() and Log() are executed in the same thread.
-  virtual void send(GOOGLE_NAMESPACE::LogSeverity severity,
-                    const char* full_filename,
-                    const char* /*base_filename*/, int /*line*/,
-                    const LogMessageTime & /*logmsgtime*/,
-                    const char* message, size_t message_len) {
+  void send(GOOGLE_NAMESPACE::LogSeverity severity, const char* full_filename,
+            const char* /*base_filename*/, int /*line*/,
+            const LogMessageTime& /*logmsgtime*/, const char* message,
+            size_t message_len) override {
     // We are only interested in the log severity, full file name, and
     // log message.
     message_info_.severity = severity;
@@ -132,7 +131,7 @@ class ScopedMockLog : public GOOGLE_NAMESPACE::LogSink {
   //
   // LOG(), send(), WaitTillSent() and Log() will occur in the same thread for
   // a given log message.
-  virtual void WaitTillSent() {
+  void WaitTillSent() override {
     // First, and very importantly, we save a copy of the message being
     // processed before calling Log(), since Log() may indirectly call send()
     // and WaitTillSent() in the same thread again.

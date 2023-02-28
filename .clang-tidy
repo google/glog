@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,google-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,google-*,modernize-*,-modernize-use-trailing-return-type,readability-*,portability-*,performance-*,bugprone-*,android-*,darwin-*,clang-analyzer-*'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

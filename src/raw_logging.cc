@@ -31,11 +31,11 @@
 //
 // logging_unittest.cc covers the functionality herein
 
-#include "utilities.h"
-
-#include <stdarg.h>
-#include <cstdio>
 #include <cerrno>
+#include <cstdarg>
+#include <cstdio>
+
+#include "utilities.h"
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>               // for close() and write()
 #endif

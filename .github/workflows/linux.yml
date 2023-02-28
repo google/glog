@@ -14,7 +14,7 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         lib: [shared, static]
-        std: [98, 11, 14, 17, 20]
+        std: [14, 17, 20]
 
     steps:
       - uses: actions/checkout@v3
@@ -58,11 +58,6 @@ jobs:
         run: |
           echo 'CXXFLAGS=--coverage' >> $GITHUB_ENV
           echo 'GTest_ROOT=${{github.workspace}}/gtest' >> $GITHUB_ENV
-
-      - name: Setup C++98 Environment
-        if: matrix.std == '98'
-        run: |
-          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
       - name: Configure
         env:

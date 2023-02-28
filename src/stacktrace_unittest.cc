@@ -117,7 +117,7 @@ static void CheckRetAddrIsInFunction(void *ret_addr, const AddressRange &range)
 #endif
 
 void ATTRIBUTE_NOINLINE CheckStackTrace(int);
-static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
+static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
   const int STACK_LEN = 10;
   void *stack[STACK_LEN];
   int size;
@@ -130,7 +130,7 @@ static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf(void) {
   CHECK_GE(size, 1);
   CHECK_LE(size, STACK_LEN);
 
-  if (1) {
+  if (true) {
 #ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
     char **strings = backtrace_symbols(stack, size);
     printf("Obtained %d stack frames.\n", size);

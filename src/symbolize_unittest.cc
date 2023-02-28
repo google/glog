@@ -68,7 +68,7 @@ static const char *TrySymbolize(void *pc) {
   if (Symbolize(pc, symbol, sizeof(symbol))) {
     return symbol;
   } else {
-    return NULL;
+    return nullptr;
   }
 }
 #endif
@@ -123,12 +123,12 @@ TEST(Symbolize, Symbolize) {
       TrySymbolize(reinterpret_cast<void *>(&static_func));
 
 #if !defined(_MSC_VER) || !defined(NDEBUG)
-  CHECK(NULL != static_func_symbol);
+  CHECK(nullptr != static_func_symbol);
   EXPECT_TRUE(strcmp("static_func", static_func_symbol) == 0 ||
               strcmp("static_func()", static_func_symbol) == 0);
 #endif
 
-  EXPECT_TRUE(NULL == TrySymbolize(NULL));
+  EXPECT_TRUE(nullptr == TrySymbolize(nullptr));
 }
 
 struct Foo {
@@ -181,7 +181,7 @@ static void SymbolizeSignalHandler(int /*signo*/) {
                 sizeof(g_symbolize_buffer))) {
     g_symbolize_result = g_symbolize_buffer;
   } else {
-    g_symbolize_result = NULL;
+    g_symbolize_result = nullptr;
   }
 }
 
@@ -278,9 +278,9 @@ static const char *SymbolizeStackConsumption(void *pc, int *stack_consumed) {
   LOG(INFO) << "Stack consumption of Symbolize: " << *stack_consumed;
 
   // Now restore the old alt-signal-stack and signal handlers.
-  CHECK_ERR(sigaltstack(&old_sigstk, NULL));
-  CHECK_ERR(sigaction(SIGUSR1, &old_sa1, NULL));
-  CHECK_ERR(sigaction(SIGUSR2, &old_sa2, NULL));
+  CHECK_ERR(sigaltstack(&old_sigstk, nullptr));
+  CHECK_ERR(sigaction(SIGUSR1, &old_sa1, nullptr));
+  CHECK_ERR(sigaction(SIGUSR2, &old_sa2, nullptr));
 
   return g_symbolize_result;
 }
@@ -307,7 +307,7 @@ TEST(Symbolize, SymbolizeStackConsumption) {
   // mangled or an unmangled name here.
   symbol = SymbolizeStackConsumption(reinterpret_cast<void *>(&static_func),
                                      &stack_consumed);
-  CHECK(NULL != symbol);
+  CHECK(nullptr != symbol);
   EXPECT_TRUE(strcmp("static_func", symbol) == 0 ||
               strcmp("static_func()", symbol) == 0);
   EXPECT_GT(stack_consumed, 0);
@@ -334,7 +334,7 @@ TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
 // x86 specific tests.  Uses some inline assembler.
 extern "C" {
 inline void* always_inline inline_func() {
-  void *pc = NULL;
+  void *pc = nullptr;
 #ifdef TEST_X86_32_AND_64
   __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
 #endif
@@ -343,7 +343,7 @@ inline void* always_inline inline_func() {
 
 void* ATTRIBUTE_NOINLINE non_inline_func();
 void* ATTRIBUTE_NOINLINE non_inline_func() {
-  void *pc = NULL;
+  void *pc = nullptr;
 #ifdef TEST_X86_32_AND_64
   __asm__ __volatile__("call 1f; 1: pop %0" : "=r"(pc));
 #endif
@@ -356,7 +356,7 @@ static void ATTRIBUTE_NOINLINE TestWithPCInsideNonInlineFunction() {
   const char *symbol = TrySymbolize(pc);
 
 #if !defined(_MSC_VER) || !defined(NDEBUG)
-  CHECK(symbol != NULL);
+  CHECK(symbol != nullptr);
   CHECK_STREQ(symbol, "non_inline_func");
 #endif
   cout << "Test case TestWithPCInsideNonInlineFunction passed." << endl;
@@ -369,7 +369,7 @@ static void ATTRIBUTE_NOINLINE TestWithPCInsideInlineFunction() {
   const char *symbol = TrySymbolize(pc);
 
 #if !defined(_MSC_VER) || !defined(NDEBUG)
-  CHECK(symbol != NULL);
+  CHECK(symbol != nullptr);
   CHECK_STREQ(symbol, __FUNCTION__);
 #endif
   cout << "Test case TestWithPCInsideInlineFunction passed." << endl;
@@ -384,7 +384,7 @@ static void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
   const char *symbol = TrySymbolize(return_address);
 
 #if !defined(_MSC_VER) || !defined(NDEBUG)
-  CHECK(symbol != NULL);
+  CHECK(symbol != nullptr);
   CHECK_STREQ(symbol, "main");
 #endif
   cout << "Test case TestWithReturnAddress passed." << endl;
@@ -428,7 +428,7 @@ __declspec(noinline) void TestWithReturnAddress() {
 	  ;
   const char *symbol = TrySymbolize(return_address);
 #if !defined(_MSC_VER) || !defined(NDEBUG)
-  CHECK(symbol != NULL);
+  CHECK(symbol != nullptr);
   CHECK_STREQ(symbol, "main");
 #endif
   cout << "Test case TestWithReturnAddress passed." << endl;
@@ -444,7 +444,7 @@ int main(int argc, char **argv) {
 # if defined(__ELF__)
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.
-  InstallSymbolizeCallback(NULL);
+  InstallSymbolizeCallback(nullptr);
 
   TestWithPCInsideInlineFunction();
   TestWithPCInsideNonInlineFunction();

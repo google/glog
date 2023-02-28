@@ -19,7 +19,6 @@ jobs:
         build_type: [Debug, Release]
         lib: [shared, static]
         msvc: [VS-16-2019, VS-17-2022]
-        # Visual Studio 17 2022 does not support C++11 and older language standard
         std: [14, 17, 20]
         include:
           - msvc: VS-16-2019
@@ -139,7 +138,7 @@ jobs:
       matrix:
         build_type: [Debug]
         lib: [shared, static]
-        std: [98, 11, 14, 17, 20]
+        std: [14, 17, 20]
         sys: [mingw32, mingw64]
         include:
          - sys: mingw32
@@ -158,11 +157,6 @@ jobs:
             mingw-w64-${{matrix.env}}-gcc
             mingw-w64-${{matrix.env}}-gflags
             mingw-w64-${{matrix.env}}-ninja
-
-      - name: Setup C++98 Environment
-        if: matrix.std == '98'
-        run: |
-          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
       - name: Setup Environment
         if: matrix.build_type == 'Debug'

@@ -35,14 +35,15 @@
 //    http://www.linux-foundation.org/spec/ELF/ppc64/PPC-elf64abi-1.9.html#STACK
 // Linux has similar code: http://patchwork.ozlabs.org/linuxppc/patch?id=8882
 
+#include <cstdint>  // for uintptr_t
 #include <cstdio>
-#include <stdint.h>   // for uintptr_t
+
 #include "stacktrace.h"
 
 _START_GOOGLE_NAMESPACE_
 
 // Given a pointer to a stack frame, locate and return the calling
-// stackframe, or return NULL if no stackframe can be found. Perform sanity
+// stackframe, or return nullptr if no stackframe can be found. Perform sanity
 // checks (the strictness of which is controlled by the boolean parameter
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
 template<bool STRICT_UNWINDING>
@@ -54,18 +55,20 @@ static void **NextStackFrame(void **old_sp) {
   if (STRICT_UNWINDING) {
     // With the stack growing downwards, older stack frame must be
     // at a greater address that the current one.
-    if (new_sp <= old_sp) return NULL;
+    if (new_sp <= old_sp) return nullptr;
     // Assume stack frames larger than 100,000 bytes are bogus.
-    if ((uintptr_t)new_sp - (uintptr_t)old_sp > 100000) return NULL;
+    if ((uintptr_t)new_sp - (uintptr_t)old_sp > 100000) return nullptr;
   } else {
     // In the non-strict mode, allow discontiguous stack frames.
     // (alternate-signal-stacks for example).
-    if (new_sp == old_sp) return NULL;
+    if (new_sp == old_sp) return nullptr;
     // And allow frames upto about 1MB.
-    if ((new_sp > old_sp)
-        && ((uintptr_t)new_sp - (uintptr_t)old_sp > 1000000)) return NULL;
+    if ((new_sp > old_sp) &&
+        ((uintptr_t)new_sp - (uintptr_t)old_sp > 1000000)) {
+      return nullptr;
+    }
   }
-  if ((uintptr_t)new_sp & (sizeof(void *) - 1)) return NULL;
+  if ((uintptr_t)new_sp & (sizeof(void *) - 1)) return nullptr;
   return new_sp;
 }
 

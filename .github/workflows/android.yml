@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        std: [98, 11, 14, 17, 20]
+        std: [14, 17, 20]
         abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
         build_type: [Debug, Release]
 
@@ -25,11 +25,6 @@ jobs:
         uses: ashutoshvarma/setup-ninja@master
         with:
           version: 1.10.0
-
-      - name: Setup C++98 Environment
-        if: matrix.std == '98'
-        run: |
-          echo 'CXXFLAGS=-Wno-error=variadic-macros -Wno-error=long-long ${{env.CXXFLAGS}}' >> $GITHUB_ENV
 
       - name: Setup NDK
         env:

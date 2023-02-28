@@ -191,16 +191,16 @@ inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
 void DumpStackTraceToString(std::string* stacktrace);
 
 struct CrashReason {
-  CrashReason() : filename(0), line_number(0), message(0), depth(0) {}
+  CrashReason() = default;
 
-  const char* filename;
-  int line_number;
-  const char* message;
+  const char* filename{nullptr};
+  int line_number{0};
+  const char* message{nullptr};
 
   // We'll also store a bit of stack trace context at the time of crash as
   // it may not be available later on.
   void* stack[32];
-  int depth;
+  int depth{0};
 };
 
 void SetCrashReason(const CrashReason* r);

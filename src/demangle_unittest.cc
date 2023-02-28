@@ -94,7 +94,7 @@ TEST(Demangle, CornerCases) {
   EXPECT_FALSE(Demangle(mangled, tmp, size - 2));  // Not enough.
   EXPECT_FALSE(Demangle(mangled, tmp, 1));
   EXPECT_FALSE(Demangle(mangled, tmp, 0));
-  EXPECT_FALSE(Demangle(mangled, NULL, 0));  // Should not cause SEGV.
+  EXPECT_FALSE(Demangle(mangled, nullptr, 0));  // Should not cause SEGV.
 }
 
 // Test handling of functions suffixed with .clone.N, which is used by GCC

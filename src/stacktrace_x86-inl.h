@@ -29,7 +29,7 @@
 //
 // Produce stack trace
 
-#include <stdint.h>   // for uintptr_t
+#include <cstdint>  // for uintptr_t
 
 #include "utilities.h"   // for OS_* macros
 
@@ -38,13 +38,14 @@
 #include <sys/mman.h>
 #endif
 
-#include <cstdio>  // for NULL
+#include <cstdio>  // for nullptr
+
 #include "stacktrace.h"
 
 _START_GOOGLE_NAMESPACE_
 
 // Given a pointer to a stack frame, locate and return the calling
-// stackframe, or return NULL if no stackframe can be found. Perform sanity
+// stackframe, or return nullptr if no stackframe can be found. Perform sanity
 // checks (the strictness of which is controlled by the boolean parameter
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
 template<bool STRICT_UNWINDING>
@@ -56,28 +57,32 @@ static void **NextStackFrame(void **old_sp) {
   if (STRICT_UNWINDING) {
     // With the stack growing downwards, older stack frame must be
     // at a greater address that the current one.
-    if (new_sp <= old_sp) return NULL;
+    if (new_sp <= old_sp) return nullptr;
     // Assume stack frames larger than 100,000 bytes are bogus.
     if (reinterpret_cast<uintptr_t>(new_sp) -
             reinterpret_cast<uintptr_t>(old_sp) >
-        100000)
-      return NULL;
+        100000) {
+      return nullptr;
+    }
   } else {
     // In the non-strict mode, allow discontiguous stack frames.
     // (alternate-signal-stacks for example).
-    if (new_sp == old_sp) return NULL;
+    if (new_sp == old_sp) return nullptr;
     // And allow frames upto about 1MB.
     if ((new_sp > old_sp) && (reinterpret_cast<uintptr_t>(new_sp) -
                                   reinterpret_cast<uintptr_t>(old_sp) >
-                              1000000))
-      return NULL;
+                              1000000)) {
+      return nullptr;
+    }
   }
-  if (reinterpret_cast<uintptr_t>(new_sp) & (sizeof(void *) - 1)) return NULL;
+  if (reinterpret_cast<uintptr_t>(new_sp) & (sizeof(void *) - 1)) {
+    return nullptr;
+  }
 #ifdef __i386__
   // On 64-bit machines, the stack pointer can be very close to
   // 0xffffffff, so we explicitly check for a pointer into the
   // last two pages in the address space
-  if ((uintptr_t)new_sp >= 0xffffe000) return NULL;
+  if ((uintptr_t)new_sp >= 0xffffe000) return nullptr;
 #endif
 #if !defined(GLOG_OS_WINDOWS)
   if (!STRICT_UNWINDING) {
@@ -91,7 +96,7 @@ static void **NextStackFrame(void **old_sp) {
         reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(new_sp) &
                                  static_cast<uintptr_t>(~(page_size - 1)));
     if (msync(new_sp_aligned, static_cast<size_t>(page_size), MS_ASYNC) == -1) {
-      return NULL;
+      return nullptr;
     }
   }
 #endif
@@ -135,7 +140,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 
   int n = 0;
   while (sp && n < max_depth) {
-    if (*(sp + 1) == NULL) {
+    if (*(sp + 1) == nullptr) {
       // In 64-bit code, we often see a frame that
       // points to itself and has a return address of 0.
       break;
