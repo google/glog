@@ -98,6 +98,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-D_GNU_SOURCE",
     ]
 
+    linux_only_copts = [
+        # For utilities.h.
+        "-DHAVE_EXECINFO_H",
+    ]
+
     darwin_only_copts = [
         # For stacktrace.
         "-DHAVE_DLADDR",
@@ -146,7 +151,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "@bazel_tools//src/conditions:darwin": common_copts + linux_or_darwin_copts + darwin_only_copts,
         "@bazel_tools//src/conditions:freebsd": common_copts + linux_or_darwin_copts + freebsd_only_copts,
         ":wasm": common_copts + wasm_copts,
-        "//conditions:default": common_copts + linux_or_darwin_copts,
+        "//conditions:default": common_copts + linux_or_darwin_copts + linux_only_copts,
     }) + select({
         ":clang-cl": clang_cl_only_copts,
         "//conditions:default": [],
