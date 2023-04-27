@@ -160,10 +160,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     native.filegroup(
         name = "shared_headers",
         srcs = [
-            "src/base/mutex.h", 
+            "src/base/commandlineflags.h",
+            "src/base/mutex.h",
             "src/stacktrace.h",
             "src/utilities.h",
-        ] 
+        ]
     )
 
     native.cc_library(
@@ -171,6 +172,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         visibility = ["//visibility:public"],
         srcs = [
             ":config_h",
+            ":shared_headers",
             "src/base/googleinit.h",
             "src/demangle.cc",
             "src/demangle.h",
@@ -187,13 +189,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/symbolize.h",
             "src/utilities.cc",
             "src/vlog_is_on.cc",
-            ":shared_headers",
         ] + select({
             "@bazel_tools//src/conditions:windows": windows_only_srcs,
             "//conditions:default": [],
         }),
         hdrs = [
-            "src/base/commandlineflags.h",
             "src/glog/log_severity.h",
             "src/glog/platform.h",
             ":logging_h",
