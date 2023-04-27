@@ -376,7 +376,7 @@ void TestRawLogging() {
 
   FlagSaver saver;
 
-  // Check that RAW loggging does not use mallocs.
+  // Check that RAW logging does not use mallocs.
   NewHook new_hook;
 
   RAW_LOG(INFO, "%s%s%d%c%f", foo->c_str(), "bar ", 10, ' ', 3.4);
