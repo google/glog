@@ -104,7 +104,7 @@ struct SiteFlag {
   SiteFlag* next;
 };
 
-// Helper routine which determines the logging info for a particalur VLOG site.
+// Helper routine which determines the logging info for a particular VLOG site.
 //   site_flag     is the address of the site-local pointer to the controlling
 //                 verbosity level
 //   site_default  is the default to use for *site_flag

@@ -80,7 +80,7 @@ TEST(Demangle, Windows) {
 
 #else
 
-// Test corner cases of bounary conditions.
+// Test corner cases of boundary conditions.
 TEST(Demangle, CornerCases) {
   const size_t size = 10;
   char tmp[size] = { 0 };

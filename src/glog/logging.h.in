@@ -290,11 +290,11 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
 //         "program with --v=1 or more";
 //   VLOG_EVERY_N(1, 10)
 //      << "I'm printed every 10th occurrence, and when you run the program "
-//         "with --v=1 or more. Present occurence is " << google::COUNTER;
+//         "with --v=1 or more. Present occurrence is " << google::COUNTER;
 //   VLOG_IF_EVERY_N(1, (size > 1024), 10)
-//      << "I'm printed on every 10th occurence of case when size is more "
+//      << "I'm printed on every 10th occurrence of case when size is more "
 //         " than 1024, when you run the program with --v=1 or more. ";
-//         "Present occurence is " << google::COUNTER;
+//         "Present occurrence is " << google::COUNTER;
 //
 // The supported severity levels for macros that allow you to specify one
 // are (in increasing order of severity) INFO, WARNING, ERROR, and FATAL.
@@ -842,7 +842,7 @@ DEFINE_CHECK_OP_IMPL(Check_GT, > )
 #define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1) op (val2))
 #elif DCHECK_IS_ON()
 // In debug mode, avoid constructing CheckOpStrings if possible,
-// to reduce the overhead of CHECK statments by 2x.
+// to reduce the overhead of CHECK statements by 2x.
 // Real DCHECK-heavy tests have seen 1.5x speedups.
 
 // The meaning of "string" might be different between now and
@@ -1425,7 +1425,7 @@ public:
   // is so that streaming can be done more efficiently.
   static const size_t kMaxLogMessageLen;
 
-  // Theses should not be called directly outside of logging.*,
+  // These should not be called directly outside of logging.*,
   // only passed as SendMethod arguments to other LogMessage methods:
   void SendToLog();  // Actually dispatch to the logs
   void SendToSyslogAndLog();  // Actually dispatch to syslog and the logs
@@ -1652,8 +1652,8 @@ GLOG_EXPORT void LogToStderr();
 GLOG_EXPORT void SetEmailLogging(LogSeverity min_severity,
                                           const char* addresses);
 
-// A simple function that sends email. dest is a commma-separated
-// list of addressess.  Thread-safe.
+// A simple function that sends email. dest is a comma-separated
+// list of addresses.  Thread-safe.
 GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
                            const char* body);
 

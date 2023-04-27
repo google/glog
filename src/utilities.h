@@ -29,7 +29,7 @@
 //
 // Author: Shinichiro Hamaji
 //
-// Define utilties for glog internal usage.
+// Define utilities for glog internal usage.
 
 #ifndef UTILITIES_H__
 #define UTILITIES_H__
@@ -174,7 +174,7 @@ inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
                        :"=a"(ret)
                         // GCC may produces %sil or %dil for
                         // constraint "r", but some of apple's gas
-                        // dosn't know the 8 bit registers.
+                        // doesn't know the 8 bit registers.
                         // We use "q" to avoid these registers.
                        :"q"(newval), "q"(ptr), "a"(oldval)
                        :"memory", "cc");

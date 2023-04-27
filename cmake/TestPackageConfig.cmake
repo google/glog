@@ -21,7 +21,7 @@ execute_process (
   # Capture the PATH environment variable content set during project generation
   # stage. This is required because later during the build stage the PATH is
   # modified again (e.g., for MinGW AppVeyor CI builds) by adding back the
-  # directory containing git.exe. Incidently, the Git installation directory
+  # directory containing git.exe. Incidentally, the Git installation directory
   # also contains sh.exe which causes MinGW Makefile generation to fail.
   COMMAND ${CMAKE_COMMAND} -E env PATH=${PATH}
   ${CMAKE_COMMAND} -C ${INITIAL_CACHE}
