@@ -156,6 +156,16 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "//conditions:default": [],
     })
 
+    # Needed to use these headers in `glog` and the test targets without exposing them as public targets in `glog`
+    native.filegroup(
+        name = "shared_headers",
+        srcs = [
+            "src/base/mutex.h", 
+            "src/stacktrace.h",
+            "src/utilities.h",
+        ] 
+    )
+
     native.cc_library(
         name = "glog",
         visibility = ["//visibility:public"],
@@ -177,17 +187,15 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             "src/symbolize.h",
             "src/utilities.cc",
             "src/vlog_is_on.cc",
+            ":shared_headers",
         ] + select({
             "@bazel_tools//src/conditions:windows": windows_only_srcs,
             "//conditions:default": [],
         }),
         hdrs = [
             "src/base/commandlineflags.h",
-            "src/base/mutex.h",
             "src/glog/log_severity.h",
             "src/glog/platform.h",
-            "src/stacktrace.h",
-            "src/utilities.h",
             ":logging_h",
             ":raw_logging_h",
             ":stl_logging_h",
@@ -227,6 +235,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             visibility = ["//visibility:public"],
             srcs = [
                 ":config_h",
+                ":shared_headers",
                 "src/googletest.h",
                 "src/" + test_name + "_unittest.cc",
             ],
