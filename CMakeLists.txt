@@ -68,7 +68,6 @@ set (CMAKE_POSITION_INDEPENDENT_CODE ON)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 
 set (CMAKE_DEBUG_POSTFIX d)
-set (CMAKE_THREAD_PREFER_PTHREAD 1)
 
 find_package (GTest NO_MODULE)
 
@@ -158,24 +157,6 @@ check_cxx_symbol_exists (backtrace execinfo.h HAVE_EXECINFO_BACKTRACE)
 check_cxx_symbol_exists (backtrace_symbols execinfo.h
   HAVE_EXECINFO_BACKTRACE_SYMBOLS)
 check_cxx_symbol_exists (_chsize_s io.h HAVE__CHSIZE_S)
-
-cmake_push_check_state (RESET)
-
-set (CMAKE_REQUIRED_DEFINITIONS -D_XOPEN_SOURCE=500)
-
-if (Threads_FOUND)
-  set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
-endif (Threads_FOUND)
-
-check_cxx_symbol_exists (pthread_threadid_np pthread.h HAVE_PTHREAD_THREADID_NP)
-
-cmake_pop_check_state ()
-
-if (HAVE_RWLOCK_INIT AND HAVE_RWLOCK_RDLOCK AND HAVE_RWLOCK_WRLOCK AND
-    HAVE_RWLOCK_UNLOCK AND HAVE_RWLOCK_DESTROY)
-  set (HAVE_RWLOCK TRUE)
-endif (HAVE_RWLOCK_INIT AND HAVE_RWLOCK_RDLOCK AND HAVE_RWLOCK_WRLOCK AND
-    HAVE_RWLOCK_UNLOCK AND HAVE_RWLOCK_DESTROY)
 
 cmake_push_check_state (RESET)
 set (CMAKE_REQUIRED_LIBRARIES dbghelp)

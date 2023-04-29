@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -250,53 +250,6 @@ bool PidHasChanged() {
   }
   g_main_thread_pid = pid;
   return true;
-}
-
-pid_t GetTID() {
-  // On Linux and MacOSX, we try to use gettid().
-#if defined GLOG_OS_LINUX || defined GLOG_OS_MACOSX
-#  ifndef __NR_gettid
-#    ifdef GLOG_OS_MACOSX
-#      define __NR_gettid SYS_gettid
-#    elif !defined __i386__
-#      error "Must define __NR_gettid for non-x86 platforms"
-#    else
-#      define __NR_gettid 224
-#    endif
-#  endif
-  static bool lacks_gettid = false;
-  if (!lacks_gettid) {
-#  if (defined(GLOG_OS_MACOSX) && defined(HAVE_PTHREAD_THREADID_NP))
-    uint64_t tid64;
-    const int error = pthread_threadid_np(nullptr, &tid64);
-    pid_t tid = error ? -1 : static_cast<pid_t>(tid64);
-#  else
-    auto tid = static_cast<pid_t>(syscall(__NR_gettid));
-#  endif
-    if (tid != -1) {
-      return tid;
-    }
-    // Technically, this variable has to be volatile, but there is a small
-    // performance penalty in accessing volatile variables and there should
-    // not be any serious adverse effect if a thread does not immediately see
-    // the value change to "true".
-    lacks_gettid = true;
-  }
-#endif  // GLOG_OS_LINUX || GLOG_OS_MACOSX
-
-  // If gettid() could not be used, we use one of the following.
-#if defined GLOG_OS_LINUX
-  return getpid();  // Linux:  getpid returns thread ID when gettid is absent
-#elif defined GLOG_OS_WINDOWS && !defined GLOG_OS_CYGWIN
-  return static_cast<pid_t>(GetCurrentThreadId());
-#elif defined GLOG_OS_OPENBSD
-  return getthrid();
-#elif defined(HAVE_PTHREAD)
-  // If none of the techniques above worked, we use pthread_self().
-  return (pid_t)(uintptr_t)pthread_self();
-#else
-  return -1;
-#endif
 }
 
 const char* const_basename(const char* filepath) {

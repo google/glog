@@ -59,8 +59,6 @@ def glog_library(with_gflags = 1, **kwargs):
         "-Wno-unused-function",
         "-Wno-unused-local-typedefs",
         "-Wno-unused-variable",
-        # Allows to include pthread.h.
-        "-DHAVE_PTHREAD",
         # Allows src/logging.cc to determine the host name.
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
@@ -98,8 +96,6 @@ def glog_library(with_gflags = 1, **kwargs):
     darwin_only_copts = [
         # For stacktrace.
         "-DHAVE_DLADDR",
-        # Avoid deprecated syscall().
-        "-DHAVE_PTHREAD_THREADID_NP",
     ]
 
     windows_only_copts = [

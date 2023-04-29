@@ -47,6 +47,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -130,7 +131,8 @@ struct GLOG_EXPORT LogMessageTime {
 struct LogMessageInfo {
   explicit LogMessageInfo(const char* const severity_,
                           const char* const filename_, const int& line_number_,
-                          const int& thread_id_, const LogMessageTime& time_)
+                          std::thread::id thread_id_,
+                          const LogMessageTime& time_)
       : severity(severity_),
         filename(filename_),
         line_number(line_number_),
@@ -140,7 +142,7 @@ struct LogMessageInfo {
   const char* const severity;
   const char* const filename;
   const int& line_number;
-  const int& thread_id;
+  std::thread::id thread_id;
   const LogMessageTime& time;
 };
 

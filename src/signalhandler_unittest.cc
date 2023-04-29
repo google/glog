@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,17 +32,15 @@
 // This is a helper binary for testing signalhandler.cc.  The actual test
 // is done in signalhandler_unittest.sh.
 
-#include "utilities.h"
-
-#if defined(HAVE_PTHREAD)
-#  include <pthread.h>
-#endif
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <sstream>
 #include <string>
+#include <thread>
 
 #include "glog/logging.h"
+#include "utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
@@ -51,19 +49,13 @@ using namespace GFLAGS_NAMESPACE;
 
 using namespace google;
 
-static void* DieInThread(void*) {
-  // We assume pthread_t is an integral number or a pointer, rather
-  // than a complex struct.  In some environments, pthread_self()
-  // returns an uint64 but in some other environments pthread_self()
-  // returns a pointer.
-  fprintf(
-      stderr, "0x%px is dying\n",
-      static_cast<const void*>(reinterpret_cast<const char*>(pthread_self())));
-  // Use volatile to prevent from these to be optimized away.
-  volatile int a = 0;
-  volatile int b = 1 / a;
+static void DieInThread(int* a) {
+  std::ostringstream oss;
+  oss << std::showbase << std::hex << std::this_thread::get_id();
+
+  fprintf(stderr, "%s is dying\n", oss.str().c_str());
+  int b = 1 / *a;
   fprintf(stderr, "We should have died: b=%d\n", b);
-  return nullptr;
 }
 
 static void WriteToStdout(const char* data, size_t size) {
@@ -92,14 +84,8 @@ int main(int argc, char** argv) {
     while (true)
       ;
   } else if (command == "die_in_thread") {
-#  if defined(HAVE_PTHREAD)
-    pthread_t thread;
-    pthread_create(&thread, nullptr, &DieInThread, nullptr);
-    pthread_join(thread, nullptr);
-#  else
-    fprintf(stderr, "no pthread\n");
-    return 1;
-#  endif
+    std::thread t{&DieInThread, nullptr};
+    t.join();
   } else if (command == "dump_to_stdout") {
     InstallFailureWriter(WriteToStdout);
     abort();

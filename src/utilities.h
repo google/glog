@@ -53,6 +53,7 @@
 #define PRIoS __PRIS_PREFIX "o"
 
 #include <string>
+#include <thread>
 
 #include "glog/logging.h"
 
@@ -170,8 +171,6 @@ WallTime WallTime_Now();
 
 int32 GetMainThreadPid();
 bool PidHasChanged();
-
-pid_t GetTID();
 
 const std::string& MyUserName();
 

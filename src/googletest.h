@@ -579,59 +579,6 @@ struct FlagSaver {
 };
 #endif
 
-class Thread {
- public:
-  virtual ~Thread() = default;
-
-  void SetJoinable(bool) {}
-#if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
-  void Start() {
-    handle_ = CreateThread(nullptr, 0, &Thread::InvokeThreadW, this, 0, &th_);
-    CHECK(handle_) << "CreateThread";
-  }
-  void Join() { WaitForSingleObject(handle_, INFINITE); }
-#elif defined(HAVE_PTHREAD)
-  void Start() { pthread_create(&th_, nullptr, &Thread::InvokeThread, this); }
-  void Join() { pthread_join(th_, nullptr); }
-#else
-  void Start() {}
-  void Join() {}
-#endif
-
- protected:
-  virtual void Run() = 0;
-
- private:
-  static void* InvokeThread(void* self) {
-    (static_cast<Thread*>(self))->Run();
-    return nullptr;
-  }
-
-#if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
-  static DWORD __stdcall InvokeThreadW(LPVOID self) {
-    InvokeThread(self);
-    return 0;
-  }
-  HANDLE handle_;
-  DWORD th_;
-#elif defined(HAVE_PTHREAD)
-  pthread_t th_;
-#endif
-};
-
-static inline void SleepForMilliseconds(unsigned t) {
-#ifndef GLOG_OS_WINDOWS
-#  if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
-  const struct timespec req = {0, t * 1000 * 1000};
-  nanosleep(&req, nullptr);
-#  else
-  usleep(t * 1000);
-#  endif
-#else
-  Sleep(t);
-#endif
-}
-
 // Add hook for operator new to ensure there are no memory allocation.
 
 void (*g_new_hook)() = nullptr;

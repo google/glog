@@ -44,6 +44,7 @@
 #  include <sys/wait.h>
 #endif
 
+#include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -54,6 +55,7 @@
 #include <queue>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "base/commandlineflags.h"
@@ -1197,12 +1199,9 @@ static vector<string> global_messages;
 // helper for TestWaitingLogSink below.
 // Thread that does the logic of TestWaitingLogSink
 // It's free to use LOG() itself.
-class TestLogSinkWriter : public Thread {
+class TestLogSinkWriter {
  public:
-  TestLogSinkWriter() {
-    SetJoinable(true);
-    Start();
-  }
+  TestLogSinkWriter() : t_{&TestLogSinkWriter::Run, this} {}
 
   // Just buffer it (can't use LOG() here).
   void Buffer(const string& message) {
@@ -1215,11 +1214,12 @@ class TestLogSinkWriter : public Thread {
 
   // Wait for the buffer to clear (can't use LOG() here).
   void Wait() {
+    using namespace std::chrono_literals;
     RAW_LOG(INFO, "Waiting");
     mutex_.lock();
     while (!NoWork()) {
       mutex_.unlock();
-      SleepForMilliseconds(1);
+      std::this_thread::sleep_for(1ms);
       mutex_.lock();
     }
     RAW_LOG(INFO, "Waited");
@@ -1232,6 +1232,8 @@ class TestLogSinkWriter : public Thread {
     should_exit_ = true;
   }
 
+  void Join() { t_.join(); }
+
  private:
   // helpers ---------------
 
@@ -1240,12 +1242,13 @@ class TestLogSinkWriter : public Thread {
   bool HaveWork() { return !messages_.empty() || should_exit_; }
 
   // Thread body; CAN use LOG() here!
-  void Run() override {
+  void Run() {
+    using namespace std::chrono_literals;
     while (true) {
       mutex_.lock();
       while (!HaveWork()) {
         mutex_.unlock();
-        SleepForMilliseconds(1);
+        std::this_thread::sleep_for(1ms);
         mutex_.lock();
       }
       if (should_exit_ && messages_.empty()) {
@@ -1255,7 +1258,7 @@ class TestLogSinkWriter : public Thread {
       // Give the main thread time to log its message,
       // so that we get a reliable log capture to compare to golden file.
       // Same for the other sleep below.
-      SleepForMilliseconds(20);
+      std::this_thread::sleep_for(20ms);
       RAW_LOG(INFO, "Sink got a messages");  // only RAW_LOG under mutex_ here
       string message = messages_.front();
       messages_.pop();
@@ -1264,7 +1267,7 @@ class TestLogSinkWriter : public Thread {
       // e.g. pushing the message over with an RPC:
       size_t messages_left = messages_.size();
       mutex_.unlock();
-      SleepForMilliseconds(20);
+      std::this_thread::sleep_for(20ms);
       // May not use LOG while holding mutex_, because Buffer()
       // acquires mutex_, and Buffer is called from LOG(),
       // which has its own internal mutex:
@@ -1277,6 +1280,7 @@ class TestLogSinkWriter : public Thread {
 
   // data ---------------
 
+  std::thread t_;
   std::mutex mutex_;
   bool should_exit_{false};
   queue<string> messages_;  // messages to be logged
@@ -1288,7 +1292,7 @@ class TestLogSinkWriter : public Thread {
 class TestWaitingLogSink : public LogSink {
  public:
   TestWaitingLogSink() {
-    tid_ = pthread_self();  // for thread-specific behavior
+    tid_ = std::this_thread::get_id();  // for thread-specific behavior
     AddLogSink(this);
   }
   ~TestWaitingLogSink() override {
@@ -1306,7 +1310,7 @@ class TestWaitingLogSink : public LogSink {
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
-    if (pthread_equal(tid_, pthread_self())) {
+    if (tid_ == std::this_thread::get_id()) {
       writer_.Buffer(ToString(severity, base_filename, line, logmsgtime,
                               message, message_len));
     }
@@ -1314,11 +1318,11 @@ class TestWaitingLogSink : public LogSink {
 
   void WaitTillSent() override {
     // Wait for Writer thread if we are the original logging thread.
-    if (pthread_equal(tid_, pthread_self())) writer_.Wait();
+    if (tid_ == std::this_thread::get_id()) writer_.Wait();
   }
 
  private:
-  pthread_t tid_;
+  std::thread::id tid_;
   TestLogSinkWriter writer_;
 };
 
@@ -1329,15 +1333,16 @@ static void TestLogSinkWaitTillSent() {
   // reentered
   global_messages.clear();
   {
+    using namespace std::chrono_literals;
     TestWaitingLogSink sink;
     // Sleeps give the sink threads time to do all their work,
     // so that we get a reliable log capture to compare to the golden file.
     LOG(INFO) << "Message 1";
-    SleepForMilliseconds(60);
+    std::this_thread::sleep_for(60ms);
     LOG(ERROR) << "Message 2";
-    SleepForMilliseconds(60);
+    std::this_thread::sleep_for(60ms);
     LOG(WARNING) << "Message 3";
-    SleepForMilliseconds(60);
+    std::this_thread::sleep_for(60ms);
   }
   for (auto& global_message : global_messages) {
     LOG(INFO) << "Sink capture: " << global_message;
