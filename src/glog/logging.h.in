@@ -1344,6 +1344,15 @@ GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
   class GLOG_EXPORT LogStream : public std::ostream {
 GLOG_MSVC_POP_WARNING()
   public:
+#if defined __has_attribute
+#  if __has_attribute (used)
+    // In some cases, like when compiling glog as a static library with GCC and
+    // linking against a Clang-built executable, this constructor will be
+    // removed by the linker. We use this attribute to prevent the linker from
+    // discarding it.
+    __attribute__ ((used))
+#  endif
+#endif
     LogStream(char *buf, int len, int64 ctr)
         : std::ostream(NULL),
           streambuf_(buf, len),
