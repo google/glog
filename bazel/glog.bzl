@@ -204,10 +204,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         includes = ["src"],
         defines = final_lib_defines,
         copts = final_lib_copts,
-        deps = gflags_deps + select({
-            "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
-            "//conditions:default": [],
-        }),
+        deps = gflags_deps,
         **kwargs
     )
 
@@ -247,19 +244,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
             ],
             **kwargs
         )
-
-    # Workaround https://github.com/bazelbuild/bazel/issues/6337 by declaring
-    # the dependencies without strip_include_prefix.
-    native.cc_library(
-        name = "strip_include_prefix_hack",
-        hdrs = [
-            "src/glog/log_severity.h",
-            ":logging_h",
-            ":raw_logging_h",
-            ":stl_logging_h",
-            ":vlog_is_on_h",
-        ],
-    )
 
     expand_template(
         name = "config_h",
