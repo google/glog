@@ -204,9 +204,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # https://github.com/google/glog/issues/837: Replacing
         # `strip_include_prefix` with `includes` would avoid spamming
         # downstream projects with compiler warnings, but would also leak
-        # private headers like stacktrace.h. I suspect the only way to avoid
-        # this is to refactor the project including the CMake build, so that
-        # the private headers are in a glog_internal subdirectory.
+        # private headers like stacktrace.h, because strip_include_prefix's
+        # implementation only creates symlinks for the public hdrs. I suspect
+        # the only way to avoid this is to refactor the project including the
+        # CMake build, so that the private headers are in a glog_internal
+        # subdirectory.
         strip_include_prefix = "src",
         defines = final_lib_defines,
         copts = final_lib_copts,
