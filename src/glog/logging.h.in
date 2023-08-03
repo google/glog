@@ -470,6 +470,9 @@ DECLARE_bool(stop_logging_if_full_disk);
 // Use UTC time for logging
 DECLARE_bool(log_utc_time);
 
+// Mailer used to send logging email
+DECLARE_string(logmailer);
+
 // Log messages below the GOOGLE_STRIP_LOG level will be compiled away for
 // security reasons. See LOG(severtiy) below.
 
