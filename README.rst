@@ -202,7 +202,7 @@ You can download and install glog using the `conan
 .. code:: bash
 
    pip install conan
-   conan install -r conancenter glob/<glob-version>@
+   conan install -r conancenter glog/<glog-version>@
 
 The glog recipe in conan center is kept up to date by conan center index community
 contributors. If the version is out of date, please create an
