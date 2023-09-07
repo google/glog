@@ -60,6 +60,7 @@
 #include <cerrno>                   // for errno
 #include <sstream>
 #include <regex>
+#include <cctype> // for std::isspace
 #ifdef GLOG_OS_WINDOWS
 #include "windows/dirent.h"
 #else
