@@ -495,6 +495,22 @@ target_compile_features (glog_internal PUBLIC $<TARGET_PROPERTY:glog,COMPILE_FEA
 add_library (glog
   $<TARGET_OBJECTS:glog_internal>
 )
+
+# Note: When you use cmake to build with xcode as a generator under Mac, the build will fail.
+# See https://cmake.org/cmake/help/latest/command/add_library.html#object-libraries
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+  file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp)
+  set(temporary_file "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/xcode.cpp")
+
+  add_custom_command(
+    OUTPUT ${temporary_file}
+    COMMAND ${CMAKE_COMMAND} -E touch ${temporary_file}
+    COMMENT "Creating temporary files for building on Xcode"
+  )
+
+  target_sources(glog PRIVATE $<$<BOOL:${temporary_file}>:${temporary_file}>)
+endif(CMAKE_GENERATOR STREQUAL "Xcode")
+
 target_compile_features (glog PUBLIC cxx_std_14)
 
 add_library (glog::glog ALIAS glog)
