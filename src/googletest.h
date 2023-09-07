@@ -560,17 +560,20 @@ struct FlagSaver {
       : v_(FLAGS_v),
         stderrthreshold_(FLAGS_stderrthreshold),
         logtostderr_(FLAGS_logtostderr),
-        alsologtostderr_(FLAGS_alsologtostderr) {}
+        alsologtostderr_(FLAGS_alsologtostderr),
+        logmailer_(FLAGS_logmailer) {}
   ~FlagSaver() {
     FLAGS_v = v_;
     FLAGS_stderrthreshold = stderrthreshold_;
     FLAGS_logtostderr = logtostderr_;
     FLAGS_alsologtostderr = alsologtostderr_;
+    FLAGS_logmailer = logmailer_;
   }
   int v_;
   int stderrthreshold_;
   bool logtostderr_;
   bool alsologtostderr_;
+  std::string logmailer_;
 };
 #endif
 

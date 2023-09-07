@@ -1489,3 +1489,31 @@ TEST(LogMsgTime, gmtoff) {
   const long utc_max_offset = 50400;
   EXPECT_TRUE( (nGmtOff >= utc_min_offset) && (nGmtOff <= utc_max_offset) );
 }
+
+TEST(EmailLogging, ValidAddress) {
+  FlagSaver saver;
+  FLAGS_logmailer = "/usr/bin/true";
+
+  EXPECT_TRUE(SendEmail("example@example.com", "Example subject", "Example body"));
+}
+
+TEST(EmailLogging, MultipleAddresses) {
+  FlagSaver saver;
+  FLAGS_logmailer = "/usr/bin/true";
+
+  EXPECT_TRUE(SendEmail("example@example.com,foo@bar.com", "Example subject", "Example body"));
+}
+
+TEST(EmailLogging, InvalidAddress) {
+  FlagSaver saver;
+  FLAGS_logmailer = "/usr/bin/true";
+
+  EXPECT_FALSE(SendEmail("hello world@foo", "Example subject", "Example body"));
+}
+
+TEST(EmailLogging, MaliciousAddress) {
+  FlagSaver saver;
+  FLAGS_logmailer = "/usr/bin/true";
+
+  EXPECT_FALSE(SendEmail("!/bin/true@example.com", "Example subject", "Example body"));
+}

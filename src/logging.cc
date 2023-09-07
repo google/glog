@@ -59,6 +59,8 @@
 #include <vector>
 #include <cerrno>                   // for errno
 #include <sstream>
+#include <regex>
+#include <cctype> // for std::isspace
 #ifdef GLOG_OS_WINDOWS
 #include "windows/dirent.h"
 #else
@@ -2205,6 +2207,13 @@ static string ShellEscape(const string& src) {
   }
   return result;
 }
+
+// Trim whitespace from both ends of the provided string.
+static inline void trim(std::string &s) {
+  const auto toRemove = [](char ch) { return std::isspace(ch) == 0; };
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), toRemove));
+  s.erase(std::find_if(s.rbegin(), s.rend(), toRemove).base(), s.end());
+}
 #endif
 
 // use_logging controls whether the logging functions LOG/VLOG are used
@@ -2214,6 +2223,45 @@ static bool SendEmailInternal(const char*dest, const char *subject,
                               const char*body, bool use_logging) {
 #ifndef GLOG_OS_EMSCRIPTEN
   if (dest && *dest) {
+    // Split the comma-separated list of email addresses, validate each one and
+    // build a sanitized new comma-separated string without whitespace.
+    std::istringstream ss(dest);
+    std::ostringstream sanitized_dests;
+    std::string s;
+    while (std::getline(ss, s, ',')) {
+      trim(s);
+      if (s.empty()) {
+        continue;
+      }
+      // We validate the provided email addresses using the same regular
+      // expression that HTML5 uses[1], except that we require the address to
+      // start with an alpha-numeric character. This is because we don't want to
+      // allow email addresses that start with a special character, such as a
+      // pipe or dash, which could be misunderstood as a command-line flag by
+      // certain versions of `mail` that are vulnerable to command injection.[2]
+      // [1] https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
+      // [2] e.g. https://nvd.nist.gov/vuln/detail/CVE-2004-2771
+      if (!std::regex_match(
+              s,
+              std::regex("^[a-zA-Z0-9]"
+                         "[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]*@[a-zA-Z0-9]"
+                         "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9]"
+                         "(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"))) {
+        if (use_logging) {
+          VLOG(1) << "Invalid destination email address:" << s;
+        } else {
+          fprintf(stderr, "Invalid destination email address: %s\n",
+                  s.c_str());
+        }
+        return false;
+      }
+      if (!sanitized_dests.str().empty()) {
+        sanitized_dests << ",";
+      }
+      sanitized_dests << s;
+    }
+    dest = sanitized_dests.str().c_str();
+
     if ( use_logging ) {
       VLOG(1) << "Trying to send TITLE:" << subject
               << " BODY:" << body << " to " << dest;
@@ -2235,8 +2283,8 @@ static bool SendEmailInternal(const char*dest, const char *subject,
 
     FILE* pipe = popen(cmd.c_str(), "w");
     if (pipe != nullptr) {
-        // Add the body if we have one
-        if (body) {
+      // Add the body if we have one
+      if (body) {
         fwrite(body, sizeof(char), strlen(body), pipe);
       }
       bool ok = pclose(pipe) != -1;
