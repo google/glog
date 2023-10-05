@@ -37,6 +37,7 @@
 #include "demangle.h"
 
 #include <cstdio>  // for nullptr
+#include <limits>
 
 #include "utilities.h"
 
@@ -592,9 +593,23 @@ static bool ParseNumber(State *state, int *number_out) {
   }
   const char *p = state->mangled_cur;
   int number = 0;
+  constexpr int int_max_by_10 = std::numeric_limits<int>::max() / 10;
   for (;*p != '\0'; ++p) {
     if (IsDigit(*p)) {
-      number = number * 10 + (*p - '0');
+      // Prevent signed integer overflow when multiplying
+      if (number > int_max_by_10) {
+        return false;
+      }
+
+      const int digit = *p - '0';
+      const int shifted = number * 10;
+
+      // Prevent signed integer overflow when summing
+      if (digit > std::numeric_limits<int>::max() - shifted) {
+        return false;
+      }
+
+      number = shifted + digit;
     } else {
       break;
     }
