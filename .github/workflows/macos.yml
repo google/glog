@@ -17,14 +17,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Ninja
-        uses: ashutoshvarma/setup-ninja@master
-        with:
-          version: 1.10.0
-
       - name: Setup Dependencies
         run: |
-          brew install lcov
+          brew install lcov ninja
 
       - name: Setup Environment
         if: matrix.build_type == 'Debug'

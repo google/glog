@@ -8,7 +8,7 @@ jobs:
       run:
         shell: bash
     name: Emscripten-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container: emscripten/emsdk
     strategy:
       fail-fast: true
@@ -22,7 +22,7 @@ jobs:
 
       - name: Setup Dependencies
         run: |
-          apt-get update
+          sudo apt-get update
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
             cmake \
             ninja-build

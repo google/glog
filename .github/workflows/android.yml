@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build-android:
     name: NDK-C++${{matrix.std}}-${{matrix.abi}}-${{matrix.build_type}}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     defaults:
       run:
         shell: bash
@@ -21,10 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Ninja
-        uses: ashutoshvarma/setup-ninja@master
-        with:
-          version: 1.10.0
+      - name: Setup Dependencies
+        run: |
+          sudo apt-get update
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
+            cmake \
+            ninja-build
 
       - name: Setup NDK
         env:
