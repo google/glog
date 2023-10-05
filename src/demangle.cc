@@ -36,6 +36,7 @@
 
 #include "demangle.h"
 
+#include <cstddef>
 #include <cstdio>  // for nullptr
 #include <limits>
 
@@ -222,6 +223,10 @@ static bool ZeroOrMore(ParseFunc parse_func, State *state) {
 // is set to true for later use.  The output string is ensured to
 // always terminate with '\0' as long as there is no overflow.
 static void Append(State *state, const char * const str, ssize_t length) {
+  if (state->out_cur == nullptr) {
+    state->overflowed = true;
+    return;
+  }
   for (ssize_t i = 0; i < length; ++i) {
     if (state->out_cur + 1 < state->out_end) {  // +1 for '\0'
       *state->out_cur = str[i];
@@ -666,6 +671,10 @@ static bool ParseIdentifier(State *state, ssize_t length) {
     MaybeAppend(state, "(anonymous namespace)");
   } else {
     MaybeAppendWithLength(state, state->mangled_cur, length);
+  }
+  if (length < 0 ||
+      static_cast<std::size_t>(length) > StrLen(state->mangled_cur)) {
+    return false;
   }
   state->mangled_cur += length;
   return true;
