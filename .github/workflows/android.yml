@@ -10,11 +10,11 @@ jobs:
       run:
         shell: bash
     env:
-      NDK_VERSION: 25.0.8775105
+      NDK_VERSION: 26.0.10792818
     strategy:
       fail-fast: true
       matrix:
-        std: [14, 17, 20, 23]
+        std: [14, 17, 20]
         abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
         build_type: [Debug, Release]
 

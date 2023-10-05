@@ -535,10 +535,8 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
   // Iterate over maps and look for the map containing the pc.  Then
   // look into the symbol tables inside.
   char buf[1024];  // Big enough for line of sane /proc/self/maps
-  unsigned num_maps = 0;
   LineReader reader(wrapped_maps_fd.get(), buf, sizeof(buf), 0);
   while (true) {
-    num_maps++;
     const char *cursor;
     const char *eol;
     if (!reader.ReadLine(&cursor, &eol)) {  // EOF or malformed line.
