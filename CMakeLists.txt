@@ -214,50 +214,61 @@ if (WITH_TLS)
 endif (WITH_TLS)
 
 set (_PC_FIELDS
-  "gregs[REG_PC]"
-  "gregs[REG_EIP]"
-  "gregs[REG_RIP]"
-  "sc_ip"
-  "uc_regs->gregs[PT_NIP]"
-  "gregs[R15]"
-  "arm_pc"
-  "mc_eip"
-  "mc_rip"
-  "__gregs[REG_EIP]"
-  "__gregs[REG_RIP]"
-  "ss.eip"
-  "__ss.__eip"
-  "ss.rip"
-  "__ss.__rip"
-  "ss.srr0"
-  "__ss.__srr0"
+  "uc_mcontext.gregs[REG_PC]"          # Solaris x86 (32 + 64 bit)
+  "uc_mcontext.gregs[REG_EIP]"         # Linux (i386)
+  "uc_mcontext.gregs[REG_RIP]"         # Linux (x86_64)
+  "uc_mcontext.sc_ip"                  # Linux (ia64)
+  "uc_mcontext.pc"                     # Linux (mips)
+  "uc_mcontext.uc_regs->gregs[PT_NIP]" # Linux (ppc)
+  "uc_mcontext.gregs[R15]"             # Linux (arm old [untested])
+  "uc_mcontext.arm_pc"                 # Linux (arm arch 5)
+  "uc_mcontext.gp_regs[PT_NIP]"        # Suse SLES 11 (ppc64)
+  "uc_mcontext.mc_eip"                 # FreeBSD (i386)
+  "uc_mcontext.mc_rip"                 # FreeBSD (x86_64 [untested])
+  "uc_mcontext.__gregs[_REG_EIP]"      # NetBSD (i386)
+  "uc_mcontext.__gregs[_REG_RIP]"      # NetBSD (x86_64)
+  "uc_mcontext->ss.eip"                # OS X (i386, <=10.4)
+  "uc_mcontext->__ss.__eip"            # OS X (i386, >=10.5)
+  "uc_mcontext->ss.rip"                # OS X (x86_64)
+  "uc_mcontext->__ss.__rip"            # OS X (>=10.5 [untested])
+  "uc_mcontext->ss.srr0"               # OS X (ppc, ppc64 [untested])
+  "uc_mcontext->__ss.__srr0"           # OS X (>=10.5 [untested])
 )
 
-set (_PC_HEADERS ucontext.h signal.h)
+if (HAVE_UCONTEXT_H AND NOT DEFINED PC_FROM_UCONTEXT)
+  cmake_push_check_state (RESET)
 
-if (HAVE_UCONTEXT_H AND NOT PC_FROM_UCONTEXT)
-  foreach (_PC_FIELD ${_PC_FIELDS})
-    foreach (_PC_HEADER ${_PC_HEADERS})
-      set (_TMP
-      ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/uctfield.cpp)
-      file (WRITE ${_TMP} "
-#define _GNU_SOURCE 1
-#include <${_PC_HEADER}>
-int main(void)
-{
-  ucontext_t u;
-  return u.${_PC_FIELD} == 0;
-}
-")
-      try_compile (HAVE_PC_FROM_UCONTEXT ${CMAKE_CURRENT_BINARY_DIR} ${_TMP}
-        COMPILE_DEFINITIONS _GNU_SOURCE=1)
+  set (CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+  set (_PC_HEADERS ucontext.h signal.h)
 
-      if (HAVE_PC_FROM_UCONTEXT)
-        set (PC_FROM_UCONTEXT ${_PC_FIELD} CACHE)
-      endif (HAVE_PC_FROM_UCONTEXT)
+  foreach (_PC_FIELD IN LISTS _PC_FIELDS)
+    foreach (_PC_HEADER IN LISTS _PC_HEADERS)
+      # Replace non-alphanumeric characters by underscores since the name will be
+      # used as preprocessor definition.
+      string (REGEX REPLACE "[^a-zA-Z0-9]" "_" HAVE_UCONTEXT_FIELD_NAME
+        "HAVE_PC_FROM_UCONTEXT_${_PC_FIELD}")
+      # Strip trailing underscores for readability
+      string (REGEX REPLACE "_+$" "" HAVE_UCONTEXT_FIELD_NAME
+        "${HAVE_UCONTEXT_FIELD_NAME}")
+
+      check_struct_has_member (ucontext_t ${_PC_FIELD} ${_PC_HEADER}
+        ${HAVE_UCONTEXT_FIELD_NAME} LANGUAGE CXX)
+
+      if (${HAVE_UCONTEXT_FIELD_NAME})
+        set (PC_FROM_UCONTEXT ${_PC_FIELD} CACHE STRING
+          "<${_PC_HEADER}> ucontext_t PC member")
+        mark_as_advanced (PC_FROM_UCONTEXT)
+        break ()
+      endif (${HAVE_UCONTEXT_FIELD_NAME})
     endforeach (_PC_HEADER)
+
+    if (${HAVE_UCONTEXT_FIELD_NAME})
+      break ()
+    endif (${HAVE_UCONTEXT_FIELD_NAME})
   endforeach (_PC_FIELD)
-endif  (HAVE_UCONTEXT_H AND NOT PC_FROM_UCONTEXT)
+
+  cmake_pop_check_state ()
+endif (HAVE_UCONTEXT_H AND NOT DEFINED PC_FROM_UCONTEXT)
 
 set (GOOGLE_NAMESPACE google)
 set (_START_GOOGLE_NAMESPACE_ "namespace ${GOOGLE_NAMESPACE} {")
