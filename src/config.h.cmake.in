@@ -46,9 +46,6 @@
 /* Define if you have the 'pwrite' function */
 #cmakedefine HAVE_PWRITE
 
-/* define if the compiler implements pthread_rwlock_* */
-#cmakedefine HAVE_RWLOCK
-
 /* Define if you have the 'sigaction' function */
 #cmakedefine HAVE_SIGACTION
 

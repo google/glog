@@ -50,6 +50,7 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -1196,29 +1197,29 @@ class TestLogSinkWriter : public Thread {
 
   // Just buffer it (can't use LOG() here).
   void Buffer(const string& message) {
-    mutex_.Lock();
+    mutex_.lock();
     RAW_LOG(INFO, "Buffering");
     messages_.push(message);
-    mutex_.Unlock();
+    mutex_.unlock();
     RAW_LOG(INFO, "Buffered");
   }
 
   // Wait for the buffer to clear (can't use LOG() here).
   void Wait() {
     RAW_LOG(INFO, "Waiting");
-    mutex_.Lock();
+    mutex_.lock();
     while (!NoWork()) {
-      mutex_.Unlock();
+      mutex_.unlock();
       SleepForMilliseconds(1);
-      mutex_.Lock();
+      mutex_.lock();
     }
     RAW_LOG(INFO, "Waited");
-    mutex_.Unlock();
+    mutex_.unlock();
   }
 
   // Trigger thread exit.
   void Stop() {
-    MutexLock l(&mutex_);
+    std::lock_guard<std::mutex> l(mutex_);
     should_exit_ = true;
   }
 
@@ -1232,14 +1233,14 @@ class TestLogSinkWriter : public Thread {
   // Thread body; CAN use LOG() here!
   void Run() override {
     while (true) {
-      mutex_.Lock();
+      mutex_.lock();
       while (!HaveWork()) {
-        mutex_.Unlock();
+        mutex_.unlock();
         SleepForMilliseconds(1);
-        mutex_.Lock();
+        mutex_.lock();
       }
       if (should_exit_ && messages_.empty()) {
-        mutex_.Unlock();
+        mutex_.unlock();
         break;
       }
       // Give the main thread time to log its message,
@@ -1253,7 +1254,7 @@ class TestLogSinkWriter : public Thread {
       // where LOG() usage can't be eliminated,
       // e.g. pushing the message over with an RPC:
       size_t messages_left = messages_.size();
-      mutex_.Unlock();
+      mutex_.unlock();
       SleepForMilliseconds(20);
       // May not use LOG while holding mutex_, because Buffer()
       // acquires mutex_, and Buffer is called from LOG(),
@@ -1267,7 +1268,7 @@ class TestLogSinkWriter : public Thread {
 
   // data ---------------
 
-  Mutex mutex_;
+  std::mutex mutex_;
   bool should_exit_{false};
   queue<string> messages_;  // messages to be logged
 };

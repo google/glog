@@ -54,7 +54,6 @@
 
 #include <string>
 
-#include "base/mutex.h"  // This must go first so we get _XOPEN_SOURCE
 #include "glog/logging.h"
 
 #if defined(GLOG_OS_WINDOWS)

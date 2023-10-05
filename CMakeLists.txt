@@ -167,11 +167,6 @@ if (Threads_FOUND)
   set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
 endif (Threads_FOUND)
 
-check_cxx_symbol_exists (pthread_rwlock_destroy pthread.h HAVE_RWLOCK_DESTROY)
-check_cxx_symbol_exists (pthread_rwlock_init pthread.h HAVE_RWLOCK_INIT)
-check_cxx_symbol_exists (pthread_rwlock_rdlock pthread.h HAVE_RWLOCK_RDLOCK)
-check_cxx_symbol_exists (pthread_rwlock_unlock pthread.h HAVE_RWLOCK_UNLOCK)
-check_cxx_symbol_exists (pthread_rwlock_wrlock pthread.h HAVE_RWLOCK_WRLOCK)
 check_cxx_symbol_exists (pthread_threadid_np pthread.h HAVE_PTHREAD_THREADID_NP)
 
 cmake_pop_check_state ()
@@ -391,7 +386,6 @@ set (GLOG_SRCS
   ${GLOG_PUBLIC_H}
   src/base/commandlineflags.h
   src/base/googleinit.h
-  src/base/mutex.h
   src/demangle.cc
   src/demangle.h
   src/logging.cc
@@ -439,6 +433,13 @@ set (glog_libraries_options_for_static_linking)
 
 # CMake always uses the generated export header
 target_compile_definitions (glog PUBLIC GLOG_USE_GLOG_EXPORT)
+
+if (WIN32)
+  # Do not define min and max as macros
+  target_compile_definitions (glog PRIVATE NOMINMAX)
+  # Exclude unnecessary funcitonality
+  target_compile_definitions (glog PRIVATE WIN32_LEAN_AND_MEAN)
+endif (WIN32)
 
 if (HAVE_LIB_GFLAGS)
   target_compile_definitions (glog PUBLIC GLOG_USE_GFLAGS)
