@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        std: [14, 17, 20]
+        std: [14, 17, 20, 23]
         include:
           - generator: Ninja
           - build_type: Debug

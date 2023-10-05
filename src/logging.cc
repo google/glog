@@ -33,8 +33,10 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <iomanip>
 #include <string>
+
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>  // For _exit.
 #endif
@@ -1552,9 +1554,15 @@ static LogMessage::LogMessageData fatal_msg_data_shared;
 // allocations).
 static thread_local bool thread_data_available = true;
 
+#if defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
+// std::aligned_storage is deprecated in C++23
+alignas(LogMessage::LogMessageData) static std::byte
+    thread_msg_data[sizeof(LogMessage::LogMessageData)];
+#else   // !(defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L)
 static thread_local std::aligned_storage<
     sizeof(LogMessage::LogMessageData),
     alignof(LogMessage::LogMessageData)>::type thread_msg_data;
+#endif  // defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
 #endif  // defined(GLOG_THREAD_LOCAL_STORAGE)
 
 LogMessage::LogMessageData::LogMessageData()

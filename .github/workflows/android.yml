@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        std: [14, 17, 20]
+        std: [14, 17, 20, 23]
         abi: [arm64-v8a, armeabi-v7a, x86_64, x86]
         build_type: [Debug, Release]
 
