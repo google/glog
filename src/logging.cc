@@ -2268,7 +2268,9 @@ static bool SendEmailInternal(const char*dest, const char *subject,
       }
       sanitized_dests << s;
     }
-    dest = sanitized_dests.str().c_str();
+    // Avoid dangling reference
+    const std::string& tmp = sanitized_dests.str();
+    dest = tmp.c_str();
 
     if ( use_logging ) {
       VLOG(1) << "Trying to send TITLE:" << subject
