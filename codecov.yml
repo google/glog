@@ -1,0 +1,4 @@
+ignore:
+  - "**/*_unittest.cc"
+  - "src/googletest.h"
+  - "src/mock-log.h"

@@ -19,7 +19,12 @@ jobs:
 
       - name: Setup Dependencies
         run: |
-          brew install lcov ninja
+          brew install ninja
+
+      - name: Setup Coverage Dependencies
+        if: matrix.build_type == 'Debug'
+        run: |
+          brew install gcovr
 
       - name: Setup Environment
         if: matrix.build_type == 'Debug'
@@ -29,12 +34,10 @@ jobs:
       - name: Configure
         shell: bash
         env:
-          CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror ${{env.CXXFLAGS}}
+          CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror -pedantic-errors ${{env.CXXFLAGS}}
         run: |
           cmake -S . -B build_${{matrix.build_type}} \
                 -DCMAKE_CXX_EXTENSIONS=OFF \
-                -DCMAKE_CXX_FLAGS_DEBUG=-pedantic-errors  \
-                -DCMAKE_CXX_FLAGS_RELEASE=-pedantic-errors \
                 -DCMAKE_CXX_STANDARD=${{matrix.std}} \
                 -DCMAKE_CXX_STANDARD_REQUIRED=ON \
                 -G "${{matrix.generator}}" \
@@ -53,26 +56,21 @@ jobs:
       - name: Generate Coverage
         if: matrix.build_type == 'Debug'
         run: |
-          lcov --directory . --capture --output-file coverage.info
-          lcov --remove coverage.info \
-            '*/src/*_unittest.cc' \
-            '*/src/googletest.h' \
-            '*/src/mock-log.h' \
-            '*/usr/*' \
-            --output-file coverage.info
+          cd build_${{matrix.build_type}}
+          gcovr -r .. . -s --cobertura coverage.xml
+          cd ..
 
           for file in src/glog/*.h.in; do
             name=$(basename ${file})
             name_we=${name%.h.in}
-            sed -i "" "s|${{github.workspace}}/glog/${name_we}.h\$|${file}|g" coverage.info
+            sed -i "" "s|build_${{matrix.build_type}}/glog/${name_we}.h|${file}|g" build_${{matrix.build_type}}/coverage.xml
           done
-
-          lcov --list coverage.info
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build_${{matrix.build_type}}/coverage.xml
           fail_ci_if_error: true
           verbose: true

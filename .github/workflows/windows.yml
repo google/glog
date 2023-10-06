@@ -152,11 +152,19 @@ jobs:
         with:
           msystem: ${{matrix.sys}}
           install: >-
-            lcov
             mingw-w64-${{matrix.env}}-cmake
             mingw-w64-${{matrix.env}}-gcc
             mingw-w64-${{matrix.env}}-gflags
             mingw-w64-${{matrix.env}}-ninja
+            mingw-w64-${{matrix.env}}-python-jinja
+            mingw-w64-${{matrix.env}}-python-lxml
+            mingw-w64-${{matrix.env}}-python-pip
+            mingw-w64-${{matrix.env}}-python-pygments
+
+      - name: Setup Coverage Dependencies
+        if: matrix.build_type == 'Debug'
+        run: |
+          pip install 'gcovr==6.0'
 
       - name: Setup Environment
         if: matrix.build_type == 'Debug'
@@ -197,28 +205,21 @@ jobs:
       - name: Generate Coverage
         if: matrix.build_type == 'Debug'
         run: |
-          lcov --directory . --capture --output-file coverage.info
-          lcov --remove coverage.info \
-            '*/install/include/*' \
-            '*/msys64/mingw32/*' \
-            '*/msys64/mingw64/*' \
-            '*/src/*_unittest.cc' \
-            '*/src/googletest.h' \
-            '*/src/mock-log.h' \
-            --output-file coverage.info
+          cd build_${{matrix.build_type}}
+          gcovr -r .. . -s --cobertura coverage.xml
+          cd ..
 
           for file in src/glog/*.h.in; do
             name=$(basename ${file})
             name_we=${name%.h.in}
-            sed -i "s|build_${{matrix.build_type}}/glog/${name_we}.h\$|${file}|g" coverage.info
+            sed -i "s|build_${{matrix.build_type}}/glog/${name_we}.h|${file}|g" build_${{matrix.build_type}}/coverage.xml
           done
-
-          lcov --list coverage.info
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build_${{matrix.build_type}}/coverage.xml
           fail_ci_if_error: true
           verbose: true
