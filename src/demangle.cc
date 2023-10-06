@@ -111,6 +111,8 @@ struct State {
   short nest_level;          // For nested names.
   bool append;               // Append flag.
   bool overflowed;           // True if output gets overflowed.
+  uint32 local_level;
+  uint32 expr_level;
 };
 
 // We don't use strlen() in libc since it's not guaranteed to be async
@@ -155,6 +157,8 @@ static void InitState(State *state, const char *mangled,
   state->nest_level = -1;
   state->append = true;
   state->overflowed = false;
+  state->local_level = 0;
+  state->expr_level = 0;
 }
 
 // Returns true and advances "mangled_cur" if we find "one_char_token"
@@ -1127,11 +1131,20 @@ static bool ParseExpression(State *state) {
     return true;
   }
 
+  // Avoid recursion above max_levels
+  constexpr uint32 max_levels = 5;
+
+  if (state->expr_level > max_levels) {
+    return false;
+  }
+  ++state->expr_level;
+
   State copy = *state;
   if (ParseOperatorName(state) &&
       ParseExpression(state) &&
       ParseExpression(state) &&
       ParseExpression(state)) {
+    --state->expr_level;
     return true;
   }
   *state = copy;
@@ -1139,30 +1152,35 @@ static bool ParseExpression(State *state) {
   if (ParseOperatorName(state) &&
       ParseExpression(state) &&
       ParseExpression(state)) {
+    --state->expr_level;
     return true;
   }
   *state = copy;
 
   if (ParseOperatorName(state) &&
       ParseExpression(state)) {
+    --state->expr_level;
     return true;
   }
   *state = copy;
 
   if (ParseTwoCharToken(state, "st") && ParseType(state)) {
     return true;
+    --state->expr_level;
   }
   *state = copy;
 
   if (ParseTwoCharToken(state, "sr") && ParseType(state) &&
       ParseUnqualifiedName(state) &&
       ParseTemplateArgs(state)) {
+    --state->expr_level;
     return true;
   }
   *state = copy;
 
   if (ParseTwoCharToken(state, "sr") && ParseType(state) &&
       ParseUnqualifiedName(state)) {
+    --state->expr_level;
     return true;
   }
   *state = copy;
@@ -1208,16 +1226,25 @@ static bool ParseExprPrimary(State *state) {
 //                 [<discriminator>]
 //              := Z <(function) encoding> E s [<discriminator>]
 static bool ParseLocalName(State *state) {
+  // Avoid recursion above max_levels
+  constexpr uint32 max_levels = 5;
+  if (state->local_level > max_levels) {
+    return false;
+  }
+  ++state->local_level;
+
   State copy = *state;
   if (ParseOneCharToken(state, 'Z') && ParseEncoding(state) &&
       ParseOneCharToken(state, 'E') && MaybeAppend(state, "::") &&
       ParseName(state) && Optional(ParseDiscriminator(state))) {
+    --state->local_level;
     return true;
   }
   *state = copy;
 
   if (ParseOneCharToken(state, 'Z') && ParseEncoding(state) &&
       ParseTwoCharToken(state, "Es") && Optional(ParseDiscriminator(state))) {
+    --state->local_level;
     return true;
   }
   *state = copy;
