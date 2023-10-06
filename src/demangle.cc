@@ -113,6 +113,7 @@ struct State {
   bool overflowed;           // True if output gets overflowed.
   uint32 local_level;
   uint32 expr_level;
+  uint32 arg_level;
 };
 
 // We don't use strlen() in libc since it's not guaranteed to be async
@@ -159,6 +160,7 @@ static void InitState(State *state, const char *mangled,
   state->overflowed = false;
   state->local_level = 0;
   state->expr_level = 0;
+  state->arg_level = 0;
 }
 
 // Returns true and advances "mangled_cur" if we find "one_char_token"
@@ -1095,22 +1097,33 @@ static bool ParseTemplateArgs(State *state) {
 //                 ::= J <template-arg>* E        # argument pack
 //                 ::= X <expression> E
 static bool ParseTemplateArg(State *state) {
+  // Avoid recursion above max_levels
+  constexpr uint32 max_levels = 5;
+
+  if (state->arg_level > max_levels) {
+    return false;
+  }
+  ++state->arg_level;
+
   State copy = *state;
   if ((ParseOneCharToken(state, 'I') || ParseOneCharToken(state, 'J')) &&
       ZeroOrMore(ParseTemplateArg, state) &&
       ParseOneCharToken(state, 'E')) {
+    --state->arg_level;
     return true;
   }
   *state = copy;
 
   if (ParseType(state) ||
       ParseExprPrimary(state)) {
+    --state->arg_level;
     return true;
   }
   *state = copy;
 
   if (ParseOneCharToken(state, 'X') && ParseExpression(state) &&
       ParseOneCharToken(state, 'E')) {
+    --state->arg_level;
     return true;
   }
   *state = copy;
