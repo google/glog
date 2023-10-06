@@ -140,9 +140,12 @@
                     : memchr("tTyY1\0", getenv(envname)[0], 6) != nullptr)
 
 #define EnvToInt(envname, dflt) \
-  (!getenv(envname) ? (dflt) : strtol(getenv(envname), nullptr, 10))
+  (!getenv(envname) ? (dflt)    \
+                    : static_cast<int>(strtol(getenv(envname), nullptr, 10)))
 
 #define EnvToUInt(envname, dflt) \
-  (!getenv(envname) ? (dflt) : strtoul(getenv(envname), nullptr, 10))
+  (!getenv(envname)              \
+       ? (dflt)                  \
+       : static_cast<unsigned>(strtoul(getenv(envname), nullptr, 10)))
 
 #endif  // BASE_COMMANDLINEFLAGS_H__

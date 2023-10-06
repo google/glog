@@ -894,7 +894,7 @@ struct MyLogger : public base::Logger {
 
   void Flush() override {}
 
-  uint32 LogSize() override { return data.length(); }
+  uint32 LogSize() override { return static_cast<uint32>(data.length()); }
 
  private:
   bool* set_on_destruction_;
