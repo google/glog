@@ -595,7 +595,8 @@ class Thread {
   void Start() { pthread_create(&th_, nullptr, &Thread::InvokeThread, this); }
   void Join() { pthread_join(th_, nullptr); }
 #else
-# error No thread implementation.
+  void Start() {}
+  void Join() {}
 #endif
 
  protected:
@@ -614,7 +615,7 @@ class Thread {
   }
   HANDLE handle_;
   DWORD th_;
-#else
+#elif defined(HAVE_PTHREAD)
   pthread_t th_;
 #endif
 };

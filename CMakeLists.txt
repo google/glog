@@ -468,16 +468,13 @@ set (GLOG_SRCS
   src/demangle.h
   src/logging.cc
   src/raw_logging.cc
+  src/signalhandler.cc
   src/symbolize.cc
   src/symbolize.h
   src/utilities.cc
   src/utilities.h
   src/vlog_is_on.cc
 )
-
-if (HAVE_PTHREAD OR WIN32 OR CYGWIN)
-  list (APPEND GLOG_SRCS src/signalhandler.cc)
-endif (HAVE_PTHREAD OR WIN32 OR CYGWIN)
 
 if (CYGWIN OR WIN32)
   list (APPEND GLOG_SRCS
