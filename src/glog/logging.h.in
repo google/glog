@@ -464,6 +464,13 @@ DECLARE_string(vmodule); // also in vlog_is_on.cc
 // Sets the maximum log file size (in MB).
 DECLARE_uint32(max_log_size);
 
+// Set maximum log file num after rolling
+DECLARE_uint32(max_logfile_num);
+
+// Set log file rolling policy, support size-based and time-based
+// The available values are size, day and hour
+DECLARE_string(log_rolling_policy);
+
 // Sets whether to avoid logging to the disk if the disk is full.
 DECLARE_bool(stop_logging_if_full_disk);
 
