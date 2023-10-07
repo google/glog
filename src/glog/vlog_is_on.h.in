@@ -61,9 +61,9 @@
 #ifndef BASE_VLOG_IS_ON_H_
 #define BASE_VLOG_IS_ON_H_
 
-#include <glog/log_severity.h>
-
 #include <cstddef>
+
+#include "glog/log_severity.h"
 
 #if defined(__GNUC__)
 // We emit an anonymous static int* variable at every VLOG_IS_ON(n) site.

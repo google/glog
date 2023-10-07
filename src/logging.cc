@@ -68,10 +68,10 @@
 #else
 #include <dirent.h> // for automatic removal of old logs
 #endif
-#include "base/commandlineflags.h"        // to get the program name
-#include <glog/logging.h>
-#include <glog/raw_logging.h>
+#include "base/commandlineflags.h"  // to get the program name
 #include "base/googleinit.h"
+#include "glog/logging.h"
+#include "glog/raw_logging.h"
 
 #ifdef HAVE_STACKTRACE
 # include "stacktrace.h"

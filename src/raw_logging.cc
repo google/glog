@@ -39,12 +39,14 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>               // for close() and write()
 #endif
-#include <fcntl.h>                 // for open()
+#include <fcntl.h>  // for open()
+
 #include <ctime>
-#include "config.h"
-#include <glog/logging.h>          // To pick up flag settings etc.
-#include <glog/raw_logging.h>
+
 #include "base/commandlineflags.h"
+#include "config.h"
+#include "glog/logging.h"  // To pick up flag settings etc.
+#include "glog/raw_logging.h"
 
 #ifdef HAVE_STACKTRACE
 # include "stacktrace.h"

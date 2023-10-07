@@ -32,11 +32,12 @@
 // The common part of the striplog tests.
 
 #include <cstdio>
-#include <string>
 #include <iosfwd>
-#include <glog/logging.h>
+#include <string>
+
 #include "base/commandlineflags.h"
 #include "config.h"
+#include "glog/logging.h"
 
 DECLARE_bool(logtostderr);
 GLOG_DEFINE_bool(check_mode, false, "Prints 'opt' or 'dbg'");
