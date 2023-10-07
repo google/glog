@@ -25,7 +25,7 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt-get install -y \
             build-essential \
             cmake \
-            lcov \
+            gcovr \
             libgflags-dev \
             libunwind-dev \
             ninja-build
@@ -117,27 +117,22 @@ jobs:
       - name: Generate Coverage
         if: matrix.build_type == 'Debug'
         run: |
-          lcov --directory . --capture --output-file coverage.info
-          lcov --remove coverage.info \
-            '${{github.workspace}}/gtest/*' \
-            '*/src/*_unittest.cc' \
-            '*/src/googletest.h' \
-            '*/src/mock-log.h' \
-            '/usr/*' \
-            --output-file coverage.info
+          cd build_${{matrix.build_type}}
+          gcovr -r .. . -s --xml coverage.xml
+          cd ..
 
           for file in src/glog/*.h.in; do
             name=$(basename ${file})
             name_we=${name%.h.in}
-            sed -i "s|build_${{matrix.build_type}}/glog/${name_we}.h\$|${file}|g" coverage.info
+            sed -i "s|build_${{matrix.build_type}}/glog/${name_we}.h|${file}|g" build_${{matrix.build_type}}/coverage.xml
           done
 
-          lcov --list coverage.info
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: build_${{matrix.build_type}}/coverage.xml
           fail_ci_if_error: true
           verbose: true
