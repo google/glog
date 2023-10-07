@@ -1045,13 +1045,13 @@ namespace google {
   constexpr std::chrono::nanoseconds LOG_TIME_PERIOD =                         \
       std::chrono::duration_cast<std::chrono::nanoseconds>(                    \
           std::chrono::duration<double>(seconds));                             \
-  static std::atomic<@ac_google_namespace@ ::int64> LOG_PREVIOUS_TIME_RAW;    \
+  static std::atomic<@ac_google_namespace@::int64> LOG_PREVIOUS_TIME_RAW;      \
   GLOG_IFDEF_THREAD_SANITIZER(                                                 \
       AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_TIME_PERIOD,            \
-                              sizeof(@ac_google_namespace @ ::int64), ""));    \
+                              sizeof(@ac_google_namespace@::int64), ""));      \
   GLOG_IFDEF_THREAD_SANITIZER(                                                 \
       AnnotateBenignRaceSized(__FILE__, __LINE__, &LOG_PREVIOUS_TIME_RAW,      \
-                              sizeof(@ac_google_namespace @ ::int64), ""));    \
+                              sizeof(@ac_google_namespace@::int64), ""));      \
   const auto LOG_CURRENT_TIME =                                                \
       std::chrono::duration_cast<std::chrono::nanoseconds>(                    \
           std::chrono::steady_clock::now().time_since_epoch());                \
@@ -1065,8 +1065,8 @@ namespace google {
             .count(),                                                          \
         std::memory_order_relaxed);                                            \
   if (LOG_TIME_DELTA > LOG_TIME_PERIOD)                                        \
-  @ac_google_namespace@ ::LogMessage(                                         \
-      __FILE__, __LINE__, @ac_google_namespace@ ::GLOG_##severity)            \
+  @ac_google_namespace@::LogMessage(                                           \
+      __FILE__, __LINE__, @ac_google_namespace@::GLOG_##severity)              \
       .stream()
 
 #define SOME_KIND_OF_LOG_EVERY_N(severity, n, what_to_do) \
