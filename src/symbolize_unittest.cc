@@ -33,12 +33,11 @@
 
 #include "symbolize.h"
 
-#include <glog/logging.h>
-
 #include <csignal>
 #include <iostream>
 
 #include "config.h"
+#include "glog/logging.h"
 #include "googletest.h"
 #include "utilities.h"
 

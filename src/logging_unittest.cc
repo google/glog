@@ -49,7 +49,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <memory>
 #include <queue>
 #include <sstream>
@@ -57,8 +56,8 @@
 #include <vector>
 
 #include "base/commandlineflags.h"
-#include <glog/logging.h>
-#include <glog/raw_logging.h>
+#include "glog/logging.h"
+#include "glog/raw_logging.h"
 #include "googletest.h"
 
 DECLARE_string(log_backtrace_at);  // logging.cc

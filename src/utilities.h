@@ -52,11 +52,10 @@
 #define PRIXS __PRIS_PREFIX "X"
 #define PRIoS __PRIS_PREFIX "o"
 
-#include "base/mutex.h"  // This must go first so we get _XOPEN_SOURCE
-
 #include <string>
 
-#include <glog/logging.h>
+#include "base/mutex.h"  // This must go first so we get _XOPEN_SOURCE
+#include "glog/logging.h"
 
 #if defined(GLOG_OS_WINDOWS)
 # include "port.h"

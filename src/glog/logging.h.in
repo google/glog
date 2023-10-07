@@ -60,10 +60,10 @@
 #define GLOG_MSVC_POP_WARNING()
 #endif
 
-#include <glog/platform.h>
+#include "glog/platform.h"
 
 #if @ac_cv_have_glog_export@
-#include <glog/export.h>
+#include "glog/export.h"
 #endif
 
 // We care a lot about number of bits things take up.  Unfortunately,
@@ -599,8 +599,8 @@ DECLARE_string(logmailer);
 @ac_google_start_namespace@
 
 // They need the definitions of integer types.
-#include <glog/log_severity.h>
-#include <glog/vlog_is_on.h>
+#include "glog/log_severity.h"
+#include "glog/vlog_is_on.h"
 
 // Initialize google's logging library. You will see the program name
 // specified by argv0 in log outputs.
