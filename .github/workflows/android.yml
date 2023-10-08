@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build-android:
     name: NDK-C++${{matrix.std}}-${{matrix.abi}}-${{matrix.build_type}}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-8core
     permissions:
       actions: read
       contents: read

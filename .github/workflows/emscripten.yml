@@ -8,7 +8,7 @@ jobs:
       run:
         shell: bash
     name: Emscripten-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-8core
     permissions:
       actions: read
       contents: read
