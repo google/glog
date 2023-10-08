@@ -130,6 +130,9 @@
 /* define if gmtime_r is available in time.h */
 #cmakedefine HAVE_GMTIME_R
 
+/* define if _chsize_s is available in io.h */
+#cmakedefine HAVE__CHSIZE_S
+
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
 #cmakedefine LT_OBJDIR
