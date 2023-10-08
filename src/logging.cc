@@ -1931,6 +1931,14 @@ void LogMessage::RecordCrashReason(
 GLOG_EXPORT logging_fail_func_t g_logging_fail_func =
     reinterpret_cast<logging_fail_func_t>(&abort);
 
+NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 1, 0) {}
+NullStream::NullStream(const char* /*file*/, int /*line*/,
+                       const CheckOpString& /*result*/)
+    : LogMessage::LogStream(message_buffer_, 1, 0) {}
+NullStream& NullStream::stream() { return *this; }
+
+NullStreamFatal::~NullStreamFatal() { _exit(EXIT_FAILURE); }
+
 void InstallFailureFunction(logging_fail_func_t fail_func) {
   g_logging_fail_func = fail_func;
 }

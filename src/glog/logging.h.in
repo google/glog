@@ -1780,11 +1780,11 @@ class GLOG_EXPORT NullStream : public LogMessage::LogStream {
   // (they'll never be actually displayed). This will be needed if a
   // NullStream& is implicitly converted to LogStream&, in which case
   // the overloaded NullStream::operator<< will not be invoked.
-  NullStream() : LogMessage::LogStream(message_buffer_, 1, 0) { }
+  NullStream();
   NullStream(const char* /*file*/, int /*line*/,
-             const CheckOpString& /*result*/) :
-      LogMessage::LogStream(message_buffer_, 1, 0) { }
-  NullStream &stream() { return *this; }
+             const CheckOpString& /*result*/);
+  NullStream& stream();
+
  private:
   // A very short buffer for messages (which we discard anyway). This
   // will be needed if NullStream& converted to LogStream& (e.g. as a
@@ -1805,17 +1805,8 @@ inline NullStream& operator<<(NullStream &str, const T &) { return str; }
 // trace), like LogMessageFatal.
 class GLOG_EXPORT NullStreamFatal : public NullStream {
  public:
-  NullStreamFatal() { }
-  NullStreamFatal(const char* file, int line, const CheckOpString& result) :
-      NullStream(file, line, result) { }
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4722)
-#endif // _MSC_VER
-  [[noreturn]] ~NullStreamFatal() throw() { _exit(EXIT_FAILURE); }
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif // _MSC_VER
+  using NullStream::NullStream;
+  [[noreturn]] ~NullStreamFatal();
 };
 
 // Install a signal handler that will dump signal information and a stack
