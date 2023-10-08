@@ -114,6 +114,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DGLOG_EXPORT=__declspec(dllexport)",
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
         "-DHAVE_SNPRINTF",
+        "-DHAVE__CHSIZE_S",
         "-I" + src_windows,
     ]
 

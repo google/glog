@@ -58,6 +58,9 @@
 #ifdef HAVE_SYSLOG_H
 # include <syslog.h>
 #endif
+#ifdef HAVE__CHSIZE_S
+#include <io.h> // for truncate log file
+#endif
 #include <vector>
 #include <cerrno>                   // for errno
 #include <sstream>
@@ -2425,7 +2428,7 @@ void GetExistingTempDirectories(vector<string>* list) {
 }
 
 void TruncateLogFile(const char *path, uint64 limit, uint64 keep) {
-#ifdef HAVE_UNISTD_H
+#if defined(HAVE_UNISTD_H) || defined(HAVE__CHSIZE_S)
   struct stat statbuf;
   const int kCopyBlockSize = 8 << 10;
   char copybuf[kCopyBlockSize];
@@ -2446,7 +2449,11 @@ void TruncateLogFile(const char *path, uint64 limit, uint64 keep) {
       // all of base/...) with -D_FILE_OFFSET_BITS=64 but that's
       // rather scary.
       // Instead just truncate the file to something we can manage
+#ifdef HAVE__CHSIZE_S
+      if (_chsize_s(fd, 0) != 0) {
+#else
       if (truncate(path, 0) == -1) {
+#endif
         PLOG(ERROR) << "Unable to truncate " << path;
       } else {
         LOG(ERROR) << "Truncated " << path << " due to EFBIG error";
@@ -2491,7 +2498,11 @@ void TruncateLogFile(const char *path, uint64 limit, uint64 keep) {
   // Truncate the remainder of the file. If someone else writes to the
   // end of the file after our last read() above, we lose their latest
   // data. Too bad ...
+#ifdef HAVE__CHSIZE_S
+  if (_chsize_s(fd, write_offset) != 0) {
+#else
   if (ftruncate(fd, write_offset) == -1) {
+#endif
     PLOG(ERROR) << "Unable to truncate " << path;
   }
 

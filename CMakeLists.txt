@@ -131,6 +131,7 @@ check_function_exists (sigaltstack HAVE_SIGALTSTACK)
 check_cxx_symbol_exists (backtrace execinfo.h HAVE_EXECINFO_BACKTRACE)
 check_cxx_symbol_exists (backtrace_symbols execinfo.h
   HAVE_EXECINFO_BACKTRACE_SYMBOLS)
+check_cxx_symbol_exists (_chsize_s io.h HAVE__CHSIZE_S)
 
 # NOTE gcc does not fail if you pass a non-existent -Wno-* option as an
 # argument. However, it will happily fail if you pass the corresponding -W*
