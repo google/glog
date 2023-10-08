@@ -489,9 +489,20 @@ add_library (glog_internal OBJECT
   ${GLOG_SRCS}
 )
 target_compile_features (glog_internal PUBLIC $<TARGET_PROPERTY:glog,COMPILE_FEATURES>)
+set_target_properties (glog_internal PROPERTIES DEFINE_SYMBOL GOOGLE_GLOG_IS_A_DLL)
+
+# Some generators (such as Xcode) do not generate any output if the target does
+# not reference at least one source file.
+set (_glog_EMPTY_SOURCE ${glog_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/glog.cc)
+
+add_custom_command (
+  OUTPUT ${_glog_EMPTY_SOURCE}
+  COMMAND ${CMAKE_COMMAND} -E touch ${_glog_EMPTY_SOURCE}
+)
 
 add_library (glog
   $<TARGET_OBJECTS:glog_internal>
+  ${_glog_EMPTY_SOURCE}
 )
 target_compile_features (glog PUBLIC cxx_std_14)
 
@@ -613,38 +624,30 @@ if (NOT WITH_FUZZING STREQUAL "none")
 endif (NOT WITH_FUZZING STREQUAL "none")
 
 if (BUILD_TESTING)
-  add_library (glogtest STATIC
-    $<TARGET_OBJECTS:glog_internal>
-  )
-
-  target_include_directories (glogtest PUBLIC
-    $<TARGET_PROPERTY:glog,INCLUDE_DIRECTORIES>)
-  target_compile_definitions (glogtest PUBLIC
-    $<TARGET_PROPERTY:glog,COMPILE_DEFINITIONS> GLOG_STATIC_DEFINE)
-  target_link_libraries (glogtest PUBLIC
-    $<TARGET_PROPERTY:glog,LINK_LIBRARIES>)
-
-  set (_GLOG_TEST_LIBS glogtest)
+  add_library (glog_test INTERFACE)
+  target_link_libraries (glog_test INTERFACE $<TARGET_OBJECTS:glog_internal> $<TARGET_PROPERTY:glog,LINK_LIBRARIES>)
+  target_compile_definitions (glog_test INTERFACE GLOG_STATIC_DEFINE $<TARGET_PROPERTY:glog,COMPILE_DEFINITIONS>)
+  target_include_directories (glog_test INTERFACE $<TARGET_PROPERTY:glog,INCLUDE_DIRECTORIES>)
 
   if (HAVE_LIB_GTEST)
-    list (APPEND _GLOG_TEST_LIBS GTest::gtest)
+    target_link_libraries (glog_test INTERFACE GTest::gtest)
   endif (HAVE_LIB_GTEST)
 
   if (HAVE_LIB_GMOCK)
-    list (APPEND _GLOG_TEST_LIBS GTest::gmock)
+    target_link_libraries (glog_test INTERFACE GTest::gmock)
   endif (HAVE_LIB_GMOCK)
 
   add_executable (logging_unittest
     src/logging_unittest.cc
   )
 
-  target_link_libraries (logging_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (logging_unittest PRIVATE glog_test)
 
   add_executable (stl_logging_unittest
     src/stl_logging_unittest.cc
   )
 
-  target_link_libraries (stl_logging_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (stl_logging_unittest PRIVATE glog_test)
 
   if (HAVE_NO_DEPRECATED)
     set_property (TARGET stl_logging_unittest APPEND PROPERTY COMPILE_OPTIONS
@@ -661,35 +664,35 @@ if (BUILD_TESTING)
       src/symbolize_unittest.cc
     )
 
-    target_link_libraries (symbolize_unittest PRIVATE ${_GLOG_TEST_LIBS})
+    target_link_libraries (symbolize_unittest PRIVATE glog_test)
   endif (HAVE_SYMBOLIZE)
 
   add_executable (demangle_unittest
     src/demangle_unittest.cc
   )
 
-  target_link_libraries (demangle_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (demangle_unittest PRIVATE glog_test)
 
   if (HAVE_STACKTRACE)
     add_executable (stacktrace_unittest
       src/stacktrace_unittest.cc
     )
 
-    target_link_libraries (stacktrace_unittest PRIVATE ${_GLOG_TEST_LIBS})
+    target_link_libraries (stacktrace_unittest PRIVATE glog_test)
   endif (HAVE_STACKTRACE)
 
   add_executable (utilities_unittest
     src/utilities_unittest.cc
   )
 
-  target_link_libraries (utilities_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (utilities_unittest PRIVATE glog_test)
 
   if (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
     add_executable (signalhandler_unittest
       src/signalhandler_unittest.cc
     )
 
-    target_link_libraries (signalhandler_unittest PRIVATE ${_GLOG_TEST_LIBS})
+    target_link_libraries (signalhandler_unittest PRIVATE glog_test)
   endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
 
   add_test (NAME demangle COMMAND demangle_unittest)
@@ -735,7 +738,7 @@ if (BUILD_TESTING)
       src/mock-log.h
     )
 
-    target_link_libraries (mock-log_unittest PRIVATE ${_GLOG_TEST_LIBS})
+    target_link_libraries (mock-log_unittest PRIVATE glog_test)
 
     add_test (NAME mock-log COMMAND mock-log_unittest)
   endif (HAVE_LIB_GMOCK)
@@ -797,17 +800,17 @@ if (BUILD_TESTING)
   add_executable (cleanup_immediately_unittest
     src/cleanup_immediately_unittest.cc)
 
-  target_link_libraries (cleanup_immediately_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (cleanup_immediately_unittest PRIVATE glog_test)
 
   add_executable (cleanup_with_absolute_prefix_unittest
     src/cleanup_with_absolute_prefix_unittest.cc)
 
-  target_link_libraries (cleanup_with_absolute_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (cleanup_with_absolute_prefix_unittest PRIVATE glog_test)
 
   add_executable (cleanup_with_relative_prefix_unittest
     src/cleanup_with_relative_prefix_unittest.cc)
 
-  target_link_libraries (cleanup_with_relative_prefix_unittest PRIVATE ${_GLOG_TEST_LIBS})
+  target_link_libraries (cleanup_with_relative_prefix_unittest PRIVATE glog_test)
 
   set (CLEANUP_LOG_DIR ${CMAKE_CURRENT_BINARY_DIR}/cleanup_tests)
 

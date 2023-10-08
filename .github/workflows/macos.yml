@@ -15,7 +15,7 @@ jobs:
       matrix:
         std: [14, 17, 20, 23]
         include:
-          - generator: Ninja
+          - generator: Xcode
           - build_type: Debug
 
     steps:
@@ -34,6 +34,7 @@ jobs:
         if: matrix.build_type == 'Debug'
         run: |
           echo 'CXXFLAGS=--coverage' >> $GITHUB_ENV
+          echo 'LDFLAGS=--coverage' >> $GITHUB_ENV
 
       - name: Configure
         shell: bash
@@ -55,6 +56,7 @@ jobs:
       - name: Test
         run: |
           ctest --test-dir build_${{matrix.build_type}} \
+                --build-config ${{matrix.build_type}} \
                 --output-on-failure
 
       - name: Generate Coverage
