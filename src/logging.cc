@@ -2397,12 +2397,9 @@ const vector<string>& GetLoggingDirectories() {
     logging_directories_list = new vector<string>;
 
     if ( !FLAGS_log_dir.empty() ) {
-      // A dir was specified, we should use it, and make sure to end with
-      // a directory delimiter.
-      const char* const dir_delim_end =
-        possible_dir_delim + sizeof(possible_dir_delim);
-      if (std::find(possible_dir_delim, dir_delim_end,
-            FLAGS_log_dir.back()) == dir_delim_end) {
+      // Ensure the specified path ends with a directory delimiter.
+      if (std::find(std::begin(possible_dir_delim), std::end(possible_dir_delim),
+            FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
         logging_directories_list->push_back(FLAGS_log_dir + "/");
       } else {
         logging_directories_list->push_back(FLAGS_log_dir);
