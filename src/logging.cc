@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cstddef>
 #include <iomanip>
+#include <iterator>
 #include <string>
 
 #ifdef HAVE_UNISTD_H
@@ -2397,8 +2398,13 @@ const vector<string>& GetLoggingDirectories() {
     logging_directories_list = new vector<string>;
 
     if ( !FLAGS_log_dir.empty() ) {
-      // A dir was specified, we should use it
-      logging_directories_list->push_back(FLAGS_log_dir);
+      // Ensure the specified path ends with a directory delimiter.
+      if (std::find(std::begin(possible_dir_delim), std::end(possible_dir_delim),
+            FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
+        logging_directories_list->push_back(FLAGS_log_dir + "/");
+      } else {
+        logging_directories_list->push_back(FLAGS_log_dir);
+      }
     } else {
       GetTempDirectories(logging_directories_list);
 #ifdef GLOG_OS_WINDOWS
