@@ -35,6 +35,7 @@
 #include <cassert>
 #include <cstddef>
 #include <iomanip>
+#include <iterator>
 #include <string>
 
 #ifdef HAVE_UNISTD_H
