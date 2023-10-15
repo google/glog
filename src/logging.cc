@@ -1560,7 +1560,7 @@ static thread_local bool thread_data_available = true;
 
 #if defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
 // std::aligned_storage is deprecated in C++23
-alignas(LogMessage::LogMessageData) static std::byte
+alignas(LogMessage::LogMessageData) static thread_local std::byte
     thread_msg_data[sizeof(LogMessage::LogMessageData)];
 #else   // !(defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L)
 static thread_local std::aligned_storage<
