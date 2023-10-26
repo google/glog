@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-azuretools.vscode-azurestaticwebapps",
+        "ms-vscode.vscode-github-issue-notebooks",
+        "hashicorp.terraform"
+    ]
+}
