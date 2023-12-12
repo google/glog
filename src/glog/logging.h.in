@@ -1175,6 +1175,8 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 #define DLOG_EVERY_N(severity, n) LOG_EVERY_N(severity, n)
 #define DLOG_IF_EVERY_N(severity, condition, n) \
   LOG_IF_EVERY_N(severity, condition, n)
+#define DLOG_FIRST_N(severity, n) LOG_FIRST_N(severity, n)
+#define DLOG_EVERY_T(severity, T) LOG_EVERY_T(severity, T)
 #define DLOG_ASSERT(condition) LOG_ASSERT(condition)
 
 // debug-only checking.  executed if DCHECK_IS_ON().
@@ -1213,6 +1215,14 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 #define DLOG_IF_EVERY_N(severity, condition, n) \
   static_cast<void>(0),                         \
   (true || !(condition))? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+
+#define DLOG_FIRST_N(severity, n) \
+  static_cast<void>(0),            \
+  true ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
+
+#define DLOG_EVERY_T(severity, T) \
+  static_cast<void>(0),           \
+  true ? (void) 0 : @ac_google_namespace@::LogMessageVoidify() & LOG(severity)
 
 #define DLOG_ASSERT(condition) \
   static_cast<void>(0),        \
