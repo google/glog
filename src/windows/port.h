@@ -49,15 +49,16 @@
 #define WIN32_LEAN_AND_MEAN  /* We always want minimal includes */
 #endif
 
+#include <direct.h>  /* for _getcwd() */
+#include <io.h>      /* because we so often use open/close/etc */
+#include <process.h> /* for _getpid() */
 #include <windows.h>
-#include <winsock.h>         /* for gethostname */
-#include <io.h>              /* because we so often use open/close/etc */
-#include <direct.h>          /* for _getcwd() */
-#include <process.h>         /* for _getpid() */
-#include <cstdarg>          /* template_dictionary.cc uses va_copy */
-#include <cstdio>           /* read in vsnprintf decl. before redifining it */
-#include <cstring>          /* for _strnicmp(), strerror_s() */
-#include <ctime>            /* for localtime_s() */
+#include <winsock.h> /* for gethostname */
+
+#include <cstdarg> /* template_dictionary.cc uses va_copy */
+#include <cstdio>  /* read in vsnprintf decl. before redefining it */
+#include <cstring> /* for _strnicmp(), strerror_s() */
+#include <ctime>   /* for localtime_s() */
 /* Note: the C++ #includes are all together at the bottom.  This file is
  * used by both C and C++ code, so we put all the C++ together.
  */
@@ -80,13 +81,6 @@
 
 /* file I/O */
 #define PATH_MAX 1024
-#define access  _access
-#define getcwd  _getcwd
-#define open    _open
-#define read    _read
-#define write(fd, p, n) _write(fd, p, n)
-#define lseek   _lseek
-#define close   _close
 #define popen   _popen
 #define pclose  _pclose
 #define R_OK    04           /* read-only (for access()) */
