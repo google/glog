@@ -82,10 +82,10 @@ _START_GOOGLE_NAMESPACE_
 #define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex)
 #endif
 
-// CAVEAT: vsnprintf called from *DoRawLog below has some (exotic) code paths
-// that invoke malloc() and getenv() that might acquire some locks.
-// If this becomes a problem we should reimplement a subset of vsnprintf
-// that does not need locks and malloc.
+// CAVEAT: std::vsnprintf called from *DoRawLog below has some (exotic) code
+// paths that invoke malloc() and getenv() that might acquire some locks. If
+// this becomes a problem we should reimplement a subset of std::vsnprintf that
+// does not need locks and malloc.
 
 // Helper for RawLog__ below.
 // *DoRawLog writes to *buf of *size and move them past the written portion.
@@ -94,7 +94,7 @@ GLOG_ATTRIBUTE_FORMAT(printf, 3, 4)
 static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
   va_list ap;
   va_start(ap, format);
-  int n = vsnprintf(*buf, *size, format, ap);
+  int n = std::vsnprintf(*buf, *size, format, ap);
   va_end(ap);
   if (n < 0 || static_cast<size_t>(n) > *size) return false;
   *size -= static_cast<size_t>(n);
@@ -109,7 +109,7 @@ inline static bool VADoRawLog(char** buf, size_t* size,
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
-  int n = vsnprintf(*buf, *size, format, ap);
+  int n = std::vsnprintf(*buf, *size, format, ap);
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif

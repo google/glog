@@ -391,7 +391,7 @@ struct FileDescriptor {
 //
 // Note: we don't use ProcMapsIterator since the object is big (it has
 // a 5k array member) and uses async-unsafe functions such as sscanf()
-// and snprintf().
+// and std::snprintf().
 class LineReader {
  public:
   explicit LineReader(int fd, char *buf, size_t buf_len, size_t offset)

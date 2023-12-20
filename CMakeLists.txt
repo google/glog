@@ -151,10 +151,6 @@ endif (Threads_FOUND)
 check_cxx_symbol_exists (pthread_threadid_np "pthread.h" HAVE_PTHREAD_THREADID_NP)
 cmake_pop_check_state ()
 
-# NOTE: Cannot use check_function_exists here since >=vc-14.0 can define
-# snprintf as an inline function
-check_cxx_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
-
 cmake_push_check_state (RESET)
 set (CMAKE_REQUIRED_LIBRARIES dbghelp)
 check_cxx_symbol_exists (UnDecorateSymbolName "windows.h;dbghelp.h" HAVE_DBGHELP)

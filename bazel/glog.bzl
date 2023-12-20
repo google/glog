@@ -113,7 +113,6 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         # Override -DGLOG_EXPORT= from the cc_library's defines.
         "-DGLOG_EXPORT=__declspec(dllexport)",
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
-        "-DHAVE_SNPRINTF",
         "-DHAVE__CHSIZE_S",
         "-I" + src_windows,
     ]
