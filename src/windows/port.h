@@ -56,7 +56,6 @@
 #include <winsock.h> /* for gethostname */
 
 #include <cstdarg> /* template_dictionary.cc uses va_copy */
-#include <cstdio>  /* read in vsnprintf decl. before redefining it */
 #include <cstring> /* for _strnicmp(), strerror_s() */
 #include <ctime>   /* for localtime_s() */
 /* Note: the C++ #includes are all together at the bottom.  This file is
@@ -110,21 +109,6 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 
 /* Sleep is in ms, on windows */
 #define sleep(secs)  Sleep((secs) * 1000)
-
-/* We can't just use _vsnprintf and _snprintf as drop-in-replacements,
- * because they don't always NUL-terminate. :-(  We also can't use the
- * name vsnprintf, since windows defines that (but not snprintf (!)).
- */
-#ifndef HAVE_SNPRINTF
-extern int GLOG_EXPORT snprintf(char* str, size_t size, const char* format,
-                                ...);
-#endif
-extern int GLOG_EXPORT safe_vsnprintf(char* str, size_t size,
-                                      const char* format, va_list ap);
-#define vsnprintf(str, size, format, ap)  safe_vsnprintf(str, size, format, ap)
-#ifndef va_copy
-#define va_copy(dst, src)  (dst) = (src)
-#endif
 
 /* Windows doesn't support specifying the number of buckets as a
  * hash_map constructor arg, so we leave this blank.

@@ -487,8 +487,9 @@ static inline string Munge(const string& filename) {
     const size_t str_size = 256;
     char null_str[str_size];
     char ptr_str[str_size];
-    snprintf(null_str, str_size, "%p", static_cast<void*>(nullptr));
-    snprintf(ptr_str, str_size, "%p", reinterpret_cast<void*>(PTR_TEST_VALUE));
+    std::snprintf(null_str, str_size, "%p", static_cast<void*>(nullptr));
+    std::snprintf(ptr_str, str_size, "%p",
+                  reinterpret_cast<void*>(PTR_TEST_VALUE));
 
     StringReplace(&line, "__NULLP__", null_str);
     StringReplace(&line, "__PTRTEST__", ptr_str);

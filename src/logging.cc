@@ -1699,7 +1699,7 @@ void LogMessage::Init(const char* file,
 
   if (!FLAGS_log_backtrace_at.empty()) {
     char fileline[128];
-    snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
+    std::snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
 #ifdef HAVE_STACKTRACE
     if (FLAGS_log_backtrace_at == fileline) {
       string stacktrace;
@@ -2614,7 +2614,7 @@ string StrError(int err) {
   char buf[100];
   int rc = posix_strerror_r(err, buf, sizeof(buf));
   if ((rc < 0) || (buf[0] == '\000')) {
-    snprintf(buf, sizeof(buf), "Error number %d", err);
+    std::snprintf(buf, sizeof(buf), "Error number %d", err);
   }
   return buf;
 }

@@ -7,9 +7,6 @@
 /* Define if you have the `dladdr' function */
 #cmakedefine HAVE_DLADDR
 
-/* Define if you have the `snprintf' function */
-#cmakedefine HAVE_SNPRINTF
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #cmakedefine HAVE_DLFCN_H
 

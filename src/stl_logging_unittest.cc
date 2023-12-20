@@ -82,7 +82,7 @@ static void TestSTLLogging() {
       if (i > 0) expected += ' ';
       const size_t buf_size = 256;
       char buf[buf_size];
-      snprintf(buf, buf_size, "%d", i);
+      std::snprintf(buf, buf_size, "%d", i);
       expected += buf;
     }
     v.push_back(100);

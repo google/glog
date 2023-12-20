@@ -120,8 +120,8 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
       symbol = tmp;
   }
   char buf[1024];
-  snprintf(buf, sizeof(buf), "%s@ %*p  %s\n",
-           prefix, kPrintfPointerFieldWidth, pc, symbol);
+  std::snprintf(buf, sizeof(buf), "%s@ %*p  %s\n", prefix,
+                kPrintfPointerFieldWidth, pc, symbol);
   writerfn(buf, arg);
 }
 #endif
@@ -129,8 +129,8 @@ static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
 static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
                    const char * const prefix) {
   char buf[100];
-  snprintf(buf, sizeof(buf), "%s@ %*p\n",
-           prefix, kPrintfPointerFieldWidth, pc);
+  std::snprintf(buf, sizeof(buf), "%s@ %*p\n", prefix, kPrintfPointerFieldWidth,
+                pc);
   writerfn(buf, arg);
 }
 
@@ -334,7 +334,7 @@ static void MyUserNameInitializer() {
     if (pwuid_res == 0 && result) {
       g_my_user_name = pwd.pw_name;
     } else {
-      snprintf(buffer, sizeof(buffer), "uid%d", uid);
+      std::snprintf(buffer, sizeof(buffer), "uid%d", uid);
       g_my_user_name = buffer;
     }
 #endif

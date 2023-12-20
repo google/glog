@@ -1006,7 +1006,7 @@ static void TestTruncate() {
   int fd;
   CHECK_ERR(fd = open(path.c_str(), O_APPEND | O_WRONLY));
   char fdpath[64];
-  snprintf(fdpath, sizeof(fdpath), "/proc/self/fd/%d", fd);
+  std::snprintf(fdpath, sizeof(fdpath), "/proc/self/fd/%d", fd);
   TestOneTruncate(fdpath, 10, 10, 10, 10, 10);
 #endif
 
@@ -1435,7 +1435,8 @@ TEST(LogBacktraceAt, DoesBacktraceAtRightLineWhenEnabled) {
   StrictMock<ScopedMockLog> log;
 
   char where[100];
-  snprintf(where, 100, "%s:%d", const_basename(__FILE__), kBacktraceAtLine);
+  std::snprintf(where, 100, "%s:%d", const_basename(__FILE__),
+                kBacktraceAtLine);
   FLAGS_log_backtrace_at = where;
 
   // The LOG at the specified line should include a stacktrace which includes
