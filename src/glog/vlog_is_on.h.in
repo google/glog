@@ -74,11 +74,11 @@
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
 #define VLOG_IS_ON(verboselevel)                                \
   __extension__  \
-  ({ static @ac_google_namespace@::SiteFlag vlocal__ = {NULL, NULL, 0, NULL};       \
+  ({ static @ac_google_namespace@::SiteFlag vlocal__ = {nullptr, nullptr, 0, nullptr};       \
      GLOG_IFDEF_THREAD_SANITIZER( \
              AnnotateBenignRaceSized(__FILE__, __LINE__, &vlocal__, sizeof(@ac_google_namespace@::SiteFlag), "")); \
      @ac_google_namespace@::int32 verbose_level__ = (verboselevel);                    \
-     (vlocal__.level == NULL ? @ac_google_namespace@::InitVLOG3__(&vlocal__, &FLAGS_v, \
+     (vlocal__.level == nullptr ? @ac_google_namespace@::InitVLOG3__(&vlocal__, &FLAGS_v, \
                         __FILE__, verbose_level__) : *vlocal__.level >= verbose_level__); \
   })
 #else
