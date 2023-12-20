@@ -21,7 +21,6 @@ include (CheckCXXSourceRuns)
 include (CheckCXXSymbolExists)
 include (CheckFunctionExists)
 include (CheckIncludeFileCXX)
-include (CheckLibraryExists)
 include (CheckStructHasMember)
 include (CheckTypeSize)
 include (CMakeDependentOption)
@@ -156,7 +155,10 @@ cmake_pop_check_state ()
 # snprintf as an inline function
 check_cxx_symbol_exists (snprintf cstdio HAVE_SNPRINTF)
 
-check_library_exists (dbghelp UnDecorateSymbolName "" HAVE_DBGHELP)
+cmake_push_check_state (RESET)
+set (CMAKE_REQUIRED_LIBRARIES dbghelp)
+check_cxx_symbol_exists (UnDecorateSymbolName "windows.h;dbghelp.h" HAVE_DBGHELP)
+cmake_pop_check_state ()
 
 check_cxx_source_compiles ("
 #include <cstdlib>
