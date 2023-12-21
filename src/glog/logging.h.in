@@ -1784,23 +1784,25 @@ GLOG_EXPORT int posix_strerror_r(int err, char *buf, size_t len);
 GLOG_EXPORT std::string StrError(int err);
 
 // A class for which we define operator<<, which does nothing.
-class GLOG_EXPORT NullStream : public LogMessage::LogStream {
+class GLOG_EXPORT NullStreamBase {
  public:
   // Initialize the LogStream so the messages can be written somewhere
   // (they'll never be actually displayed). This will be needed if a
   // NullStream& is implicitly converted to LogStream&, in which case
   // the overloaded NullStream::operator<< will not be invoked.
-  NullStream();
-  NullStream(const char* /*file*/, int /*line*/,
-             const CheckOpString& /*result*/);
-  NullStream& stream();
+  NullStreamBase() noexcept;
+  NullStreamBase(const char* /*file*/, int /*line*/,
+                 const CheckOpString& /*result*/) noexcept;
+  NullStreamBase(const NullStreamBase& other) = delete;
+  NullStreamBase& operator=(const NullStreamBase& other) = delete;
+  NullStreamBase& stream() noexcept;
 
- private:
-  // A very short buffer for messages (which we discard anyway). This
-  // will be needed if NullStream& converted to LogStream& (e.g. as a
-  // result of a conditional expression).
-  char message_buffer_[2];
+ protected:
+  // Prevent the class to be deleted through a base class pointer
+  ~NullStreamBase();
 };
+
+class GLOG_EXPORT NullStream final : public NullStreamBase {};
 
 // Do nothing. This operator is inline, allowing the message to be
 // compiled away. The message will not be compiled away if we do
@@ -1808,15 +1810,26 @@ class GLOG_EXPORT NullStream : public LogMessage::LogStream {
 // SKIP_LOG=WARNING. In those cases, NullStream will be implicitly
 // converted to LogStream and the message will be computed and then
 // quietly discarded.
-template<class T>
-inline NullStream& operator<<(NullStream &str, const T &) { return str; }
+template <class T>
+inline NullStreamBase& operator<<(NullStreamBase& str, const T&) noexcept {
+  return str;
+}
+inline NullStreamBase& operator<<(
+    NullStreamBase& str, std::ostream& (* /*unused*/)(std::ostream&)) noexcept {
+  return str;
+}
 
 // Similar to NullStream, but aborts the program (without stack
 // trace), like LogMessageFatal.
-class GLOG_EXPORT NullStreamFatal : public NullStream {
+class GLOG_EXPORT NullStreamFatal final : public NullStreamBase {
  public:
-  using NullStream::NullStream;
-  [[noreturn]] ~NullStreamFatal();
+  using NullStreamBase::NullStreamBase;
+  [[noreturn]]
+#if defined(__GNUG__)
+  // Avoid optimizing the destructor away
+  [[gnu::used]]
+#endif  // defined(__GNUG__)
+  ~NullStreamFatal();
 };
 
 // Install a signal handler that will dump signal information and a stack

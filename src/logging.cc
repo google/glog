@@ -1932,11 +1932,11 @@ void LogMessage::RecordCrashReason(
 GLOG_EXPORT logging_fail_func_t g_logging_fail_func =
     reinterpret_cast<logging_fail_func_t>(&abort);
 
-NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 1, 0) {}
-NullStream::NullStream(const char* /*file*/, int /*line*/,
-                       const CheckOpString& /*result*/)
-    : LogMessage::LogStream(message_buffer_, 1, 0) {}
-NullStream& NullStream::stream() { return *this; }
+NullStreamBase::NullStreamBase() noexcept = default;
+NullStreamBase::NullStreamBase(const char* /*file*/, int /*line*/,
+                               const CheckOpString& /*result*/) noexcept {}
+NullStreamBase& NullStreamBase::stream() noexcept { return *this; }
+NullStreamBase::~NullStreamBase() = default;
 
 NullStreamFatal::~NullStreamFatal() { _exit(EXIT_FAILURE); }
 
