@@ -2292,13 +2292,17 @@ static bool SendEmailInternal(const char*dest, const char *subject,
               subject, body, dest);
     }
 
-    string logmailer = FLAGS_logmailer;
-    if (logmailer.empty()) {
-        logmailer = "/bin/mail";
+    string logmailer;
+
+    if (FLAGS_logmailer.empty()) {
+      // Don't need to shell escape the literal string
+      logmailer = "/bin/mail";
+    } else {
+      logmailer = ShellEscape(FLAGS_logmailer);
     }
+
     string cmd =
-        logmailer + " -s" +
-        ShellEscape(subject) + " " + ShellEscape(dest);
+        logmailer + " -s" + ShellEscape(subject) + " " + ShellEscape(dest);
     if (use_logging) {
         VLOG(4) << "Mailing command: " << cmd;
     }
