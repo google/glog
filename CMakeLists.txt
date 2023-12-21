@@ -15,7 +15,6 @@ set (CPACK_PACKAGE_VERSION ${glog_VERSION})
 
 list (APPEND CMAKE_MODULE_PATH ${glog_SOURCE_DIR}/cmake)
 
-include (CheckCXXCompilerFlag)
 include (CheckCXXSourceCompiles)
 include (CheckCXXSourceRuns)
 include (CheckCXXSymbolExists)
@@ -131,16 +130,6 @@ check_cxx_symbol_exists (backtrace execinfo.h HAVE_EXECINFO_BACKTRACE)
 check_cxx_symbol_exists (backtrace_symbols execinfo.h
   HAVE_EXECINFO_BACKTRACE_SYMBOLS)
 check_cxx_symbol_exists (_chsize_s io.h HAVE__CHSIZE_S)
-
-# NOTE gcc does not fail if you pass a non-existent -Wno-* option as an
-# argument. However, it will happily fail if you pass the corresponding -W*
-# option. So, we check whether options that disable warnings exist by testing
-# the availability of the corresponding option that enables the warning. This
-# eliminates the need to check for compiler for several (mainly Clang) options.
-
-check_cxx_compiler_flag (-Wdeprecated HAVE_NO_DEPRECATED)
-check_cxx_compiler_flag (-Wunnamed-type-template-args
-    HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS)
 
 cmake_push_check_state (RESET)
 
@@ -399,8 +388,6 @@ configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
 configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
 configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
 
-add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
-
 set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
 set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
 set (_glog_CMake_LIBDIR ${CMAKE_INSTALL_LIBDIR})
@@ -639,11 +626,6 @@ if (BUILD_TESTING)
   )
 
   target_link_libraries (stl_logging_unittest PRIVATE glog_test)
-
-  if (HAVE_NO_DEPRECATED)
-    set_property (TARGET stl_logging_unittest APPEND PROPERTY COMPILE_OPTIONS
-      -Wno-deprecated)
-  endif (HAVE_NO_DEPRECATED)
 
   if (HAVE_SYMBOLIZE)
     add_executable (symbolize_unittest
