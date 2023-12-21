@@ -310,21 +310,35 @@ const char* const_basename(const char* filepath) {
 #endif
   return base ? (base+1) : filepath;
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static std::wstring g_my_user_name;
+const std::wstring& MyUserName() { return g_my_user_name; }
+#else
 static string g_my_user_name;
-const string& MyUserName() {
-  return g_my_user_name;
-}
+const string& MyUserName() { return g_my_user_name; }
+#endif  // 
+
 static void MyUserNameInitializer() {
   // TODO(hamaji): Probably this is not portable.
-#if defined(GLOG_OS_WINDOWS)
-  const char* user = getenv("USERNAME");
+#ifdef GLOG_OS_WINDOWS
+#ifdef UNICODE
+  std::wstring user = getenvw(TEXT("USERNAME"));
+  if (!user.empty()) {
+    g_my_user_name = user;
+  }
 #else
-  const char* user = getenv("USER");
-#endif
+  const char* user = getenv("USERNAME");
   if (user != nullptr) {
     g_my_user_name = user;
-  } else {
+  }
+#endif  // UNICODE
+#else
+  const char* user = getenv("USER");
+  if (user != nullptr) {
+    g_my_user_name = user;
+  }
+#endif
+   else {
 #if defined(HAVE_PWD_H) && defined(HAVE_UNISTD_H)
     struct passwd pwd;
     struct passwd* result = nullptr;
@@ -339,7 +353,12 @@ static void MyUserNameInitializer() {
     }
 #endif
     if (g_my_user_name.empty()) {
-      g_my_user_name = "invalid-user";
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+      g_my_user_name = TEXT("invalid-user");
+#else 
+        g_my_user_name = "invalid-user";
+#endif  // 
+
     }
   }
 }
@@ -383,6 +402,23 @@ void ShutdownGoogleLoggingUtilities() {
   closelog();
 #endif
 }
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+std::wstring ConvertString2WString(const std::string& str) {
+  int iLen = MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), NULL, NULL);
+    std::wstring wstr;
+    wstr.resize(iLen);
+    MultiByteToWideChar(CP_ACP, 0, str.c_str(), str.size(), &wstr[0], wstr.size());
+    return wstr;
+}
+std::string ConvertWString2String(const std::wstring& wstr) {
+    int iLen =  WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), NULL, NULL, NULL, NULL);
+    std::string str;
+    str.resize(iLen);
+    WideCharToMultiByte(CP_ACP, 0, wstr.c_str(), wstr.size(), &str[0],
+                        str.size(), NULL, NULL);
+    return str;
+}
+#endif  //
 
 }  // namespace glog_internal_namespace_
 

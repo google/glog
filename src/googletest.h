@@ -67,6 +67,9 @@
 using std::map;
 using std::string;
 using std::vector;
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+using std::wstring;
+#endif
 
 _START_GOOGLE_NAMESPACE_
 
@@ -77,6 +80,20 @@ _END_GOOGLE_NAMESPACE_
 #undef GLOG_EXPORT
 #define GLOG_EXPORT
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline wstring GetTempDir() {
+  vector<wstring> temp_directories_list;
+  google::GetExistingTempDirectories(&temp_directories_list);
+
+  if (temp_directories_list.empty()) {
+    fprintf(stderr, "No temporary directory found\n");
+    exit(EXIT_FAILURE);
+  }
+
+  // Use first directory from list of existing temporary directories.
+  return temp_directories_list.front();
+}
+#else
 static inline string GetTempDir() {
   vector<string> temp_directories_list;
   google::GetExistingTempDirectories(&temp_directories_list);
@@ -89,6 +106,8 @@ static inline string GetTempDir() {
   // Use first directory from list of existing temporary directories.
   return temp_directories_list.front();
 }
+#endif
+
 
 #if defined(GLOG_OS_WINDOWS) && defined(_MSC_VER) && !defined(TEST_SRC_DIR)
 // The test will run in glog/vsproject/<project name>
@@ -101,9 +120,16 @@ static const char TEST_SRC_DIR[] = ".";
 
 static const uint32_t PTR_TEST_VALUE = 0x12345678;
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+DEFINE_wstring(test_tmpdir, GetTempDir(), "Dir we use for temp files");
+#else
 DEFINE_string(test_tmpdir, GetTempDir(), "Dir we use for temp files");
+
+#endif  // 
+
 DEFINE_string(test_srcdir, TEST_SRC_DIR,
               "Source-dir root, needed to find glog_unittest_flagfile");
+
 DEFINE_bool(run_benchmark, false, "If true, run benchmarks");
 #ifdef NDEBUG
 DEFINE_int32(benchmark_iters, 100000000, "Number of iterations per benchmark");
@@ -296,7 +322,11 @@ static inline void RunSpecifiedBenchmarks() {
 
 class CapturedStream {
  public:
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  CapturedStream(int fd, wstring filename)
+#else
   CapturedStream(int fd, string filename)
+#endif
       : fd_(fd),
 
         filename_(std::move(filename)) {
@@ -317,9 +347,14 @@ class CapturedStream {
     CHECK(uncaptured_fd_ != -1);
 
     // Open file to save stream to
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+    int cap_fd = _wopen(filename_.c_str(), O_CREAT | O_TRUNC | O_WRONLY,
+                      S_IRUSR | S_IWUSR);
+#else
     int cap_fd = open(filename_.c_str(),
                       O_CREAT | O_TRUNC | O_WRONLY,
                       S_IRUSR | S_IWUSR);
+#endif
     CHECK(cap_fd != -1);
 
     // Send stdout/stderr to this file
@@ -336,28 +371,47 @@ class CapturedStream {
       CHECK(dup2(uncaptured_fd_, fd_) != -1);
     }
   }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  const wstring& filename() const { return filename_; }
+#else
   const string & filename() const { return filename_; }
-
+#endif
  private:
   int fd_;             // file descriptor being captured
   int uncaptured_fd_{-1};  // where the stream was originally being sent to
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  wstring filename_;  // file where stream is being saved
+#else
   string filename_;    // file where stream is being saved
+#endif
 };
 static CapturedStream * s_captured_streams[STDERR_FILENO+1];
 // Redirect a file descriptor to a file.
 //   fd       - Should be STDOUT_FILENO or STDERR_FILENO
 //   filename - File where output should be stored
-static inline void CaptureTestOutput(int fd, const string & filename) {
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline void CaptureTestOutput(int fd, const wstring & filename) {
+#else
+static inline void CaptureTestOutput(int fd, const string& filename) {
+#endif
   CHECK((fd == STDOUT_FILENO) || (fd == STDERR_FILENO));
   CHECK(s_captured_streams[fd] == nullptr);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
 }
 static inline void CaptureTestStdout() {
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  CaptureTestOutput(STDOUT_FILENO, FLAGS_test_tmpdir + TEXT("/captured.out"));
+#else
   CaptureTestOutput(STDOUT_FILENO, FLAGS_test_tmpdir + "/captured.out");
+#endif
 }
 static inline void CaptureTestStderr() {
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + TEXT("/captured.err"));
+#else
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
+#endif
 }
 // Return the size (in bytes) of a file
 static inline size_t GetFileSize(FILE * file) {
@@ -398,7 +452,11 @@ static inline string GetCapturedTestOutput(int fd) {
   cap->StopCapture();
 
   // Read the captured file.
-  FILE * const file = fopen(cap->filename().c_str(), "r");
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  FILE * const file = _wfopen(cap->filename().c_str(), TEXT("r"));
+#else
+  FILE* const file = fopen(cap->filename().c_str(), "r");
+#endif;
   const string content = ReadEntireFile(file);
   fclose(file);
 
@@ -476,10 +534,16 @@ static inline void StringReplace(string* str,
     str->replace(pos, oldsub.size(), newsub);
   }
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline string Munge(const wstring& filename) {
+  FILE* fp = _wfopen(filename.c_str(), TEXT("rb"));
+  CHECK(fp != nullptr) << ConvertWString2String(filename) << ": couldn't open";
+#else
 static inline string Munge(const string& filename) {
   FILE* fp = fopen(filename.c_str(), "rb");
   CHECK(fp != nullptr) << filename << ": couldn't open";
+#endif
+  
   char buf[4096];
   string result;
   while (fgets(buf, 4095, fp)) {
@@ -503,13 +567,52 @@ static inline string Munge(const string& filename) {
   fclose(fp);
   return result;
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline void WriteToFile(const string& body, const wstring& file) {
+  FILE* fp = _wfopen(file.c_str(), TEXT("wb"));
+  fwrite(body.data(), 1, body.size(), fp);
+  fclose(fp);
+}
+#else
 static inline void WriteToFile(const string& body, const string& file) {
   FILE* fp = fopen(file.c_str(), "wb");
   fwrite(body.data(), 1, body.size(), fp);
   fclose(fp);
 }
+#endif
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline bool MungeAndDiffTest(const wstring& golden_filename,
+                                    CapturedStream* cap) {
+  if (cap == s_captured_streams[STDOUT_FILENO]) {
+    CHECK(cap) << ": did you forget CaptureTestStdout()?";
+  } else {
+    CHECK(cap) << ": did you forget CaptureTestStderr()?";
+  }
 
+  cap->StopCapture();
+
+  // Run munge
+  const string captured = Munge(cap->filename());
+  const string golden = Munge(golden_filename);
+  if (captured != golden) {
+    fprintf(stderr,
+            "Test with golden file failed. We'll try to show the diff:\n");
+    wstring munged_golden = golden_filename + TEXT(".munged");
+    WriteToFile(golden, munged_golden);
+    wstring munged_captured = cap->filename() + TEXT(".munged");
+    WriteToFile(captured, munged_captured);
+    wstring diffcmd(TEXT("fc ") + munged_golden + TEXT(" ") + munged_captured);
+    if (_wsystem(diffcmd.c_str()) != 0) {
+      fprintf(stderr, "diff command was failed.\n");
+    }
+    _wunlink(munged_golden.c_str());
+    _wunlink(munged_captured.c_str());
+    return false;
+  }
+  LOG(INFO) << "Diff was successful";
+  return true;
+}
+#else
 static inline bool MungeAndDiffTest(const string& golden_filename,
                                     CapturedStream* cap) {
   if (cap == s_captured_streams[STDOUT_FILENO]) {
@@ -545,7 +648,17 @@ static inline bool MungeAndDiffTest(const string& golden_filename,
   LOG(INFO) << "Diff was successful";
   return true;
 }
+#endif
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static inline bool MungeAndDiffTestStderr(const wstring& golden_filename) {
+  return MungeAndDiffTest(golden_filename, s_captured_streams[STDERR_FILENO]);
+}
+
+static inline bool MungeAndDiffTestStdout(const wstring& golden_filename) {
+  return MungeAndDiffTest(golden_filename, s_captured_streams[STDOUT_FILENO]);
+}
+#else
 static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
   return MungeAndDiffTest(golden_filename, s_captured_streams[STDERR_FILENO]);
 }
@@ -553,6 +666,9 @@ static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
 static inline bool MungeAndDiffTestStdout(const string& golden_filename) {
   return MungeAndDiffTest(golden_filename, s_captured_streams[STDOUT_FILENO]);
 }
+
+#endif  // 
+
 
 // Save flags used from logging_unittest.cc.
 #ifndef HAVE_LIB_GFLAGS

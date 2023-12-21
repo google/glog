@@ -351,6 +351,9 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
 #pragma push_macro("DECLARE_VARIABLE")
 #pragma push_macro("DECLARE_bool")
 #pragma push_macro("DECLARE_string")
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+#pragma push_macro("DECLARE_wstring")
+#endif
 #pragma push_macro("DECLARE_int32")
 #pragma push_macro("DECLARE_uint32")
 
@@ -364,6 +367,12 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
 
 #ifdef DECLARE_string
 #undef DECLARE_string
+#endif
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+#ifdef DECLARE_wstring
+#undef DECLARE_wstring
+#endif
 #endif
 
 #ifdef DECLARE_int32
@@ -402,7 +411,18 @@ typedef void(*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l, vo
     extern GLOG_EXPORT std::string& FLAGS_##name;              \
   }                                                                     \
   using fLS::FLAGS_##name
+  
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+#define DECLARE_wstring(name)                                            \
+  namespace fLS {                                                       \
+    extern GLOG_EXPORT std::wstring& FLAGS_##name;              		\
+  }                                                                     \
+  using fLS::FLAGS_##name
 #endif
+  
+#endif
+
+
 
 // Set whether appending a timestamp to the log file name
 DECLARE_bool(timestamp_in_logfile_name);
@@ -448,7 +468,12 @@ DECLARE_int32(minloglevel);
 
 // If specified, logfiles are written into this directory instead of the
 // default logging directory.
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+DECLARE_wstring(log_dir);
+#else
 DECLARE_string(log_dir);
+#endif
 
 // Set the log file mode.
 DECLARE_int32(logfile_mode);
@@ -1574,9 +1599,13 @@ GLOG_EXPORT void FlushLogFilesUnsafe(LogSeverity min_severity);
 // messages is sent.  If base_filename is "", it means "don't log this
 // severity".  Thread-safe.
 //
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+GLOG_EXPORT void SetLogDestination(LogSeverity severity,
+                                            const wchar_t* base_filename);
+#else 
 GLOG_EXPORT void SetLogDestination(LogSeverity severity,
                                             const char* base_filename);
-
+#endif
 //
 // Set the basename of the symlink to the latest log file at a given
 // severity.  If symlink_basename is empty, do not make a symlink.  If
@@ -1668,8 +1697,11 @@ GLOG_EXPORT void SetEmailLogging(LogSeverity min_severity,
 // list of addresses.  Thread-safe.
 GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
                            const char* body);
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+GLOG_EXPORT const std::vector<std::wstring>& GetLoggingDirectories();
+#else
 GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
+#endif
 
 // For tests only:  Clear the internal [cached] list of logging directories to
 // force a refresh the next time GetLoggingDirectories is called.
@@ -1679,8 +1711,13 @@ void TestOnly_ClearLoggingDirectoriesList();
 // Returns a set of existing temporary directories, which will be a
 // subset of the directories returned by GetLoggingDirectories().
 // Thread-safe.
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+GLOG_EXPORT void GetExistingTempDirectories(
+    std::vector<std::wstring>* list);
+#else
 GLOG_EXPORT void GetExistingTempDirectories(
     std::vector<std::string>* list);
+#endif
 
 // Print any fatal message again -- useful to call from signal handler
 // so that the last thing in the output is the fatal message.
@@ -1839,6 +1876,9 @@ GLOG_EXPORT void InstallFailureWriter(
 #pragma pop_macro("DECLARE_VARIABLE")
 #pragma pop_macro("DECLARE_bool")
 #pragma pop_macro("DECLARE_string")
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+#pragma pop_macro("DECLARE_wstring")
+#endif
 #pragma pop_macro("DECLARE_int32")
 #pragma pop_macro("DECLARE_uint32")
 

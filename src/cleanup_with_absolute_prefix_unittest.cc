@@ -57,8 +57,11 @@ using namespace GOOGLE_NAMESPACE;
 TEST(CleanImmediatelyWithAbsolutePrefix, logging) {
   google::EnableLogCleaner(0);
   google::SetLogFilenameExtension(".barfoo");
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  google::SetLogDestination(GLOG_INFO, TEXT("test_cleanup_"));
+#else
   google::SetLogDestination(GLOG_INFO, "test_cleanup_");
-
+#endif
   for (unsigned i = 0; i < 1000; ++i) {
     LOG(INFO) << "cleanup test";
   }
