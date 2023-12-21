@@ -153,7 +153,12 @@ bool PidHasChanged();
 
 pid_t GetTID();
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+const std::wstring& MyUserName();
+#else
 const std::string& MyUserName();
+#endif  // 
+
 
 // Get the part of filepath after the last path separator.
 // (Doesn't modify filepath, contrary to basename() in libgen.h.)
@@ -206,8 +211,13 @@ void SetCrashReason(const CrashReason* r);
 
 void InitGoogleLoggingUtilities(const char* argv0);
 void ShutdownGoogleLoggingUtilities();
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+std::wstring ConvertString2WString(const std::string& str);
+std::string ConvertWString2String(const std::wstring& wstr);
+#endif  //
 }  // namespace glog_internal_namespace_
+
+
 
 _END_GOOGLE_NAMESPACE_
 

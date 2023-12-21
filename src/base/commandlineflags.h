@@ -61,6 +61,11 @@
 
 #include "glog/logging.h"
 
+#ifdef GLOG_OS_WINDOWS
+#include "Windows.h"
+#endif  // GLOG_OS_WINDOWS
+
+
 #define DECLARE_VARIABLE(type, shorttype, name, tn) \
   namespace fL##shorttype {                         \
     extern GLOG_EXPORT type FLAGS_##name;           \
@@ -107,6 +112,21 @@
   char FLAGS_no##name;                                        \
   }                                                           \
   using fLS::FLAGS_##name
+    
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)       
+#define DECLARE_wstring(name)                       \
+  namespace fLS {                                   \
+  extern GLOG_EXPORT std::wstring& FLAGS_##name;    \
+  }                                                 \
+  using fLS::FLAGS_##name
+#define DEFINE_wstring(name, value, meaning)                            \
+    namespace fLS {                                                     \
+        std::wstring FLAGS_##name##_buf(value);                         \
+        GLOG_EXPORT std::wstring& FLAGS_##name = FLAGS_##name##_buf;    \
+        wchar_t FLAGS_no##name;                                      \
+    }                                                                   \
+    using fLS::FLAGS_##name                                         
+#endif  // 
 
 #endif  // HAVE_LIB_GFLAGS
 
@@ -134,6 +154,25 @@
 
 #define EnvToString(envname, dflt)   \
   (!getenv(envname) ? (dflt) : getenv(envname))
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+#define GLOG_DEFINE_wstring(name, value, meaning) \
+  DEFINE_wstring(name, EnvToWString(TEXT("GLOG_") #name, value), meaning)
+
+static std::wstring getenvw(wchar_t *lpName) { 
+    auto size = GetEnvironmentVariableW(lpName, NULL, 0);
+    if (size == 0) {
+      return {};
+    }
+    std::wstring value;
+    value.resize(size);
+    GetEnvironmentVariableW(lpName, &value[0], size);
+    return value.substr(0,size-1);
+}
+#define EnvToWString(envname, dflt) \
+   (getenvw(envname).empty() ? dflt : getenvw(envname))
+#endif
+
 
 #define EnvToBool(envname, dflt) \
   (!getenv(envname) ? (dflt)     \
