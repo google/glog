@@ -531,7 +531,9 @@ if (HAVE_DBGHELP)
 endif (HAVE_DBGHELP)
 
 if (HAVE_PTHREAD)
-  target_link_libraries (glog PRIVATE ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries (glog PRIVATE Threads::Threads)
+
+  set (Threads_DEPENDENCY "find_dependency (Threads)")
 
   if (CMAKE_THREAD_LIBS_INIT)
     set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} ${CMAKE_THREAD_LIBS_INIT}")
