@@ -144,12 +144,26 @@ check_cxx_compiler_flag (-Wunnamed-type-template-args
 
 cmake_push_check_state (RESET)
 
+set (CMAKE_REQUIRED_DEFINITIONS -D_XOPEN_SOURCE=500)
+
 if (Threads_FOUND)
   set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
 endif (Threads_FOUND)
 
-check_cxx_symbol_exists (pthread_threadid_np "pthread.h" HAVE_PTHREAD_THREADID_NP)
+check_cxx_symbol_exists (pthread_rwlock_destroy pthread.h HAVE_RWLOCK_DESTROY)
+check_cxx_symbol_exists (pthread_rwlock_init pthread.h HAVE_RWLOCK_INIT)
+check_cxx_symbol_exists (pthread_rwlock_rdlock pthread.h HAVE_RWLOCK_RDLOCK)
+check_cxx_symbol_exists (pthread_rwlock_unlock pthread.h HAVE_RWLOCK_UNLOCK)
+check_cxx_symbol_exists (pthread_rwlock_wrlock pthread.h HAVE_RWLOCK_WRLOCK)
+check_cxx_symbol_exists (pthread_threadid_np pthread.h HAVE_PTHREAD_THREADID_NP)
+
 cmake_pop_check_state ()
+
+if (HAVE_RWLOCK_INIT AND HAVE_RWLOCK_RDLOCK AND HAVE_RWLOCK_WRLOCK AND
+    HAVE_RWLOCK_UNLOCK AND HAVE_RWLOCK_DESTROY)
+  set (HAVE_RWLOCK TRUE)
+endif (HAVE_RWLOCK_INIT AND HAVE_RWLOCK_RDLOCK AND HAVE_RWLOCK_WRLOCK AND
+    HAVE_RWLOCK_UNLOCK AND HAVE_RWLOCK_DESTROY)
 
 cmake_push_check_state (RESET)
 set (CMAKE_REQUIRED_LIBRARIES dbghelp)
@@ -184,23 +198,6 @@ int main(void)
   int a; if (__sync_val_compare_and_swap(&a, 0, 1)) return 1; return 0;
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
-
-if (Threads_FOUND)
-  cmake_push_check_state (RESET)
-  set (CMAKE_REQUIRED_LIBRARIES Threads::Threads)
-  check_cxx_source_compiles ("
-#define _XOPEN_SOURCE 500
-#include <pthread.h>
-int main(void)
-{
-  pthread_rwlock_t l;
-  pthread_rwlock_init(&l, NULL);
-  pthread_rwlock_rdlock(&l);
-  return 0;
-}
-  " HAVE_RWLOCK)
-  cmake_pop_check_state ()
-endif (Threads_FOUND)
 
 check_cxx_source_compiles ("
 __declspec(selectany) int a;
@@ -362,14 +359,7 @@ if (WITH_SYMBOLIZE)
     endif (HAVE_SYMBOLIZE)
   elseif (UNIX)
     cmake_push_check_state (RESET)
-    check_cxx_source_compiles ([=[
-    int main()
-    {
-      #ifndef __ELF__
-      #error __ELF__ not defined
-      #endif
-    }
-    ]=] HAVE_SYMBOLIZE)
+    check_cxx_symbol_exists (__ELF__ "" HAVE_SYMBOLIZE)
     cmake_pop_check_state ()
   elseif (APPLE AND HAVE_DLADDR)
     set (HAVE_SYMBOLIZE 1)
@@ -380,17 +370,7 @@ endif (WITH_SYMBOLIZE)
 # building the library.
 add_compile_definitions (GLOG_NO_SYMBOLIZE_DETECTION)
 
-check_cxx_source_compiles ("
-#include <cstdlib>
-#include <ctime>
-int main()
-{
-    time_t timep;
-    struct tm result;
-    localtime_r(&timep, &result);
-    return EXIT_SUCCESS;
-}
-" HAVE_LOCALTIME_R)
+check_cxx_symbol_exists (localtime_r "cstdlib;ctime" HAVE_LOCALTIME_R)
 
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
