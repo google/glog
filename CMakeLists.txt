@@ -665,11 +665,6 @@ if (BUILD_TESTING)
       -Wno-deprecated)
   endif (HAVE_NO_DEPRECATED)
 
-  if (HAVE_EXT_SLIST)
-    target_compile_definitions (stl_logging_unittest PRIVATE
-      GLOG_STL_LOGGING_FOR_EXT_SLIST)
-  endif (HAVE_EXT_SLIST)
-
   if (HAVE_SYMBOLIZE)
     add_executable (symbolize_unittest
       src/symbolize_unittest.cc

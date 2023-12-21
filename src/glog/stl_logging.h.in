@@ -1,4 +1,4 @@
-// Copyright (c) 2003, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -34,14 +34,6 @@
 // LOG(INFO) << "data: " << x;
 // vector<int> v1, v2;
 // CHECK_EQ(v1, v2);
-//
-// If you want to use this header file with hash maps or slist, you
-// need to define macros before including this file:
-//
-// - GLOG_STL_LOGGING_FOR_UNORDERED     - <unordered_map> and <unordered_set>
-// - GLOG_STL_LOGGING_FOR_TR1_UNORDERED - <tr1/unordered_(map|set)>
-// - GLOG_STL_LOGGING_FOR_EXT_HASH      - <ext/hash_(map|set)>
-// - GLOG_STL_LOGGING_FOR_EXT_SLIST     - <ext/slist>
 //
 
 #ifndef UTIL_GTL_STL_LOGGING_INL_H_
@@ -117,10 +109,8 @@ inline std::ostream& operator<<(std::ostream& out, \
   return out; \
 }
 
-#if defined(GLOG_STL_LOGGING_FOR_UNORDERED) && __cplusplus >= 201103L
                         OUTPUT_FIVE_ARG_CONTAINER(std::unordered_map)
                             OUTPUT_FIVE_ARG_CONTAINER(std::unordered_multimap)
-#endif
 
 #undef OUTPUT_FIVE_ARG_CONTAINER
 
