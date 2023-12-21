@@ -6,13 +6,6 @@ project (glog
   LANGUAGES CXX
 )
 
-set (CPACK_PACKAGE_NAME glog)
-set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "Google logging library")
-set (CPACK_PACKAGE_VERSION_MAJOR ${glog_VERSION_MAJOR})
-set (CPACK_PACKAGE_VERSION_MINOR ${glog_VERSION_MINOR})
-set (CPACK_PACKAGE_VERSION_PATCH ${glog_VERSION_PATCH})
-set (CPACK_PACKAGE_VERSION ${glog_VERSION})
-
 list (APPEND CMAKE_MODULE_PATH ${glog_SOURCE_DIR}/cmake)
 
 include (CheckCXXSourceCompiles)
@@ -25,7 +18,6 @@ include (CheckTypeSize)
 include (CMakeDependentOption)
 include (CMakePackageConfigHelpers)
 include (CMakePushCheckState)
-include (CPack)
 include (CTest)
 include (DetermineGflagsNamespace)
 include (GenerateExportHeader)
@@ -850,15 +842,17 @@ endif (BUILD_TESTING)
 
 install (TARGETS glog
   EXPORT glog-targets
-  RUNTIME DESTINATION ${_glog_CMake_BINDIR}
-  PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog
-  LIBRARY DESTINATION ${_glog_CMake_LIBDIR}
-  ARCHIVE DESTINATION ${_glog_CMake_LIBDIR})
+  RUNTIME DESTINATION ${_glog_CMake_BINDIR} COMPONENT Runtime
+  PUBLIC_HEADER DESTINATION ${_glog_CMake_INCLUDE_DIR}/glog COMPONENT Development
+  LIBRARY DESTINATION ${_glog_CMake_LIBDIR} COMPONENT Runtime
+  ARCHIVE DESTINATION ${_glog_CMake_LIBDIR} COMPONENT Development
+)
 
 if (WITH_PKGCONFIG)
   install (
     FILES "${glog_BINARY_DIR}/libglog.pc"
     DESTINATION "${_glog_CMake_LIBDIR}/pkgconfig"
+    COMPONENT Development
   )
 endif (WITH_PKGCONFIG)
 
@@ -928,7 +922,9 @@ file (INSTALL
 install (FILES
   ${glog_BINARY_DIR}/glog-config.cmake
   ${glog_BINARY_DIR}/glog-config-version.cmake
-  DESTINATION ${_glog_CMake_INSTALLDIR})
+  DESTINATION ${_glog_CMake_INSTALLDIR}
+  COMPONENT Development
+)
 
 # Find modules in share/glog/cmake
 install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
@@ -937,5 +933,20 @@ install (DIRECTORY ${_glog_BINARY_CMake_DATADIR}
   FILES_MATCHING PATTERN "*.cmake"
 )
 
-install (EXPORT glog-targets NAMESPACE glog:: DESTINATION
-  ${_glog_CMake_INSTALLDIR})
+install (EXPORT glog-targets NAMESPACE glog::
+  DESTINATION ${_glog_CMake_INSTALLDIR}
+  COMPONENT Development
+)
+
+set (CPACK_DEB_COMPONENT_INSTALL ON)
+set (CPACK_DEBIAN_DEVELOPMENT_PACKAGE_NAME libgoogle-glog-dev)
+set (CPACK_DEBIAN_ENABLE_COMPONENT_DEPENDS ON)
+set (CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set (CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+set (CPACK_DEBIAN_RUNTIME_PACKAGE_NAME libgoogle-glog)
+set (CPACK_PACKAGE_NAME google-glog)
+
+include (CPack)
+
+cpack_add_component (Runtime)
+cpack_add_component (Development DEPENDS Runtime)
