@@ -388,6 +388,8 @@ excessive logging.
    DLOG(INFO) << "Found cookies";
    DLOG_IF(INFO, num_cookies > 10) << "Got lots of cookies";
    DLOG_EVERY_N(INFO, 10) << "Got the " << google::COUNTER << "th cookie";
+   DLOG_FIRST_N(INFO, 10) << "Got the " << google::COUNTER << "th cookie";
+   DLOG_EVERY_T(INFO, 0.01) << "Got a cookie";
 
 
 ``CHECK`` Macros
