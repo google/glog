@@ -264,8 +264,13 @@ int main(int argc, char **argv) {
   TestSTREQ();
 
   // TODO: The golden test portion of this test is very flakey.
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
   EXPECT_TRUE(
-      MungeAndDiffTestStderr(FLAGS_test_srcdir + "/src/logging_unittest.err"));
+       MungeAndDiffTestStderr(ConvertString2WString(FLAGS_test_srcdir + "/src/logging_unittest.err")));
+#else
+  EXPECT_TRUE(MungeAndDiffTestStderr(
+      FLAGS_test_srcdir + "/src/logging_unittest.err"));
+#endif
 
   FLAGS_logtostderr = false;
 
@@ -281,8 +286,15 @@ int main(int argc, char **argv) {
   TestCHECK();
   TestDCHECK();
   TestSTREQ();
-  EXPECT_TRUE(
-      MungeAndDiffTestStdout(FLAGS_test_srcdir + "/src/logging_unittest.out"));
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  EXPECT_TRUE(MungeAndDiffTestStdout(
+      ConvertString2WString(FLAGS_test_srcdir + "/src/logging_unittest.out")));
+#else
+  EXPECT_TRUE(MungeAndDiffTestStdout(
+      FLAGS_test_srcdir + "/src/logging_unittest.out"));
+#endif  // 
+
+ 
   FLAGS_logtostdout = false;
 
   TestBasename();
@@ -699,6 +711,27 @@ TEST(DeathCheckNN, Simple) {
 }
 
 // Get list of file names that match pattern
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void GetFiles(const wstring& pattern, vector<wstring>* files) {
+  files->clear();
+  WIN32_FIND_DATAW data;
+  HANDLE handle = FindFirstFileW(pattern.c_str(), &data);
+  size_t index = pattern.rfind('\\');
+  if (index == string::npos) {
+    LOG(FATAL) << "No directory separator.";
+  }
+  const wstring dirname = pattern.substr(0, index + 1);
+  if (handle == INVALID_HANDLE_VALUE) {
+    // Finding no files is OK.
+    return;
+  }
+  do {
+    files->push_back(dirname + data.cFileName);
+  } while (FindNextFileW(handle, &data));
+  BOOL result = FindClose(handle);
+  LOG_SYSRESULT(result != 0);
+}
+#else
 static void GetFiles(const string& pattern, vector<string>* files) {
   files->clear();
 #if defined(HAVE_GLOB_H)
@@ -730,8 +763,18 @@ static void GetFiles(const string& pattern, vector<string>* files) {
 # error There is no way to do glob.
 #endif
 }
+#endif
 
 // Delete files patching pattern
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void DeleteFiles(const wstring& pattern) {
+  vector<wstring> files;
+  GetFiles(pattern, &files);
+  for (auto& file : files) {
+    CHECK(_wunlink(file.c_str()) == 0) << ": " << strerror(errno);
+  }
+}
+#else
 static void DeleteFiles(const string& pattern) {
   vector<string> files;
   GetFiles(pattern, &files);
@@ -739,15 +782,30 @@ static void DeleteFiles(const string& pattern) {
     CHECK(unlink(file.c_str()) == 0) << ": " << strerror(errno);
   }
 }
+#endif
 
 //check string is in file (or is *NOT*, depending on optional checkInFileOrNot)
-static void CheckFile(const string& name, const string& expected_string, const bool checkInFileOrNot = true) {
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void CheckFile(const wstring& name, const string& expected_string,
+                      const bool checkInFileOrNot = true) { 
+  vector<wstring> files;
+  GetFiles(name + TEXT("*"), &files);
+  CHECK_EQ(files.size(), 1UL);
+
+  FILE* file = _wfopen(files[0].c_str(), TEXT("r"));
+  CHECK(file != nullptr) << ": could not open " << ConvertWString2String(files[0]) ;
+
+#else
+static void CheckFile(const string& name, const string& expected_string,
+                      const bool checkInFileOrNot = true) { 
   vector<string> files;
   GetFiles(name + "*", &files);
   CHECK_EQ(files.size(), 1UL);
 
   FILE* file = fopen(files[0].c_str(), "r");
   CHECK(file != nullptr) << ": could not open " << files[0];
+
+#endif
   char buf[1000];
   while (fgets(buf, sizeof(buf), file) != nullptr) {
     char* first = strstr(buf, expected_string.c_str());
@@ -759,9 +817,30 @@ static void CheckFile(const string& name, const string& expected_string, const b
     }
   }
   fclose(file);
-  LOG(FATAL) << "Did " << (checkInFileOrNot? "not " : "") << "find " << expected_string << " in " << files[0];
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  LOG(FATAL) << "Did " << (checkInFileOrNot? "not " : "") << "find " << expected_string << " in " << ConvertWString2String(files[0]);
+#else
+  LOG(FATAL) << "Did " << (checkInFileOrNot ? "not " : "") << "find "
+             << expected_string << " in " << files[0];
+ #endif
 }
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void TestBasename() {
+  fprintf(stderr, "==== Test setting log file basename\n");
+  const wstring dest = FLAGS_test_tmpdir + TEXT("/logging_test_basename");
+  DeleteFiles(dest + TEXT("*"));
 
+  SetLogDestination(GLOG_INFO, dest.c_str());
+  LOG(INFO) << "message to new base";
+  FlushLogFiles(GLOG_INFO);
+
+  CheckFile(dest, "message to new base");
+
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
+  DeleteFiles(dest + TEXT("*"));
+}
+#else
 static void TestBasename() {
   fprintf(stderr, "==== Test setting log file basename\n");
   const string dest = FLAGS_test_tmpdir + "/logging_test_basename";
@@ -777,7 +856,38 @@ static void TestBasename() {
   LogToStderr();
   DeleteFiles(dest + "*");
 }
+#endif
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void TestBasenameAppendWhenNoTimestamp() {
+  fprintf(stderr,
+          "==== Test setting log file basename without timestamp and appending "
+          "properly\n");
+  const wstring dest =
+      FLAGS_test_tmpdir + TEXT("/logging_test_basename_append_when_no_timestamp");
+  DeleteFiles(dest + TEXT("*"));
+
+  ofstream out(dest.c_str());
+  out << "test preexisting content" << endl;
+  out.close();
+
+  CheckFile(dest, "test preexisting content");
+
+  FLAGS_timestamp_in_logfile_name = false;
+  SetLogDestination(GLOG_INFO, dest.c_str());
+  LOG(INFO) << "message to new base, appending to preexisting file";
+  FlushLogFiles(GLOG_INFO);
+  FLAGS_timestamp_in_logfile_name = true;
+
+  // if the logging overwrites the file instead of appending it will fail.
+  CheckFile(dest, "test preexisting content");
+  CheckFile(dest, "message to new base, appending to preexisting file");
+
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
+  DeleteFiles(dest + TEXT("*"));
+}
+#else
 static void TestBasenameAppendWhenNoTimestamp() {
   fprintf(stderr, "==== Test setting log file basename without timestamp and appending properly\n");
   const string dest = FLAGS_test_tmpdir + "/logging_test_basename_append_when_no_timestamp";
@@ -803,6 +913,7 @@ static void TestBasenameAppendWhenNoTimestamp() {
   LogToStderr();
   DeleteFiles(dest + "*");
 }
+#endif
 
 static void TestTwoProcessesWrite() {
 // test only implemented for platforms with fork & wait; the actual implementation relies on flock
@@ -855,7 +966,30 @@ static void TestSymlink() {
   DeleteFiles(sym + "*");
 #endif
 }
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static void TestExtension() {
+  fprintf(stderr, "==== Test setting log file extension\n");
+  wstring dest = FLAGS_test_tmpdir + TEXT("/logging_test_extension");
+  DeleteFiles(dest + TEXT("*"));
 
+  SetLogDestination(GLOG_INFO, dest.c_str());
+  SetLogFilenameExtension("specialextension");
+  LOG(INFO) << "message to new extension";
+  FlushLogFiles(GLOG_INFO);
+  CheckFile(dest, "message to new extension");
+
+  // Check that file name ends with extension
+  vector<wstring> filenames;
+  GetFiles(dest + TEXT("*"), &filenames);
+  CHECK_EQ(filenames.size(), 1UL);
+  CHECK(wcsstr(filenames[0].c_str(), TEXT("specialextension")) != nullptr);
+
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
+  DeleteFiles(dest + TEXT("*"));
+}
+
+#else
 static void TestExtension() {
   fprintf(stderr, "==== Test setting log file extension\n");
   string dest = FLAGS_test_tmpdir + "/logging_test_extension";
@@ -877,6 +1011,7 @@ static void TestExtension() {
   LogToStderr();
   DeleteFiles(dest + "*");
 }
+#endif
 
 struct MyLogger : public base::Logger {
   string data;

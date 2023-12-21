@@ -86,6 +86,7 @@
 #endif
 
 using std::string;
+using std::wstring;
 using std::vector;
 using std::setw;
 using std::setfill;
@@ -180,6 +181,16 @@ GLOG_DEFINE_string(logmailer, "",
                    "Mailer used to send logging email");
 
 // Compute the default value for --log_dir
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static const std::wstring DefaultLogDir() {
+  std::wstring env = getenvw(TEXT("GOOGLE_LOG_DIR"));
+  if (!env.empty()) {
+    return env;
+  }
+  env = getenvw(TEXT("TEST_TMPDIR"));
+  return env;
+}
+#else 
 static const char* DefaultLogDir() {
   const char* env;
   env = getenv("GOOGLE_LOG_DIR");
@@ -192,12 +203,23 @@ static const char* DefaultLogDir() {
   }
   return "";
 }
+#endif
 
 GLOG_DEFINE_int32(logfile_mode, 0664, "Log file mode/permissions.");
 
-GLOG_DEFINE_string(log_dir, DefaultLogDir(),
-                   "If specified, logfiles are written into this directory instead "
-                   "of the default logging directory.");
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+GLOG_DEFINE_wstring(
+    log_dir, DefaultLogDir(),
+    TEXT("If specified, logfiles are written into this directory instead ")
+    TEXT("of the default logging directory."));
+#else
+GLOG_DEFINE_string(
+    log_dir, DefaultLogDir(),
+    "If specified, logfiles are written into this directory instead "
+    "of the default logging directory.");
+#endif  // GLOG_DEFINE_wstring(log_dir, De)
+
 GLOG_DEFINE_string(log_link, "", "Put additional links to the log "
                    "files in this directory");
 
@@ -253,6 +275,17 @@ static ssize_t pwrite(int fd, void* buf, size_t count, off_t offset) {
 }
 #endif  // !HAVE_PWRITE
 
+#ifdef GLOG_OS_WINDOWS
+static void GetHostName(string* hostname) {
+  char buf[MAX_COMPUTERNAME_LENGTH + 1];
+  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
+  if (GetComputerNameA(buf, &len)) {
+    *hostname = buf;
+  } else {
+    hostname->clear();
+  }
+}
+#else
 static void GetHostName(string* hostname) {
 #if defined(HAVE_SYS_UTSNAME_H)
   struct utsname buf;
@@ -261,19 +294,15 @@ static void GetHostName(string* hostname) {
     *buf.nodename = '\0';
   }
   *hostname = buf.nodename;
-#elif defined(GLOG_OS_WINDOWS)
-  char buf[MAX_COMPUTERNAME_LENGTH + 1];
-  DWORD len = MAX_COMPUTERNAME_LENGTH + 1;
-  if (GetComputerNameA(buf, &len)) {
-    *hostname = buf;
-  } else {
-    hostname->clear();
-  }
 #else
-# warning There is no way to retrieve the host name.
+#warning There is no way to retrieve the host name.
   *hostname = "(unknown)";
 #endif
 }
+#endif  // GLOG_OS_WINDOWS
+
+
+
 
 // Returns true iff terminal supports using colors in output.
 static bool TerminalSupportsColor() {
@@ -440,7 +469,11 @@ namespace {
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
  public:
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  LogFileObject(LogSeverity severity, const wchar_t* base_filename);
+#else
   LogFileObject(LogSeverity severity, const char* base_filename);
+#endif
   ~LogFileObject() override;
 
   void Write(bool force_flush,  // Should we force a flush here?
@@ -448,7 +481,11 @@ class LogFileObject : public base::Logger {
              const char* message, size_t message_len) override;
 
   // Configuration options
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  void SetBasename(const wchar_t* basename);
+#else
   void SetBasename(const char* basename);
+#endif
   void SetExtension(const char* ext);
   void SetSymlinkBasename(const char* symlink_basename);
 
@@ -472,7 +509,12 @@ class LogFileObject : public base::Logger {
 
   Mutex lock_;
   bool base_filename_selected_;
+#if defined (GLOG_OS_WINDOWS) && defined(UNICODE)
+  wstring base_filename_;
+  #else
   string base_filename_;
+#endif  // !
+
   string symlink_basename_;
   string filename_extension_;     // option users can specify (eg to add port#)
   FILE* file_{nullptr};
@@ -501,14 +543,29 @@ class LogCleaner {
 
   // update next_cleanup_time_
   void UpdateCleanUpTime();
-
-  void Run(bool base_filename_selected,
-           const string& base_filename,
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  void Run(bool base_filename_selected, const wstring& base_filename,
            const string& filename_extension);
+#else
+  void Run(bool base_filename_selected, const string& base_filename,
+           const string& filename_extension);
+#endif
+
 
   bool enabled() const { return enabled_; }
 
  private:
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  vector<wstring> GetOverdueLogNames(wstring log_directory, unsigned int days,
+                                    const wstring& base_filename,
+                                    const string& filename_extension) const;
+
+  bool IsLogFromCurrentProject(const wstring& filepath,
+                               const wstring& base_filename,
+                               const string& filename_extension) const;
+
+  bool IsLogLastModifiedOver(const wstring& filepath, unsigned int days) const;
+#else
   vector<string> GetOverdueLogNames(string log_directory, unsigned int days,
                                     const string& base_filename,
                                     const string& filename_extension) const;
@@ -518,6 +575,9 @@ class LogCleaner {
                                const string& filename_extension) const;
 
   bool IsLogLastModifiedOver(const string& filepath, unsigned int days) const;
+#endif  // 
+
+
 
   bool enabled_{false};
   unsigned int overdue_days_{7};
@@ -535,9 +595,15 @@ class LogDestination {
   friend base::Logger* base::GetLogger(LogSeverity);
   friend void base::SetLogger(LogSeverity, base::Logger*);
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
   // These methods are just forwarded to by their global versions.
   static void SetLogDestination(LogSeverity severity,
-				const char* base_filename);
+				const wchar_t* base_filename);
+#else
+  // These methods are just forwarded to by their global versions.
+  static void SetLogDestination(LogSeverity severity,
+                                const char* base_filename);
+#endif
   static void SetLogSymlink(LogSeverity severity,
                             const char* symlink_basename);
   static void AddLogSink(LogSink *destination);
@@ -563,7 +629,12 @@ class LogDestination {
   static void DeleteLogDestinations();
 
  private:
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  LogDestination(LogSeverity severity, const wchar_t* base_filename);
+#else
   LogDestination(LogSeverity severity, const char* base_filename);
+#endif  // 
+
   ~LogDestination();
 
   // Take a log message of a particular severity and log it to stderr
@@ -635,21 +706,27 @@ Mutex LogDestination::sink_mutex_;
 bool LogDestination::terminal_supports_color_ = TerminalSupportsColor();
 
 /* static */
+
+
 const string& LogDestination::hostname() {
   if (hostname_.empty()) {
     GetHostName(&hostname_);
     if (hostname_.empty()) {
-      hostname_ = "(unknown)";
+    hostname_ = "(unknown)";
     }
   }
   return hostname_;
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+LogDestination::LogDestination(LogSeverity severity, const wchar_t* base_filename)
+    : fileobject_(severity, base_filename), logger_(&fileobject_) {}
+#else
 LogDestination::LogDestination(LogSeverity severity,
                                const char* base_filename)
   : fileobject_(severity, base_filename),
     logger_(&fileobject_) {
 }
+#endif
 
 LogDestination::~LogDestination() {
   ResetLoggerImpl();
@@ -693,14 +770,27 @@ inline void LogDestination::FlushLogFiles(int min_severity) {
   }
 }
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
 inline void LogDestination::SetLogDestination(LogSeverity severity,
-					      const char* base_filename) {
+                                              const wchar_t* base_filename) {
   assert(severity >= 0 && severity < NUM_SEVERITIES);
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   MutexLock l(&log_mutex);
   log_destination(severity)->fileobject_.SetBasename(base_filename);
 }
+#else
+inline void LogDestination::SetLogDestination(LogSeverity severity,
+                                              const char* base_filename) {
+  assert(severity >= 0 && severity < NUM_SEVERITIES);
+  // Prevent any subtle race conditions by wrapping a mutex lock around
+  // all this stuff.
+  MutexLock l(&log_mutex);
+  log_destination(severity)->fileobject_.SetBasename(base_filename);
+}
+#endif  // 
+
+
 
 inline void LogDestination::SetLogSymlink(LogSeverity severity,
                                           const char* symlink_basename) {
@@ -750,7 +840,11 @@ inline void LogDestination::LogToStderr() {
   // SetLogDestination already do the locking!
   SetStderrLogging(0);            // thus everything is "also" logged to stderr
   for ( int i = 0; i < NUM_SEVERITIES; ++i ) {
-    SetLogDestination(i, "");     // "" turns off logging to a logfile
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+    SetLogDestination(i, TEXT(""));     // "" turns off logging to a logfile
+#else
+    SetLogDestination(i, "");  // "" turns off logging to a logfile
+#endif
   }
 }
 
@@ -968,6 +1062,8 @@ namespace {
 // Directory delimiter; Windows supports both forward slashes and backslashes
 #ifdef GLOG_OS_WINDOWS
 const char possible_dir_delim[] = {'\\', '/'};
+const TCHAR w_possible_dir_delim[] = {TEXT('\\'), TEXT('/')};
+
 #else
 const char possible_dir_delim[] = {'/'};
 #endif
@@ -982,7 +1078,22 @@ string PrettyDuration(int secs) {
   result << hours << ':' << setw(2) << mins << ':' << setw(2) << secs;
   return result.str();
 }
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+LogFileObject::LogFileObject(LogSeverity severity, const wchar_t* base_filename)
+    : base_filename_selected_(base_filename != nullptr),
+      base_filename_((base_filename != nullptr) ? base_filename : TEXT("")),
+      symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
+      filename_extension_(),
 
+      severity_(severity),
+
+      rollover_attempt_(kRolloverAttemptFrequency - 1),
+
+      start_time_(WallTime_Now()) {
+  assert(severity >= 0);
+  assert(severity < NUM_SEVERITIES);
+}
+#else
 LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
     : base_filename_selected_(base_filename != nullptr),
       base_filename_((base_filename != nullptr) ? base_filename : ""),
@@ -997,6 +1108,7 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
   assert(severity >= 0);
   assert(severity < NUM_SEVERITIES);
 }
+#endif
 
 LogFileObject::~LogFileObject() {
   MutexLock l(&lock_);
@@ -1005,7 +1117,21 @@ LogFileObject::~LogFileObject() {
     file_ = nullptr;
   }
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+void LogFileObject::SetBasename(const wchar_t* basename) {
+  MutexLock l(&lock_);
+  base_filename_selected_ = true;
+  if (base_filename_ != basename) {
+    // Get rid of old log file since we are changing names
+    if (file_ != nullptr) {
+      fclose(file_);
+      file_ = nullptr;
+      rollover_attempt_ = kRolloverAttemptFrequency - 1;
+    }
+    base_filename_ = basename;
+  }
+}
+#else
 void LogFileObject::SetBasename(const char* basename) {
   MutexLock l(&lock_);
   base_filename_selected_ = true;
@@ -1014,11 +1140,14 @@ void LogFileObject::SetBasename(const char* basename) {
     if (file_ != nullptr) {
       fclose(file_);
       file_ = nullptr;
-      rollover_attempt_ = kRolloverAttemptFrequency-1;
+      rollover_attempt_ = kRolloverAttemptFrequency - 1;
     }
     base_filename_ = basename;
   }
 }
+#endif  // 
+
+
 
 void LogFileObject::SetExtension(const char* ext) {
   MutexLock l(&lock_);
@@ -1055,20 +1184,37 @@ void LogFileObject::FlushUnlocked(){
 }
 
 bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_;
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  wstring string_filename = base_filename_;
   if (FLAGS_timestamp_in_logfile_name) {
-    string_filename += time_pid_string;
+    string_filename += ConvertString2WString(time_pid_string);
   }
-  string_filename += filename_extension_;
-  const char* filename = string_filename.c_str();
+  string_filename += ConvertString2WString(filename_extension_);
+  const wchar_t* filename = string_filename.c_str();
   //only write to files, create if non-existant.
   int flags = O_WRONLY | O_CREAT;
   if (FLAGS_timestamp_in_logfile_name) {
     //demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
   }
+  int fd = _wopen(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode));
+  if (fd == -1) return false;
+#else
+  string string_filename = base_filename_;
+  if (FLAGS_timestamp_in_logfile_name) {
+    string_filename += time_pid_string;
+  }
+  string_filename += filename_extension_;
+  const char* filename = string_filename.c_str();
+  // only write to files, create if non-existant.
+  int flags = O_WRONLY | O_CREAT;
+  if (FLAGS_timestamp_in_logfile_name) {
+    // demand that the file is unique for our timestamp (fail if it exists).
+    flags = flags | O_EXCL;
+  }
   int fd = open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode));
   if (fd == -1) return false;
+#endif
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
   fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -1102,7 +1248,13 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   if (file_ == nullptr) {   // Man, we're screwed!
       close(fd);
       if (FLAGS_timestamp_in_logfile_name) {
-      unlink(filename);  // Erase the half-baked evidence: an unusable log file, only if we just created it.
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+      _wunlink(filename);
+#else
+      unlink(filename);  // Erase the half-baked evidence: an unusable log file,
+                         // only if we just created it.
+#endif  // 
+
     }
     return false;
   }
@@ -1115,6 +1267,10 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     }
   }
 #endif
+
+#if defined(GLOG_OS_WINDOWS)
+    // TODO(hamaji): Create lnk file on Windows?
+#elif defined(HAVE_UNISTD_H)
   // We try to create a symlink called <program_name>.<severity>,
   // which is easier to use.  (Every time we create a new logfile,
   // we destroy the old symlink and create a new one, so it always
@@ -1124,15 +1280,13 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     // take directory from filename
     const char* slash = strrchr(filename, PATH_SEPARATOR);
     const string linkname =
-      symlink_basename_ + '.' + LogSeverityNames[severity_];
+        symlink_basename_ + '.' + LogSeverityNames[severity_];
     string linkpath;
-    if ( slash ) linkpath = string(filename, static_cast<size_t>(slash-filename+1));  // get dirname
+    if (slash)
+      linkpath = string(
+          filename, static_cast<size_t>(slash - filename + 1));  // get dirname
     linkpath += linkname;
-    unlink(linkpath.c_str());                    // delete old one if it exists
-
-#if defined(GLOG_OS_WINDOWS)
-    // TODO(hamaji): Create lnk file on Windows?
-#elif defined(HAVE_UNISTD_H)
+    unlink(linkpath.c_str());  // delete old one if it exists
     // We must have unistd.h.
     // Make the symlink be relative (in the same dir) so that if the
     // entire log directory gets relocated the link is still valid.
@@ -1150,9 +1304,8 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
         // silently ignore failures
       }
     }
-#endif
   }
-
+#endif
   return true;  // Everything worked
 }
 
@@ -1222,6 +1375,31 @@ void LogFileObject::Write(bool force_flush,
       //
       // Where does the file get put?  Successively try the directories
       // "/tmp", and "."
+
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+      wstring stripped_filename(
+          ConvertString2WString(glog_internal_namespace_::ProgramInvocationShortName()));
+      string hostname;
+      GetHostName(&hostname);
+
+      wstring uidname = MyUserName();
+      // We should not call CHECK() here because this function can be
+      // called after holding on to log_mutex. We don't want to
+      // attempt to hold on to the same mutex, and get into a
+      // deadlock. Simply use a name like invalid-user.
+      if (uidname.empty()) uidname = TEXT("invalid-user");
+
+      stripped_filename =
+          stripped_filename + TEXT('.') + ConvertString2WString(hostname) +
+          TEXT('.') +
+                          uidname + TEXT(".log.") +
+                          ConvertString2WString(LogSeverityNames[severity_]) +
+                          TEXT('.');
+
+       // We're going to (potentially) try to put logs in several different dirs
+      const vector<wstring>& log_dirs = GetLoggingDirectories();
+#else
       string stripped_filename(
           glog_internal_namespace_::ProgramInvocationShortName());
       string hostname;
@@ -1234,17 +1412,22 @@ void LogFileObject::Write(bool force_flush,
       // deadlock. Simply use a name like invalid-user.
       if (uidname.empty()) uidname = "invalid-user";
 
-      stripped_filename = stripped_filename+'.'+hostname+'.'
-                          +uidname+".log."
-                          +LogSeverityNames[severity_]+'.';
+      stripped_filename = stripped_filename + '.' + hostname + '.' + uidname +
+                          ".log." + LogSeverityNames[severity_] + '.';
       // We're going to (potentially) try to put logs in several different dirs
-      const vector<string> & log_dirs = GetLoggingDirectories();
+      const vector<string>& log_dirs = GetLoggingDirectories();
+
+#endif  // 
 
       // Go through the list of dirs, and try to create the log file in each
       // until we succeed or run out of options
       bool success = false;
       for (const auto& log_dir : log_dirs) {
+#if defined(GLOG_OS_WINDOWS)
+        base_filename_ = log_dir + TEXT("/") + stripped_filename;
+#else
         base_filename_ = log_dir + "/" + stripped_filename;
+#endif
         if ( CreateLogfile(time_pid_string) ) {
           success = true;
           break;
@@ -1371,9 +1554,43 @@ void LogCleaner::UpdateCleanUpTime() {
                       * 1000000);  // in usec
   next_cleanup_time_ = CycleClock_Now() + UsecToCycles(next);
 }
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+void LogCleaner::Run(bool base_filename_selected, const wstring& base_filename,
+                     const string& filename_extension) {
+  assert(enabled_);
+  assert(!base_filename_selected || !base_filename.empty());
 
-void LogCleaner::Run(bool base_filename_selected,
-                     const string& base_filename,
+  // avoid scanning logs too frequently
+  if (CycleClock_Now() < next_cleanup_time_) {
+    return;
+  }
+  UpdateCleanUpTime();
+
+  vector<wstring> dirs;
+
+  if (!base_filename_selected) {
+    dirs = GetLoggingDirectories();
+  } else {
+    size_t pos = base_filename.find_last_of(w_possible_dir_delim, string::npos,
+                                            sizeof(w_possible_dir_delim));
+    if (pos != string::npos) {
+      wstring dir = base_filename.substr(0, pos + 1);
+      dirs.push_back(dir);
+    } else {
+      dirs.emplace_back(TEXT("."));
+    }
+  }
+
+  for (auto& dir : dirs) {
+    vector<wstring> logs = GetOverdueLogNames(dir, overdue_days_, base_filename,
+                                             filename_extension);
+    for (auto& log : logs) {
+      static_cast<void>(_wunlink(log.c_str()));
+    }
+  }
+}
+#else
+void LogCleaner::Run(bool base_filename_selected, const string& base_filename,
                      const string& filename_extension) {
   assert(enabled_);
   assert(!base_filename_selected || !base_filename.empty());
@@ -1407,7 +1624,48 @@ void LogCleaner::Run(bool base_filename_selected,
     }
   }
 }
+#endif  // 
 
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+vector<wstring> LogCleaner::GetOverdueLogNames(
+    wstring log_directory, unsigned int days, const wstring& base_filename,
+    const string& filename_extension) const {
+  // The names of overdue logs.
+  vector<wstring> overdue_log_names;
+
+  // Try to get all files within log_directory.
+  WDIR* dir;
+  struct wdirent* ent;
+
+  if ((dir = wopendir(log_directory.c_str()))) {
+    while ((ent = wreaddir(dir))) {
+      if (wcscmp(ent->d_name, TEXT(".")) == 0 || wcscmp(ent->d_name, TEXT("..")) == 0) {
+        continue;
+      }
+
+      wstring filepath = ent->d_name;
+      const wchar_t* const dir_delim_end =
+          w_possible_dir_delim + sizeof(w_possible_dir_delim);
+
+      if (!log_directory.empty() &&
+          std::find(w_possible_dir_delim, dir_delim_end,
+                    log_directory[log_directory.size() - 1]) != dir_delim_end) {
+        filepath = log_directory + filepath;
+      }
+
+      if (IsLogFromCurrentProject(filepath, base_filename,
+                                  filename_extension) &&
+          IsLogLastModifiedOver(filepath, days)) {
+        overdue_log_names.push_back(filepath);
+      }
+    }
+    wclosedir(dir);
+  }
+
+  return overdue_log_names;
+}
+#else
 vector<string> LogCleaner::GetOverdueLogNames(
     string log_directory, unsigned int days, const string& base_filename,
     const string& filename_extension) const {
@@ -1444,7 +1702,96 @@ vector<string> LogCleaner::GetOverdueLogNames(
 
   return overdue_log_names;
 }
+#endif
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+bool LogCleaner::IsLogFromCurrentProject(
+    const wstring& filepath, const wstring& base_filename,
+    const string& filename_extension) const {
+  // We should remove duplicated delimiters from `base_filename`, e.g.,
+  // before: "/tmp//<base_filename>.<create_time>.<pid>"
+  // after:  "/tmp/<base_filename>.<create_time>.<pid>"
+  wstring cleaned_base_filename;
+
+  const wchar_t* const dir_delim_end =
+      w_possible_dir_delim + sizeof(w_possible_dir_delim);
+
+  size_t real_filepath_size = filepath.size();
+  for (wchar_t c : base_filename) {
+    if (cleaned_base_filename.empty()) {
+      cleaned_base_filename += c;
+    } else if (std::find(w_possible_dir_delim, dir_delim_end, c) ==
+                   dir_delim_end ||
+               (!cleaned_base_filename.empty() &&
+                c != cleaned_base_filename[cleaned_base_filename.size() - 1])) {
+      cleaned_base_filename += c;
+    }
+  }
+
+  // Return early if the filename doesn't start with `cleaned_base_filename`.
+  if (filepath.find(cleaned_base_filename) != 0) {
+    return false;
+  }
+
+  // Check if in the string `filename_extension` is right next to
+  // `cleaned_base_filename` in `filepath` if the user
+  // has set a custom filename extension.
+  if (!filename_extension.empty()) {
+    if (cleaned_base_filename.size() >= real_filepath_size) {
+      return false;
+    }
+    // for origin version, `filename_extension` is middle of the `filepath`.
+    wstring ext = filepath.substr(cleaned_base_filename.size(),
+                                 filename_extension.size());
+    if (ext == ConvertString2WString(filename_extension)) {
+      cleaned_base_filename += ConvertString2WString(filename_extension);
+    } else {
+      // for new version, `filename_extension` is right of the `filepath`.
+      if (filename_extension.size() >= real_filepath_size) {
+        return false;
+      }
+      real_filepath_size = filepath.size() - filename_extension.size();
+      if (filepath.substr(real_filepath_size) != ConvertString2WString(filename_extension)) {
+        return false;
+      }
+    }
+  }
+
+  // The characters after `cleaned_base_filename` should match the format:
+  // YYYYMMDD-HHMMSS.pid
+  for (size_t i = cleaned_base_filename.size(); i < real_filepath_size; i++) {
+    const wchar_t& c = filepath[i];
+
+    if (i <= cleaned_base_filename.size() + 7) {  // 0 ~ 7 : YYYYMMDD
+      if (c < TEXT('0') || c >TEXT('9')) {
+        return false;
+      }
+
+    } else if (i == cleaned_base_filename.size() + 8) {  // 8: -
+      if (c != TEXT('-')) {
+        return false;
+      }
+
+    } else if (i <= cleaned_base_filename.size() + 14) {  // 9 ~ 14: HHMMSS
+      if (c < TEXT('0') || c > TEXT('9')) {
+        return false;
+      }
+
+    } else if (i == cleaned_base_filename.size() + 15) {  // 15: .
+      if (c != TEXT('.')) {
+        return false;
+      }
+
+    } else if (i >= cleaned_base_filename.size() + 16) {  // 16+: pid
+      if (c < TEXT('0') || c > TEXT('9')) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+#else
 bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
                                          const string& base_filename,
                                          const string& filename_extension) const {
@@ -1521,7 +1868,25 @@ bool LogCleaner::IsLogFromCurrentProject(const string& filepath,
 
   return true;
 }
+#endif
 
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+bool LogCleaner::IsLogLastModifiedOver(const wstring& filepath,
+                                       unsigned int days) const {
+  // Try to get the last modified time of this file.
+  struct _stat file_stat;
+
+  if (_wstat(filepath.c_str(), &file_stat) == 0) {
+    const time_t seconds_in_a_day = 60 * 60 * 24;
+    time_t last_modified_time = file_stat.st_mtime;
+    time_t current_time = time(nullptr);
+    return difftime(current_time, last_modified_time) > days * seconds_in_a_day;
+  }
+
+  // If failed to get file stat, don't return true!
+  return false;
+}
+#else
 bool LogCleaner::IsLogLastModifiedOver(const string& filepath,
                                        unsigned int days) const {
   // Try to get the last modified time of this file.
@@ -1537,6 +1902,7 @@ bool LogCleaner::IsLogLastModifiedOver(const string& filepath,
   // If failed to get file stat, don't return true!
   return false;
 }
+#endif  // 
 
 }  // namespace
 
@@ -2065,10 +2431,15 @@ void FlushLogFiles(LogSeverity min_severity) {
 void FlushLogFilesUnsafe(LogSeverity min_severity) {
   LogDestination::FlushLogFilesUnsafe(min_severity);
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+void SetLogDestination(LogSeverity severity, const wchar_t* base_filename) {
+  LogDestination::SetLogDestination(severity, base_filename);
+}
+#else
 void SetLogDestination(LogSeverity severity, const char* base_filename) {
   LogDestination::SetLogDestination(severity, base_filename);
 }
+#endif
 
 void SetLogSymlink(LogSeverity severity, const char* symlink_basename) {
   LogDestination::SetLogSymlink(severity, symlink_basename);
@@ -2342,32 +2713,39 @@ bool SendEmail(const char*dest, const char *subject, const char*body){
   return SendEmailInternal(dest, subject, body, true);
 }
 
-static void GetTempDirectories(vector<string>* list) {
-  list->clear();
 #ifdef GLOG_OS_WINDOWS
+#ifdef UNICODE
+static void GetTempDirectories(vector<wstring>* list) {
+#else
+static void GetTempDirectories(vector<string>* list) {
+#endif
+  list->clear();
   // On windows we'll try to find a directory in this order:
   //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
   //   C:/TMP/
   //   C:/TEMP/
   //   C:/WINDOWS/ or C:/WINNT/
   //   .
-  char tmp[MAX_PATH];
-  if (GetTempPathA(MAX_PATH, tmp))
-    list->push_back(tmp);
-  list->push_back("C:\\tmp\\");
-  list->push_back("C:\\temp\\");
+  TCHAR tmp[MAX_PATH];
+  if (GetTempPath(MAX_PATH, tmp)) list->push_back(tmp);
+  list->push_back(TEXT("C:\\tmp\\"));
+  list->push_back(TEXT("C:\\temp\\"));
+}
 #else
+static void GetTempDirectories(vector<string>* list) {
+  list->clear();
   // Directories, in order of preference. If we find a dir that
   // exists, we stop adding other less-preferred dirs
-  const char * candidates[] = {
-    // Non-null only during unittest/regtest
-    getenv("TEST_TMPDIR"),
+  const char* candidates[] = {
+      // Non-null only during unittest/regtest
+      getenv("TEST_TMPDIR"),
 
-    // Explicitly-supplied temp dirs
-    getenv("TMPDIR"), getenv("TMP"),
+      // Explicitly-supplied temp dirs
+      getenv("TMPDIR"),
+      getenv("TMP"),
 
-    // If all else fails
-    "/tmp",
+      // If all else fails
+      "/tmp",
   };
 
   for (auto d : candidates) {
@@ -2386,21 +2764,50 @@ static void GetTempDirectories(vector<string>* list) {
       return;
     }
   }
-
-#endif
 }
+#endif  // GLOG_OS_WINDOWS
 
+
+
+
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+static vector<wstring>* logging_directories_list;
+const vector<wstring>& GetLoggingDirectories() {
+  // Not strictly thread-safe but we're called early in InitGoogle().
+  if (logging_directories_list == nullptr) {
+    logging_directories_list = new vector<wstring>;
+
+    if (!FLAGS_log_dir.empty()) {
+      // Ensure the specified path ends with a directory delimiter.
+      if (std::find(std::begin(possible_dir_delim),
+                    std::end(possible_dir_delim),
+                    FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
+        logging_directories_list->push_back(FLAGS_log_dir + TEXT("/"));
+      } else {
+        logging_directories_list->push_back(FLAGS_log_dir);
+      }
+    } else {
+      GetTempDirectories(logging_directories_list);
+      TCHAR tmp[MAX_PATH];
+      if (GetWindowsDirectory(tmp, MAX_PATH))
+        logging_directories_list->push_back(tmp);
+      logging_directories_list->push_back(TEXT(".\\"));
+    }
+  }
+  return *logging_directories_list;
+}
+#else
 static vector<string>* logging_directories_list;
-
 const vector<string>& GetLoggingDirectories() {
   // Not strictly thread-safe but we're called early in InitGoogle().
   if (logging_directories_list == nullptr) {
     logging_directories_list = new vector<string>;
 
-    if ( !FLAGS_log_dir.empty() ) {
+    if (!FLAGS_log_dir.empty()) {
       // Ensure the specified path ends with a directory delimiter.
-      if (std::find(std::begin(possible_dir_delim), std::end(possible_dir_delim),
-            FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
+      if (std::find(std::begin(possible_dir_delim),
+                    std::end(possible_dir_delim),
+                    FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
         logging_directories_list->push_back(FLAGS_log_dir + "/");
       } else {
         logging_directories_list->push_back(FLAGS_log_dir);
@@ -2419,6 +2826,9 @@ const vector<string>& GetLoggingDirectories() {
   }
   return *logging_directories_list;
 }
+#endif  // 
+
+
 
 void TestOnly_ClearLoggingDirectoriesList() {
   fprintf(stderr, "TestOnly_ClearLoggingDirectoriesList should only be "
@@ -2426,7 +2836,21 @@ void TestOnly_ClearLoggingDirectoriesList() {
   delete logging_directories_list;
   logging_directories_list = nullptr;
 }
-
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+void GetExistingTempDirectories(vector<wstring>* list) {
+  GetTempDirectories(list);
+  auto i_dir = list->begin();
+  while (i_dir != list->end()) {
+    // zero arg to access means test for existence; no constant
+    // defined on windows
+    if (_waccess(i_dir->c_str(), 0)) {
+      i_dir = list->erase(i_dir);
+    } else {
+      ++i_dir;
+    }
+  }
+}
+#else
 void GetExistingTempDirectories(vector<string>* list) {
   GetTempDirectories(list);
   auto i_dir = list->begin();
@@ -2440,6 +2864,7 @@ void GetExistingTempDirectories(vector<string>* list) {
     }
   }
 }
+#endif  // 
 
 void TruncateLogFile(const char *path, uint64 limit, uint64 keep) {
 #if defined(HAVE_UNISTD_H) || defined(HAVE__CHSIZE_S)

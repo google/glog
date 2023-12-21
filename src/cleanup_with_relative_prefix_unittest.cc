@@ -57,7 +57,12 @@ using namespace GOOGLE_NAMESPACE;
 TEST(CleanImmediatelyWithRelativePrefix, logging) {
   google::EnableLogCleaner(0);
   google::SetLogFilenameExtension(".relativefoo");
+#if defined(GLOG_OS_WINDOWS) && defined(UNICODE)
+  google::SetLogDestination(GLOG_INFO, TEXT("test_subdir/test_cleanup_"));
+#else
   google::SetLogDestination(GLOG_INFO, "test_subdir/test_cleanup_");
+#endif  // (GLOG_OS_WINDOWS) && defined(UNICODE)
+
 
   for (unsigned i = 0; i < 1000; ++i) {
     LOG(INFO) << "cleanup test";
