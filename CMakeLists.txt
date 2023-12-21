@@ -41,10 +41,10 @@ option (WITH_GTEST "Use Google Test" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
-option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 option (WITH_UNWIND "Enable libunwind support" ON)
 
 cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
+cmake_dependent_option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON WITH_THREADS OFF)
 
 set (WITH_FUZZING none CACHE STRING "Fuzzing engine")
 set_property (CACHE WITH_FUZZING PROPERTY STRINGS none libfuzzer ossfuzz)
