@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (c) 2007, Google Inc.
+# Copyright (c) 2023, Google Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -32,15 +32,15 @@
 # Author: Sergey Ioffe
 
 get_strings () {
-    if test -e ".libs/$1"; then
-        binary=".libs/$1"
+    if test -e "$1"; then
+        binary="$1"
     elif test -e "$1.exe"; then
         binary="$1.exe"
     else
         echo "We coundn't find $1 binary."
         exit 1
     fi
-    
+
     strings -n 10 $binary | sort | awk '/TESTMESSAGE/ {printf "%s ", $2}'
 }
 
@@ -60,20 +60,21 @@ die () {
 # Check that the string literals are appropriately stripped. This will
 # not be the case in debug mode.
 
-mode=`GLOG_check_mode=1 ./logging_striptest0 2> /dev/null`
+mode=`GLOG_check_mode=1 ./striplog0_unittest 2> /dev/null`
+echo $mode
 if [ "$mode" = "opt" ];
 then
     echo "In OPT mode"
-    check_eq "`get_strings logging_striptest0`" "COND ERROR FATAL INFO USAGE WARNING "
-    check_eq "`get_strings logging_striptest2`" "COND ERROR FATAL USAGE "
-    check_eq "`get_strings logging_striptest10`" "" 
+    check_eq "`get_strings striplog0_unittest`" "COND ERROR FATAL INFO WARNING "
+    check_eq "`get_strings striplog2_unittest`" "COND ERROR FATAL "
+    check_eq "`get_strings striplog10_unittest`" ""
 else
     echo "In DBG mode; not checking strings"
 fi
 
 # Check that LOG(FATAL) aborts even for large STRIP_LOG
 
-./logging_striptest2 2>/dev/null && die "Did not abort for STRIP_LOG=2"
-./logging_striptest10 2>/dev/null && die "Did not abort for STRIP_LOG=10"
+./striplog2_unittest 2>/dev/null && die "Did not abort for STRIP_LOG=2"
+./striplog10_unittest 2>/dev/null && die "Did not abort for STRIP_LOG=10"
 
 echo "PASS"

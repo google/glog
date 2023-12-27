@@ -50,6 +50,7 @@
 # include <unistd.h>
 #endif
 #include <vector>
+#include <utility>
 
 #if defined(_MSC_VER)
 #define GLOG_MSVC_PUSH_DISABLE_WARNING(n) __pragma(warning(push)) \
@@ -61,6 +62,16 @@
 #endif
 
 #include "glog/platform.h"
+
+#if defined(__has_attribute)
+#if __has_attribute(used)
+#define GLOG_USED __attribute__((used))
+#endif  // __has_attribute(used)
+#endif  // defined(__has_attribute)
+
+#if !defined(GLOG_USED)
+#define GLOG_USED
+#endif  // !defined(GLOG_USED)
 
 #if @ac_cv_have_glog_export@
 #include "glog/export.h"
@@ -1357,22 +1368,30 @@ GLOG_MSVC_PUSH_DISABLE_WARNING(4275)
   class GLOG_EXPORT LogStream : public std::ostream {
 GLOG_MSVC_POP_WARNING()
   public:
-#if defined __has_attribute
-#  if __has_attribute (used)
-    // In some cases, like when compiling glog as a static library with GCC and
-    // linking against a Clang-built executable, this constructor will be
-    // removed by the linker. We use this attribute to prevent the linker from
-    // discarding it.
-    __attribute__ ((used))
-#  endif
-#endif
-    LogStream(char *buf, int len, int64 ctr)
-        : std::ostream(nullptr),
-          streambuf_(buf, len),
-          ctr_(ctr),
-          self_(this) {
-      rdbuf(&streambuf_);
-    }
+   // In some cases, like when compiling glog as a static library with GCC and
+   // linking against a Clang-built executable, this constructor will be
+   // removed by the linker. We use this attribute to prevent the linker from
+   // discarding it.
+    GLOG_USED
+   LogStream(char* buf, int len, int64 ctr)
+       : std::ostream(nullptr), streambuf_(buf, len), ctr_(ctr), self_(this) {
+     rdbuf(&streambuf_);
+   }
+
+   LogStream(LogStream&& other) noexcept
+       : std::ostream(nullptr),
+         streambuf_(std::move(other.streambuf_)),
+         ctr_(std::exchange(other.ctr_, 0)),
+         self_(this) {
+     rdbuf(&streambuf_);
+   }
+
+   LogStream& operator=(LogStream&& other) noexcept {
+     streambuf_ = std::move(other.streambuf_);
+     ctr_ = std::exchange(other.ctr_, 0);
+     rdbuf(&streambuf_);
+     return *this;
+   }
 
     int64 ctr() const { return ctr_; }
     void set_ctr(int64 ctr) { ctr_ = ctr; }
@@ -1383,9 +1402,10 @@ GLOG_MSVC_POP_WARNING()
     char* pbase() const { return streambuf_.pbase(); }
     char* str() const { return pbase(); }
 
+    LogStream(const LogStream&) = delete;
+    LogStream& operator=(const LogStream&) = delete;
+
   private:
-    LogStream(const LogStream&);
-    LogStream& operator=(const LogStream&);
     base_logging::LogStreamBuf streambuf_;
     int64 ctr_;  // Counter hack (for the LOG_EVERY_X() macro)
     LogStream *self_;  // Consistency check hack
@@ -1799,7 +1819,7 @@ class GLOG_EXPORT NullStream : public LogMessage::LogStream {
   // A very short buffer for messages (which we discard anyway). This
   // will be needed if NullStream& converted to LogStream& (e.g. as a
   // result of a conditional expression).
-  char message_buffer_[2];
+  char message_buffer_[3];
 };
 
 // Do nothing. This operator is inline, allowing the message to be
@@ -1816,7 +1836,9 @@ inline NullStream& operator<<(NullStream &str, const T &) { return str; }
 class GLOG_EXPORT NullStreamFatal : public NullStream {
  public:
   using NullStream::NullStream;
-  [[noreturn]] ~NullStreamFatal();
+  [[noreturn]]
+  // Prevent the linker from discarding the destructor.
+  GLOG_USED ~NullStreamFatal();
 };
 
 // Install a signal handler that will dump signal information and a stack

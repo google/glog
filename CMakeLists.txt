@@ -815,6 +815,37 @@ if (BUILD_TESTING)
   set_tests_properties (cleanup_immediately PROPERTIES FIXTURES_REQUIRED logcleanuptest)
   set_tests_properties (cleanup_with_absolute_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
   set_tests_properties (cleanup_with_relative_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
+
+  add_executable (striplog0_unittest
+    src/striplog_unittest.cc
+  )
+  target_compile_definitions (striplog0_unittest PRIVATE GOOGLE_STRIP_LOG=0)
+  target_link_libraries (striplog0_unittest PRIVATE glog_test)
+
+  add_test (NAME striplog0 COMMAND striplog0_unittest)
+
+  add_executable (striplog2_unittest
+    src/striplog_unittest.cc
+  )
+  target_compile_definitions (striplog2_unittest PRIVATE GOOGLE_STRIP_LOG=2)
+  target_link_libraries (striplog2_unittest PRIVATE glog_test)
+
+  add_test (NAME striplog2 COMMAND striplog2_unittest)
+
+  add_executable (striplog10_unittest
+    src/striplog_unittest.cc
+  )
+  target_compile_definitions (striplog10_unittest PRIVATE GOOGLE_STRIP_LOG=10)
+  target_link_libraries (striplog10_unittest PRIVATE glog_test)
+
+  add_test (NAME striplog10 COMMAND striplog10_unittest)
+
+  set_tests_properties (
+    striplog0
+    striplog2
+    striplog10
+    PROPERTIES WILL_FAIL ON
+  )
 endif (BUILD_TESTING)
 
 install (TARGETS glog
