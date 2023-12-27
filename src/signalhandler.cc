@@ -211,6 +211,8 @@ void DumpSignalInfo(int signal_number, siginfo_t *siginfo) {
   pthread_t id = pthread_self();
   formatter.AppendUint64(
       reinterpret_cast<uint64>(reinterpret_cast<const char*>(id)), 16);
+  formatter.AppendString("/");
+  formatter.AppendUint64(static_cast<uint64>(GetTID(), 10));
   formatter.AppendString(") ");
   // Only linux has the PID of the signal sender in si_pid.
 #ifdef GLOG_OS_LINUX
