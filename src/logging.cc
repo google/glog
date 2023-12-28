@@ -1,4 +1,4 @@
-// Copyright (c) 1999, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -1932,13 +1932,17 @@ void LogMessage::RecordCrashReason(
 GLOG_EXPORT logging_fail_func_t g_logging_fail_func =
     reinterpret_cast<logging_fail_func_t>(&abort);
 
-NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 1, 0) {}
+NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 2, 0) {}
 NullStream::NullStream(const char* /*file*/, int /*line*/,
                        const CheckOpString& /*result*/)
-    : LogMessage::LogStream(message_buffer_, 1, 0) {}
+    : LogMessage::LogStream(message_buffer_, 2, 0) {}
 NullStream& NullStream::stream() { return *this; }
 
-NullStreamFatal::~NullStreamFatal() { _exit(EXIT_FAILURE); }
+NullStreamFatal::~NullStreamFatal() {
+  // Cannot use g_logging_fail_func here as it may output the backtrace which
+  // would be inconsistent with NullStream behavior.
+  std::abort();
+}
 
 void InstallFailureFunction(logging_fail_func_t fail_func) {
   g_logging_fail_func = fail_func;
