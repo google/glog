@@ -36,7 +36,7 @@
 #include "stacktrace.h"
 #include <dbghelp.h>
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 int GetStackTrace(void** result, int max_depth, int skip_count) {
   if (max_depth > 64) {
@@ -48,4 +48,4 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
                                static_cast<DWORD>(max_depth), result, nullptr);
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google

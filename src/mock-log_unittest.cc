@@ -40,10 +40,10 @@
 
 namespace {
 
-using GOOGLE_NAMESPACE::GLOG_ERROR;
-using GOOGLE_NAMESPACE::GLOG_INFO;
-using GOOGLE_NAMESPACE::GLOG_WARNING;
-using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+using google::GLOG_ERROR;
+using google::GLOG_INFO;
+using google::GLOG_WARNING;
+using google::glog_testing::ScopedMockLog;
 using std::string;
 using testing::_;
 using testing::EndsWith;
@@ -100,7 +100,7 @@ TEST(ScopedMockLogTest, LogDuringIntercept) {
 }  // namespace
 
 int main(int argc, char **argv) {
-  GOOGLE_NAMESPACE::InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging(argv[0]);
   testing::InitGoogleTest(&argc, argv);
   testing::InitGoogleMock(&argc, argv);
 

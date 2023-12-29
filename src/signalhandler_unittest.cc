@@ -44,12 +44,12 @@
 
 #include "glog/logging.h"
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
 #include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
 
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 static void* DieInThread(void*) {
   // We assume pthread_t is an integral number or a pointer, rather
@@ -75,7 +75,7 @@ static void WriteToStdout(const char* data, size_t size) {
 int main(int argc, char **argv) {
 #if defined(HAVE_STACKTRACE) && defined(HAVE_SYMBOLIZE)
   InitGoogleLogging(argv[0]);
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
   InstallFailureSignalHandler();

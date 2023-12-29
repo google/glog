@@ -133,10 +133,7 @@ endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)
 check_include_file_cxx (glob.h HAVE_GLOB_H)
-check_include_file_cxx (memory.h HAVE_MEMORY_H)
 check_include_file_cxx (pwd.h HAVE_PWD_H)
-check_include_file_cxx (strings.h HAVE_STRINGS_H)
-check_include_file_cxx (sys/stat.h HAVE_SYS_STAT_H)
 check_include_file_cxx (sys/syscall.h HAVE_SYS_SYSCALL_H)
 check_include_file_cxx (sys/time.h HAVE_SYS_TIME_H)
 check_include_file_cxx (sys/types.h HAVE_SYS_TYPES_H)
@@ -189,28 +186,6 @@ cmake_push_check_state (RESET)
 set (CMAKE_REQUIRED_LIBRARIES dbghelp)
 check_cxx_symbol_exists (UnDecorateSymbolName "windows.h;dbghelp.h" HAVE_DBGHELP)
 cmake_pop_check_state ()
-
-check_cxx_source_compiles ("
-#include <cstdlib>
-static void foo(void) __attribute__ ((unused));
-int main(void) { return 0; }
-" HAVE___ATTRIBUTE__)
-
-check_cxx_source_compiles ("
-#include <cstdlib>
-static void foo(void) __attribute__ ((visibility(\"default\")));
-int main(void) { return 0; }
-" HAVE___ATTRIBUTE__VISIBILITY_DEFAULT)
-
-check_cxx_source_compiles ("
-#include <cstdlib>
-static void foo(void) __attribute__ ((visibility(\"hidden\")));
-int main(void) { return 0; }
-" HAVE___ATTRIBUTE__VISIBILITY_HIDDEN)
-
-check_cxx_source_compiles ("
-int main(void) { if (__builtin_expect(0, 0)) return 1; return 0; }
-" HAVE___BUILTIN_EXPECT)
 
 check_cxx_source_compiles ("
 int main(void)
@@ -284,58 +259,6 @@ if (HAVE_UCONTEXT_H AND NOT DEFINED PC_FROM_UCONTEXT)
 
   cmake_pop_check_state ()
 endif (HAVE_UCONTEXT_H AND NOT DEFINED PC_FROM_UCONTEXT)
-
-set (GOOGLE_NAMESPACE google)
-set (_START_GOOGLE_NAMESPACE_ "namespace ${GOOGLE_NAMESPACE} {")
-set (_END_GOOGLE_NAMESPACE_ "}")
-set (ac_cv_have_glog_export 1)
-
-if (HAVE_LIB_GFLAGS)
-  set (ac_cv_have_libgflags 1)
-else (HAVE_LIB_GFLAGS)
-  set (ac_cv_have_libgflags 0)
-endif (HAVE_LIB_GFLAGS)
-
-if (HAVE_SYS_TYPES_H)
-  set (ac_cv_have_systypes_h 1)
-else (HAVE_SYS_TYPES_H)
-  set (ac_cv_have_systypes_h 0)
-endif (HAVE_SYS_TYPES_H)
-
-if (HAVE_SSIZE_T)
-  set (ac_cv_have_ssize_t 1)
-else (HAVE_SSIZE_T)
-  set (ac_cv_have_ssize_t 0)
-endif (HAVE_SSIZE_T)
-
-if (HAVE_MODE_T)
-  set (ac_cv_have_mode_t 1)
-else (HAVE_MODE_T)
-  set (ac_cv_have_mode_t 0)
-endif (HAVE_MODE_T)
-
-if (HAVE_UNISTD_H)
-  set (ac_cv_have_unistd_h 1)
-else (HAVE_UNISTD_H)
-  set (ac_cv_have_unistd_h 0)
-endif (HAVE_UNISTD_H)
-
-set (ac_google_namespace ${GOOGLE_NAMESPACE})
-set (ac_google_end_namespace ${_END_GOOGLE_NAMESPACE_})
-set (ac_google_start_namespace ${_START_GOOGLE_NAMESPACE_})
-
-if (HAVE___ATTRIBUTE__)
-  set (ac_cv___attribute___noinline "__attribute__((noinline))")
-  set (ac_cv___attribute___printf_4_5 "__attribute__((__format__(__printf__, 4, 5)))")
-elseif (HAVE___DECLSPEC)
-  #set (ac_cv___attribute___noinline "__declspec(noinline)")
-endif (HAVE___ATTRIBUTE__)
-
-if (HAVE___BUILTIN_EXPECT)
-  set (ac_cv_have___builtin_expect 1)
-else (HAVE___BUILTIN_EXPECT)
-  set (ac_cv_have___builtin_expect 0)
-endif (HAVE___BUILTIN_EXPECT)
 
 if (HAVE_EXECINFO_BACKTRACE AND HAVE_EXECINFO_BACKTRACE_SYMBOLS)
   set (HAVE_STACKTRACE 1)
@@ -414,10 +337,6 @@ else (CYGWIN)
 endif (CYGWIN)
 
 configure_file (src/config.h.cmake.in config.h)
-configure_file (src/glog/logging.h.in glog/logging.h @ONLY)
-configure_file (src/glog/raw_logging.h.in glog/raw_logging.h @ONLY)
-configure_file (src/glog/stl_logging.h.in glog/stl_logging.h @ONLY)
-configure_file (src/glog/vlog_is_on.h.in glog/vlog_is_on.h @ONLY)
 
 set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
 set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
@@ -459,12 +378,12 @@ endif (_glog_CMake_MODULES)
 
 set (GLOG_PUBLIC_H
   ${glog_BINARY_DIR}/glog/export.h
-  ${glog_BINARY_DIR}/glog/logging.h
-  ${glog_BINARY_DIR}/glog/raw_logging.h
-  ${glog_BINARY_DIR}/glog/stl_logging.h
-  ${glog_BINARY_DIR}/glog/vlog_is_on.h
   src/glog/log_severity.h
+  src/glog/logging.h
   src/glog/platform.h
+  src/glog/raw_logging.h
+  src/glog/stl_logging.h
+  src/glog/vlog_is_on.h
 )
 
 set (GLOG_SRCS
@@ -516,6 +435,13 @@ target_compile_features (glog PUBLIC cxx_std_14)
 add_library (glog::glog ALIAS glog)
 
 set (glog_libraries_options_for_static_linking)
+
+# CMake always uses the generated export header
+target_compile_definitions (glog PUBLIC GLOG_USE_GLOG_EXPORT)
+
+if (HAVE_LIB_GFLAGS)
+  target_compile_definitions (glog PUBLIC GLOG_USE_GFLAGS)
+endif (HAVE_LIB_GFLAGS)
 
 if (Unwind_FOUND)
   target_link_libraries (glog PRIVATE unwind::unwind)

@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -64,7 +64,7 @@
 #include "symbolize.h"
 #include "demangle.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // We don't use assert() since it's not guaranteed to be
 // async-signal-safe.  Instead we define a minimal assertion
@@ -106,7 +106,7 @@ static ATTRIBUTE_NOINLINE void DemangleInplace(char *out, size_t out_size) {
   }
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #if defined(__ELF__)
 
@@ -138,7 +138,7 @@ _END_GOOGLE_NAMESPACE_
 // Re-runs fn until it doesn't cause EINTR.
 #define NO_INTR(fn)   do {} while ((fn) < 0 && errno == EINTR)
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // Read up to "count" bytes from "offset" in the file pointed by file
 // descriptor "fd" into the buffer starting at "buf" while handling short reads
@@ -833,14 +833,14 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   return true;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 
 #include <dlfcn.h>
 #include <cstring>
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
                                                     size_t out_size) {
@@ -858,7 +858,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #elif defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
 
@@ -869,7 +869,7 @@ _END_GOOGLE_NAMESPACE_
 #pragma comment(lib, "dbghelp")
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 class SymInitializer {
 public:
@@ -923,19 +923,19 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void *pc, char *out,
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #else
 # error BUG: HAVE_SYMBOLIZE was wrongly set
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 bool Symbolize(void *pc, char *out, size_t out_size) {
   return SymbolizeAndDemangle(pc, out, out_size);
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #else  /* HAVE_SYMBOLIZE */
 
@@ -943,7 +943,7 @@ _END_GOOGLE_NAMESPACE_
 
 #include "config.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // TODO: Support other environments.
 bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/) {
@@ -951,6 +951,6 @@ bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/) {
   return false;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif

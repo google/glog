@@ -70,7 +70,7 @@
 #define safe_write(fd, s, len) write(fd, s, len)
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 #if defined(__GNUC__)
 #define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck) \
@@ -179,4 +179,4 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   }
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google

@@ -41,7 +41,7 @@
 # include <execinfo.h>
 #endif
 
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 #ifdef HAVE_STACKTRACE
 

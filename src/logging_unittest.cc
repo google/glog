@@ -62,7 +62,7 @@
 
 DECLARE_string(log_backtrace_at);  // logging.cc
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
 #include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
@@ -71,28 +71,28 @@ using namespace GFLAGS_NAMESPACE;
 #include <gmock/gmock.h>
 #include "mock-log.h"
 // Introduce several symbols from gmock.
+using google::glog_testing::ScopedMockLog;
 using testing::_;
+using testing::AllOf;
 using testing::AnyNumber;
 using testing::HasSubstr;
-using testing::AllOf;
-using testing::StrNe;
-using testing::StrictMock;
 using testing::InitGoogleMock;
-using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+using testing::StrictMock;
+using testing::StrNe;
 #endif
 
 using namespace std;
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 // Some non-advertised functions that we want to test or use.
-_START_GOOGLE_NAMESPACE_
+namespace google {
 namespace base {
 namespace internal {
 bool GetExitOnDFatal();
 void SetExitOnDFatal(bool value);
 }  // namespace internal
 }  // namespace base
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 static void TestLogging(bool check_counts);
 static void TestRawLogging();
@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
   InitGoogleMock(&argc, argv);
 #endif
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
 
@@ -1104,14 +1104,14 @@ static void TestLogPeriodically() {
   }
 }
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 namespace glog_internal_namespace_ {
 extern  // in logging.cc
 bool SafeFNMatch_(const char* pattern, size_t patt_len,
                   const char* str, size_t str_len);
 } // namespace glog_internal_namespace_
 using glog_internal_namespace_::SafeFNMatch_;
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 static bool WrapSafeFNMatch(string pattern, string str) {
   pattern += "abc";

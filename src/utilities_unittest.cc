@@ -33,12 +33,12 @@
 #include "glog/logging.h"
 #include "googletest.h"
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
 #include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
 
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 TEST(utilities, sync_val_compare_and_swap) {
   bool now_entering = false;

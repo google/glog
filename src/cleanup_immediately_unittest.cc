@@ -32,7 +32,7 @@
 #include "glog/raw_logging.h"
 #include "googletest.h"
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
 #include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
@@ -42,7 +42,7 @@ using namespace GFLAGS_NAMESPACE;
 
 #include "mock-log.h"
 // Introduce several symbols from gmock.
-using GOOGLE_NAMESPACE::glog_testing::ScopedMockLog;
+using google::glog_testing::ScopedMockLog;
 using testing::_;
 using testing::AllOf;
 using testing::AnyNumber;
@@ -52,7 +52,7 @@ using testing::StrictMock;
 using testing::StrNe;
 #endif
 
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 TEST(CleanImmediately, logging) {
   google::SetLogFilenameExtension(".foobar");
@@ -68,7 +68,7 @@ TEST(CleanImmediately, logging) {
 int main(int argc, char **argv) {
   FLAGS_colorlogtostderr = false;
   FLAGS_timestamp_in_logfile_name = true;
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
   // Make sure stderr is not buffered as stderr seems to be buffered

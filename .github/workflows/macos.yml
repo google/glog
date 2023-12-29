@@ -66,12 +66,6 @@ jobs:
           gcovr -r .. . -s --cobertura coverage.xml
           cd ..
 
-          for file in src/glog/*.h.in; do
-            name=$(basename ${file})
-            name_we=${name%.h.in}
-            sed -i "" "s|build_${{matrix.build_type}}/glog/${name_we}.h|${file}|g" build_${{matrix.build_type}}/coverage.xml
-          done
-
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
         uses: codecov/codecov-action@v3

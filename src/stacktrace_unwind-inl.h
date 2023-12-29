@@ -35,7 +35,7 @@
 
 #include "stacktrace.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 struct trace_arg_t {
   void **result;
@@ -101,4 +101,4 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   return targ.count;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
