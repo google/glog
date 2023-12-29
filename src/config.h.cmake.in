@@ -37,9 +37,6 @@
 /* define if you have dbghelp library */
 #cmakedefine HAVE_DBGHELP
 
-/* define if you have libunwind */
-#cmakedefine HAVE_LIB_UNWIND
-
 /* Define to 1 if you have the <memory.h> header file. */
 #cmakedefine HAVE_MEMORY_H
 
@@ -103,11 +100,11 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #cmakedefine HAVE_UNISTD_H ${HAVE_UNISTD_H}
 
-/* Define if you linking to _Unwind_Backtrace is possible. */
-#cmakedefine HAVE__UNWIND_BACKTRACE
+/* define if you have unwind */
+#cmakedefine HAVE_UNWIND
 
-/* Define if you linking to _Unwind_GetIP is possible. */
-#cmakedefine HAVE__UNWIND_GETIP
+/* define if you have libunwind */
+#cmakedefine HAVE_LIBUNWIND
 
 /* define if your compiler has __attribute__ */
 #cmakedefine HAVE___ATTRIBUTE__

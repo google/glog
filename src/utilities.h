@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -85,9 +85,9 @@
 // correctly when GetStackTrace() is called with max_depth == 0.
 // Some code may do that.
 
-#if defined(HAVE_LIB_UNWIND)
+#if defined(HAVE_LIBUNWIND)
 # define STACKTRACE_H "stacktrace_libunwind-inl.h"
-#elif defined(HAVE__UNWIND_BACKTRACE) && defined(HAVE__UNWIND_GETIP)
+#elif defined(HAVE_UNWIND)
 # define STACKTRACE_H "stacktrace_unwind-inl.h"
 #elif !defined(NO_FRAME_POINTER)
 # if defined(__i386__) && __GNUC__ >= 2

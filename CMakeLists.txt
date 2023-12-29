@@ -40,7 +40,9 @@ option (WITH_GTEST "Use Google Test" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" ON)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
-option (WITH_UNWIND "Enable libunwind support" ON)
+
+set (WITH_UNWIND libunwind CACHE STRING "unwind driver")
+set_property (CACHE WITH_UNWIND PROPERTY STRINGS none unwind libunwind)
 
 cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
 cmake_dependent_option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON WITH_THREADS OFF)
@@ -48,9 +50,9 @@ cmake_dependent_option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON 
 set (WITH_FUZZING none CACHE STRING "Fuzzing engine")
 set_property (CACHE WITH_FUZZING PROPERTY STRINGS none libfuzzer ossfuzz)
 
-if (NOT WITH_UNWIND)
+if (WITH_UNWIND STREQUAL none)
   set (CMAKE_DISABLE_FIND_PACKAGE_Unwind ON)
-endif (NOT WITH_UNWIND)
+endif (WITH_UNWIND STREQUAL none)
 
 if (NOT WITH_GTEST)
   set (CMAKE_DISABLE_FIND_PACKAGE_GTest ON)
@@ -91,13 +93,42 @@ find_package (Threads)
 find_package (Unwind)
 
 if (Unwind_FOUND)
-  set (HAVE_LIB_UNWIND 1)
-else (Unwind_FOUND)
+  cmake_push_check_state (RESET)
+  set (CMAKE_REQUIRED_LIBRARIES unwind::unwind)
+
   # Check whether linking actually succeeds. ARM toolchains of LLVM unwind
   # implementation do not necessarily provide the _Unwind_Backtrace function
   # which causes the previous check to succeed but the linking to fail.
   check_cxx_symbol_exists (_Unwind_Backtrace unwind.h HAVE__UNWIND_BACKTRACE)
   check_cxx_symbol_exists (_Unwind_GetIP unwind.h HAVE__UNWIND_GETIP)
+
+  check_cxx_symbol_exists (unw_get_reg libunwind.h HAVE_UNW_GET_REG)
+  check_cxx_symbol_exists (unw_getcontext libunwind.h HAVE_UNW_GETCONTEXT)
+  check_cxx_symbol_exists (unw_init_local libunwind.h HAVE_UNW_INIT_LOCAL)
+  check_cxx_symbol_exists (unw_step libunwind.h HAVE_UNW_STEP)
+
+  if (HAVE__UNWIND_BACKTRACE AND HAVE__UNWIND_GETIP)
+    set (_HAVE_UNWIND 1)
+  endif (HAVE__UNWIND_BACKTRACE AND HAVE__UNWIND_GETIP)
+
+  if (HAVE_UNW_GET_REG AND HAVE_UNW_GETCONTEXT AND HAVE_UNW_INIT_LOCAL AND HAVE_UNW_STEP)
+    set (_HAVE_LIBUNWIND 1)
+  endif (HAVE_UNW_GET_REG AND HAVE_UNW_GETCONTEXT AND HAVE_UNW_INIT_LOCAL AND HAVE_UNW_STEP)
+
+  if (WITH_UNWIND STREQUAL unwind)
+    if (_HAVE_UNWIND)
+      set (HAVE_UNWIND 1)
+    endif (_HAVE_UNWIND)
+  elseif (WITH_UNWIND STREQUAL libunwind)
+    if (_HAVE_LIBUNWIND)
+      set (HAVE_LIBUNWIND 1)
+    endif (_HAVE_LIBUNWIND)
+  endif (WITH_UNWIND STREQUAL unwind)
+
+  unset (_HAVE_LIBUNWIND)
+  unset (_HAVE_UNWIND)
+
+  cmake_pop_check_state ()
 endif (Unwind_FOUND)
 
 check_include_file_cxx (dlfcn.h HAVE_DLFCN_H)

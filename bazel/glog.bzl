@@ -73,8 +73,7 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
-        "-DHAVE__UNWIND_BACKTRACE",
-        "-DHAVE__UNWIND_GETIP",
+        "-DHAVE_UNWIND",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
