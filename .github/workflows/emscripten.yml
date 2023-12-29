@@ -40,18 +40,11 @@ jobs:
         env:
           CXXFLAGS: -Wall -Wextra -Wsign-conversion -Wtautological-compare -Wformat-nonliteral -Wundef -Werror -Wno-error=wasm-exception-spec ${{env.CXXFLAGS}}
         run: |
-          cmake -S . -B build_${{matrix.build_type}} \
+          emcmake cmake -S . -B build_${{matrix.build_type}} \
             -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} \
-            -DCMAKE_AR=$(which emar) \
-            -DCMAKE_CXX_COMPILER=$(which em++) \
             -DCMAKE_CXX_STANDARD=${{matrix.std}} \
             -DCMAKE_CXX_STANDARD_REQUIRED=ON \
-            -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
-            -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
-            -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY \
-            -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER \
             -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/install \
-            -DCMAKE_RANLIB=$(which emranlib) \
             -G Ninja \
             -Werror
 
