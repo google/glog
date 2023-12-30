@@ -40,6 +40,7 @@
 #include "glog/logging.h"
 #include "googletest.h"
 #include "utilities.h"
+#include "stacktrace.h"
 
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
@@ -60,7 +61,8 @@ using namespace google;
 
 #  define always_inline
 
-#  if defined(__ELF__) || defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
+#  if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H) || \
+      defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
 // A wrapper function for Symbolize() to make the unit test simple.
 static const char* TrySymbolize(void* pc, google::SymbolizeOptions options =
                                               google::SymbolizeOptions::kNone) {
@@ -73,8 +75,7 @@ static const char* TrySymbolize(void* pc, google::SymbolizeOptions options =
 }
 #  endif
 
-#  if defined(__ELF__)
-
+#  if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
 // This unit tests make sense only with GCC.
 // Uses lots of GCC specific features.
 #    if defined(__GNUC__) && !defined(__OPENCC__)
@@ -449,15 +450,15 @@ __declspec(noinline) void TestWithReturnAddress() {
 #    endif
   cout << "Test case TestWithReturnAddress passed." << endl;
 }
-#  endif  // __ELF__
-#endif    // HAVE_STACKTRACE
+#  endif
+#endif  // HAVE_STACKTRACE
 
 int main(int argc, char** argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   InitGoogleTest(&argc, argv);
 #if defined(HAVE_SYMBOLIZE) && defined(HAVE_STACKTRACE)
-#  if defined(__ELF__)
+#  if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
   // We don't want to get affected by the callback interface, that may be
   // used to install some callback function at InitGoogle() time.
   InstallSymbolizeCallback(nullptr);
@@ -472,7 +473,7 @@ int main(int argc, char** argv) {
 #  else   // GLOG_OS_WINDOWS
   printf("PASS (no symbolize_unittest support)\n");
   return 0;
-#  endif  // __ELF__
+#  endif  // defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
 #else
   printf("PASS (no symbolize support)\n");
   return 0;

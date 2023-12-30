@@ -52,6 +52,15 @@
 /* Define to 1 if you have the <syslog.h> header file. */
 #cmakedefine HAVE_SYSLOG_H
 
+/* Define to 1 if you have the <elf.h> header file. */
+#cmakedefine HAVE_ELF_H
+
+/* Define to 1 if you have the <sys/exec_elf.h> header file. */
+#cmakedefine HAVE_SYS_EXEC_ELF_H
+
+/* Define to 1 if you have the <link.h> header file. */
+#cmakedefine HAVE_LINK_H
+
 /* Define to 1 if you have the <sys/syscall.h> header file. */
 #cmakedefine HAVE_SYS_SYSCALL_H
 

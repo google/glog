@@ -61,6 +61,14 @@
 #include "config.h"
 #include "glog/platform.h"
 
+#if defined(HAVE_LINK_H)
+#  include <link.h>  // For ElfW() macro.
+#elif defined(HAVE_ELF_H)
+#  include <elf.h>
+#elif defined(HAVE_SYS_EXEC_ELF_H)
+#  include <sys/exec_elf.h>
+#endif
+
 #if defined(GLOG_USE_GLOG_EXPORT)
 #  include "glog/export.h"
 #endif
@@ -72,7 +80,7 @@
 #ifndef GLOG_NO_SYMBOLIZE_DETECTION
 #  ifndef HAVE_SYMBOLIZE
 // defined by gcc
-#    if defined(__ELF__) && defined(GLOG_OS_LINUX)
+#    if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
 #      define HAVE_SYMBOLIZE
 #    elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
@@ -86,26 +94,11 @@
 
 #ifdef HAVE_SYMBOLIZE
 
-#  if defined(__ELF__)  // defined by gcc
-#    if defined(__OpenBSD__)
-#      include <sys/exec_elf.h>
-#    else
-#      include <elf.h>
-#    endif
+#  if !defined(SIZEOF_VOID_P) && defined(__SIZEOF_POINTER__)
+#    define SIZEOF_VOID_P __SIZEOF_POINTER__
+#  endif
 
-#    if !defined(GLOG_OS_ANDROID)
-#      include <link.h>  // For ElfW() macro.
-#    endif
-
-// For systems where SIZEOF_VOID_P is not defined, determine it
-// based on __LP64__ (defined by gcc on 64-bit systems)
-#    if !defined(SIZEOF_VOID_P)
-#      if defined(__LP64__)
-#        define SIZEOF_VOID_P 8
-#      else
-#        define SIZEOF_VOID_P 4
-#      endif
-#    endif
+#  if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
 
 // If there is no ElfW macro, let's define it by ourself.
 #    ifndef ElfW
@@ -130,7 +123,7 @@ bool GetSectionHeaderByName(int fd, const char* name, size_t name_len,
 }  // namespace glog_internal_namespace_
 }  // namespace google
 
-#  endif /* __ELF__ */
+#  endif
 
 namespace google {
 inline namespace glog_internal_namespace_ {
