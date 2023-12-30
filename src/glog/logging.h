@@ -68,11 +68,25 @@
 #  if __has_attribute(used)
 #    define GLOG_USED __attribute__((used))
 #  endif  // __has_attribute(used)
+#  if __has_attribute(noreturn)
+#    define GLOG_NORETURN __attribute__((noreturn))
+#  endif  // __has_attribute(noreturn)
+#  if __has_attribute(noinline)
+#    define GLOG_NOINLINE __attribute__((noinline))
+#  endif  // __has_attribute(noinline)
 #endif    // defined(__has_attribute)
 
 #if !defined(GLOG_USED)
 #  define GLOG_USED
 #endif  // !defined(GLOG_USED)
+
+#if !defined(GLOG_NORETURN)
+#  define GLOG_NORETURN
+#endif  // !defined(GLOG_NORETURN)
+
+#if !defined(GLOG_NOINLINE)
+#  define GLOG_NOINLINE
+#endif  // !defined(GLOG_NOINLINE)
 
 #include "glog/log_severity.h"
 #include "glog/vlog_is_on.h"
@@ -499,11 +513,7 @@ GLOG_EXPORT bool IsGoogleLoggingInitialized();
 // Shutdown google's logging library.
 GLOG_EXPORT void ShutdownGoogleLogging();
 
-#if defined(__GNUC__)
-typedef void (*logging_fail_func_t)() __attribute__((noreturn));
-#else
-typedef void (*logging_fail_func_t)();
-#endif
+typedef void (*logging_fail_func_t)() GLOG_NORETURN;
 
 // Install a function which will be called after LOG(FATAL).
 GLOG_EXPORT void InstallFailureFunction(logging_fail_func_t fail_func);
@@ -652,13 +662,8 @@ GLOG_EXPORT void MakeCheckOpValueString(std::ostream* os,
 
 // Build the error message string. Specify no inlining for code size.
 template <typename T1, typename T2>
-std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
-#if defined(__has_attribute)
-#  if __has_attribute(used)
-    __attribute__((noinline))
-#  endif
-#endif
-    ;
+std::string* MakeCheckOpString(const T1& v1, const T2& v2,
+                               const char* exprtext) GLOG_NOINLINE;
 
 namespace base {
 

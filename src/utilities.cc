@@ -150,9 +150,7 @@ static void DumpStackTrace(int skip_count, DebugWriter* writerfn, void* arg) {
   }
 }
 
-#  ifdef __GNUC__
-__attribute__((noreturn))
-#  endif
+GLOG_NORETURN
 static void
 DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, nullptr);

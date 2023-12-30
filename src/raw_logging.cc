@@ -31,6 +31,7 @@
 //
 // logging_unittest.cc covers the functionality herein
 
+#include <atomic>
 #include <cstdarg>
 #include <cstdio>
 #include <iomanip>
