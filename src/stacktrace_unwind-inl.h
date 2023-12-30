@@ -1,4 +1,4 @@
-// Copyright (c) 2005 - 2007, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,6 @@
 // Produce stack trace using libgcc
 
 #include <unwind.h>  // ABI defined unwinder
-
-#include <cstdlib>  // for nullptr
 
 #include "stacktrace.h"
 
