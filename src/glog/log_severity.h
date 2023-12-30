@@ -51,20 +51,20 @@
 using LogSeverity = int;
 
 const int GLOG_INFO = 0, GLOG_WARNING = 1, GLOG_ERROR = 2, GLOG_FATAL = 3,
-  NUM_SEVERITIES = 4;
+          NUM_SEVERITIES = 4;
 #ifndef GLOG_NO_ABBREVIATED_SEVERITIES
-# ifdef ERROR
+#  ifdef ERROR
 #  error ERROR macro is defined. Define GLOG_NO_ABBREVIATED_SEVERITIES before including logging.h. See the document for detail.
-# endif
-const int INFO = GLOG_INFO, WARNING = GLOG_WARNING,
-  ERROR = GLOG_ERROR, FATAL = GLOG_FATAL;
+#  endif
+const int INFO = GLOG_INFO, WARNING = GLOG_WARNING, ERROR = GLOG_ERROR,
+          FATAL = GLOG_FATAL;
 #endif
 
 // DFATAL is FATAL in debug mode, ERROR in normal mode
 #ifdef NDEBUG
-#define DFATAL_LEVEL ERROR
+#  define DFATAL_LEVEL ERROR
 #else
-#define DFATAL_LEVEL FATAL
+#  define DFATAL_LEVEL FATAL
 #endif
 
 extern GLOG_EXPORT const char* const LogSeverityNames[NUM_SEVERITIES];
@@ -89,10 +89,10 @@ extern GLOG_EXPORT const char* const LogSeverityNames[NUM_SEVERITIES];
 //
 #ifdef NDEBUG
 enum { DEBUG_MODE = 0 };
-#define IF_DEBUG_MODE(x)
+#  define IF_DEBUG_MODE(x)
 #else
 enum { DEBUG_MODE = 1 };
-#define IF_DEBUG_MODE(x) x
+#  define IF_DEBUG_MODE(x) x
 #endif
 
 #endif  // BASE_LOG_SEVERITY_H__

@@ -33,14 +33,14 @@
 #include "googletest.h"
 
 #ifdef GLOG_USE_GFLAGS
-#include <gflags/gflags.h>
+#  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
 
 #ifdef HAVE_LIB_GMOCK
-#include <gmock/gmock.h>
+#  include <gmock/gmock.h>
 
-#include "mock-log.h"
+#  include "mock-log.h"
 // Introduce several symbols from gmock.
 using google::glog_testing::ScopedMockLog;
 using testing::_;
@@ -65,7 +65,7 @@ TEST(CleanImmediately, logging) {
   google::DisableLogCleaner();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   FLAGS_colorlogtostderr = false;
   FLAGS_timestamp_in_logfile_name = true;
 #ifdef GLOG_USE_GFLAGS

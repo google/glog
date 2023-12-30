@@ -31,11 +31,11 @@
 
 #include <cstdint>  // for uintptr_t
 
-#include "utilities.h"   // for OS_* macros
+#include "utilities.h"  // for OS_* macros
 
 #if !defined(GLOG_OS_WINDOWS)
-#include <unistd.h>
-#include <sys/mman.h>
+#  include <sys/mman.h>
+#  include <unistd.h>
 #endif
 
 #include <cstdio>  // for nullptr
@@ -48,9 +48,9 @@ namespace google {
 // stackframe, or return nullptr if no stackframe can be found. Perform sanity
 // checks (the strictness of which is controlled by the boolean parameter
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
-template<bool STRICT_UNWINDING>
-static void **NextStackFrame(void **old_sp) {
-  void **new_sp = static_cast<void **>(*old_sp);
+template <bool STRICT_UNWINDING>
+static void** NextStackFrame(void** old_sp) {
+  void** new_sp = static_cast<void**>(*old_sp);
 
   // Check that the transition from frame pointer old_sp to frame
   // pointer new_sp isn't clearly bogus
@@ -75,7 +75,7 @@ static void **NextStackFrame(void **old_sp) {
       return nullptr;
     }
   }
-  if (reinterpret_cast<uintptr_t>(new_sp) & (sizeof(void *) - 1)) {
+  if (reinterpret_cast<uintptr_t>(new_sp) & (sizeof(void*) - 1)) {
     return nullptr;
   }
 #ifdef __i386__
@@ -92,9 +92,9 @@ static void **NextStackFrame(void **old_sp) {
     // Note: NextStackFrame<false>() is only called while the program
     //       is already on its last leg, so it's ok to be slow here.
     static int page_size = getpagesize();
-    void *new_sp_aligned =
-        reinterpret_cast<void *>(reinterpret_cast<uintptr_t>(new_sp) &
-                                 static_cast<uintptr_t>(~(page_size - 1)));
+    void* new_sp_aligned =
+        reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(new_sp) &
+                                static_cast<uintptr_t>(~(page_size - 1)));
     if (msync(new_sp_aligned, static_cast<size_t>(page_size), MS_ASYNC) == -1) {
       return nullptr;
     }
@@ -105,12 +105,12 @@ static void **NextStackFrame(void **old_sp) {
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  void **sp;
+  void** sp;
 
 #ifdef __GNUC__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 402
-#define USE_BUILTIN_FRAME_ADDRESS
-#endif
+#  if __GNUC__ * 100 + __GNUC_MINOR__ >= 402
+#    define USE_BUILTIN_FRAME_ADDRESS
+#  endif
 #endif
 
 #ifdef USE_BUILTIN_FRAME_ADDRESS
@@ -121,7 +121,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   //    sp[1]   caller address
   //    sp[2]   first argument
   //    ...
-  sp = (void **)&result - 2;
+  sp = (void**)&result - 2;
 #elif defined(__x86_64__)
   // __builtin_frame_address(0) can return the wrong address on gcc-4.1.0-k8
   unsigned long rbp;
@@ -132,10 +132,10 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   // would be (before this __asm__ instruction) to call Noop() defined as
   //   static void Noop() __attribute__ ((noinline));  // prevent inlining
   //   static void Noop() { asm(""); }  // prevent optimizing-away
-  __asm__ volatile ("mov %%rbp, %0" : "=r" (rbp));
+  __asm__ volatile("mov %%rbp, %0" : "=r"(rbp));
   // Arguments are passed in registers on x86-64, so we can't just
   // offset from &result
-  sp = (void **) rbp;
+  sp = (void**)rbp;
 #endif
 
   int n = 0;
@@ -148,7 +148,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
     if (skip_count > 0) {
       skip_count--;
     } else {
-      result[n++] = *(sp+1);
+      result[n++] = *(sp + 1);
     }
     // Use strict unwinding rules.
     sp = NextStackFrame<true>(sp);

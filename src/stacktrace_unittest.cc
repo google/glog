@@ -38,7 +38,7 @@
 #include "utilities.h"
 
 #ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
-# include <execinfo.h>
+#  include <execinfo.h>
 #endif
 
 using namespace google;
@@ -59,68 +59,74 @@ struct AddressRange {
 // Expected function [start,end] range.
 AddressRange expected_range[BACKTRACE_STEPS];
 
-#if __GNUC__
+#  if __GNUC__
 // Using GCC extension: address of a label can be taken with '&&label'.
 // Start should be a label somewhere before recursive call, end somewhere
 // after it.
-#define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange)           \
-  do {                                                                   \
-    (prange)->start = &&start_label;                                     \
-    (prange)->end = &&end_label;                                         \
-    CHECK_LT((prange)->start, (prange)->end);                            \
-  } while (0)
+#    define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange) \
+      do {                                                         \
+        (prange)->start = &&start_label;                           \
+        (prange)->end = &&end_label;                               \
+        CHECK_LT((prange)->start, (prange)->end);                  \
+      } while (0)
 // This macro expands into "unmovable" code (opaque to GCC), and that
 // prevents GCC from moving a_label up or down in the code.
 // Without it, there is no code following the 'end' label, and GCC
 // (4.3.1, 4.4.0) thinks it safe to assign &&end an address that is before
 // the recursive call.
-#define DECLARE_ADDRESS_LABEL(a_label)                                   \
-  a_label: do { __asm__ __volatile__(""); } while (0)
+#    define DECLARE_ADDRESS_LABEL(a_label) \
+    a_label:                               \
+      do {                                 \
+        __asm__ __volatile__("");          \
+      } while (0)
 // Gcc 4.4.0 may split function into multiple chunks, and the chunk
 // performing recursive call may end up later in the code then the return
 // instruction (this actually happens with FDO).
 // Adjust function range from __builtin_return_address.
-#define ADJUST_ADDRESS_RANGE_FROM_RA(prange)                             \
-  do {                                                                   \
-    void *ra = __builtin_return_address(0);                              \
-    CHECK_LT((prange)->start, ra);                                       \
-    if (ra > (prange)->end) {                                            \
-      printf("Adjusting range from %p..%p to %p..%p\n",                  \
-             (prange)->start, (prange)->end,                             \
-             (prange)->start, ra);                                       \
-      (prange)->end = ra;                                                \
-    }                                                                    \
-  } while (0)
-#else
+#    define ADJUST_ADDRESS_RANGE_FROM_RA(prange)                             \
+      do {                                                                   \
+        void* ra = __builtin_return_address(0);                              \
+        CHECK_LT((prange)->start, ra);                                       \
+        if (ra > (prange)->end) {                                            \
+          printf("Adjusting range from %p..%p to %p..%p\n", (prange)->start, \
+                 (prange)->end, (prange)->start, ra);                        \
+          (prange)->end = ra;                                                \
+        }                                                                    \
+      } while (0)
+#  else
 // Assume the Check* functions below are not longer than 256 bytes.
-#define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange)           \
-  do {                                                                   \
-    (prange)->start = reinterpret_cast<const void *>(&fn);               \
-    (prange)->end = reinterpret_cast<const char *>(&fn) + 256;           \
-  } while (0)
-#define DECLARE_ADDRESS_LABEL(a_label) do { } while (0)
-#define ADJUST_ADDRESS_RANGE_FROM_RA(prange) do { } while (0)
-#endif  // __GNUC__
+#    define INIT_ADDRESS_RANGE(fn, start_label, end_label, prange) \
+      do {                                                         \
+        (prange)->start = reinterpret_cast<const void*>(&fn);      \
+        (prange)->end = reinterpret_cast<const char*>(&fn) + 256;  \
+      } while (0)
+#    define DECLARE_ADDRESS_LABEL(a_label) \
+      do {                                 \
+      } while (0)
+#    define ADJUST_ADDRESS_RANGE_FROM_RA(prange) \
+      do {                                       \
+      } while (0)
+#  endif  // __GNUC__
 
 //-----------------------------------------------------------------------//
 
-static void CheckRetAddrIsInFunction(void *ret_addr, const AddressRange &range)
-{
+static void CheckRetAddrIsInFunction(void* ret_addr,
+                                     const AddressRange& range) {
   CHECK_GE(ret_addr, range.start);
   CHECK_LE(ret_addr, range.end);
 }
 
 //-----------------------------------------------------------------------//
 
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-label-as-value"
-#endif
+#  if defined(__clang__)
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wgnu-label-as-value"
+#  endif
 
 void ATTRIBUTE_NOINLINE CheckStackTrace(int);
 static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
   const int STACK_LEN = 10;
-  void *stack[STACK_LEN];
+  void* stack[STACK_LEN];
   int size;
 
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[1]);
@@ -132,8 +138,8 @@ static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
   CHECK_LE(size, STACK_LEN);
 
   if (true) {
-#ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
-    char **strings = backtrace_symbols(stack, size);
+#  ifdef HAVE_EXECINFO_BACKTRACE_SYMBOLS
+    char** strings = backtrace_symbols(stack, size);
     printf("Obtained %d stack frames.\n", size);
     for (int i = 0; i < size; i++) {
       printf("%s %p\n", strings[i], stack[i]);
@@ -146,11 +152,11 @@ static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
 
     printf("CheckStackTrace() addr: %p\n", p.p2);
     free(strings);
-#endif
+#  endif
   }
   for (int i = 0; i < BACKTRACE_STEPS; i++) {
-    printf("Backtrace %d: expected: %p..%p  actual: %p ... ",
-           i, expected_range[i].start, expected_range[i].end, stack[i]);
+    printf("Backtrace %d: expected: %p..%p  actual: %p ... ", i,
+           expected_range[i].start, expected_range[i].end, stack[i]);
     fflush(stdout);
     CheckRetAddrIsInFunction(stack[i], expected_range[i]);
     printf("OK\n");
@@ -198,7 +204,7 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
   DECLARE_ADDRESS_LABEL(end);
 }
 
-#ifndef __GNUC__
+#  ifndef __GNUC__
 // On non-GNU environment, we use the address of `CheckStackTrace` to
 // guess the address range of this function. This guess is wrong for
 // non-static function on Windows. This is probably because
@@ -206,8 +212,9 @@ static void ATTRIBUTE_NOINLINE CheckStackTrace1(int i) {
 // not the actual address of `CheckStackTrace`.
 // See https://github.com/google/glog/issues/421 for the detail.
 static
-#endif
-void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
+#  endif
+    void ATTRIBUTE_NOINLINE
+    CheckStackTrace(int i) {
   INIT_ADDRESS_RANGE(CheckStackTrace, start, end, &expected_range[5]);
   DECLARE_ADDRESS_LABEL(start);
   for (int j = i; j >= 0; j--) {
@@ -216,13 +223,13 @@ void ATTRIBUTE_NOINLINE CheckStackTrace(int i) {
   DECLARE_ADDRESS_LABEL(end);
 }
 
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
+#  if defined(__clang__)
+#    pragma clang diagnostic pop
+#  endif
 
 //-----------------------------------------------------------------------//
 
-int main(int, char ** argv) {
+int main(int, char** argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
 
@@ -235,12 +242,12 @@ int main(int, char ** argv) {
 #else
 int main() {
 
-#ifdef GLOG_BAZEL_BUILD
+#  ifdef GLOG_BAZEL_BUILD
   printf("HAVE_STACKTRACE is expected to be defined in Bazel tests\n");
   exit(EXIT_FAILURE);
-#endif  // GLOG_BAZEL_BUILD
+#  endif  // GLOG_BAZEL_BUILD
 
   printf("PASS (no stacktrace support)\n");
   return 0;
 }
-#endif  // HAVE_STACKTRACE
+#endif    // HAVE_STACKTRACE

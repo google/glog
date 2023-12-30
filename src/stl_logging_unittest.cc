@@ -62,14 +62,14 @@ static void TestSTLLogging() {
 
   {
     // Test a sorted pair associative container.
-    map< int, string > m;
+    map<int, string> m;
     m[20] = "twenty";
     m[10] = "ten";
     m[30] = "thirty";
     ostringstream ss;
     ss << m;
     EXPECT_EQ(ss.str(), "(10, ten) (20, twenty) (30, thirty)");
-    map< int, string > copied_m(m);
+    map<int, string> copied_m(m);
     CHECK_EQ(m, copied_m);  // This must compile.
   }
 
@@ -95,14 +95,14 @@ static void TestSTLLogging() {
   {
     // Test a sorted pair associative container.
     // Use a non-default comparison functor.
-    map<int, string, greater<> > m;
+    map<int, string, greater<>> m;
     m[20] = "twenty";
     m[10] = "ten";
     m[30] = "thirty";
     ostringstream ss;
     ss << m;
     EXPECT_EQ(ss.str(), "(30, thirty) (20, twenty) (10, ten)");
-    map<int, string, greater<> > copied_m(m);
+    map<int, string, greater<>> copied_m(m);
     CHECK_EQ(m, copied_m);  // This must compile.
   }
 }

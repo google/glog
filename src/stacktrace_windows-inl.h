@@ -31,10 +31,11 @@
 //
 // Windows implementation - just use CaptureStackBackTrace
 
+#include <dbghelp.h>
+
 #include "config.h"
 #include "port.h"
 #include "stacktrace.h"
-#include <dbghelp.h>
 
 namespace google {
 

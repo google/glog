@@ -35,7 +35,7 @@
 #include "utilities.h"
 
 #if defined(HAVE_PTHREAD)
-# include <pthread.h>
+#  include <pthread.h>
 #endif
 #include <csignal>
 #include <cstdio>
@@ -45,7 +45,7 @@
 #include "glog/logging.h"
 
 #ifdef GLOG_USE_GFLAGS
-#include <gflags/gflags.h>
+#  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
 
@@ -72,12 +72,12 @@ static void WriteToStdout(const char* data, size_t size) {
   }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 #if defined(HAVE_STACKTRACE) && defined(HAVE_SYMBOLIZE)
   InitGoogleLogging(argv[0]);
-#ifdef GLOG_USE_GFLAGS
+#  ifdef GLOG_USE_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
-#endif
+#  endif
   InstallFailureSignalHandler();
   const std::string command = argc > 1 ? argv[1] : "none";
   if (command == "segv") {
@@ -85,26 +85,27 @@ int main(int argc, char **argv) {
     LOG(INFO) << "create the log file";
     LOG(INFO) << "a message before segv";
     // We assume 0xDEAD is not writable.
-    int *a = (int*)0xDEAD;
+    int* a = (int*)0xDEAD;
     *a = 0;
   } else if (command == "loop") {
     fprintf(stderr, "looping\n");
-    while (true);
+    while (true)
+      ;
   } else if (command == "die_in_thread") {
-#if defined(HAVE_PTHREAD)
+#  if defined(HAVE_PTHREAD)
     pthread_t thread;
     pthread_create(&thread, nullptr, &DieInThread, nullptr);
     pthread_join(thread, nullptr);
-#else
+#  else
     fprintf(stderr, "no pthread\n");
     return 1;
-#endif
+#  endif
   } else if (command == "dump_to_stdout") {
     InstallFailureWriter(WriteToStdout);
     abort();
   } else if (command == "installed") {
     fprintf(stderr, "signal handler installed: %s\n",
-        IsFailureSignalHandlerInstalled() ? "true" : "false");
+            IsFailureSignalHandlerInstalled() ? "true" : "false");
   } else {
     // Tell the shell script
     puts("OK");

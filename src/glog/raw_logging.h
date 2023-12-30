@@ -44,8 +44,8 @@ namespace google {
 #include "glog/vlog_is_on.h"
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wvariadic-macros"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wvariadic-macros"
 #endif
 
 // This is similar to LOG(severity) << format... and VLOG(level) << format..,
@@ -85,46 +85,46 @@ namespace google {
 // The following STRIP_LOG testing is performed in the header file so that it's
 // possible to completely compile out the logging code and the log messages.
 #if !defined(STRIP_LOG) || STRIP_LOG == 0
-#define RAW_VLOG(verboselevel, ...) \
-  do {                              \
-    if (VLOG_IS_ON(verboselevel)) { \
-      RAW_LOG_INFO(__VA_ARGS__);    \
-    }                               \
-  } while (0)
+#  define RAW_VLOG(verboselevel, ...) \
+    do {                              \
+      if (VLOG_IS_ON(verboselevel)) { \
+        RAW_LOG_INFO(__VA_ARGS__);    \
+      }                               \
+    } while (0)
 #else
-#define RAW_VLOG(verboselevel, ...) RawLogStub__(0, __VA_ARGS__)
+#  define RAW_VLOG(verboselevel, ...) RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG == 0
 
 #if !defined(STRIP_LOG) || STRIP_LOG == 0
-#define RAW_LOG_INFO(...) \
-  google::RawLog__(google::GLOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#  define RAW_LOG_INFO(...) \
+    google::RawLog__(google::GLOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define RAW_LOG_INFO(...) google::RawLogStub__(0, __VA_ARGS__)
+#  define RAW_LOG_INFO(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG == 0
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 1
-#define RAW_LOG_WARNING(...) \
-  google::RawLog__(google::GLOG_WARNING, __FILE__, __LINE__, __VA_ARGS__)
+#  define RAW_LOG_WARNING(...) \
+    google::RawLog__(google::GLOG_WARNING, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define RAW_LOG_WARNING(...) google::RawLogStub__(0, __VA_ARGS__)
+#  define RAW_LOG_WARNING(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG <= 1
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 2
-#define RAW_LOG_ERROR(...) \
-  google::RawLog__(google::GLOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#  define RAW_LOG_ERROR(...) \
+    google::RawLog__(google::GLOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define RAW_LOG_ERROR(...) google::RawLogStub__(0, __VA_ARGS__)
+#  define RAW_LOG_ERROR(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG <= 2
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 3
-#define RAW_LOG_FATAL(...) \
-  google::RawLog__(google::GLOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+#  define RAW_LOG_FATAL(...) \
+    google::RawLog__(google::GLOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 #else
-#define RAW_LOG_FATAL(...)                \
-  do {                                    \
-    google::RawLogStub__(0, __VA_ARGS__); \
-    exit(EXIT_FAILURE);                   \
-  } while (0)
+#  define RAW_LOG_FATAL(...)                \
+    do {                                    \
+      google::RawLogStub__(0, __VA_ARGS__); \
+      exit(EXIT_FAILURE);                   \
+    } while (0)
 #endif  // STRIP_LOG <= 3
 
 // Similar to CHECK(condition) << message,
@@ -142,20 +142,20 @@ namespace google {
 // Debug versions of RAW_LOG and RAW_CHECK
 #ifndef NDEBUG
 
-#define RAW_DLOG(severity, ...) RAW_LOG(severity, __VA_ARGS__)
-#define RAW_DCHECK(condition, message) RAW_CHECK(condition, message)
+#  define RAW_DLOG(severity, ...) RAW_LOG(severity, __VA_ARGS__)
+#  define RAW_DCHECK(condition, message) RAW_CHECK(condition, message)
 
 #else  // NDEBUG
 
-#define RAW_DLOG(severity, ...) \
-  while (false) RAW_LOG(severity, __VA_ARGS__)
-#define RAW_DCHECK(condition, message) \
-  while (false) RAW_CHECK(condition, message)
+#  define RAW_DLOG(severity, ...) \
+    while (false) RAW_LOG(severity, __VA_ARGS__)
+#  define RAW_DCHECK(condition, message) \
+    while (false) RAW_CHECK(condition, message)
 
 #endif  // NDEBUG
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
 
 // Stub log function used to work around for unused variable warnings when
@@ -169,9 +169,9 @@ static inline void RawLogStub__(int /* ignored */, ...) {}
 GLOG_EXPORT void RawLog__(LogSeverity severity, const char* file, int line,
                           const char* format, ...)
 #if defined(__has_attribute)
-#if __has_attribute(used)
+#  if __has_attribute(used)
     __attribute__((__format__(__printf__, 4, 5)))
-#endif
+#  endif
 #endif
     ;
 }  // namespace google

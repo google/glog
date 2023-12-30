@@ -1,10 +1,10 @@
 // Copyright (c) 2008, Google Inc.
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 // notice, this list of conditions and the following disclaimer.
 //     * Redistributions in binary form must reproduce the above
@@ -14,7 +14,7 @@
 //     * Neither the name of Google Inc. nor the names of its
 // contributors may be used to endorse or promote products derived from
 // this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -36,16 +36,14 @@
 class GoogleInitializer {
  public:
   using void_function = void (*)();
-  GoogleInitializer(const char*, void_function f) {
-    f();
-  }
+  GoogleInitializer(const char*, void_function f) { f(); }
 };
 
-#define REGISTER_MODULE_INITIALIZER(name, body)                 \
-  namespace {                                                   \
-    static void google_init_module_##name () { body; }          \
-    GoogleInitializer google_initializer_module_##name(#name,   \
-            google_init_module_##name);                         \
+#define REGISTER_MODULE_INITIALIZER(name, body)       \
+  namespace {                                         \
+  static void google_init_module_##name() { body; }   \
+  GoogleInitializer google_initializer_module_##name( \
+      #name, google_init_module_##name);              \
   }
 
 #endif /* _GOOGLEINIT_H */

@@ -57,13 +57,13 @@ int CheckNoReturn(bool b) {
 }
 
 struct A {};
-std::ostream &operator<<(std::ostream &str, const A &) { return str; }
+std::ostream& operator<<(std::ostream& str, const A&) { return str; }
 
 namespace {
 void handle_abort(int /*code*/) { std::exit(EXIT_FAILURE); }
 }  // namespace
 
-int main(int, char *argv[]) {
+int main(int, char* argv[]) {
 #if defined(_MSC_VER)
   // Avoid presenting an interactive dialog that will cause the test to time
   // out.

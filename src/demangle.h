@@ -78,7 +78,7 @@ namespace google {
 // Demangle "mangled".  On success, return true and write the
 // demangled symbol name to "out".  Otherwise, return false.
 // "out" is modified even if demangling is unsuccessful.
-bool GLOG_EXPORT Demangle(const char *mangled, char *out, size_t out_size);
+bool GLOG_EXPORT Demangle(const char* mangled, char* out, size_t out_size);
 
 }  // namespace google
 

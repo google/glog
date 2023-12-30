@@ -36,9 +36,9 @@
 
 // printf macros for size_t, in the style of inttypes.h
 #ifdef _LP64
-#define __PRIS_PREFIX "z"
+#  define __PRIS_PREFIX "z"
 #else
-#define __PRIS_PREFIX
+#  define __PRIS_PREFIX
 #endif
 
 // Use these macros after a % in a printf format string
@@ -58,22 +58,22 @@
 #include "glog/logging.h"
 
 #if defined(GLOG_OS_WINDOWS)
-# include "port.h"
+#  include "port.h"
 #endif
 
 #include "config.h"
 
 #if defined(HAVE_UNISTD_H)
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #if !defined(HAVE_SSIZE_T)
-#if defined(GLOG_OS_WINDOWS)
-#include <basetsd.h>
+#  if defined(GLOG_OS_WINDOWS)
+#    include <basetsd.h>
 using ssize_t = SSIZE_T;
-#else
+#  else
 using ssize_t = std::ptrdiff_t;
-#endif
+#  endif
 #endif
 
 // There are three different ways we can try to get the stack trace:
@@ -99,45 +99,45 @@ using ssize_t = std::ptrdiff_t;
 // Some code may do that.
 
 #if defined(HAVE_LIBUNWIND)
-# define STACKTRACE_H "stacktrace_libunwind-inl.h"
+#  define STACKTRACE_H "stacktrace_libunwind-inl.h"
 #elif defined(HAVE_UNWIND)
-# define STACKTRACE_H "stacktrace_unwind-inl.h"
+#  define STACKTRACE_H "stacktrace_unwind-inl.h"
 #elif !defined(NO_FRAME_POINTER)
-# if defined(__i386__) && __GNUC__ >= 2
-#  define STACKTRACE_H "stacktrace_x86-inl.h"
-# elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
-#  define STACKTRACE_H "stacktrace_powerpc-inl.h"
-# elif defined(GLOG_OS_WINDOWS)
-#  define STACKTRACE_H "stacktrace_windows-inl.h"
-# endif
+#  if defined(__i386__) && __GNUC__ >= 2
+#    define STACKTRACE_H "stacktrace_x86-inl.h"
+#  elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
+#    define STACKTRACE_H "stacktrace_powerpc-inl.h"
+#  elif defined(GLOG_OS_WINDOWS)
+#    define STACKTRACE_H "stacktrace_windows-inl.h"
+#  endif
 #endif
 
 #if !defined(STACKTRACE_H) && defined(HAVE_EXECINFO_BACKTRACE)
-# define STACKTRACE_H "stacktrace_generic-inl.h"
+#  define STACKTRACE_H "stacktrace_generic-inl.h"
 #endif
 
 #if defined(STACKTRACE_H)
-# define HAVE_STACKTRACE
+#  define HAVE_STACKTRACE
 #endif
 
 #ifndef GLOG_NO_SYMBOLIZE_DETECTION
-#ifndef HAVE_SYMBOLIZE
+#  ifndef HAVE_SYMBOLIZE
 // defined by gcc
-#if defined(__ELF__) && defined(GLOG_OS_LINUX)
-# define HAVE_SYMBOLIZE
-#elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
+#    if defined(__ELF__) && defined(GLOG_OS_LINUX)
+#      define HAVE_SYMBOLIZE
+#    elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
-# define HAVE_SYMBOLIZE
-#elif defined(GLOG_OS_WINDOWS)
+#      define HAVE_SYMBOLIZE
+#    elif defined(GLOG_OS_WINDOWS)
 // Use DbgHelp to symbolize
-# define HAVE_SYMBOLIZE
-#endif
-#endif // !defined(HAVE_SYMBOLIZE)
-#endif // !defined(GLOG_NO_SYMBOLIZE_DETECTION)
+#      define HAVE_SYMBOLIZE
+#    endif
+#  endif  // !defined(HAVE_SYMBOLIZE)
+#endif    // !defined(GLOG_NO_SYMBOLIZE_DETECTION)
 
 #ifndef ARRAYSIZE
 // There is a better way, but this is good enough for our purpose.
-# define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
+#  define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
 
 namespace google {
@@ -145,21 +145,21 @@ namespace google {
 namespace glog_internal_namespace_ {
 
 #if defined(__has_attribute)
-#if __has_attribute(noinline)
-# define ATTRIBUTE_NOINLINE __attribute__ ((noinline))
-# define HAVE_ATTRIBUTE_NOINLINE
-#endif
-#endif
-
-#if !defined(HAVE_ATTRIBUTE_NOINLINE)
-#if defined(GLOG_OS_WINDOWS)
-# define ATTRIBUTE_NOINLINE __declspec(noinline)
-# define HAVE_ATTRIBUTE_NOINLINE
-#endif
+#  if __has_attribute(noinline)
+#    define ATTRIBUTE_NOINLINE __attribute__((noinline))
+#    define HAVE_ATTRIBUTE_NOINLINE
+#  endif
 #endif
 
 #if !defined(HAVE_ATTRIBUTE_NOINLINE)
-# define ATTRIBUTE_NOINLINE
+#  if defined(GLOG_OS_WINDOWS)
+#    define ATTRIBUTE_NOINLINE __declspec(noinline)
+#    define HAVE_ATTRIBUTE_NOINLINE
+#  endif
+#endif
+
+#if !defined(HAVE_ATTRIBUTE_NOINLINE)
+#  define ATTRIBUTE_NOINLINE
 #endif
 
 const char* ProgramInvocationShortName();
@@ -184,20 +184,20 @@ const char* const_basename(const char* filepath);
 // defined, we try the CPU specific logics (we only support x86 and
 // x86_64 for now) first, then use a naive implementation, which has a
 // race condition.
-template<typename T>
+template <typename T>
 inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
 #if defined(HAVE___SYNC_VAL_COMPARE_AND_SWAP)
   return __sync_val_compare_and_swap(ptr, oldval, newval);
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
   T ret;
   __asm__ __volatile__("lock; cmpxchg %1, (%2);"
-                       :"=a"(ret)
-                        // GCC may produces %sil or %dil for
-                        // constraint "r", but some of apple's gas
-                        // doesn't know the 8 bit registers.
-                        // We use "q" to avoid these registers.
-                       :"q"(newval), "q"(ptr), "a"(oldval)
-                       :"memory", "cc");
+                       : "=a"(ret)
+                       // GCC may produces %sil or %dil for
+                       // constraint "r", but some of apple's gas
+                       // doesn't know the 8 bit registers.
+                       // We use "q" to avoid these registers.
+                       : "q"(newval), "q"(ptr), "a"(oldval)
+                       : "memory", "cc");
   return ret;
 #else
   T ret = *ptr;

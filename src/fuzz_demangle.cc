@@ -18,7 +18,7 @@
 
 #include "demangle.h"
 
-extern "C" int LLVMFuzzerTestOneInput(const unsigned char *Data,
+extern "C" int LLVMFuzzerTestOneInput(const unsigned char* Data,
                                       unsigned Size) {
   if (Size >= 4095) {
     return 0;

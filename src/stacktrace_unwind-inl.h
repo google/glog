@@ -38,17 +38,17 @@
 namespace google {
 
 struct trace_arg_t {
-  void **result;
+  void** result;
   int max_depth;
   int skip_count;
   int count;
 };
 
 // Workaround for the malloc() in _Unwind_Backtrace() issue.
-static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context */*uc*/, void */*opq*/) {
+static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context* /*uc*/,
+                                         void* /*opq*/) {
   return _URC_NO_REASON;
 }
-
 
 // This code is not considered ready to run until
 // static initializers run so that we are guaranteed
@@ -56,23 +56,23 @@ static _Unwind_Reason_Code nop_backtrace(struct _Unwind_Context */*uc*/, void */
 static bool ready_to_run = false;
 class StackTraceInit {
  public:
-   StackTraceInit() {
-     // Extra call to force initialization
-     _Unwind_Backtrace(nop_backtrace, nullptr);
-     ready_to_run = true;
-   }
+  StackTraceInit() {
+    // Extra call to force initialization
+    _Unwind_Backtrace(nop_backtrace, nullptr);
+    ready_to_run = true;
+  }
 };
 
 static StackTraceInit module_initializer;  // Force initialization
 
-static _Unwind_Reason_Code GetOneFrame(struct _Unwind_Context *uc, void *opq) {
-   auto *targ = static_cast<trace_arg_t *>(opq);
+static _Unwind_Reason_Code GetOneFrame(struct _Unwind_Context* uc, void* opq) {
+  auto* targ = static_cast<trace_arg_t*>(opq);
 
-   if (targ->skip_count > 0) {
-     targ->skip_count--;
-   } else {
-     targ->result[targ->count++] = reinterpret_cast<void *>(_Unwind_GetIP(uc));
-   }
+  if (targ->skip_count > 0) {
+    targ->skip_count--;
+  } else {
+    targ->result[targ->count++] = reinterpret_cast<void*>(_Unwind_GetIP(uc));
+  }
 
   if (targ->count == targ->max_depth) {
     return _URC_END_OF_STACK;
@@ -89,7 +89,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 
   trace_arg_t targ;
 
-  skip_count += 1;         // Do not include the "GetStackTrace" frame
+  skip_count += 1;  // Do not include the "GetStackTrace" frame
 
   targ.result = result;
   targ.max_depth = max_depth;

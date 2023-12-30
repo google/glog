@@ -46,9 +46,9 @@ namespace google {
 // stackframe, or return nullptr if no stackframe can be found. Perform sanity
 // checks (the strictness of which is controlled by the boolean parameter
 // "STRICT_UNWINDING") to reduce the chance that a bad pointer is returned.
-template<bool STRICT_UNWINDING>
-static void **NextStackFrame(void **old_sp) {
-  void **new_sp = static_cast<void **>(*old_sp);
+template <bool STRICT_UNWINDING>
+static void** NextStackFrame(void** old_sp) {
+  void** new_sp = static_cast<void**>(*old_sp);
 
   // Check that the transition from frame pointer old_sp to frame
   // pointer new_sp isn't clearly bogus
@@ -68,7 +68,7 @@ static void **NextStackFrame(void **old_sp) {
       return nullptr;
     }
   }
-  if ((uintptr_t)new_sp & (sizeof(void *) - 1)) return nullptr;
+  if ((uintptr_t)new_sp & (sizeof(void*) - 1)) return nullptr;
   return new_sp;
 }
 
@@ -78,15 +78,15 @@ void StacktracePowerPCDummyFunction() { __asm__ volatile(""); }
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  void **sp;
+  void** sp;
   // Apple OS X uses an old version of gnu as -- both Darwin 7.9.0 (Panther)
   // and Darwin 8.8.1 (Tiger) use as 1.38.  This means we have to use a
   // different asm syntax.  I don't know quite the best way to discriminate
   // systems using the old as from the new one; I've gone with __APPLE__.
 #ifdef __APPLE__
-  __asm__ volatile ("mr %0,r1" : "=r" (sp));
+  __asm__ volatile("mr %0,r1" : "=r"(sp));
 #else
-  __asm__ volatile ("mr %0,1" : "=r" (sp));
+  __asm__ volatile("mr %0,1" : "=r"(sp));
 #endif
 
   // On PowerPC, the "Link Register" or "Link Record" (LR), is a stack
@@ -111,17 +111,18 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
       // linux ppc64), it's in sp[2].  For SYSV (used by linux ppc),
       // it's in sp[1].
 #if defined(_CALL_AIX) || defined(_CALL_DARWIN)
-      result[n++] = *(sp+2);
+      result[n++] = *(sp + 2);
 #elif defined(_CALL_SYSV)
-      result[n++] = *(sp+1);
-#elif defined(__APPLE__) || ((defined(__linux) || defined(__linux__)) && defined(__PPC64__))
+      result[n++] = *(sp + 1);
+#elif defined(__APPLE__) || \
+    ((defined(__linux) || defined(__linux__)) && defined(__PPC64__))
       // This check is in case the compiler doesn't define _CALL_AIX/etc.
-      result[n++] = *(sp+2);
+      result[n++] = *(sp + 2);
 #elif defined(__linux) || defined(__OpenBSD__)
       // This check is in case the compiler doesn't define _CALL_SYSV.
-      result[n++] = *(sp+1);
+      result[n++] = *(sp + 1);
 #else
-#error Need to specify the PPC ABI for your architecture.
+#  error Need to specify the PPC ABI for your architecture.
 #endif
     }
     // Use strict unwinding rules.

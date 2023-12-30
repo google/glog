@@ -43,15 +43,15 @@
 #include "utilities.h"
 
 #if defined(GLOG_OS_WINDOWS)
-#include <dbghelp.h>
+#  include <dbghelp.h>
 #endif
 
 namespace google {
 
 #if !defined(GLOG_OS_WINDOWS)
 struct AbbrevPair {
-  const char *abbrev;
-  const char *real_name;
+  const char* abbrev;
+  const char* real_name;
 };
 
 // List of operators from Itanium C++ ABI.
@@ -102,11 +102,11 @@ static const AbbrevPair kSubstitutionList[] = {
 
 // State needed for demangling.
 struct State {
-  const char *mangled_cur;   // Cursor of mangled name.
-  char *out_cur;             // Cursor of output string.
-  const char *out_begin;     // Beginning of output string.
-  const char *out_end;       // End of output string.
-  const char *prev_name;     // For constructors/destructors.
+  const char* mangled_cur;   // Cursor of mangled name.
+  char* out_cur;             // Cursor of output string.
+  const char* out_begin;     // Beginning of output string.
+  const char* out_end;       // End of output string.
+  const char* prev_name;     // For constructors/destructors.
   ssize_t prev_name_length;  // For constructors/destructors.
   short nest_level;          // For nested names.
   bool append;               // Append flag.
@@ -118,7 +118,7 @@ struct State {
 
 // We don't use strlen() in libc since it's not guaranteed to be async
 // signal safe.
-static size_t StrLen(const char *str) {
+static size_t StrLen(const char* str) {
   size_t len = 0;
   while (*str != '\0') {
     ++str;
@@ -128,7 +128,7 @@ static size_t StrLen(const char *str) {
 }
 
 // Returns true if "str" has at least "n" characters remaining.
-static bool AtLeastNumCharsRemaining(const char *str, ssize_t n) {
+static bool AtLeastNumCharsRemaining(const char* str, ssize_t n) {
   for (ssize_t i = 0; i < n; ++i) {
     if (str[i] == '\0') {
       return false;
@@ -138,17 +138,16 @@ static bool AtLeastNumCharsRemaining(const char *str, ssize_t n) {
 }
 
 // Returns true if "str" has "prefix" as a prefix.
-static bool StrPrefix(const char *str, const char *prefix) {
+static bool StrPrefix(const char* str, const char* prefix) {
   size_t i = 0;
-  while (str[i] != '\0' && prefix[i] != '\0' &&
-         str[i] == prefix[i]) {
+  while (str[i] != '\0' && prefix[i] != '\0' && str[i] == prefix[i]) {
     ++i;
   }
   return prefix[i] == '\0';  // Consumed everything in "prefix".
 }
 
-static void InitState(State *state, const char *mangled,
-                      char *out, size_t out_size) {
+static void InitState(State* state, const char* mangled, char* out,
+                      size_t out_size) {
   state->mangled_cur = mangled;
   state->out_cur = out;
   state->out_begin = out;
@@ -166,7 +165,7 @@ static void InitState(State *state, const char *mangled,
 // Returns true and advances "mangled_cur" if we find "one_char_token"
 // at "mangled_cur" position.  It is assumed that "one_char_token" does
 // not contain '\0'.
-static bool ParseOneCharToken(State *state, const char one_char_token) {
+static bool ParseOneCharToken(State* state, const char one_char_token) {
   if (state->mangled_cur[0] == one_char_token) {
     ++state->mangled_cur;
     return true;
@@ -177,7 +176,7 @@ static bool ParseOneCharToken(State *state, const char one_char_token) {
 // Returns true and advances "mangled_cur" if we find "two_char_token"
 // at "mangled_cur" position.  It is assumed that "two_char_token" does
 // not contain '\0'.
-static bool ParseTwoCharToken(State *state, const char *two_char_token) {
+static bool ParseTwoCharToken(State* state, const char* two_char_token) {
   if (state->mangled_cur[0] == two_char_token[0] &&
       state->mangled_cur[1] == two_char_token[1]) {
     state->mangled_cur += 2;
@@ -188,8 +187,8 @@ static bool ParseTwoCharToken(State *state, const char *two_char_token) {
 
 // Returns true and advances "mangled_cur" if we find any character in
 // "char_class" at "mangled_cur" position.
-static bool ParseCharClass(State *state, const char *char_class) {
-  const char *p = char_class;
+static bool ParseCharClass(State* state, const char* char_class) {
+  const char* p = char_class;
   for (; *p != '\0'; ++p) {
     if (state->mangled_cur[0] == *p) {
       ++state->mangled_cur;
@@ -200,13 +199,11 @@ static bool ParseCharClass(State *state, const char *char_class) {
 }
 
 // This function is used for handling an optional non-terminal.
-static bool Optional(bool) {
-  return true;
-}
+static bool Optional(bool) { return true; }
 
 // This function is used for handling <non-terminal>+ syntax.
-using ParseFunc = bool (*)(State *);
-static bool OneOrMore(ParseFunc parse_func, State *state) {
+using ParseFunc = bool (*)(State*);
+static bool OneOrMore(ParseFunc parse_func, State* state) {
   if (parse_func(state)) {
     while (parse_func(state)) {
     }
@@ -219,7 +216,7 @@ static bool OneOrMore(ParseFunc parse_func, State *state) {
 // always returns true and must be followed by a termination token or a
 // terminating sequence not handled by parse_func (e.g.
 // ParseOneCharToken(state, 'E')).
-static bool ZeroOrMore(ParseFunc parse_func, State *state) {
+static bool ZeroOrMore(ParseFunc parse_func, State* state) {
   while (parse_func(state)) {
   }
   return true;
@@ -228,7 +225,7 @@ static bool ZeroOrMore(ParseFunc parse_func, State *state) {
 // Append "str" at "out_cur".  If there is an overflow, "overflowed"
 // is set to true for later use.  The output string is ensured to
 // always terminate with '\0' as long as there is no overflow.
-static void Append(State *state, const char * const str, ssize_t length) {
+static void Append(State* state, const char* const str, ssize_t length) {
   if (state->out_cur == nullptr) {
     state->overflowed = true;
     return;
@@ -248,23 +245,19 @@ static void Append(State *state, const char * const str, ssize_t length) {
 }
 
 // We don't use equivalents in libc to avoid locale issues.
-static bool IsLower(char c) {
-  return c >= 'a' && c <= 'z';
-}
+static bool IsLower(char c) { return c >= 'a' && c <= 'z'; }
 
 static bool IsAlpha(char c) {
   return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-static bool IsDigit(char c) {
-  return c >= '0' && c <= '9';
-}
+static bool IsDigit(char c) { return c >= '0' && c <= '9'; }
 
 // Returns true if "str" is a function clone suffix.  These suffixes are used
 // by GCC 4.5.x and later versions to indicate functions which have been
 // cloned during optimization.  We treat any sequence (.<alpha>+.<digit>+)+ as
 // a function clone suffix.
-static bool IsFunctionCloneSuffix(const char *str) {
+static bool IsFunctionCloneSuffix(const char* str) {
   size_t i = 0;
   while (str[i] != '\0') {
     // Consume a single .<alpha>+.<digit>+ sequence.
@@ -288,12 +281,12 @@ static bool IsFunctionCloneSuffix(const char *str) {
 
 // Append "str" with some tweaks, iff "append" state is true.
 // Returns true so that it can be placed in "if" conditions.
-static void MaybeAppendWithLength(State *state, const char * const str,
+static void MaybeAppendWithLength(State* state, const char* const str,
                                   ssize_t length) {
   if (state->append && length > 0) {
     // Append a space if the output buffer ends with '<' and "str"
     // starts with '<' to avoid <<<.
-    if (str[0] == '<' && state->out_begin < state->out_cur  &&
+    if (str[0] == '<' && state->out_begin < state->out_cur &&
         state->out_cur[-1] == '<') {
       Append(state, " ", 1);
     }
@@ -307,7 +300,7 @@ static void MaybeAppendWithLength(State *state, const char * const str,
 }
 
 // A convenient wrapper around MaybeAppendWithLength().
-static bool MaybeAppend(State *state, const char * const str) {
+static bool MaybeAppend(State* state, const char* const str) {
   if (state->append) {
     size_t length = StrLen(str);
     MaybeAppendWithLength(state, str, static_cast<ssize_t>(length));
@@ -316,45 +309,45 @@ static bool MaybeAppend(State *state, const char * const str) {
 }
 
 // This function is used for handling nested names.
-static bool EnterNestedName(State *state) {
+static bool EnterNestedName(State* state) {
   state->nest_level = 0;
   return true;
 }
 
 // This function is used for handling nested names.
-static bool LeaveNestedName(State *state, short prev_value) {
+static bool LeaveNestedName(State* state, short prev_value) {
   state->nest_level = prev_value;
   return true;
 }
 
 // Disable the append mode not to print function parameters, etc.
-static bool DisableAppend(State *state) {
+static bool DisableAppend(State* state) {
   state->append = false;
   return true;
 }
 
 // Restore the append mode to the previous state.
-static bool RestoreAppend(State *state, bool prev_value) {
+static bool RestoreAppend(State* state, bool prev_value) {
   state->append = prev_value;
   return true;
 }
 
 // Increase the nest level for nested names.
-static void MaybeIncreaseNestLevel(State *state) {
+static void MaybeIncreaseNestLevel(State* state) {
   if (state->nest_level > -1) {
     ++state->nest_level;
   }
 }
 
 // Appends :: for nested names if necessary.
-static void MaybeAppendSeparator(State *state) {
+static void MaybeAppendSeparator(State* state) {
   if (state->nest_level >= 1) {
     MaybeAppend(state, "::");
   }
 }
 
 // Cancel the last separator if necessary.
-static void MaybeCancelLastSeparator(State *state) {
+static void MaybeCancelLastSeparator(State* state) {
   if (state->nest_level >= 1 && state->append &&
       state->out_begin <= state->out_cur - 2) {
     state->out_cur -= 2;
@@ -364,7 +357,7 @@ static void MaybeCancelLastSeparator(State *state) {
 
 // Returns true if the identifier of the given length pointed to by
 // "mangled_cur" is anonymous namespace.
-static bool IdentifierIsAnonymousNamespace(State *state, ssize_t length) {
+static bool IdentifierIsAnonymousNamespace(State* state, ssize_t length) {
   static const char anon_prefix[] = "_GLOBAL__N_";
   return (length > static_cast<ssize_t>(sizeof(anon_prefix)) -
                        1 &&  // Should be longer.
@@ -372,45 +365,45 @@ static bool IdentifierIsAnonymousNamespace(State *state, ssize_t length) {
 }
 
 // Forward declarations of our parsing functions.
-static bool ParseMangledName(State *state);
-static bool ParseEncoding(State *state);
-static bool ParseName(State *state);
-static bool ParseUnscopedName(State *state);
-static bool ParseUnscopedTemplateName(State *state);
-static bool ParseNestedName(State *state);
-static bool ParsePrefix(State *state);
-static bool ParseUnqualifiedName(State *state);
-static bool ParseSourceName(State *state);
-static bool ParseLocalSourceName(State *state);
-static bool ParseNumber(State *state, int *number_out);
-static bool ParseFloatNumber(State *state);
-static bool ParseSeqId(State *state);
-static bool ParseIdentifier(State *state, ssize_t length);
-static bool ParseAbiTags(State *state);
-static bool ParseAbiTag(State *state);
-static bool ParseOperatorName(State *state);
-static bool ParseSpecialName(State *state);
-static bool ParseCallOffset(State *state);
-static bool ParseNVOffset(State *state);
-static bool ParseVOffset(State *state);
-static bool ParseCtorDtorName(State *state);
-static bool ParseType(State *state);
-static bool ParseCVQualifiers(State *state);
-static bool ParseBuiltinType(State *state);
-static bool ParseFunctionType(State *state);
-static bool ParseBareFunctionType(State *state);
-static bool ParseClassEnumType(State *state);
-static bool ParseArrayType(State *state);
-static bool ParsePointerToMemberType(State *state);
-static bool ParseTemplateParam(State *state);
-static bool ParseTemplateTemplateParam(State *state);
-static bool ParseTemplateArgs(State *state);
-static bool ParseTemplateArg(State *state);
-static bool ParseExpression(State *state);
-static bool ParseExprPrimary(State *state);
-static bool ParseLocalName(State *state);
-static bool ParseDiscriminator(State *state);
-static bool ParseSubstitution(State *state);
+static bool ParseMangledName(State* state);
+static bool ParseEncoding(State* state);
+static bool ParseName(State* state);
+static bool ParseUnscopedName(State* state);
+static bool ParseUnscopedTemplateName(State* state);
+static bool ParseNestedName(State* state);
+static bool ParsePrefix(State* state);
+static bool ParseUnqualifiedName(State* state);
+static bool ParseSourceName(State* state);
+static bool ParseLocalSourceName(State* state);
+static bool ParseNumber(State* state, int* number_out);
+static bool ParseFloatNumber(State* state);
+static bool ParseSeqId(State* state);
+static bool ParseIdentifier(State* state, ssize_t length);
+static bool ParseAbiTags(State* state);
+static bool ParseAbiTag(State* state);
+static bool ParseOperatorName(State* state);
+static bool ParseSpecialName(State* state);
+static bool ParseCallOffset(State* state);
+static bool ParseNVOffset(State* state);
+static bool ParseVOffset(State* state);
+static bool ParseCtorDtorName(State* state);
+static bool ParseType(State* state);
+static bool ParseCVQualifiers(State* state);
+static bool ParseBuiltinType(State* state);
+static bool ParseFunctionType(State* state);
+static bool ParseBareFunctionType(State* state);
+static bool ParseClassEnumType(State* state);
+static bool ParseArrayType(State* state);
+static bool ParsePointerToMemberType(State* state);
+static bool ParseTemplateParam(State* state);
+static bool ParseTemplateTemplateParam(State* state);
+static bool ParseTemplateArgs(State* state);
+static bool ParseTemplateArg(State* state);
+static bool ParseExpression(State* state);
+static bool ParseExprPrimary(State* state);
+static bool ParseLocalName(State* state);
+static bool ParseDiscriminator(State* state);
+static bool ParseSubstitution(State* state);
 
 // Implementation note: the following code is a straightforward
 // translation of the Itanium C++ ABI defined in BNF with a couple of
@@ -443,14 +436,14 @@ static bool ParseSubstitution(State *state);
 //   <http://www.codesourcery.com/cxx-abi/abi.html#mangling>
 
 // <mangled-name> ::= _Z <encoding>
-static bool ParseMangledName(State *state) {
+static bool ParseMangledName(State* state) {
   return ParseTwoCharToken(state, "_Z") && ParseEncoding(state);
 }
 
 // <encoding> ::= <(function) name> <bare-function-type>
 //            ::= <(data) name>
 //            ::= <special-name>
-static bool ParseEncoding(State *state) {
+static bool ParseEncoding(State* state) {
   State copy = *state;
   if (ParseName(state) && ParseBareFunctionType(state)) {
     return true;
@@ -467,14 +460,13 @@ static bool ParseEncoding(State *state) {
 //        ::= <unscoped-template-name> <template-args>
 //        ::= <unscoped-name>
 //        ::= <local-name>
-static bool ParseName(State *state) {
+static bool ParseName(State* state) {
   if (ParseNestedName(state) || ParseLocalName(state)) {
     return true;
   }
 
   State copy = *state;
-  if (ParseUnscopedTemplateName(state) &&
-      ParseTemplateArgs(state)) {
+  if (ParseUnscopedTemplateName(state) && ParseTemplateArgs(state)) {
     return true;
   }
   *state = copy;
@@ -488,14 +480,13 @@ static bool ParseName(State *state) {
 
 // <unscoped-name> ::= <unqualified-name>
 //                 ::= St <unqualified-name>
-static bool ParseUnscopedName(State *state) {
+static bool ParseUnscopedName(State* state) {
   if (ParseUnqualifiedName(state)) {
     return true;
   }
 
   State copy = *state;
-  if (ParseTwoCharToken(state, "St") &&
-      MaybeAppend(state, "std::") &&
+  if (ParseTwoCharToken(state, "St") && MaybeAppend(state, "std::") &&
       ParseUnqualifiedName(state)) {
     return true;
   }
@@ -505,18 +496,16 @@ static bool ParseUnscopedName(State *state) {
 
 // <unscoped-template-name> ::= <unscoped-name>
 //                          ::= <substitution>
-static bool ParseUnscopedTemplateName(State *state) {
+static bool ParseUnscopedTemplateName(State* state) {
   return ParseUnscopedName(state) || ParseSubstitution(state);
 }
 
 // <nested-name> ::= N [<CV-qualifiers>] <prefix> <unqualified-name> E
 //               ::= N [<CV-qualifiers>] <template-prefix> <template-args> E
-static bool ParseNestedName(State *state) {
+static bool ParseNestedName(State* state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'N') &&
-      EnterNestedName(state) &&
-      Optional(ParseCVQualifiers(state)) &&
-      ParsePrefix(state) &&
+  if (ParseOneCharToken(state, 'N') && EnterNestedName(state) &&
+      Optional(ParseCVQualifiers(state)) && ParsePrefix(state) &&
       LeaveNestedName(state, copy.nest_level) &&
       ParseOneCharToken(state, 'E')) {
     return true;
@@ -536,12 +525,11 @@ static bool ParseNestedName(State *state) {
 // <template-prefix> ::= <prefix> <(template) unqualified-name>
 //                   ::= <template-param>
 //                   ::= <substitution>
-static bool ParsePrefix(State *state) {
+static bool ParsePrefix(State* state) {
   bool has_something = false;
   while (true) {
     MaybeAppendSeparator(state);
-    if (ParseTemplateParam(state) ||
-        ParseSubstitution(state) ||
+    if (ParseTemplateParam(state) || ParseSubstitution(state) ||
         ParseUnscopedName(state)) {
       has_something = true;
       MaybeIncreaseNestLevel(state);
@@ -561,15 +549,14 @@ static bool ParsePrefix(State *state) {
 //                    ::= <ctor-dtor-name>
 //                    ::= <source-name> [<abi-tags>]
 //                    ::= <local-source-name> [<abi-tags>]
-static bool ParseUnqualifiedName(State *state) {
-  return (ParseOperatorName(state) ||
-          ParseCtorDtorName(state) ||
+static bool ParseUnqualifiedName(State* state) {
+  return (ParseOperatorName(state) || ParseCtorDtorName(state) ||
           (ParseSourceName(state) && Optional(ParseAbiTags(state))) ||
           (ParseLocalSourceName(state) && Optional(ParseAbiTags(state))));
 }
 
 // <source-name> ::= <positive length number> <identifier>
-static bool ParseSourceName(State *state) {
+static bool ParseSourceName(State* state) {
   State copy = *state;
   int length = -1;
   if (ParseNumber(state, &length) && ParseIdentifier(state, length)) {
@@ -584,7 +571,7 @@ static bool ParseSourceName(State *state) {
 // References:
 //   http://gcc.gnu.org/bugzilla/show_bug.cgi?id=31775
 //   http://gcc.gnu.org/viewcvs?view=rev&revision=124467
-static bool ParseLocalSourceName(State *state) {
+static bool ParseLocalSourceName(State* state) {
   State copy = *state;
   if (ParseOneCharToken(state, 'L') && ParseSourceName(state) &&
       Optional(ParseDiscriminator(state))) {
@@ -597,15 +584,15 @@ static bool ParseLocalSourceName(State *state) {
 // <number> ::= [n] <non-negative decimal integer>
 // If "number_out" is non-null, then *number_out is set to the value of the
 // parsed number on success.
-static bool ParseNumber(State *state, int *number_out) {
+static bool ParseNumber(State* state, int* number_out) {
   int sign = 1;
   if (ParseOneCharToken(state, 'n')) {
     sign = -1;
   }
-  const char *p = state->mangled_cur;
+  const char* p = state->mangled_cur;
   int number = 0;
   constexpr int int_max_by_10 = std::numeric_limits<int>::max() / 10;
-  for (;*p != '\0'; ++p) {
+  for (; *p != '\0'; ++p) {
     if (IsDigit(*p)) {
       // Prevent signed integer overflow when multiplying
       if (number > int_max_by_10) {
@@ -637,9 +624,9 @@ static bool ParseNumber(State *state, int *number_out) {
 
 // Floating-point literals are encoded using a fixed-length lowercase
 // hexadecimal string.
-static bool ParseFloatNumber(State *state) {
-  const char *p = state->mangled_cur;
-  for (;*p != '\0'; ++p) {
+static bool ParseFloatNumber(State* state) {
+  const char* p = state->mangled_cur;
+  for (; *p != '\0'; ++p) {
     if (!IsDigit(*p) && !(*p >= 'a' && *p <= 'f')) {
       break;
     }
@@ -653,9 +640,9 @@ static bool ParseFloatNumber(State *state) {
 
 // The <seq-id> is a sequence number in base 36,
 // using digits and upper case letters
-static bool ParseSeqId(State *state) {
-  const char *p = state->mangled_cur;
-  for (;*p != '\0'; ++p) {
+static bool ParseSeqId(State* state) {
+  const char* p = state->mangled_cur;
+  for (; *p != '\0'; ++p) {
     if (!IsDigit(*p) && !(*p >= 'A' && *p <= 'Z')) {
       break;
     }
@@ -668,9 +655,8 @@ static bool ParseSeqId(State *state) {
 }
 
 // <identifier> ::= <unqualified source code identifier> (of given length)
-static bool ParseIdentifier(State *state, ssize_t length) {
-  if (length == -1 ||
-      !AtLeastNumCharsRemaining(state->mangled_cur, length)) {
+static bool ParseIdentifier(State* state, ssize_t length) {
+  if (length == -1 || !AtLeastNumCharsRemaining(state->mangled_cur, length)) {
     return false;
   }
   if (IdentifierIsAnonymousNamespace(state, length)) {
@@ -687,7 +673,7 @@ static bool ParseIdentifier(State *state, ssize_t length) {
 }
 
 // <abi-tags> ::= <abi-tag> [<abi-tags>]
-static bool ParseAbiTags(State *state) {
+static bool ParseAbiTags(State* state) {
   State copy = *state;
   DisableAppend(state);
   if (OneOrMore(ParseAbiTag, state)) {
@@ -699,23 +685,21 @@ static bool ParseAbiTags(State *state) {
 }
 
 // <abi-tag> ::= B <source-name>
-static bool ParseAbiTag(State *state) {
+static bool ParseAbiTag(State* state) {
   return ParseOneCharToken(state, 'B') && ParseSourceName(state);
 }
 
 // <operator-name> ::= nw, and other two letters cases
 //                 ::= cv <type>  # (cast)
 //                 ::= v  <digit> <source-name> # vendor extended operator
-static bool ParseOperatorName(State *state) {
+static bool ParseOperatorName(State* state) {
   if (!AtLeastNumCharsRemaining(state->mangled_cur, 2)) {
     return false;
   }
   // First check with "cv" (cast) case.
   State copy = *state;
-  if (ParseTwoCharToken(state, "cv") &&
-      MaybeAppend(state, "operator ") &&
-      EnterNestedName(state) &&
-      ParseType(state) &&
+  if (ParseTwoCharToken(state, "cv") && MaybeAppend(state, "operator ") &&
+      EnterNestedName(state) && ParseType(state) &&
       LeaveNestedName(state, copy.nest_level)) {
     return true;
   }
@@ -730,12 +714,11 @@ static bool ParseOperatorName(State *state) {
 
   // Other operator names should start with a lower alphabet followed
   // by a lower/upper alphabet.
-  if (!(IsLower(state->mangled_cur[0]) &&
-        IsAlpha(state->mangled_cur[1]))) {
+  if (!(IsLower(state->mangled_cur[0]) && IsAlpha(state->mangled_cur[1]))) {
     return false;
   }
   // We may want to perform a binary search if we really need speed.
-  const AbbrevPair *p;
+  const AbbrevPair* p;
   for (p = kOperatorList; p->abbrev != nullptr; ++p) {
     if (state->mangled_cur[0] == p->abbrev[0] &&
         state->mangled_cur[1] == p->abbrev[1]) {
@@ -769,10 +752,9 @@ static bool ParseOperatorName(State *state) {
 //
 // Note: we don't care much about them since they don't appear in
 // stack traces.  The are special data.
-static bool ParseSpecialName(State *state) {
+static bool ParseSpecialName(State* state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'T') &&
-      ParseCharClass(state, "VTIS") &&
+  if (ParseOneCharToken(state, 'T') && ParseCharClass(state, "VTIS") &&
       ParseType(state)) {
     return true;
   }
@@ -784,8 +766,7 @@ static bool ParseSpecialName(State *state) {
   }
   *state = copy;
 
-  if (ParseTwoCharToken(state, "GV") &&
-      ParseName(state)) {
+  if (ParseTwoCharToken(state, "GV") && ParseName(state)) {
     return true;
   }
   *state = copy;
@@ -831,16 +812,16 @@ static bool ParseSpecialName(State *state) {
 
 // <call-offset> ::= h <nv-offset> _
 //               ::= v <v-offset> _
-static bool ParseCallOffset(State *state) {
+static bool ParseCallOffset(State* state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'h') &&
-      ParseNVOffset(state) && ParseOneCharToken(state, '_')) {
+  if (ParseOneCharToken(state, 'h') && ParseNVOffset(state) &&
+      ParseOneCharToken(state, '_')) {
     return true;
   }
   *state = copy;
 
-  if (ParseOneCharToken(state, 'v') &&
-      ParseVOffset(state) && ParseOneCharToken(state, '_')) {
+  if (ParseOneCharToken(state, 'v') && ParseVOffset(state) &&
+      ParseOneCharToken(state, '_')) {
     return true;
   }
   *state = copy;
@@ -849,10 +830,10 @@ static bool ParseCallOffset(State *state) {
 }
 
 // <nv-offset> ::= <(offset) number>
-static bool ParseNVOffset(State *state) { return ParseNumber(state, nullptr); }
+static bool ParseNVOffset(State* state) { return ParseNumber(state, nullptr); }
 
 // <v-offset>  ::= <(offset) number> _ <(virtual offset) number>
-static bool ParseVOffset(State *state) {
+static bool ParseVOffset(State* state) {
   State copy = *state;
   if (ParseNumber(state, nullptr) && ParseOneCharToken(state, '_') &&
       ParseNumber(state, nullptr)) {
@@ -864,20 +845,18 @@ static bool ParseVOffset(State *state) {
 
 // <ctor-dtor-name> ::= C1 | C2 | C3
 //                  ::= D0 | D1 | D2
-static bool ParseCtorDtorName(State *state) {
+static bool ParseCtorDtorName(State* state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'C') &&
-      ParseCharClass(state, "123")) {
-    const char * const prev_name = state->prev_name;
+  if (ParseOneCharToken(state, 'C') && ParseCharClass(state, "123")) {
+    const char* const prev_name = state->prev_name;
     const ssize_t prev_name_length = state->prev_name_length;
     MaybeAppendWithLength(state, prev_name, prev_name_length);
     return true;
   }
   *state = copy;
 
-  if (ParseOneCharToken(state, 'D') &&
-      ParseCharClass(state, "012")) {
-    const char * const prev_name = state->prev_name;
+  if (ParseOneCharToken(state, 'D') && ParseCharClass(state, "012")) {
+    const char* const prev_name = state->prev_name;
     const ssize_t prev_name_length = state->prev_name_length;
     MaybeAppend(state, "~");
     MaybeAppendWithLength(state, prev_name, prev_name_length);
@@ -907,7 +886,7 @@ static bool ParseCtorDtorName(State *state) {
 //                               # member access (C++0x)
 //        ::= DT <expression> E  # decltype of an expression (C++0x)
 //
-static bool ParseType(State *state) {
+static bool ParseType(State* state) {
   // We should check CV-qualifers, and PRGC things first.
   State copy = *state;
   if (ParseCVQualifiers(state) && ParseType(state)) {
@@ -937,17 +916,13 @@ static bool ParseType(State *state) {
   }
   *state = copy;
 
-  if (ParseBuiltinType(state) ||
-      ParseFunctionType(state) ||
-      ParseClassEnumType(state) ||
-      ParseArrayType(state) ||
-      ParsePointerToMemberType(state) ||
-      ParseSubstitution(state)) {
+  if (ParseBuiltinType(state) || ParseFunctionType(state) ||
+      ParseClassEnumType(state) || ParseArrayType(state) ||
+      ParsePointerToMemberType(state) || ParseSubstitution(state)) {
     return true;
   }
 
-  if (ParseTemplateTemplateParam(state) &&
-      ParseTemplateArgs(state)) {
+  if (ParseTemplateTemplateParam(state) && ParseTemplateArgs(state)) {
     return true;
   }
   *state = copy;
@@ -963,7 +938,7 @@ static bool ParseType(State *state) {
 // <CV-qualifiers> ::= [r] [V] [K]
 // We don't allow empty <CV-qualifiers> to avoid infinite loop in
 // ParseType().
-static bool ParseCVQualifiers(State *state) {
+static bool ParseCVQualifiers(State* state) {
   int num_cv_qualifiers = 0;
   num_cv_qualifiers += ParseOneCharToken(state, 'r');
   num_cv_qualifiers += ParseOneCharToken(state, 'V');
@@ -973,8 +948,8 @@ static bool ParseCVQualifiers(State *state) {
 
 // <builtin-type> ::= v, etc.
 //                ::= u <source-name>
-static bool ParseBuiltinType(State *state) {
-  const AbbrevPair *p;
+static bool ParseBuiltinType(State* state) {
+  const AbbrevPair* p;
   for (p = kBuiltinTypeList; p->abbrev != nullptr; ++p) {
     if (state->mangled_cur[0] == p->abbrev[0]) {
       MaybeAppend(state, p->real_name);
@@ -992,11 +967,11 @@ static bool ParseBuiltinType(State *state) {
 }
 
 // <function-type> ::= F [Y] <bare-function-type> E
-static bool ParseFunctionType(State *state) {
+static bool ParseFunctionType(State* state) {
   State copy = *state;
   if (ParseOneCharToken(state, 'F') &&
-      Optional(ParseOneCharToken(state, 'Y')) &&
-      ParseBareFunctionType(state) && ParseOneCharToken(state, 'E')) {
+      Optional(ParseOneCharToken(state, 'Y')) && ParseBareFunctionType(state) &&
+      ParseOneCharToken(state, 'E')) {
     return true;
   }
   *state = copy;
@@ -1004,7 +979,7 @@ static bool ParseFunctionType(State *state) {
 }
 
 // <bare-function-type> ::= <(signature) type>+
-static bool ParseBareFunctionType(State *state) {
+static bool ParseBareFunctionType(State* state) {
   State copy = *state;
   DisableAppend(state);
   if (OneOrMore(ParseType, state)) {
@@ -1017,13 +992,11 @@ static bool ParseBareFunctionType(State *state) {
 }
 
 // <class-enum-type> ::= <name>
-static bool ParseClassEnumType(State *state) {
-  return ParseName(state);
-}
+static bool ParseClassEnumType(State* state) { return ParseName(state); }
 
 // <array-type> ::= A <(positive dimension) number> _ <(element) type>
 //              ::= A [<(dimension) expression>] _ <(element) type>
-static bool ParseArrayType(State *state) {
+static bool ParseArrayType(State* state) {
   State copy = *state;
   if (ParseOneCharToken(state, 'A') && ParseNumber(state, nullptr) &&
       ParseOneCharToken(state, '_') && ParseType(state)) {
@@ -1040,10 +1013,9 @@ static bool ParseArrayType(State *state) {
 }
 
 // <pointer-to-member-type> ::= M <(class) type> <(member) type>
-static bool ParsePointerToMemberType(State *state) {
+static bool ParsePointerToMemberType(State* state) {
   State copy = *state;
-  if (ParseOneCharToken(state, 'M') && ParseType(state) &&
-      ParseType(state)) {
+  if (ParseOneCharToken(state, 'M') && ParseType(state) && ParseType(state)) {
     return true;
   }
   *state = copy;
@@ -1052,7 +1024,7 @@ static bool ParsePointerToMemberType(State *state) {
 
 // <template-param> ::= T_
 //                  ::= T <parameter-2 non-negative number> _
-static bool ParseTemplateParam(State *state) {
+static bool ParseTemplateParam(State* state) {
   if (ParseTwoCharToken(state, "T_")) {
     MaybeAppend(state, "?");  // We don't support template substitutions.
     return true;
@@ -1068,20 +1040,17 @@ static bool ParseTemplateParam(State *state) {
   return false;
 }
 
-
 // <template-template-param> ::= <template-param>
 //                           ::= <substitution>
-static bool ParseTemplateTemplateParam(State *state) {
-  return (ParseTemplateParam(state) ||
-          ParseSubstitution(state));
+static bool ParseTemplateTemplateParam(State* state) {
+  return (ParseTemplateParam(state) || ParseSubstitution(state));
 }
 
 // <template-args> ::= I <template-arg>+ E
-static bool ParseTemplateArgs(State *state) {
+static bool ParseTemplateArgs(State* state) {
   State copy = *state;
   DisableAppend(state);
-  if (ParseOneCharToken(state, 'I') &&
-      OneOrMore(ParseTemplateArg, state) &&
+  if (ParseOneCharToken(state, 'I') && OneOrMore(ParseTemplateArg, state) &&
       ParseOneCharToken(state, 'E')) {
     RestoreAppend(state, copy.append);
     MaybeAppend(state, "<>");
@@ -1096,7 +1065,7 @@ static bool ParseTemplateArgs(State *state) {
 //                 ::= I <template-arg>* E        # argument pack
 //                 ::= J <template-arg>* E        # argument pack
 //                 ::= X <expression> E
-static bool ParseTemplateArg(State *state) {
+static bool ParseTemplateArg(State* state) {
   // Avoid recursion above max_levels
   constexpr uint32 max_levels = 5;
 
@@ -1107,15 +1076,13 @@ static bool ParseTemplateArg(State *state) {
 
   State copy = *state;
   if ((ParseOneCharToken(state, 'I') || ParseOneCharToken(state, 'J')) &&
-      ZeroOrMore(ParseTemplateArg, state) &&
-      ParseOneCharToken(state, 'E')) {
+      ZeroOrMore(ParseTemplateArg, state) && ParseOneCharToken(state, 'E')) {
     --state->arg_level;
     return true;
   }
   *state = copy;
 
-  if (ParseType(state) ||
-      ParseExprPrimary(state)) {
+  if (ParseType(state) || ParseExprPrimary(state)) {
     --state->arg_level;
     return true;
   }
@@ -1139,7 +1106,7 @@ static bool ParseTemplateArg(State *state) {
 //              ::= st <type>
 //              ::= sr <type> <unqualified-name> <template-args>
 //              ::= sr <type> <unqualified-name>
-static bool ParseExpression(State *state) {
+static bool ParseExpression(State* state) {
   if (ParseTemplateParam(state) || ParseExprPrimary(state)) {
     return true;
   }
@@ -1153,25 +1120,21 @@ static bool ParseExpression(State *state) {
   ++state->expr_level;
 
   State copy = *state;
-  if (ParseOperatorName(state) &&
-      ParseExpression(state) &&
-      ParseExpression(state) &&
+  if (ParseOperatorName(state) && ParseExpression(state) &&
+      ParseExpression(state) && ParseExpression(state)) {
+    --state->expr_level;
+    return true;
+  }
+  *state = copy;
+
+  if (ParseOperatorName(state) && ParseExpression(state) &&
       ParseExpression(state)) {
     --state->expr_level;
     return true;
   }
   *state = copy;
 
-  if (ParseOperatorName(state) &&
-      ParseExpression(state) &&
-      ParseExpression(state)) {
-    --state->expr_level;
-    return true;
-  }
-  *state = copy;
-
-  if (ParseOperatorName(state) &&
-      ParseExpression(state)) {
+  if (ParseOperatorName(state) && ParseExpression(state)) {
     --state->expr_level;
     return true;
   }
@@ -1184,8 +1147,7 @@ static bool ParseExpression(State *state) {
   *state = copy;
 
   if (ParseTwoCharToken(state, "sr") && ParseType(state) &&
-      ParseUnqualifiedName(state) &&
-      ParseTemplateArgs(state)) {
+      ParseUnqualifiedName(state) && ParseTemplateArgs(state)) {
     --state->expr_level;
     return true;
   }
@@ -1205,7 +1167,7 @@ static bool ParseExpression(State *state) {
 //                ::= L <mangled-name> E
 //                // A bug in g++'s C++ ABI version 2 (-fabi-version=2).
 //                ::= LZ <encoding> E
-static bool ParseExprPrimary(State *state) {
+static bool ParseExprPrimary(State* state) {
   State copy = *state;
   if (ParseOneCharToken(state, 'L') && ParseType(state) &&
       ParseNumber(state, nullptr) && ParseOneCharToken(state, 'E')) {
@@ -1214,8 +1176,7 @@ static bool ParseExprPrimary(State *state) {
   *state = copy;
 
   if (ParseOneCharToken(state, 'L') && ParseType(state) &&
-      ParseFloatNumber(state) &&
-      ParseOneCharToken(state, 'E')) {
+      ParseFloatNumber(state) && ParseOneCharToken(state, 'E')) {
     return true;
   }
   *state = copy;
@@ -1238,7 +1199,7 @@ static bool ParseExprPrimary(State *state) {
 // <local-name> := Z <(function) encoding> E <(entity) name>
 //                 [<discriminator>]
 //              := Z <(function) encoding> E s [<discriminator>]
-static bool ParseLocalName(State *state) {
+static bool ParseLocalName(State* state) {
   // Avoid recursion above max_levels
   constexpr uint32 max_levels = 5;
   if (state->local_level > max_levels) {
@@ -1265,7 +1226,7 @@ static bool ParseLocalName(State *state) {
 }
 
 // <discriminator> := _ <(non-negative) number>
-static bool ParseDiscriminator(State *state) {
+static bool ParseDiscriminator(State* state) {
   State copy = *state;
   if (ParseOneCharToken(state, '_') && ParseNumber(state, nullptr)) {
     return true;
@@ -1277,7 +1238,7 @@ static bool ParseDiscriminator(State *state) {
 // <substitution> ::= S_
 //                ::= S <seq-id> _
 //                ::= St, etc.
-static bool ParseSubstitution(State *state) {
+static bool ParseSubstitution(State* state) {
   if (ParseTwoCharToken(state, "S_")) {
     MaybeAppend(state, "?");  // We don't support substitutions.
     return true;
@@ -1293,7 +1254,7 @@ static bool ParseSubstitution(State *state) {
 
   // Expand abbreviations like "St" => "std".
   if (ParseOneCharToken(state, 'S')) {
-    const AbbrevPair *p;
+    const AbbrevPair* p;
     for (p = kSubstitutionList; p->abbrev != nullptr; ++p) {
       if (state->mangled_cur[0] == p->abbrev[1]) {
         MaybeAppend(state, "std");
@@ -1312,7 +1273,7 @@ static bool ParseSubstitution(State *state) {
 
 // Parse <mangled-name>, optionally followed by either a function-clone suffix
 // or version suffix.  Returns true only if all of "mangled_cur" was consumed.
-static bool ParseTopLevelMangledName(State *state) {
+static bool ParseTopLevelMangledName(State* state) {
   if (ParseMangledName(state)) {
     if (state->mangled_cur[0] != '\0') {
       // Drop trailing function clone suffix, if any.
@@ -1334,9 +1295,9 @@ static bool ParseTopLevelMangledName(State *state) {
 #endif
 
 // The demangler entry point.
-bool Demangle(const char *mangled, char *out, size_t out_size) {
+bool Demangle(const char* mangled, char* out, size_t out_size) {
 #if defined(GLOG_OS_WINDOWS)
-#if defined(HAVE_DBGHELP)
+#  if defined(HAVE_DBGHELP)
   // When built with incremental linking, the Windows debugger
   // library provides a more complicated `Symbol->Name` with the
   // Incremental Linking Table offset, which looks like
@@ -1347,23 +1308,23 @@ bool Demangle(const char *mangled, char *out, size_t out_size) {
   //
   // Since we may be in a signal handler here, we cannot use `std::string`.
   char buffer[1024];  // Big enough for a sane symbol.
-  const char *lparen = strchr(mangled, '(');
+  const char* lparen = strchr(mangled, '(');
   if (lparen) {
     // Extract the string `(?...)`
-    const char *rparen = strchr(lparen, ')');
+    const char* rparen = strchr(lparen, ')');
     size_t length = static_cast<size_t>(rparen - lparen) - 1;
     strncpy(buffer, lparen + 1, length);
     buffer[length] = '\0';
     mangled = buffer;
-  } // Else the symbol wasn't inside a set of parentheses
+  }  // Else the symbol wasn't inside a set of parentheses
   // We use the ANSI version to ensure the string type is always `char *`.
   return UnDecorateSymbolName(mangled, out, out_size, UNDNAME_COMPLETE);
-#else
+#  else
   (void)mangled;
   (void)out;
   (void)out_size;
   return false;
-#endif
+#  endif
 #else
   State state;
   InitState(&state, mangled, out, out_size);

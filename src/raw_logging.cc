@@ -37,7 +37,7 @@
 
 #include "utilities.h"
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>               // for close() and write()
+#  include <unistd.h>  // for close() and write()
 #endif
 #include <fcntl.h>  // for open()
 
@@ -49,37 +49,37 @@
 #include "glog/raw_logging.h"
 
 #ifdef HAVE_STACKTRACE
-# include "stacktrace.h"
+#  include "stacktrace.h"
 #endif
 
 #if defined(HAVE_SYSCALL_H)
-#include <syscall.h>                 // for syscall()
+#  include <syscall.h>  // for syscall()
 #elif defined(HAVE_SYS_SYSCALL_H)
-#include <sys/syscall.h>                 // for syscall()
+#  include <sys/syscall.h>  // for syscall()
 #endif
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>
+#  include <unistd.h>
 #endif
 
-#if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) && \
+#if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) &&    \
     (!(defined(GLOG_OS_MACOSX)) && !(defined(GLOG_OS_OPENBSD))) && \
     !defined(GLOG_OS_EMSCRIPTEN)
-#define safe_write(fd, s, len) syscall(SYS_write, fd, s, len)
+#  define safe_write(fd, s, len) syscall(SYS_write, fd, s, len)
 #else
 // Not so safe, but what can you do?
-#define safe_write(fd, s, len) write(fd, s, len)
+#  define safe_write(fd, s, len) write(fd, s, len)
 #endif
 
 namespace google {
 
 #if defined(__GNUC__)
-#define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck) \
-  __attribute__((format(archetype, stringIndex, firstToCheck)))
-#define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex) \
-  __attribute__((format_arg(stringIndex)))
+#  define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck) \
+    __attribute__((format(archetype, stringIndex, firstToCheck)))
+#  define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex) \
+    __attribute__((format_arg(stringIndex)))
 #else
-#define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck)
-#define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex)
+#  define GLOG_ATTRIBUTE_FORMAT(archetype, stringIndex, firstToCheck)
+#  define GLOG_ATTRIBUTE_FORMAT_ARG(stringIndex)
 #endif
 
 // CAVEAT: std::vsnprintf called from *DoRawLog below has some (exotic) code
@@ -103,15 +103,15 @@ static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
 }
 
 // Helper for RawLog__ below.
-inline static bool VADoRawLog(char** buf, size_t* size,
-                              const char* format, va_list ap) {
+inline static bool VADoRawLog(char** buf, size_t* size, const char* format,
+                              va_list ap) {
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
   int n = std::vsnprintf(*buf, *size, format, ap);
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
   if (n < 0 || static_cast<size_t>(n) > *size) return false;
   *size -= static_cast<size_t>(n);
@@ -122,7 +122,7 @@ inline static bool VADoRawLog(char** buf, size_t* size,
 static const int kLogBufSize = 3000;
 static bool crashed = false;
 static CrashReason crash_reason;
-static char crash_buf[kLogBufSize + 1] = { 0 };  // Will end in '\0'
+static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
 GLOG_ATTRIBUTE_FORMAT(printf, 4, 5)
 void RawLog__(LogSeverity severity, const char* file, int line,
@@ -139,9 +139,8 @@ void RawLog__(LogSeverity severity, const char* file, int line,
 
   // NOTE: this format should match the specification in base/logging.h
   DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %5u %s:%d] RAW: ",
-           LogSeverityNames[severity][0],
-           static_cast<unsigned int>(GetTID()),
-           const_basename(const_cast<char *>(file)), line);
+           LogSeverityNames[severity][0], static_cast<unsigned int>(GetTID()),
+           const_basename(const_cast<char*>(file)), line);
 
   // Record the position and size of the buffer after the prefix
   const char* msg_start = buf;
@@ -161,7 +160,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // libc (to side-step any libc interception).
   // We write just once to avoid races with other invocations of RawLog__.
   safe_write(STDERR_FILENO, buffer, strlen(buffer));
-  if (severity == GLOG_FATAL)  {
+  if (severity == GLOG_FATAL) {
     if (!sync_val_compare_and_swap(&crashed, false, true)) {
       crash_reason.filename = file;
       crash_reason.line_number = line;

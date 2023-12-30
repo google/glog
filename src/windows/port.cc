@@ -33,7 +33,7 @@
  */
 
 #ifndef _WIN32
-# error You should only be including windows/port.cc in a windows environment!
+#  error You should only be including windows/port.cc in a windows environment!
 #endif
 
 #include "port.h"
@@ -47,7 +47,7 @@ struct tm* localtime_r(const std::time_t* timep, std::tm* result) {
   localtime_s(result, timep);
   return result;
 }
-#endif // not HAVE_LOCALTIME_R
+#endif  // not HAVE_LOCALTIME_R
 #ifndef HAVE_GMTIME_R
 struct tm* gmtime_r(const std::time_t* timep, std::tm* result) {
   gmtime_s(result, timep);

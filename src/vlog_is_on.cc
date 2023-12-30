@@ -49,14 +49,17 @@
 
 using std::string;
 
-GLOG_DEFINE_int32(v, 0, "Show all VLOG(m) messages for m <= this."
-" Overridable by --vmodule.");
+GLOG_DEFINE_int32(v, 0,
+                  "Show all VLOG(m) messages for m <= this."
+                  " Overridable by --vmodule.");
 
-GLOG_DEFINE_string(vmodule, "", "per-module verbose level."
-" Argument is a comma-separated list of <module name>=<log level>."
-" <module name> is a glob pattern, matched against the filename base"
-" (that is, name ignoring .cc/.h./-inl.h)."
-" <log level> overrides any value given by --v.");
+GLOG_DEFINE_string(
+    vmodule, "",
+    "per-module verbose level."
+    " Argument is a comma-separated list of <module name>=<log level>."
+    " <module name> is a glob pattern, matched against the filename base"
+    " (that is, name ignoring .cc/.h./-inl.h)."
+    " <log level> overrides any value given by --v.");
 
 namespace google {
 
@@ -75,18 +78,19 @@ GLOG_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
   size_t p = 0;
   size_t s = 0;
   while (true) {
-    if (p == patt_len  &&  s == str_len) return true;
+    if (p == patt_len && s == str_len) return true;
     if (p == patt_len) return false;
-    if (s == str_len) return p+1 == patt_len  &&  pattern[p] == '*';
-    if (pattern[p] == str[s]  ||  pattern[p] == '?') {
+    if (s == str_len) return p + 1 == patt_len && pattern[p] == '*';
+    if (pattern[p] == str[s] || pattern[p] == '?') {
       p += 1;
       s += 1;
       continue;
     }
     if (pattern[p] == '*') {
-      if (p+1 == patt_len) return true;
+      if (p + 1 == patt_len) return true;
       do {
-        if (SafeFNMatch_(pattern+(p+1), patt_len-(p+1), str+s, str_len-s)) {
+        if (SafeFNMatch_(pattern + (p + 1), patt_len - (p + 1), str + s,
+                         str_len - s)) {
           return true;
         }
         s += 1;
@@ -177,10 +181,9 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
           found = true;
         }
         info->vlog_level = log_level;
-      } else if (!found  &&
-                 SafeFNMatch_(info->module_pattern.c_str(),
-                              info->module_pattern.size(),
-                              module_pattern, pattern_len)) {
+      } else if (!found && SafeFNMatch_(info->module_pattern.c_str(),
+                                        info->module_pattern.size(),
+                                        module_pattern, pattern_len)) {
         result = info->vlog_level;
         found = true;
       }
@@ -216,8 +219,8 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
 
 // NOTE: Individual VLOG statements cache the integer log level pointers.
 // NOTE: This function must not allocate memory or require any locks.
-bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
-                 const char* fname, int32 verbose_level) {
+bool InitVLOG3__(SiteFlag* site_flag, int32* level_default, const char* fname,
+                 int32 verbose_level) {
   MutexLock l(&vmodule_lock);
   bool read_vmodule_flag = inited_vmodule;
   if (!read_vmodule_flag) {
@@ -240,13 +243,13 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
   }
 #endif
 
-  base = base ? (base+1) : fname;
+  base = base ? (base + 1) : fname;
   const char* base_end = strchr(base, '.');
   size_t base_length =
       base_end ? static_cast<size_t>(base_end - base) : strlen(base);
 
   // Trim out trailing "-inl" if any
-  if (base_length >= 4 && (memcmp(base+base_length-4, "-inl", 4) == 0)) {
+  if (base_length >= 4 && (memcmp(base + base_length - 4, "-inl", 4) == 0)) {
     base_length -= 4;
   }
 
@@ -260,8 +263,8 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
     if (SafeFNMatch_(info->module_pattern.c_str(), info->module_pattern.size(),
                      base, base_length)) {
       site_flag_value = &info->vlog_level;
-        // value at info->vlog_level is now what controls
-        // the VLOG at the caller site forever
+      // value at info->vlog_level is now what controls
+      // the VLOG at the caller site forever
       break;
     }
   }

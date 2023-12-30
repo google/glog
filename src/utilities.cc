@@ -29,33 +29,33 @@
 //
 // Author: Shinichiro Hamaji
 
-#include "config.h"
 #include "utilities.h"
 
+#include <csignal>
 #include <cstdio>
 #include <cstdlib>
 
-#include <csignal>
+#include "config.h"
 #ifdef HAVE_SYS_TIME_H
-# include <sys/time.h>
+#  include <sys/time.h>
 #endif
 #include <ctime>
 #if defined(HAVE_SYSCALL_H)
-#include <syscall.h>                 // for syscall()
+#  include <syscall.h>  // for syscall()
 #elif defined(HAVE_SYS_SYSCALL_H)
-#include <sys/syscall.h>                 // for syscall()
+#  include <sys/syscall.h>  // for syscall()
 #endif
 #ifdef HAVE_SYSLOG_H
-# include <syslog.h>
+#  include <syslog.h>
 #endif
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>  // For geteuid.
+#  include <unistd.h>  // For geteuid.
 #endif
 #ifdef HAVE_PWD_H
-# include <pwd.h>
+#  include <pwd.h>
 #endif
 #ifdef __ANDROID__
-#include <android/log.h>
+#  include <android/log.h>
 #endif
 
 #include "base/googleinit.h"
@@ -75,9 +75,9 @@ bool IsGoogleLoggingInitialized() {
 // The following APIs are all internal.
 #ifdef HAVE_STACKTRACE
 
-#include "stacktrace.h"
-#include "symbolize.h"
-#include "base/commandlineflags.h"
+#  include "base/commandlineflags.h"
+#  include "stacktrace.h"
+#  include "symbolize.h"
 
 GLOG_DEFINE_bool(symbolize_stacktrace, true,
                  "Symbolize the stack trace in the tombstone");
@@ -90,44 +90,44 @@ using DebugWriter = void(const char*, void*);
 // For some environments, add two extra bytes for the leading "0x".
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
-static void DebugWriteToStderr(const char* data, void *) {
+static void DebugWriteToStderr(const char* data, void*) {
   // This one is signal-safe.
   if (write(STDERR_FILENO, data, strlen(data)) < 0) {
     // Ignore errors.
   }
-#if defined(__ANDROID__)
+#  if defined(__ANDROID__)
   // ANDROID_LOG_FATAL as fatal error occurred and now is dumping call stack.
   __android_log_write(ANDROID_LOG_FATAL,
                       glog_internal_namespace_::ProgramInvocationShortName(),
                       data);
-#endif
+#  endif
 }
 
-static void DebugWriteToString(const char* data, void *arg) {
+static void DebugWriteToString(const char* data, void* arg) {
   reinterpret_cast<string*>(arg)->append(data);
 }
 
-#ifdef HAVE_SYMBOLIZE
+#  ifdef HAVE_SYMBOLIZE
 // Print a program counter and its symbol name.
-static void DumpPCAndSymbol(DebugWriter *writerfn, void *arg, void *pc,
-                            const char * const prefix) {
+static void DumpPCAndSymbol(DebugWriter* writerfn, void* arg, void* pc,
+                            const char* const prefix) {
   char tmp[1024];
-  const char *symbol = "(unknown)";
+  const char* symbol = "(unknown)";
   // Symbolizes the previous address of pc because pc may be in the
   // next function.  The overrun happens when the function ends with
   // a call to a function annotated noreturn (e.g. CHECK).
-  if (Symbolize(reinterpret_cast<char *>(pc) - 1, tmp, sizeof(tmp))) {
-      symbol = tmp;
+  if (Symbolize(reinterpret_cast<char*>(pc) - 1, tmp, sizeof(tmp))) {
+    symbol = tmp;
   }
   char buf[1024];
   std::snprintf(buf, sizeof(buf), "%s@ %*p  %s\n", prefix,
                 kPrintfPointerFieldWidth, pc, symbol);
   writerfn(buf, arg);
 }
-#endif
+#  endif
 
-static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
-                   const char * const prefix) {
+static void DumpPC(DebugWriter* writerfn, void* arg, void* pc,
+                   const char* const prefix) {
   char buf[100];
   std::snprintf(buf, sizeof(buf), "%s@ %*p\n", prefix, kPrintfPointerFieldWidth,
                 pc);
@@ -135,26 +135,26 @@ static void DumpPC(DebugWriter *writerfn, void *arg, void *pc,
 }
 
 // Dump current stack trace as directed by writerfn
-static void DumpStackTrace(int skip_count, DebugWriter *writerfn, void *arg) {
+static void DumpStackTrace(int skip_count, DebugWriter* writerfn, void* arg) {
   // Print stack trace
   void* stack[32];
-  int depth = GetStackTrace(stack, ARRAYSIZE(stack), skip_count+1);
+  int depth = GetStackTrace(stack, ARRAYSIZE(stack), skip_count + 1);
   for (int i = 0; i < depth; i++) {
-#if defined(HAVE_SYMBOLIZE)
+#  if defined(HAVE_SYMBOLIZE)
     if (FLAGS_symbolize_stacktrace) {
       DumpPCAndSymbol(writerfn, arg, stack[i], "    ");
     } else {
       DumpPC(writerfn, arg, stack[i], "    ");
     }
-#else
+#  else
     DumpPC(writerfn, arg, stack[i], "    ");
-#endif
+#  endif
   }
 }
 
-#ifdef __GNUC__
+#  ifdef __GNUC__
 __attribute__((noreturn))
-#endif
+#  endif
 static void
 DumpStackTraceAndExit() {
   DumpStackTrace(1, DebugWriteToStderr, nullptr);
@@ -163,15 +163,15 @@ DumpStackTraceAndExit() {
   if (IsFailureSignalHandlerInstalled()) {
     // Set the default signal handler for SIGABRT, to avoid invoking our
     // own signal handler installed by InstallFailureSignalHandler().
-#ifdef HAVE_SIGACTION
+#  ifdef HAVE_SIGACTION
     struct sigaction sig_action;
     memset(&sig_action, 0, sizeof(sig_action));
     sigemptyset(&sig_action.sa_mask);
     sig_action.sa_handler = SIG_DFL;
     sigaction(SIGABRT, &sig_action, nullptr);
-#elif defined(GLOG_OS_WINDOWS)
+#  elif defined(GLOG_OS_WINDOWS)
     signal(SIGABRT, SIG_DFL);
-#endif  // HAVE_SIGACTION
+#  endif  // HAVE_SIGACTION
   }
 
   abort();
@@ -199,14 +199,15 @@ struct timeval {
   long tv_sec, tv_usec;
 };
 
-// Based on: http://www.google.com/codesearch/p?hl=en#dR3YEbitojA/os_win32.c&q=GetSystemTimeAsFileTime%20license:bsd
+// Based on:
+// http://www.google.com/codesearch/p?hl=en#dR3YEbitojA/os_win32.c&q=GetSystemTimeAsFileTime%20license:bsd
 // See COPYING for copyright information.
-static int gettimeofday(struct timeval *tv, void* /*tz*/) {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wlong-long"
-#endif
-#define EPOCHFILETIME (116444736000000000ULL)
+static int gettimeofday(struct timeval* tv, void* /*tz*/) {
+#  ifdef __GNUC__
+#    pragma GCC diagnostic push
+#    pragma GCC diagnostic ignored "-Wlong-long"
+#  endif
+#  define EPOCHFILETIME (116444736000000000ULL)
   FILETIME ft;
   ULARGE_INTEGER li;
   uint64 tt;
@@ -217,9 +218,9 @@ static int gettimeofday(struct timeval *tv, void* /*tz*/) {
   tt = (li.QuadPart - EPOCHFILETIME) / 10;
   tv->tv_sec = tt / 1000000;
   tv->tv_usec = tt % 1000000;
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+#  ifdef __GNUC__
+#    pragma GCC diagnostic pop
+#  endif
 
   return 0;
 }
@@ -232,9 +233,7 @@ int64 CycleClock_Now() {
   return static_cast<int64>(tv.tv_sec) * 1000000 + tv.tv_usec;
 }
 
-int64 UsecToCycles(int64 usec) {
-  return usec;
-}
+int64 UsecToCycles(int64 usec) { return usec; }
 
 WallTime WallTime_Now() {
   // Now, cycle clock is retuning microseconds since the epoch.
@@ -242,9 +241,7 @@ WallTime WallTime_Now() {
 }
 
 static int32 g_main_thread_pid = getpid();
-int32 GetMainThreadPid() {
-  return g_main_thread_pid;
-}
+int32 GetMainThreadPid() { return g_main_thread_pid; }
 
 bool PidHasChanged() {
   int32 pid = getpid();
@@ -258,24 +255,24 @@ bool PidHasChanged() {
 pid_t GetTID() {
   // On Linux and MacOSX, we try to use gettid().
 #if defined GLOG_OS_LINUX || defined GLOG_OS_MACOSX
-#ifndef __NR_gettid
-#ifdef GLOG_OS_MACOSX
-#define __NR_gettid SYS_gettid
-#elif ! defined __i386__
-#error "Must define __NR_gettid for non-x86 platforms"
-#else
-#define __NR_gettid 224
-#endif
-#endif
+#  ifndef __NR_gettid
+#    ifdef GLOG_OS_MACOSX
+#      define __NR_gettid SYS_gettid
+#    elif !defined __i386__
+#      error "Must define __NR_gettid for non-x86 platforms"
+#    else
+#      define __NR_gettid 224
+#    endif
+#  endif
   static bool lacks_gettid = false;
   if (!lacks_gettid) {
-#if (defined(GLOG_OS_MACOSX) && defined(HAVE_PTHREAD_THREADID_NP))
+#  if (defined(GLOG_OS_MACOSX) && defined(HAVE_PTHREAD_THREADID_NP))
     uint64_t tid64;
     const int error = pthread_threadid_np(nullptr, &tid64);
     pid_t tid = error ? -1 : static_cast<pid_t>(tid64);
-#else
+#  else
     auto tid = static_cast<pid_t>(syscall(__NR_gettid));
-#endif
+#  endif
     if (tid != -1) {
       return tid;
     }
@@ -305,16 +302,13 @@ pid_t GetTID() {
 const char* const_basename(const char* filepath) {
   const char* base = strrchr(filepath, '/');
 #ifdef GLOG_OS_WINDOWS  // Look for either path separator in Windows
-  if (!base)
-    base = strrchr(filepath, '\\');
+  if (!base) base = strrchr(filepath, '\\');
 #endif
-  return base ? (base+1) : filepath;
+  return base ? (base + 1) : filepath;
 }
 
 static string g_my_user_name;
-const string& MyUserName() {
-  return g_my_user_name;
-}
+const string& MyUserName() { return g_my_user_name; }
 static void MyUserNameInitializer() {
   // TODO(hamaji): Probably this is not portable.
 #if defined(GLOG_OS_WINDOWS)
@@ -356,8 +350,7 @@ void DumpStackTraceToString(string* stacktrace) {
 static const CrashReason* g_reason = nullptr;
 
 void SetCrashReason(const CrashReason* r) {
-  sync_val_compare_and_swap(&g_reason,
-                            reinterpret_cast<const CrashReason*>(0),
+  sync_val_compare_and_swap(&g_reason, reinterpret_cast<const CrashReason*>(0),
                             r);
 }
 
@@ -366,7 +359,7 @@ void InitGoogleLoggingUtilities(const char* argv0) {
       << "You called InitGoogleLogging() twice!";
   const char* slash = strrchr(argv0, '/');
 #ifdef GLOG_OS_WINDOWS
-  if (!slash)  slash = strrchr(argv0, '\\');
+  if (!slash) slash = strrchr(argv0, '\\');
 #endif
   g_program_invocation_short_name = slash ? slash + 1 : argv0;
 
@@ -377,7 +370,8 @@ void InitGoogleLoggingUtilities(const char* argv0) {
 
 void ShutdownGoogleLoggingUtilities() {
   CHECK(IsGoogleLoggingInitialized())
-      << "You called ShutdownGoogleLogging() without calling InitGoogleLogging() first!";
+      << "You called ShutdownGoogleLogging() without calling "
+         "InitGoogleLogging() first!";
   g_program_invocation_short_name = nullptr;
 #ifdef HAVE_SYSLOG_H
   closelog();
@@ -390,13 +384,13 @@ void ShutdownGoogleLoggingUtilities() {
 
 // Make an implementation of stacktrace compiled.
 #ifdef STACKTRACE_H
-# include STACKTRACE_H
-# if 0
+#  include STACKTRACE_H
+#  if 0
 // For include scanners which can't handle macro expansions.
-#  include "stacktrace_libunwind-inl.h"
-#  include "stacktrace_x86-inl.h"
-#  include "stacktrace_x86_64-inl.h"
-#  include "stacktrace_powerpc-inl.h"
-#  include "stacktrace_generic-inl.h"
-# endif
+#    include "stacktrace_generic-inl.h"
+#    include "stacktrace_libunwind-inl.h"
+#    include "stacktrace_powerpc-inl.h"
+#    include "stacktrace_x86-inl.h"
+#    include "stacktrace_x86_64-inl.h"
+#  endif
 #endif

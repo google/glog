@@ -60,48 +60,48 @@
 
 #ifdef HAVE_SYMBOLIZE
 
-#if defined(__ELF__)  // defined by gcc
-#if defined(__OpenBSD__)
-#include <sys/exec_elf.h>
-#else
-#include <elf.h>
-#endif
+#  if defined(__ELF__)  // defined by gcc
+#    if defined(__OpenBSD__)
+#      include <sys/exec_elf.h>
+#    else
+#      include <elf.h>
+#    endif
 
-#if !defined(ANDROID)
-#include <link.h>  // For ElfW() macro.
-#endif
+#    if !defined(ANDROID)
+#      include <link.h>  // For ElfW() macro.
+#    endif
 
 // For systems where SIZEOF_VOID_P is not defined, determine it
 // based on __LP64__ (defined by gcc on 64-bit systems)
-#if !defined(SIZEOF_VOID_P)
-# if defined(__LP64__)
-#  define SIZEOF_VOID_P 8
-# else
-#  define SIZEOF_VOID_P 4
-# endif
-#endif
+#    if !defined(SIZEOF_VOID_P)
+#      if defined(__LP64__)
+#        define SIZEOF_VOID_P 8
+#      else
+#        define SIZEOF_VOID_P 4
+#      endif
+#    endif
 
 // If there is no ElfW macro, let's define it by ourself.
-#ifndef ElfW
-# if SIZEOF_VOID_P == 4
-#  define ElfW(type) Elf32_##type
-# elif SIZEOF_VOID_P == 8
-#  define ElfW(type) Elf64_##type
-# else
-#  error "Unknown sizeof(void *)"
-# endif
-#endif
+#    ifndef ElfW
+#      if SIZEOF_VOID_P == 4
+#        define ElfW(type) Elf32_##type
+#      elif SIZEOF_VOID_P == 8
+#        define ElfW(type) Elf64_##type
+#      else
+#        error "Unknown sizeof(void *)"
+#      endif
+#    endif
 
 namespace google {
 
 // Gets the section header for the given name, if it exists. Returns true on
 // success. Otherwise, returns false.
-bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
-                            ElfW(Shdr) *out);
+bool GetSectionHeaderByName(int fd, const char* name, size_t name_len,
+                            ElfW(Shdr) * out);
 
 }  // namespace google
 
-#endif  /* __ELF__ */
+#  endif /* __ELF__ */
 
 namespace google {
 
@@ -116,7 +116,7 @@ namespace google {
 // counter "pc". The callback function should write output to "out"
 // and return the size of the output written. On error, the callback
 // function should return -1.
-using SymbolizeCallback = int (*)(int, void *, char *, size_t, uint64_t);
+using SymbolizeCallback = int (*)(int, void*, char*, size_t, uint64_t);
 GLOG_EXPORT
 void InstallSymbolizeCallback(SymbolizeCallback callback);
 
@@ -130,8 +130,8 @@ void InstallSymbolizeCallback(SymbolizeCallback callback);
 // file is opened successfully, returns the file descriptor.  Otherwise,
 // returns -1.  |out_file_name_size| is the size of the file name buffer
 // (including the null-terminator).
-using SymbolizeOpenObjectFileCallback = int (*)(uint64_t, uint64_t &,
-                                                uint64_t &, char *, size_t);
+using SymbolizeOpenObjectFileCallback = int (*)(uint64_t, uint64_t&, uint64_t&,
+                                                char*, size_t);
 void InstallSymbolizeOpenObjectFileCallback(
     SymbolizeOpenObjectFileCallback callback);
 

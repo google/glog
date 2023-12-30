@@ -51,11 +51,11 @@ namespace google {
 // cases, we return 0 to indicate the situation.
 // We can use the GCC __thread syntax here since libunwind is not supported on
 // Windows.
-static __thread bool g_tl_entered; // Initialized to false.
+static __thread bool g_tl_entered;  // Initialized to false.
 
 // If you change this function, also change GetStackFrames below.
 int GetStackTrace(void** result, int max_depth, int skip_count) {
-  void *ip;
+  void* ip;
   int n = 0;
   unw_cursor_t cursor;
   unw_context_t uc;
@@ -67,11 +67,11 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 
   unw_getcontext(&uc);
   RAW_CHECK(unw_init_local(&cursor, &uc) >= 0, "unw_init_local failed");
-  skip_count++;         // Do not include the "GetStackTrace" frame
+  skip_count++;  // Do not include the "GetStackTrace" frame
 
   while (n < max_depth) {
     int ret =
-        unw_get_reg(&cursor, UNW_REG_IP, reinterpret_cast<unw_word_t *>(&ip));
+        unw_get_reg(&cursor, UNW_REG_IP, reinterpret_cast<unw_word_t*>(&ip));
     if (ret < 0) {
       break;
     }

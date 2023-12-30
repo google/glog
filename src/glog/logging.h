@@ -50,28 +50,28 @@
 #include <vector>
 
 #if defined(_MSC_VER)
-#define GLOG_MSVC_PUSH_DISABLE_WARNING(n) \
-  __pragma(warning(push)) __pragma(warning(disable : n))
-#define GLOG_MSVC_POP_WARNING() __pragma(warning(pop))
+#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n) \
+    __pragma(warning(push)) __pragma(warning(disable : n))
+#  define GLOG_MSVC_POP_WARNING() __pragma(warning(pop))
 #else
-#define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
-#define GLOG_MSVC_POP_WARNING()
+#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
+#  define GLOG_MSVC_POP_WARNING()
 #endif
 
 #include "glog/platform.h"
 
 #if defined(__has_attribute)
-#if __has_attribute(used)
-#define GLOG_USED __attribute__((used))
-#endif  // __has_attribute(used)
-#endif  // defined(__has_attribute)
+#  if __has_attribute(used)
+#    define GLOG_USED __attribute__((used))
+#  endif  // __has_attribute(used)
+#endif    // defined(__has_attribute)
 
 #if !defined(GLOG_USED)
-#define GLOG_USED
+#  define GLOG_USED
 #endif  // !defined(GLOG_USED)
 
 #if defined(GLOG_USE_GLOG_EXPORT)
-#include "glog/export.h"
+#  include "glog/export.h"
 #endif
 
 // We care a lot about number of bits things take up.  Unfortunately,
@@ -83,7 +83,7 @@
 #include <cstdint>  // the normal place uint16_t is defined
 
 #if defined(GLOG_USE_GFLAGS)
-#include <gflags/gflags.h>
+#  include <gflags/gflags.h>
 #endif
 
 #include <atomic>
@@ -158,7 +158,7 @@ typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
 // file, add "#define GOOGLE_STRIP_LOG 1" to that file _before_ including
 // base/logging.h
 #ifndef GOOGLE_STRIP_LOG
-#define GOOGLE_STRIP_LOG 0
+#  define GOOGLE_STRIP_LOG 0
 #endif
 
 // GCC can be told that a certain branch is not likely to be taken (for
@@ -167,43 +167,43 @@ typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
 // the absence of better information (ie. -fprofile-arcs).
 //
 #if defined(__has_builtin)
-#if __has_builtin(__builtin_expect)
-#define GLOG_BUILTIN_EXPECT_PRESENT
-#endif
+#  if __has_builtin(__builtin_expect)
+#    define GLOG_BUILTIN_EXPECT_PRESENT
+#  endif
 #endif
 
 #if !defined(GLOG_BUILTIN_EXPECT_PRESENT) && defined(__GNUG__)
 // __has_builtin is not available prior to GCC 10
-#define GLOG_BUILTIN_EXPECT_PRESENT
+#  define GLOG_BUILTIN_EXPECT_PRESENT
 #endif
 
 #if defined(GLOG_BUILTIN_EXPECT_PRESENT)
 
-#ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
-#define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) (__builtin_expect(x, 0))
-#endif
+#  ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
+#    define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) (__builtin_expect(x, 0))
+#  endif
 
-#ifndef GOOGLE_PREDICT_FALSE
-#define GOOGLE_PREDICT_FALSE(x) (__builtin_expect(x, 0))
-#endif
+#  ifndef GOOGLE_PREDICT_FALSE
+#    define GOOGLE_PREDICT_FALSE(x) (__builtin_expect(x, 0))
+#  endif
 
-#ifndef GOOGLE_PREDICT_TRUE
-#define GOOGLE_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
-#endif
+#  ifndef GOOGLE_PREDICT_TRUE
+#    define GOOGLE_PREDICT_TRUE(x) (__builtin_expect(!!(x), 1))
+#  endif
 
 #else
 
-#ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
-#define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) x
-#endif
+#  ifndef GOOGLE_PREDICT_BRANCH_NOT_TAKEN
+#    define GOOGLE_PREDICT_BRANCH_NOT_TAKEN(x) x
+#  endif
 
-#ifndef GOOGLE_PREDICT_TRUE
-#define GOOGLE_PREDICT_FALSE(x) x
-#endif
+#  ifndef GOOGLE_PREDICT_TRUE
+#    define GOOGLE_PREDICT_FALSE(x) x
+#  endif
 
-#ifndef GOOGLE_PREDICT_TRUE
-#define GOOGLE_PREDICT_TRUE(x) x
-#endif
+#  ifndef GOOGLE_PREDICT_TRUE
+#    define GOOGLE_PREDICT_TRUE(x) x
+#  endif
 
 #endif
 
@@ -370,50 +370,51 @@ typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
 #pragma push_macro("DECLARE_uint32")
 
 #ifdef DECLARE_VARIABLE
-#undef DECLARE_VARIABLE
+#  undef DECLARE_VARIABLE
 #endif
 
 #ifdef DECLARE_bool
-#undef DECLARE_bool
+#  undef DECLARE_bool
 #endif
 
 #ifdef DECLARE_string
-#undef DECLARE_string
+#  undef DECLARE_string
 #endif
 
 #ifdef DECLARE_int32
-#undef DECLARE_int32
+#  undef DECLARE_int32
 #endif
 
 #ifdef DECLARE_uint32
-#undef DECLARE_uint32
+#  undef DECLARE_uint32
 #endif
 
 #ifndef DECLARE_VARIABLE
-#define DECLARE_VARIABLE(type, shorttype, name, tn) \
-  namespace fL##shorttype {                         \
-    extern GLOG_EXPORT type FLAGS_##name;           \
-  }                                                 \
-  using fL##shorttype::FLAGS_##name
+#  define DECLARE_VARIABLE(type, shorttype, name, tn) \
+    namespace fL##shorttype {                         \
+      extern GLOG_EXPORT type FLAGS_##name;           \
+    }                                                 \
+    using fL##shorttype::FLAGS_##name
 
 // bool specialization
-#define DECLARE_bool(name) DECLARE_VARIABLE(bool, B, name, bool)
+#  define DECLARE_bool(name) DECLARE_VARIABLE(bool, B, name, bool)
 
 // int32 specialization
-#define DECLARE_int32(name) DECLARE_VARIABLE(google::int32, I, name, int32)
+#  define DECLARE_int32(name) DECLARE_VARIABLE(google::int32, I, name, int32)
 
-#if !defined(DECLARE_uint32)
+#  if !defined(DECLARE_uint32)
 // uint32 specialization
-#define DECLARE_uint32(name) DECLARE_VARIABLE(google::uint32, U, name, uint32)
-#endif  // !defined(DECLARE_uint32) && !defined(GLOG_USE_GFLAGS)
+#    define DECLARE_uint32(name) \
+      DECLARE_VARIABLE(google::uint32, U, name, uint32)
+#  endif  // !defined(DECLARE_uint32) && !defined(GLOG_USE_GFLAGS)
 
 // Special case for string, because we have to specify the namespace
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
-#define DECLARE_string(name)                    \
-  namespace fLS {                               \
-  extern GLOG_EXPORT std::string& FLAGS_##name; \
-  }                                             \
-  using fLS::FLAGS_##name
+#  define DECLARE_string(name)                    \
+    namespace fLS {                               \
+    extern GLOG_EXPORT std::string& FLAGS_##name; \
+    }                                             \
+    using fLS::FLAGS_##name
 #endif
 
 // Set whether appending a timestamp to the log file name
@@ -493,58 +494,58 @@ DECLARE_string(logmailer);
 // better to have compact code for these operations.
 
 #if GOOGLE_STRIP_LOG == 0
-#define COMPACT_GOOGLE_LOG_INFO google::LogMessage(__FILE__, __LINE__)
-#define LOG_TO_STRING_INFO(message) \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_INFO, message)
+#  define COMPACT_GOOGLE_LOG_INFO google::LogMessage(__FILE__, __LINE__)
+#  define LOG_TO_STRING_INFO(message) \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_INFO, message)
 #else
-#define COMPACT_GOOGLE_LOG_INFO google::NullStream()
-#define LOG_TO_STRING_INFO(message) google::NullStream()
+#  define COMPACT_GOOGLE_LOG_INFO google::NullStream()
+#  define LOG_TO_STRING_INFO(message) google::NullStream()
 #endif
 
 #if GOOGLE_STRIP_LOG <= 1
-#define COMPACT_GOOGLE_LOG_WARNING \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_WARNING)
-#define LOG_TO_STRING_WARNING(message) \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_WARNING, message)
+#  define COMPACT_GOOGLE_LOG_WARNING \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_WARNING)
+#  define LOG_TO_STRING_WARNING(message) \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_WARNING, message)
 #else
-#define COMPACT_GOOGLE_LOG_WARNING google::NullStream()
-#define LOG_TO_STRING_WARNING(message) google::NullStream()
+#  define COMPACT_GOOGLE_LOG_WARNING google::NullStream()
+#  define LOG_TO_STRING_WARNING(message) google::NullStream()
 #endif
 
 #if GOOGLE_STRIP_LOG <= 2
-#define COMPACT_GOOGLE_LOG_ERROR \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR)
-#define LOG_TO_STRING_ERROR(message) \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR, message)
+#  define COMPACT_GOOGLE_LOG_ERROR \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR)
+#  define LOG_TO_STRING_ERROR(message) \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR, message)
 #else
-#define COMPACT_GOOGLE_LOG_ERROR google::NullStream()
-#define LOG_TO_STRING_ERROR(message) google::NullStream()
+#  define COMPACT_GOOGLE_LOG_ERROR google::NullStream()
+#  define LOG_TO_STRING_ERROR(message) google::NullStream()
 #endif
 
 #if GOOGLE_STRIP_LOG <= 3
-#define COMPACT_GOOGLE_LOG_FATAL google::LogMessageFatal(__FILE__, __LINE__)
-#define LOG_TO_STRING_FATAL(message) \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_FATAL, message)
+#  define COMPACT_GOOGLE_LOG_FATAL google::LogMessageFatal(__FILE__, __LINE__)
+#  define LOG_TO_STRING_FATAL(message) \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_FATAL, message)
 #else
-#define COMPACT_GOOGLE_LOG_FATAL google::NullStreamFatal()
-#define LOG_TO_STRING_FATAL(message) google::NullStreamFatal()
+#  define COMPACT_GOOGLE_LOG_FATAL google::NullStreamFatal()
+#  define LOG_TO_STRING_FATAL(message) google::NullStreamFatal()
 #endif
 
 #if defined(NDEBUG) && !defined(DCHECK_ALWAYS_ON)
-#define DCHECK_IS_ON() 0
+#  define DCHECK_IS_ON() 0
 #else
-#define DCHECK_IS_ON() 1
+#  define DCHECK_IS_ON() 1
 #endif
 
 // For DFATAL, we want to use LogMessage (as opposed to
 // LogMessageFatal), to be consistent with the original behavior.
 #if !DCHECK_IS_ON()
-#define COMPACT_GOOGLE_LOG_DFATAL COMPACT_GOOGLE_LOG_ERROR
+#  define COMPACT_GOOGLE_LOG_DFATAL COMPACT_GOOGLE_LOG_ERROR
 #elif GOOGLE_STRIP_LOG <= 3
-#define COMPACT_GOOGLE_LOG_DFATAL \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_FATAL)
+#  define COMPACT_GOOGLE_LOG_DFATAL \
+    google::LogMessage(__FILE__, __LINE__, google::GLOG_FATAL)
 #else
-#define COMPACT_GOOGLE_LOG_DFATAL google::NullStreamFatal()
+#  define COMPACT_GOOGLE_LOG_DFATAL google::NullStreamFatal()
 #endif
 
 #define GOOGLE_LOG_INFO(counter)                                     \
@@ -581,22 +582,22 @@ DECLARE_string(logmailer);
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || \
     defined(__CYGWIN__) || defined(__CYGWIN32__)
 // A very useful logging macro to log windows errors:
-#define LOG_SYSRESULT(result)                                                \
-  if (FAILED(HRESULT_FROM_WIN32(result))) {                                  \
-    LPSTR message = nullptr;                                                 \
-    LPSTR msg = reinterpret_cast<LPSTR>(&message);                           \
-    DWORD message_length = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |   \
-                                              FORMAT_MESSAGE_FROM_SYSTEM |   \
-                                              FORMAT_MESSAGE_IGNORE_INSERTS, \
-                                          0, result, 0, msg, 100, nullptr);  \
-    if (message_length > 0) {                                                \
-      google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR, 0,          \
-                         &google::LogMessage::SendToLog)                     \
-              .stream()                                                      \
-          << reinterpret_cast<const char*>(message);                         \
-      LocalFree(message);                                                    \
-    }                                                                        \
-  }
+#  define LOG_SYSRESULT(result)                                                \
+    if (FAILED(HRESULT_FROM_WIN32(result))) {                                  \
+      LPSTR message = nullptr;                                                 \
+      LPSTR msg = reinterpret_cast<LPSTR>(&message);                           \
+      DWORD message_length = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |   \
+                                                FORMAT_MESSAGE_FROM_SYSTEM |   \
+                                                FORMAT_MESSAGE_IGNORE_INSERTS, \
+                                            0, result, 0, msg, 100, nullptr);  \
+      if (message_length > 0) {                                                \
+        google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR, 0,          \
+                           &google::LogMessage::SendToLog)                     \
+                .stream()                                                      \
+            << reinterpret_cast<const char*>(message);                         \
+        LocalFree(message);                                                    \
+      }                                                                        \
+    }
 #endif
 
 // We use the preprocessor's merging operator, "##", so that, e.g.,
@@ -781,9 +782,9 @@ GLOG_EXPORT void MakeCheckOpValueString(std::ostream* os,
 template <typename T1, typename T2>
 std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
 #if defined(__has_attribute)
-#if __has_attribute(used)
+#  if __has_attribute(used)
     __attribute__((noinline))
-#endif
+#  endif
 #endif
     ;
 
@@ -866,7 +867,7 @@ DEFINE_CHECK_OP_IMPL(Check_GT, >)
 
 #if defined(STATIC_ANALYSIS)
 // Only for static analysis tool to know that it is equivalent to assert
-#define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1)op(val2))
+#  define CHECK_OP_LOG(name, op, val1, val2, log) CHECK((val1)op(val2))
 #elif DCHECK_IS_ON()
 // In debug mode, avoid constructing CheckOpStrings if possible,
 // to reduce the overhead of CHECK statements by 2x.
@@ -878,27 +879,27 @@ DEFINE_CHECK_OP_IMPL(Check_GT, >)
 // file is included).  Save the current meaning now and use it
 // in the macro.
 typedef std::string _Check_string;
-#define CHECK_OP_LOG(name, op, val1, val2, log)                             \
-  while (google::_Check_string* _result = google::Check##name##Impl(        \
-             google::GetReferenceableValue(val1),                           \
-             google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
-  log(__FILE__, __LINE__, google::CheckOpString(_result)).stream()
+#  define CHECK_OP_LOG(name, op, val1, val2, log)                             \
+    while (google::_Check_string* _result = google::Check##name##Impl(        \
+               google::GetReferenceableValue(val1),                           \
+               google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
+    log(__FILE__, __LINE__, google::CheckOpString(_result)).stream()
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
-#define CHECK_OP_LOG(name, op, val1, val2, log)                             \
-  while (google::CheckOpString _result = google::Check##name##Impl(         \
-             google::GetReferenceableValue(val1),                           \
-             google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
-  log(__FILE__, __LINE__, _result).stream()
+#  define CHECK_OP_LOG(name, op, val1, val2, log)                             \
+    while (google::CheckOpString _result = google::Check##name##Impl(         \
+               google::GetReferenceableValue(val1),                           \
+               google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
+    log(__FILE__, __LINE__, _result).stream()
 #endif  // STATIC_ANALYSIS, DCHECK_IS_ON()
 
 #if GOOGLE_STRIP_LOG <= 3
-#define CHECK_OP(name, op, val1, val2) \
-  CHECK_OP_LOG(name, op, val1, val2, google::LogMessageFatal)
+#  define CHECK_OP(name, op, val1, val2) \
+    CHECK_OP_LOG(name, op, val1, val2, google::LogMessageFatal)
 #else
-#define CHECK_OP(name, op, val1, val2) \
-  CHECK_OP_LOG(name, op, val1, val2, google::NullStreamFatal)
+#  define CHECK_OP(name, op, val1, val2) \
+    CHECK_OP_LOG(name, op, val1, val2, google::NullStreamFatal)
 #endif  // STRIP_LOG <= 3
 
 // Equality/Inequality checks - compare two values, and log a FATAL message
@@ -1028,20 +1029,20 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
 #define LOG_PREVIOUS_TIME LOG_EVERY_N_VARNAME(previousTime_, __LINE__)
 
 #if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define GLOG_SANITIZE_THREAD 1
-#endif
+#  if __has_feature(thread_sanitizer)
+#    define GLOG_SANITIZE_THREAD 1
+#  endif
 #endif
 
 #if !defined(GLOG_SANITIZE_THREAD) && defined(__SANITIZE_THREAD__) && \
     __SANITIZE_THREAD__
-#define GLOG_SANITIZE_THREAD 1
+#  define GLOG_SANITIZE_THREAD 1
 #endif
 
 #if defined(GLOG_SANITIZE_THREAD)
-#define GLOG_IFDEF_THREAD_SANITIZER(X) X
+#  define GLOG_IFDEF_THREAD_SANITIZER(X) X
 #else
-#define GLOG_IFDEF_THREAD_SANITIZER(X)
+#  define GLOG_IFDEF_THREAD_SANITIZER(X)
 #endif
 
 #if defined(GLOG_SANITIZE_THREAD)
@@ -1166,9 +1167,9 @@ enum PRIVATE_Counter { COUNTER };
 // substituted with 0, and it expands to COMPACT_GOOGLE_LOG_0. To allow us
 // to keep using this syntax, we define this macro to do the same thing
 // as COMPACT_GOOGLE_LOG_ERROR.
-#define COMPACT_GOOGLE_LOG_0 COMPACT_GOOGLE_LOG_ERROR
-#define SYSLOG_0 SYSLOG_ERROR
-#define LOG_TO_STRING_0 LOG_TO_STRING_ERROR
+#  define COMPACT_GOOGLE_LOG_0 COMPACT_GOOGLE_LOG_ERROR
+#  define SYSLOG_0 SYSLOG_ERROR
+#  define LOG_TO_STRING_0 LOG_TO_STRING_ERROR
 // Needed for LOG_IS_ON(ERROR).
 const LogSeverity GLOG_0 = GLOG_ERROR;
 #else
@@ -1176,126 +1177,126 @@ const LogSeverity GLOG_0 = GLOG_ERROR;
 // GLOG_NO_ABBREVIATED_SEVERITIES nor WIN32_LEAN_AND_MEAN.
 // For this case, we cannot detect if ERROR is defined before users
 // actually use ERROR. Let's make an undefined symbol to warn users.
-#define GLOG_ERROR_MSG \
-  ERROR_macro_is_defined_Define_GLOG_NO_ABBREVIATED_SEVERITIES_before_including_logging_h_See_the_document_for_detail
-#define COMPACT_GOOGLE_LOG_0 GLOG_ERROR_MSG
-#define SYSLOG_0 GLOG_ERROR_MSG
-#define LOG_TO_STRING_0 GLOG_ERROR_MSG
-#define GLOG_0 GLOG_ERROR_MSG
+#  define GLOG_ERROR_MSG \
+    ERROR_macro_is_defined_Define_GLOG_NO_ABBREVIATED_SEVERITIES_before_including_logging_h_See_the_document_for_detail
+#  define COMPACT_GOOGLE_LOG_0 GLOG_ERROR_MSG
+#  define SYSLOG_0 GLOG_ERROR_MSG
+#  define LOG_TO_STRING_0 GLOG_ERROR_MSG
+#  define GLOG_0 GLOG_ERROR_MSG
 #endif
 
 // Plus some debug-logging macros that get compiled to nothing for production
 
 #if DCHECK_IS_ON()
 
-#define DLOG(severity) LOG(severity)
-#define DVLOG(verboselevel) VLOG(verboselevel)
-#define DLOG_IF(severity, condition) LOG_IF(severity, condition)
-#define DLOG_EVERY_N(severity, n) LOG_EVERY_N(severity, n)
-#define DLOG_IF_EVERY_N(severity, condition, n) \
-  LOG_IF_EVERY_N(severity, condition, n)
-#define DLOG_FIRST_N(severity, n) LOG_FIRST_N(severity, n)
-#define DLOG_EVERY_T(severity, T) LOG_EVERY_T(severity, T)
-#define DLOG_ASSERT(condition) LOG_ASSERT(condition)
+#  define DLOG(severity) LOG(severity)
+#  define DVLOG(verboselevel) VLOG(verboselevel)
+#  define DLOG_IF(severity, condition) LOG_IF(severity, condition)
+#  define DLOG_EVERY_N(severity, n) LOG_EVERY_N(severity, n)
+#  define DLOG_IF_EVERY_N(severity, condition, n) \
+    LOG_IF_EVERY_N(severity, condition, n)
+#  define DLOG_FIRST_N(severity, n) LOG_FIRST_N(severity, n)
+#  define DLOG_EVERY_T(severity, T) LOG_EVERY_T(severity, T)
+#  define DLOG_ASSERT(condition) LOG_ASSERT(condition)
 
 // debug-only checking.  executed if DCHECK_IS_ON().
-#define DCHECK(condition) CHECK(condition)
-#define DCHECK_EQ(val1, val2) CHECK_EQ(val1, val2)
-#define DCHECK_NE(val1, val2) CHECK_NE(val1, val2)
-#define DCHECK_LE(val1, val2) CHECK_LE(val1, val2)
-#define DCHECK_LT(val1, val2) CHECK_LT(val1, val2)
-#define DCHECK_GE(val1, val2) CHECK_GE(val1, val2)
-#define DCHECK_GT(val1, val2) CHECK_GT(val1, val2)
-#define DCHECK_NOTNULL(val) CHECK_NOTNULL(val)
-#define DCHECK_STREQ(str1, str2) CHECK_STREQ(str1, str2)
-#define DCHECK_STRCASEEQ(str1, str2) CHECK_STRCASEEQ(str1, str2)
-#define DCHECK_STRNE(str1, str2) CHECK_STRNE(str1, str2)
-#define DCHECK_STRCASENE(str1, str2) CHECK_STRCASENE(str1, str2)
+#  define DCHECK(condition) CHECK(condition)
+#  define DCHECK_EQ(val1, val2) CHECK_EQ(val1, val2)
+#  define DCHECK_NE(val1, val2) CHECK_NE(val1, val2)
+#  define DCHECK_LE(val1, val2) CHECK_LE(val1, val2)
+#  define DCHECK_LT(val1, val2) CHECK_LT(val1, val2)
+#  define DCHECK_GE(val1, val2) CHECK_GE(val1, val2)
+#  define DCHECK_GT(val1, val2) CHECK_GT(val1, val2)
+#  define DCHECK_NOTNULL(val) CHECK_NOTNULL(val)
+#  define DCHECK_STREQ(str1, str2) CHECK_STREQ(str1, str2)
+#  define DCHECK_STRCASEEQ(str1, str2) CHECK_STRCASEEQ(str1, str2)
+#  define DCHECK_STRNE(str1, str2) CHECK_STRNE(str1, str2)
+#  define DCHECK_STRCASENE(str1, str2) CHECK_STRCASENE(str1, str2)
 
 #else  // !DCHECK_IS_ON()
 
-#define DLOG(severity)  \
-  static_cast<void>(0), \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG(severity)  \
+    static_cast<void>(0), \
+        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
 
-#define DVLOG(verboselevel)                                 \
-  static_cast<void>(0), (true || !VLOG_IS_ON(verboselevel)) \
-                            ? (void)0                       \
-                            : google::LogMessageVoidify() & LOG(INFO)
+#  define DVLOG(verboselevel)                                 \
+    static_cast<void>(0), (true || !VLOG_IS_ON(verboselevel)) \
+                              ? (void)0                       \
+                              : google::LogMessageVoidify() & LOG(INFO)
 
-#define DLOG_IF(severity, condition)           \
-  static_cast<void>(0), (true || !(condition)) \
-                            ? (void)0          \
-                            : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_IF(severity, condition)           \
+    static_cast<void>(0), (true || !(condition)) \
+                              ? (void)0          \
+                              : google::LogMessageVoidify() & LOG(severity)
 
-#define DLOG_EVERY_N(severity, n) \
-  static_cast<void>(0),           \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_EVERY_N(severity, n) \
+    static_cast<void>(0),           \
+        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
 
-#define DLOG_IF_EVERY_N(severity, condition, n) \
-  static_cast<void>(0), (true || !(condition))  \
-                            ? (void)0           \
-                            : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_IF_EVERY_N(severity, condition, n) \
+    static_cast<void>(0), (true || !(condition))  \
+                              ? (void)0           \
+                              : google::LogMessageVoidify() & LOG(severity)
 
-#define DLOG_FIRST_N(severity, n) \
-  static_cast<void>(0),           \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_FIRST_N(severity, n) \
+    static_cast<void>(0),           \
+        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
 
-#define DLOG_EVERY_T(severity, T) \
-  static_cast<void>(0),           \
-      true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_EVERY_T(severity, T) \
+    static_cast<void>(0),           \
+        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
 
-#define DLOG_ASSERT(condition) \
-  static_cast<void>(0), true ? (void)0 : LOG_ASSERT(condition)
+#  define DLOG_ASSERT(condition) \
+    static_cast<void>(0), true ? (void)0 : LOG_ASSERT(condition)
 
 // MSVC warning C4127: conditional expression is constant
-#define DCHECK(condition)              \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK(condition)
+#  define DCHECK(condition)              \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK(condition)
 
-#define DCHECK_EQ(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_EQ(val1, val2)
+#  define DCHECK_EQ(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_EQ(val1, val2)
 
-#define DCHECK_NE(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_NE(val1, val2)
+#  define DCHECK_NE(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_NE(val1, val2)
 
-#define DCHECK_LE(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_LE(val1, val2)
+#  define DCHECK_LE(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_LE(val1, val2)
 
-#define DCHECK_LT(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_LT(val1, val2)
+#  define DCHECK_LT(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_LT(val1, val2)
 
-#define DCHECK_GE(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_GE(val1, val2)
+#  define DCHECK_GE(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_GE(val1, val2)
 
-#define DCHECK_GT(val1, val2)          \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_GT(val1, val2)
+#  define DCHECK_GT(val1, val2)          \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_GT(val1, val2)
 
 // You may see warnings in release mode if you don't use the return
 // value of DCHECK_NOTNULL. Please just use DCHECK for such cases.
-#define DCHECK_NOTNULL(val) (val)
+#  define DCHECK_NOTNULL(val) (val)
 
-#define DCHECK_STREQ(str1, str2)       \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_STREQ(str1, str2)
+#  define DCHECK_STREQ(str1, str2)       \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_STREQ(str1, str2)
 
-#define DCHECK_STRCASEEQ(str1, str2)   \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_STRCASEEQ(str1, str2)
+#  define DCHECK_STRCASEEQ(str1, str2)   \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_STRCASEEQ(str1, str2)
 
-#define DCHECK_STRNE(str1, str2)       \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_STRNE(str1, str2)
+#  define DCHECK_STRNE(str1, str2)       \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_STRNE(str1, str2)
 
-#define DCHECK_STRCASENE(str1, str2)   \
-  GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
-  while (false) GLOG_MSVC_POP_WARNING() CHECK_STRCASENE(str1, str2)
+#  define DCHECK_STRCASENE(str1, str2)   \
+    GLOG_MSVC_PUSH_DISABLE_WARNING(4127) \
+    while (false) GLOG_MSVC_POP_WARNING() CHECK_STRCASENE(str1, str2)
 
 #endif  // DCHECK_IS_ON()
 

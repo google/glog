@@ -34,7 +34,7 @@
 #include "googletest.h"
 
 #ifdef GLOG_USE_GFLAGS
-#include <gflags/gflags.h>
+#  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
 
@@ -51,7 +51,7 @@ TEST(utilities, InitGoogleLoggingDeathTest) {
   ASSERT_DEATH(InitGoogleLogging("foobar"), "");
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
   InitGoogleLogging(argv[0]);
   InitGoogleTest(&argc, argv);
 

@@ -102,55 +102,56 @@
 #ifndef GOOGLE_MUTEX_H_
 #define GOOGLE_MUTEX_H_
 
-#include "config.h"           // to figure out pthreads support
+#include "config.h"  // to figure out pthreads support
 
 #if defined(NO_THREADS)
-  typedef int MutexType;      // to keep a lock-count
+typedef int MutexType;  // to keep a lock-count
 #elif defined(_WIN32) || defined(__CYGWIN__)
-# ifndef WIN32_LEAN_AND_MEAN
-#  define WIN32_LEAN_AND_MEAN  // We only need minimal includes
-# endif
-# ifdef GMUTEX_TRYLOCK
-  // We need Windows NT or later for TryEnterCriticalSection().  If you
-  // don't need that functionality, you can remove these _WIN32_WINNT
-  // lines, and change TryLock() to assert(0) or something.
-#   ifndef _WIN32_WINNT
-#     define _WIN32_WINNT 0x0400
-#   endif
-# endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN  // We only need minimal includes
+#  endif
+#  ifdef GMUTEX_TRYLOCK
+// We need Windows NT or later for TryEnterCriticalSection().  If you
+// don't need that functionality, you can remove these _WIN32_WINNT
+// lines, and change TryLock() to assert(0) or something.
+#    ifndef _WIN32_WINNT
+#      define _WIN32_WINNT 0x0400
+#    endif
+#  endif
 // To avoid macro definition of ERROR.
-# ifndef NOGDI
-#  define NOGDI
-# endif
+#  ifndef NOGDI
+#    define NOGDI
+#  endif
 // To avoid macro definition of min/max.
-# ifndef NOMINMAX
-#  define NOMINMAX
-# endif
-# include <windows.h>
-  typedef CRITICAL_SECTION MutexType;
+#  ifndef NOMINMAX
+#    define NOMINMAX
+#  endif
+#  include <windows.h>
+typedef CRITICAL_SECTION MutexType;
 #elif defined(HAVE_PTHREAD) && defined(HAVE_RWLOCK)
-  // Needed for pthread_rwlock_*.  If it causes problems, you could take it
-  // out, but then you'd have to unset HAVE_RWLOCK (at least on linux -- it
-  // *does* cause problems for FreeBSD, or MacOSX, but isn't needed
-  // for locking there.)
-# ifdef __linux__
-#   ifndef _XOPEN_SOURCE  // Some other header might have already set it for us.
-#     define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
-#   endif
-# endif
-# include <pthread.h>
+// Needed for pthread_rwlock_*.  If it causes problems, you could take it
+// out, but then you'd have to unset HAVE_RWLOCK (at least on linux -- it
+// *does* cause problems for FreeBSD, or MacOSX, but isn't needed
+// for locking there.)
+#  ifdef __linux__
+#    ifndef _XOPEN_SOURCE  // Some other header might have already set it for
+                           // us.
+#      define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
+#    endif
+#  endif
+#  include <pthread.h>
 using MutexType = pthread_rwlock_t;
 #elif defined(HAVE_PTHREAD)
-# include <pthread.h>
-  typedef pthread_mutex_t MutexType;
+#  include <pthread.h>
+typedef pthread_mutex_t MutexType;
 #else
-# error Need to implement mutex.h for your architecture, or #define NO_THREADS
+#  error Need to implement mutex.h for your architecture, or #define NO_THREADS
 #endif
 
 // We need to include these header files after defining _XOPEN_SOURCE
 // as they may define the _XOPEN_SOURCE macro.
 #include <cassert>
-#include <cstdlib>      // for abort()
+#include <cstdlib>  // for abort()
 
 #define MUTEX_NAMESPACE glog_internal_namespace_
 
@@ -170,16 +171,16 @@ class Mutex {
   inline void Lock();    // Block if needed until free then acquire exclusively
   inline void Unlock();  // Release a lock acquired via Lock()
 #ifdef GMUTEX_TRYLOCK
-  inline bool TryLock(); // If free, Lock() and return true, else return false
+  inline bool TryLock();  // If free, Lock() and return true, else return false
 #endif
   // Note that on systems that don't support read-write locks, these may
   // be implemented as synonyms to Lock() and Unlock().  So you can use
   // these for efficiency, but don't use them anyplace where being able
   // to do shared reads is necessary to avoid deadlock.
-  inline void ReaderLock();   // Block until free or shared then acquire a share
-  inline void ReaderUnlock(); // Release a read share of this Mutex
-  inline void WriterLock() { Lock(); }     // Acquire an exclusive lock
-  inline void WriterUnlock() { Unlock(); } // Release a lock from WriterLock()
+  inline void ReaderLock();  // Block until free or shared then acquire a share
+  inline void ReaderUnlock();           // Release a read share of this Mutex
+  inline void WriterLock() { Lock(); }  // Acquire an exclusive lock
+  inline void WriterUnlock() { Unlock(); }  // Release a lock from WriterLock()
 
   // TODO(hamaji): Do nothing, implement correctly.
   inline void AssertHeld() {}
@@ -194,10 +195,10 @@ class Mutex {
   inline void SetIsSafe() { is_safe_ = true; }
 
   // Catch the error of writing Mutex when intending MutexLock.
-  explicit Mutex(Mutex * /*ignored*/) {}
+  explicit Mutex(Mutex* /*ignored*/) {}
   // Disallow "evil" constructors
-  Mutex(const Mutex &) = delete;
-  void operator=(const Mutex &) = delete;
+  Mutex(const Mutex&) = delete;
+  void operator=(const Mutex&) = delete;
 };
 
 // Now the implementation of Mutex for various systems
@@ -213,71 +214,86 @@ class Mutex {
 // we do nothing, for efficiency.  That's why everything is in an
 // assert.
 
-Mutex::Mutex() : mutex_(0) { }
-Mutex::~Mutex()            { assert(mutex_ == 0); }
-void Mutex::Lock()         { assert(--mutex_ == -1); }
-void Mutex::Unlock()       { assert(mutex_++ == -1); }
-#ifdef GMUTEX_TRYLOCK
-bool Mutex::TryLock()      { if (mutex_) return false; Lock(); return true; }
-#endif
-void Mutex::ReaderLock()   { assert(++mutex_ > 0); }
+Mutex::Mutex() : mutex_(0) {}
+Mutex::~Mutex() { assert(mutex_ == 0); }
+void Mutex::Lock() { assert(--mutex_ == -1); }
+void Mutex::Unlock() { assert(mutex_++ == -1); }
+#  ifdef GMUTEX_TRYLOCK
+bool Mutex::TryLock() {
+  if (mutex_) return false;
+  Lock();
+  return true;
+}
+#  endif
+void Mutex::ReaderLock() { assert(++mutex_ > 0); }
 void Mutex::ReaderUnlock() { assert(mutex_-- > 0); }
 
 #elif defined(_WIN32) || defined(__CYGWIN__)
 
-Mutex::Mutex()             { InitializeCriticalSection(&mutex_); SetIsSafe(); }
-Mutex::~Mutex()            { DeleteCriticalSection(&mutex_); }
-void Mutex::Lock()         { if (is_safe_) EnterCriticalSection(&mutex_); }
-void Mutex::Unlock()       { if (is_safe_) LeaveCriticalSection(&mutex_); }
-#ifdef GMUTEX_TRYLOCK
-bool Mutex::TryLock()      { return is_safe_ ?
-                                 TryEnterCriticalSection(&mutex_) != 0 : true; }
-#endif
-void Mutex::ReaderLock()   { Lock(); }      // we don't have read-write locks
+Mutex::Mutex() {
+  InitializeCriticalSection(&mutex_);
+  SetIsSafe();
+}
+Mutex::~Mutex() { DeleteCriticalSection(&mutex_); }
+void Mutex::Lock() {
+  if (is_safe_) EnterCriticalSection(&mutex_);
+}
+void Mutex::Unlock() {
+  if (is_safe_) LeaveCriticalSection(&mutex_);
+}
+#  ifdef GMUTEX_TRYLOCK
+bool Mutex::TryLock() {
+  return is_safe_ ? TryEnterCriticalSection(&mutex_) != 0 : true;
+}
+#  endif
+void Mutex::ReaderLock() { Lock(); }  // we don't have read-write locks
 void Mutex::ReaderUnlock() { Unlock(); }
 
 #elif defined(HAVE_PTHREAD) && defined(HAVE_RWLOCK)
 
-#define SAFE_PTHREAD(fncall)  do {   /* run fncall if is_safe_ is true */  \
-  if (is_safe_ && fncall(&mutex_) != 0) abort();                           \
-} while (0)
+#  define SAFE_PTHREAD(fncall)                       \
+    do { /* run fncall if is_safe_ is true */        \
+      if (is_safe_ && fncall(&mutex_) != 0) abort(); \
+    } while (0)
 
 Mutex::Mutex() {
   SetIsSafe();
   if (is_safe_ && pthread_rwlock_init(&mutex_, nullptr) != 0) abort();
 }
-Mutex::~Mutex()            { SAFE_PTHREAD(pthread_rwlock_destroy); }
-void Mutex::Lock()         { SAFE_PTHREAD(pthread_rwlock_wrlock); }
-void Mutex::Unlock()       { SAFE_PTHREAD(pthread_rwlock_unlock); }
-#ifdef GMUTEX_TRYLOCK
-bool Mutex::TryLock()      { return is_safe_ ?
-                                    pthread_rwlock_trywrlock(&mutex_) == 0 :
-                                    true; }
-#endif
-void Mutex::ReaderLock()   { SAFE_PTHREAD(pthread_rwlock_rdlock); }
+Mutex::~Mutex() { SAFE_PTHREAD(pthread_rwlock_destroy); }
+void Mutex::Lock() { SAFE_PTHREAD(pthread_rwlock_wrlock); }
+void Mutex::Unlock() { SAFE_PTHREAD(pthread_rwlock_unlock); }
+#  ifdef GMUTEX_TRYLOCK
+bool Mutex::TryLock() {
+  return is_safe_ ? pthread_rwlock_trywrlock(&mutex_) == 0 : true;
+}
+#  endif
+void Mutex::ReaderLock() { SAFE_PTHREAD(pthread_rwlock_rdlock); }
 void Mutex::ReaderUnlock() { SAFE_PTHREAD(pthread_rwlock_unlock); }
-#undef SAFE_PTHREAD
+#  undef SAFE_PTHREAD
 
 #elif defined(HAVE_PTHREAD)
 
-#define SAFE_PTHREAD(fncall)  do {   /* run fncall if is_safe_ is true */  \
-  if (is_safe_ && fncall(&mutex_) != 0) abort();                           \
-} while (0)
+#  define SAFE_PTHREAD(fncall)                       \
+    do { /* run fncall if is_safe_ is true */        \
+      if (is_safe_ && fncall(&mutex_) != 0) abort(); \
+    } while (0)
 
-Mutex::Mutex()             {
+Mutex::Mutex() {
   SetIsSafe();
   if (is_safe_ && pthread_mutex_init(&mutex_, nullptr) != 0) abort();
 }
-Mutex::~Mutex()            { SAFE_PTHREAD(pthread_mutex_destroy); }
-void Mutex::Lock()         { SAFE_PTHREAD(pthread_mutex_lock); }
-void Mutex::Unlock()       { SAFE_PTHREAD(pthread_mutex_unlock); }
-#ifdef GMUTEX_TRYLOCK
-bool Mutex::TryLock()      { return is_safe_ ?
-                                 pthread_mutex_trylock(&mutex_) == 0 : true; }
-#endif
-void Mutex::ReaderLock()   { Lock(); }
+Mutex::~Mutex() { SAFE_PTHREAD(pthread_mutex_destroy); }
+void Mutex::Lock() { SAFE_PTHREAD(pthread_mutex_lock); }
+void Mutex::Unlock() { SAFE_PTHREAD(pthread_mutex_unlock); }
+#  ifdef GMUTEX_TRYLOCK
+bool Mutex::TryLock() {
+  return is_safe_ ? pthread_mutex_trylock(&mutex_) == 0 : true;
+}
+#  endif
+void Mutex::ReaderLock() { Lock(); }
 void Mutex::ReaderUnlock() { Unlock(); }
-#undef SAFE_PTHREAD
+#  undef SAFE_PTHREAD
 
 #endif
 
@@ -287,36 +303,39 @@ void Mutex::ReaderUnlock() { Unlock(); }
 // MutexLock(mu) acquires mu when constructed and releases it when destroyed.
 class MutexLock {
  public:
-  explicit MutexLock(Mutex *mu) : mu_(mu) { mu_->Lock(); }
+  explicit MutexLock(Mutex* mu) : mu_(mu) { mu_->Lock(); }
   ~MutexLock() { mu_->Unlock(); }
+
  private:
-  Mutex * const mu_;
+  Mutex* const mu_;
   // Disallow "evil" constructors
-  MutexLock(const MutexLock &) = delete;
-  void operator=(const MutexLock &) = delete;
+  MutexLock(const MutexLock&) = delete;
+  void operator=(const MutexLock&) = delete;
 };
 
 // ReaderMutexLock and WriterMutexLock do the same, for rwlocks
 class ReaderMutexLock {
  public:
-  explicit ReaderMutexLock(Mutex *mu) : mu_(mu) { mu_->ReaderLock(); }
+  explicit ReaderMutexLock(Mutex* mu) : mu_(mu) { mu_->ReaderLock(); }
   ~ReaderMutexLock() { mu_->ReaderUnlock(); }
+
  private:
-  Mutex * const mu_;
+  Mutex* const mu_;
   // Disallow "evil" constructors
-  ReaderMutexLock(const ReaderMutexLock &) = delete;
-  void operator=(const ReaderMutexLock &) = delete;
+  ReaderMutexLock(const ReaderMutexLock&) = delete;
+  void operator=(const ReaderMutexLock&) = delete;
 };
 
 class WriterMutexLock {
  public:
-  explicit WriterMutexLock(Mutex *mu) : mu_(mu) { mu_->WriterLock(); }
+  explicit WriterMutexLock(Mutex* mu) : mu_(mu) { mu_->WriterLock(); }
   ~WriterMutexLock() { mu_->WriterUnlock(); }
+
  private:
-  Mutex * const mu_;
+  Mutex* const mu_;
   // Disallow "evil" constructors
-  WriterMutexLock(const WriterMutexLock &) = delete;
-  void operator=(const WriterMutexLock &) = delete;
+  WriterMutexLock(const WriterMutexLock&) = delete;
+  void operator=(const WriterMutexLock&) = delete;
 };
 
 // Catch bug where variable name is omitted, e.g. MutexLock (&mu);
@@ -330,4 +349,4 @@ using namespace MUTEX_NAMESPACE;
 
 #undef MUTEX_NAMESPACE
 
-#endif  /* #define GOOGLE_MUTEX_H__ */
+#endif /* #define GOOGLE_MUTEX_H__ */

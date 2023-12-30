@@ -72,20 +72,21 @@
 // it's either FLAGS_v or an appropriate internal variable
 // matching the current source file that represents results of
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
-#define VLOG_IS_ON(verboselevel)                                               \
-  __extension__({                                                              \
-    static google::SiteFlag vlocal__ = {nullptr, nullptr, 0, nullptr};         \
-    GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                       \
-        __FILE__, __LINE__, &vlocal__, sizeof(google::SiteFlag), ""));         \
-    google::int32 verbose_level__ = (verboselevel);                            \
-    (vlocal__.level == nullptr                                                 \
-         ? google::InitVLOG3__(&vlocal__, &FLAGS_v, __FILE__, verbose_level__) \
-         : *vlocal__.level >= verbose_level__);                                \
-  })
+#  define VLOG_IS_ON(verboselevel)                                       \
+    __extension__({                                                      \
+      static google::SiteFlag vlocal__ = {nullptr, nullptr, 0, nullptr}; \
+      GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(               \
+          __FILE__, __LINE__, &vlocal__, sizeof(google::SiteFlag), "")); \
+      google::int32 verbose_level__ = (verboselevel);                    \
+      (vlocal__.level == nullptr                                         \
+           ? google::InitVLOG3__(&vlocal__, &FLAGS_v, __FILE__,          \
+                                 verbose_level__)                        \
+           : *vlocal__.level >= verbose_level__);                        \
+    })
 #else
 // GNU extensions not available, so we do not support --vmodule.
 // Dynamic value of FLAGS_v always controls the logging level.
-#define VLOG_IS_ON(verboselevel) (FLAGS_v >= (verboselevel))
+#  define VLOG_IS_ON(verboselevel) (FLAGS_v >= (verboselevel))
 #endif
 
 // Set VLOG(_IS_ON) level for module_pattern to log_level.

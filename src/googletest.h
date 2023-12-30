@@ -31,7 +31,7 @@
 //   (based on googletest: http://code.google.com/p/googletest/)
 
 #ifdef GOOGLETEST_H__
-#error You must not include this file twice.
+#  error You must not include this file twice.
 #endif
 #define GOOGLETEST_H__
 
@@ -53,15 +53,15 @@
 
 #include "utilities.h"
 #ifdef HAVE_UNISTD_H
-# include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #include "base/commandlineflags.h"
 
 #if __cplusplus < 201103L && !defined(_MSC_VER)
-#define GOOGLE_GLOG_THROW_BAD_ALLOC throw (std::bad_alloc)
+#  define GOOGLE_GLOG_THROW_BAD_ALLOC throw(std::bad_alloc)
 #else
-#define GOOGLE_GLOG_THROW_BAD_ALLOC
+#  define GOOGLE_GLOG_THROW_BAD_ALLOC
 #endif
 
 using std::map;
@@ -95,7 +95,7 @@ static inline string GetTempDir() {
 // (e.g., glog/vsproject/logging_unittest).
 static const char TEST_SRC_DIR[] = "../..";
 #elif !defined(TEST_SRC_DIR)
-# warning TEST_SRC_DIR should be defined in config.h
+#  warning TEST_SRC_DIR should be defined in config.h
 static const char TEST_SRC_DIR[] = ".";
 #endif
 
@@ -112,10 +112,10 @@ DEFINE_int32(benchmark_iters, 100000, "Number of iterations per benchmark");
 #endif
 
 #ifdef HAVE_LIB_GTEST
-# include <gtest/gtest.h>
+#  include <gtest/gtest.h>
 // Use our ASSERT_DEATH implementation.
-# undef ASSERT_DEATH
-# undef ASSERT_DEBUG_DEATH
+#  undef ASSERT_DEATH
+#  undef ASSERT_DEBUG_DEATH
 using testing::InitGoogleTest;
 #else
 
@@ -127,81 +127,83 @@ void InitGoogleTest(int*, char**) {}
 
 // The following is some bare-bones testing infrastructure
 
-#define EXPECT_NEAR(val1, val2, abs_error)                                     \
-  do {                                                                         \
-    if (abs(val1 - val2) > abs_error) {                                        \
-      fprintf(stderr, "Check failed: %s within %s of %s\n", #val1, #abs_error, \
-              #val2);                                                          \
-      exit(EXIT_FAILURE);                                                      \
-    }                                                                          \
-  } while (0)
+#  define EXPECT_NEAR(val1, val2, abs_error)                         \
+    do {                                                             \
+      if (abs(val1 - val2) > abs_error) {                            \
+        fprintf(stderr, "Check failed: %s within %s of %s\n", #val1, \
+                #abs_error, #val2);                                  \
+        exit(EXIT_FAILURE);                                          \
+      }                                                              \
+    } while (0)
 
-#define EXPECT_TRUE(cond)                               \
-  do {                                                  \
-    if (!(cond)) {                                      \
-      fprintf(stderr, "Check failed: %s\n", #cond);     \
-      exit(EXIT_FAILURE);                               \
-    }                                                   \
-  } while (0)
+#  define EXPECT_TRUE(cond)                           \
+    do {                                              \
+      if (!(cond)) {                                  \
+        fprintf(stderr, "Check failed: %s\n", #cond); \
+        exit(EXIT_FAILURE);                           \
+      }                                               \
+    } while (0)
 
-#define EXPECT_FALSE(cond)  EXPECT_TRUE(!(cond))
+#  define EXPECT_FALSE(cond) EXPECT_TRUE(!(cond))
 
-#define EXPECT_OP(op, val1, val2)                                       \
-  do {                                                                  \
-    if (!((val1) op (val2))) {                                          \
-      fprintf(stderr, "Check failed: %s %s %s\n", #val1, #op, #val2);   \
-      exit(EXIT_FAILURE);                                               \
-    }                                                                   \
-  } while (0)
+#  define EXPECT_OP(op, val1, val2)                                     \
+    do {                                                                \
+      if (!((val1)op(val2))) {                                          \
+        fprintf(stderr, "Check failed: %s %s %s\n", #val1, #op, #val2); \
+        exit(EXIT_FAILURE);                                             \
+      }                                                                 \
+    } while (0)
 
-#define EXPECT_EQ(val1, val2)  EXPECT_OP(==, val1, val2)
-#define EXPECT_NE(val1, val2)  EXPECT_OP(!=, val1, val2)
-#define EXPECT_GT(val1, val2)  EXPECT_OP(>, val1, val2)
-#define EXPECT_LT(val1, val2)  EXPECT_OP(<, val1, val2)
+#  define EXPECT_EQ(val1, val2) EXPECT_OP(==, val1, val2)
+#  define EXPECT_NE(val1, val2) EXPECT_OP(!=, val1, val2)
+#  define EXPECT_GT(val1, val2) EXPECT_OP(>, val1, val2)
+#  define EXPECT_LT(val1, val2) EXPECT_OP(<, val1, val2)
 
-#define EXPECT_NAN(arg)                                         \
-  do {                                                          \
-    if (!isnan(arg)) {                                          \
-      fprintf(stderr, "Check failed: isnan(%s)\n", #arg);       \
-      exit(EXIT_FAILURE);                                       \
-    }                                                           \
-  } while (0)
+#  define EXPECT_NAN(arg)                                   \
+    do {                                                    \
+      if (!isnan(arg)) {                                    \
+        fprintf(stderr, "Check failed: isnan(%s)\n", #arg); \
+        exit(EXIT_FAILURE);                                 \
+      }                                                     \
+    } while (0)
 
-#define EXPECT_INF(arg)                                         \
-  do {                                                          \
-    if (!isinf(arg)) {                                          \
-      fprintf(stderr, "Check failed: isinf(%s)\n", #arg);       \
-      exit(EXIT_FAILURE);                                       \
-    }                                                           \
-  } while (0)
+#  define EXPECT_INF(arg)                                   \
+    do {                                                    \
+      if (!isinf(arg)) {                                    \
+        fprintf(stderr, "Check failed: isinf(%s)\n", #arg); \
+        exit(EXIT_FAILURE);                                 \
+      }                                                     \
+    } while (0)
 
-#define EXPECT_DOUBLE_EQ(val1, val2)                                    \
-  do {                                                                  \
-    if (((val1) < (val2) - 0.001 || (val1) > (val2) + 0.001)) {         \
-      fprintf(stderr, "Check failed: %s == %s\n", #val1, #val2);        \
-      exit(EXIT_FAILURE);                                               \
-    }                                                                   \
-  } while (0)
+#  define EXPECT_DOUBLE_EQ(val1, val2)                             \
+    do {                                                           \
+      if (((val1) < (val2)-0.001 || (val1) > (val2) + 0.001)) {    \
+        fprintf(stderr, "Check failed: %s == %s\n", #val1, #val2); \
+        exit(EXIT_FAILURE);                                        \
+      }                                                            \
+    } while (0)
 
-#define EXPECT_STREQ(val1, val2)                                        \
-  do {                                                                  \
-    if (strcmp((val1), (val2)) != 0) {                                  \
-      fprintf(stderr, "Check failed: streq(%s, %s)\n", #val1, #val2);   \
-      exit(EXIT_FAILURE);                                               \
-    }                                                                   \
-  } while (0)
+#  define EXPECT_STREQ(val1, val2)                                      \
+    do {                                                                \
+      if (strcmp((val1), (val2)) != 0) {                                \
+        fprintf(stderr, "Check failed: streq(%s, %s)\n", #val1, #val2); \
+        exit(EXIT_FAILURE);                                             \
+      }                                                                 \
+    } while (0)
 
 vector<void (*)()> g_testlist;  // the tests to run
 
-#define TEST(a, b)                                      \
-  struct Test_##a##_##b {                               \
-    Test_##a##_##b() { g_testlist.push_back(&Run); }    \
-    static void Run() { FlagSaver fs; RunTest(); }      \
-    static void RunTest();                              \
-  };                                                    \
-  static Test_##a##_##b g_test_##a##_##b;               \
-  void Test_##a##_##b::RunTest()
-
+#  define TEST(a, b)                                   \
+    struct Test_##a##_##b {                            \
+      Test_##a##_##b() { g_testlist.push_back(&Run); } \
+      static void Run() {                              \
+        FlagSaver fs;                                  \
+        RunTest();                                     \
+      }                                                \
+      static void RunTest();                           \
+    };                                                 \
+    static Test_##a##_##b g_test_##a##_##b;            \
+    void Test_##a##_##b::RunTest()
 
 static inline int RUN_ALL_TESTS() {
   vector<void (*)()>::const_iterator it;
@@ -228,33 +230,33 @@ static inline void CalledAbort() {
 
 #ifdef GLOG_OS_WINDOWS
 // TODO(hamaji): Death test somehow doesn't work in Windows.
-#define ASSERT_DEATH(fn, msg)
+#  define ASSERT_DEATH(fn, msg)
 #else
-#define ASSERT_DEATH(fn, msg)                                           \
-  do {                                                                  \
-    g_called_abort = false;                                             \
-    /* in logging.cc */                                                 \
-    void (*original_logging_fail_func)() = g_logging_fail_func;         \
-    g_logging_fail_func = &CalledAbort;                                 \
-    if (!setjmp(g_jmp_buf)) fn;                                         \
-    /* set back to their default */                                     \
-    g_logging_fail_func = original_logging_fail_func;                   \
-    if (!g_called_abort) {                                              \
-      fprintf(stderr, "Function didn't die (%s): %s\n", msg, #fn);      \
-      exit(EXIT_FAILURE);                                               \
-    }                                                                   \
-  } while (0)
+#  define ASSERT_DEATH(fn, msg)                                      \
+    do {                                                             \
+      g_called_abort = false;                                        \
+      /* in logging.cc */                                            \
+      void (*original_logging_fail_func)() = g_logging_fail_func;    \
+      g_logging_fail_func = &CalledAbort;                            \
+      if (!setjmp(g_jmp_buf)) fn;                                    \
+      /* set back to their default */                                \
+      g_logging_fail_func = original_logging_fail_func;              \
+      if (!g_called_abort) {                                         \
+        fprintf(stderr, "Function didn't die (%s): %s\n", msg, #fn); \
+        exit(EXIT_FAILURE);                                          \
+      }                                                              \
+    } while (0)
 #endif
 
 #ifdef NDEBUG
-#define ASSERT_DEBUG_DEATH(fn, msg)
+#  define ASSERT_DEBUG_DEATH(fn, msg)
 #else
-#define ASSERT_DEBUG_DEATH(fn, msg) ASSERT_DEATH(fn, msg)
+#  define ASSERT_DEBUG_DEATH(fn, msg) ASSERT_DEATH(fn, msg)
 #endif  // NDEBUG
 
 // Benchmark tools.
 
-#define BENCHMARK(n) static BenchmarkRegisterer __benchmark_ ## n (#n, &n);
+#define BENCHMARK(n) static BenchmarkRegisterer __benchmark_##n(#n, &n);
 
 map<string, void (*)(int)> g_benchlist;  // the benchmarks to run
 
@@ -278,13 +280,13 @@ static inline void RunSpecifiedBenchmarks() {
     double elapsed_ns = (static_cast<double>(clock()) - start) /
                         CLOCKS_PER_SEC * 1000 * 1000 * 1000;
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat="
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wformat="
 #endif
     printf("%s\t%8.2lf\t%10d\n", iter.first.c_str(), elapsed_ns / iter_cnt,
            iter_cnt);
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
+#  pragma GCC diagnostic pop
 #endif
   }
   puts("");
@@ -317,8 +319,7 @@ class CapturedStream {
     CHECK(uncaptured_fd_ != -1);
 
     // Open file to save stream to
-    int cap_fd = open(filename_.c_str(),
-                      O_CREAT | O_TRUNC | O_WRONLY,
+    int cap_fd = open(filename_.c_str(), O_CREAT | O_TRUNC | O_WRONLY,
                       S_IRUSR | S_IWUSR);
     CHECK(cap_fd != -1);
 
@@ -337,18 +338,18 @@ class CapturedStream {
     }
   }
 
-  const string & filename() const { return filename_; }
+  const string& filename() const { return filename_; }
 
  private:
-  int fd_;             // file descriptor being captured
+  int fd_;                 // file descriptor being captured
   int uncaptured_fd_{-1};  // where the stream was originally being sent to
-  string filename_;    // file where stream is being saved
+  string filename_;        // file where stream is being saved
 };
-static CapturedStream * s_captured_streams[STDERR_FILENO+1];
+static CapturedStream* s_captured_streams[STDERR_FILENO + 1];
 // Redirect a file descriptor to a file.
 //   fd       - Should be STDOUT_FILENO or STDERR_FILENO
 //   filename - File where output should be stored
-static inline void CaptureTestOutput(int fd, const string & filename) {
+static inline void CaptureTestOutput(int fd, const string& filename) {
   CHECK((fd == STDOUT_FILENO) || (fd == STDERR_FILENO));
   CHECK(s_captured_streams[fd] == nullptr);
   s_captured_streams[fd] = new CapturedStream(fd, filename);
@@ -360,14 +361,14 @@ static inline void CaptureTestStderr() {
   CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
 }
 // Return the size (in bytes) of a file
-static inline size_t GetFileSize(FILE * file) {
+static inline size_t GetFileSize(FILE* file) {
   fseek(file, 0, SEEK_END);
   return static_cast<size_t>(ftell(file));
 }
 // Read the entire content of a file as a string
-static inline string ReadEntireFile(FILE * file) {
+static inline string ReadEntireFile(FILE* file) {
   const size_t file_size = GetFileSize(file);
-  char * const buffer = new char[file_size];
+  char* const buffer = new char[file_size];
 
   size_t bytes_last_read = 0;  // # of bytes read in the last fread()
   size_t bytes_read = 0;       // # of bytes read so far
@@ -377,11 +378,12 @@ static inline string ReadEntireFile(FILE * file) {
   // Keep reading the file until we cannot read further or the
   // pre-determined file size is reached.
   do {
-    bytes_last_read = fread(buffer+bytes_read, 1, file_size-bytes_read, file);
+    bytes_last_read =
+        fread(buffer + bytes_read, 1, file_size - bytes_read, file);
     bytes_read += bytes_last_read;
   } while (bytes_last_read > 0 && bytes_read < file_size);
 
-  const string content = string(buffer, buffer+bytes_read);
+  const string content = string(buffer, buffer + bytes_read);
   delete[] buffer;
 
   return content;
@@ -390,15 +392,14 @@ static inline string ReadEntireFile(FILE * file) {
 // fd is STDERR_FILENO) as a string
 static inline string GetCapturedTestOutput(int fd) {
   CHECK(fd == STDOUT_FILENO || fd == STDERR_FILENO);
-  CapturedStream * const cap = s_captured_streams[fd];
-  CHECK(cap)
-    << ": did you forget CaptureTestStdout() or CaptureTestStderr()?";
+  CapturedStream* const cap = s_captured_streams[fd];
+  CHECK(cap) << ": did you forget CaptureTestStdout() or CaptureTestStderr()?";
 
   // Make sure everything is flushed.
   cap->StopCapture();
 
   // Read the captured file.
-  FILE * const file = fopen(cap->filename().c_str(), "r");
+  FILE* const file = fopen(cap->filename().c_str(), "r");
   const string content = ReadEntireFile(file);
   fclose(file);
 
@@ -421,7 +422,7 @@ static inline bool IsLoggingPrefix(const string& s) {
   }
   if (!strchr("IWEF", s[0])) return false;
   for (size_t i = 1; i <= 8; ++i) {
-    if (!isdigit(s[i]) && s[i] != "YEARDATE"[i-1]) return false;
+    if (!isdigit(s[i]) && s[i] != "YEARDATE"[i - 1]) return false;
   }
   return true;
 }
@@ -461,16 +462,15 @@ static inline string MungeLine(const string& line) {
   }
   size_t index = thread_lineinfo.find(':');
   CHECK_NE(string::npos, index);
-  thread_lineinfo = thread_lineinfo.substr(0, index+1) + "LINE]";
+  thread_lineinfo = thread_lineinfo.substr(0, index + 1) + "LINE]";
   string rest;
   std::getline(iss, rest);
   return (before + logcode_date[0] + "YEARDATE TIME__ " + thread_lineinfo +
           MungeLine(rest));
 }
 
-static inline void StringReplace(string* str,
-                          const string& oldsub,
-                          const string& newsub) {
+static inline void StringReplace(string* str, const string& oldsub,
+                                 const string& newsub) {
   size_t pos = str->find(oldsub);
   if (pos != string::npos) {
     str->replace(pos, oldsub.size(), newsub);
@@ -589,9 +589,7 @@ class Thread {
     handle_ = CreateThread(nullptr, 0, &Thread::InvokeThreadW, this, 0, &th_);
     CHECK(handle_) << "CreateThread";
   }
-  void Join() {
-    WaitForSingleObject(handle_, INFINITE);
-  }
+  void Join() { WaitForSingleObject(handle_, INFINITE); }
 #elif defined(HAVE_PTHREAD)
   void Start() { pthread_create(&th_, nullptr, &Thread::InvokeThread, this); }
   void Join() { pthread_join(th_, nullptr); }
@@ -623,12 +621,12 @@ class Thread {
 
 static inline void SleepForMilliseconds(unsigned t) {
 #ifndef GLOG_OS_WINDOWS
-# if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
+#  if defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 199309L
   const struct timespec req = {0, t * 1000 * 1000};
   nanosleep(&req, nullptr);
-# else
+#  else
   usleep(t * 1000);
-# endif
+#  endif
 #else
   Sleep(t);
 #endif

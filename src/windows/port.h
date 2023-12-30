@@ -45,26 +45,26 @@
 
 #ifdef _WIN32
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN  /* We always want minimal includes */
-#endif
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN /* We always want minimal includes */
+#  endif
 
-#include <direct.h>  /* for _getcwd() */
-#include <io.h>      /* because we so often use open/close/etc */
-#include <process.h> /* for _getpid() */
-#include <windows.h>
-#include <winsock.h> /* for gethostname */
+#  include <direct.h>  /* for _getcwd() */
+#  include <io.h>      /* because we so often use open/close/etc */
+#  include <process.h> /* for _getpid() */
+#  include <windows.h>
+#  include <winsock.h> /* for gethostname */
 
-#include <cstdarg> /* template_dictionary.cc uses va_copy */
-#include <cstring> /* for _strnicmp(), strerror_s() */
-#include <ctime>   /* for localtime_s() */
+#  include <cstdarg> /* template_dictionary.cc uses va_copy */
+#  include <cstring> /* for _strnicmp(), strerror_s() */
+#  include <ctime>   /* for localtime_s() */
 /* Note: the C++ #includes are all together at the bottom.  This file is
  * used by both C and C++ code, so we put all the C++ together.
  */
 
-#include "glog/logging.h"
+#  include "glog/logging.h"
 
-#ifdef _MSC_VER
+#  ifdef _MSC_VER
 
 /* 4244: otherwise we get problems when substracting two size_t's to an int
  * 4251: it's complaining about a private struct I've chosen not to dllexport
@@ -76,84 +76,85 @@
  * 4267: also subtracting two size_t to int
  * 4722: Destructor never returns due to abort()
  */
-#pragma warning(disable:4244 4251 4355 4715 4800 4996 4267 4312 4722)
+#    pragma warning(disable : 4244 4251 4355 4715 4800 4996 4267 4312 4722)
 
 /* file I/O */
-#define PATH_MAX 1024
-#define popen   _popen
-#define pclose  _pclose
-#define R_OK    04           /* read-only (for access()) */
-#define S_ISDIR(m)  (((m) & _S_IFMT) == _S_IFDIR)
+#    define PATH_MAX 1024
+#    define popen _popen
+#    define pclose _pclose
+#    define R_OK 04 /* read-only (for access()) */
+#    define S_ISDIR(m) (((m)&_S_IFMT) == _S_IFDIR)
 
-#define O_WRONLY _O_WRONLY
-#define O_CREAT _O_CREAT
-#define O_EXCL _O_EXCL
+#    define O_WRONLY _O_WRONLY
+#    define O_CREAT _O_CREAT
+#    define O_EXCL _O_EXCL
 
-#ifndef __MINGW32__
+#    ifndef __MINGW32__
 enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
-#endif
-#define S_IRUSR S_IREAD
-#define S_IWUSR S_IWRITE
+#    endif
+#    define S_IRUSR S_IREAD
+#    define S_IWUSR S_IWRITE
 
 /* Not quite as lightweight as a hard-link, but more than good enough for us. */
-#define link(oldpath, newpath)  CopyFileA(oldpath, newpath, false)
+#    define link(oldpath, newpath) CopyFileA(oldpath, newpath, false)
 
-#define strcasecmp   _stricmp
-#define strncasecmp  _strnicmp
+#    define strcasecmp _stricmp
+#    define strncasecmp _strnicmp
 
 /* In windows-land, hash<> is called hash_compare<> (from xhash.h) */
 /* VC11 provides std::hash */
-#if defined(_MSC_VER) && (_MSC_VER < 1700)
-#define hash  hash_compare
-#endif
+#    if defined(_MSC_VER) && (_MSC_VER < 1700)
+#      define hash hash_compare
+#    endif
 
 /* Sleep is in ms, on windows */
-#define sleep(secs)  Sleep((secs) * 1000)
+#    define sleep(secs) Sleep((secs)*1000)
 
 /* Windows doesn't support specifying the number of buckets as a
  * hash_map constructor arg, so we leave this blank.
  */
-#define CTEMPLATE_SMALL_HASHTABLE
+#    define CTEMPLATE_SMALL_HASHTABLE
 
-#define DEFAULT_TEMPLATE_ROOTDIR  ".."
+#    define DEFAULT_TEMPLATE_ROOTDIR ".."
 
 // ----------------------------------- SYSTEM/PROCESS
 typedef int pid_t;
-#define getpid  _getpid
+#    define getpid _getpid
 
-#endif  // _MSC_VER
+#  endif  // _MSC_VER
 
 // ----------------------------------- THREADS
-#if defined(HAVE_PTHREAD)
-# include <pthread.h>
-#else // no PTHREAD
+#  if defined(HAVE_PTHREAD)
+#    include <pthread.h>
+#  else  // no PTHREAD
 typedef DWORD pthread_t;
 typedef DWORD pthread_key_t;
 typedef LONG pthread_once_t;
-enum { PTHREAD_ONCE_INIT = 0 };   // important that this be 0! for SpinLock
-#define pthread_self  GetCurrentThreadId
-#define pthread_equal(pthread_t_1, pthread_t_2)  ((pthread_t_1)==(pthread_t_2))
-#endif // HAVE_PTHREAD
+enum { PTHREAD_ONCE_INIT = 0 };  // important that this be 0! for SpinLock
+#    define pthread_self GetCurrentThreadId
+#    define pthread_equal(pthread_t_1, pthread_t_2) \
+      ((pthread_t_1) == (pthread_t_2))
+#  endif  // HAVE_PTHREAD
 
-#ifndef HAVE_LOCALTIME_R
+#  ifndef HAVE_LOCALTIME_R
 extern GLOG_EXPORT std::tm* localtime_r(const std::time_t* timep,
                                         std::tm* result);
-#endif // not HAVE_LOCALTIME_R
+#  endif  // not HAVE_LOCALTIME_R
 
-#ifndef HAVE_GMTIME_R
+#  ifndef HAVE_GMTIME_R
 extern GLOG_EXPORT std::tm* gmtime_r(const std::time_t* timep, std::tm* result);
-#endif // not HAVE_GMTIME_R
+#  endif  // not HAVE_GMTIME_R
 
 inline char* strerror_r(int errnum, char* buf, std::size_t buflen) {
   strerror_s(buf, buflen, errnum);
   return buf;
 }
 
-#ifndef __cplusplus
+#  ifndef __cplusplus
 /* I don't see how to get inlining for C code in MSVC.  Ah well. */
-#define inline
-#endif
+#    define inline
+#  endif
 
-#endif  /* _WIN32 */
+#endif /* _WIN32 */
 
-#endif  /* CTEMPLATE_WINDOWS_PORT_H_ */
+#endif /* CTEMPLATE_WINDOWS_PORT_H_ */
