@@ -313,6 +313,7 @@ endif (WITH_SYMBOLIZE)
 # building the library.
 add_compile_definitions (GLOG_NO_SYMBOLIZE_DETECTION)
 
+check_cxx_symbol_exists (gmtime_r "cstdlib;ctime" HAVE_GMTIME_R)
 check_cxx_symbol_exists (localtime_r "cstdlib;ctime" HAVE_LOCALTIME_R)
 
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
