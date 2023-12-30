@@ -25,13 +25,7 @@ expand_template = rule(
     },
 )
 
-def dict_union(x, y):
-    z = {}
-    z.update(x)
-    z.update(y)
-    return z
-
-def glog_library(namespace = "google", with_gflags = 1, **kwargs):
+def glog_library(with_gflags = 1, **kwargs):
     if native.repository_name() != "@":
         repo_name = native.repository_name()[1:]  # Strip the first leading @
         gendir = "$(GENDIR)/external/" + repo_name
@@ -55,11 +49,9 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
     common_copts = [
         "-std=c++14",
         "-DGLOG_BAZEL_BUILD",
-        # Inject a C++ namespace.
-        "-DGOOGLE_NAMESPACE='%s'" % namespace,
         "-DHAVE_STRING_H",
         "-I%s/glog_internal" % gendir,
-    ] + (["-DHAVE_LIB_GFLAGS"] if with_gflags else [])
+    ] + (["-DGLOG_USE_GFLAGS"] if with_gflags else [])
 
     wasm_copts = [
         # Disable warnings that exists in glog.
@@ -78,11 +70,13 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         "-DHAVE_SIGACTION",
         # For logging.cc.
         "-DHAVE_PREAD",
-        "-DHAVE___ATTRIBUTE__",
     ]
 
     linux_or_darwin_copts = wasm_copts + [
         "-DGLOG_EXPORT=__attribute__((visibility(\\\"default\\\")))",
+        "-DHAVE_MODE_T",
+        "-DHAVE_SSIZE_T",
+        "-DHAVE_SYS_TYPES_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
         # For src/logging.cc to create symlinks.
@@ -194,11 +188,11 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         }),
         hdrs = [
             "src/glog/log_severity.h",
+            "src/glog/logging.h",
             "src/glog/platform.h",
-            ":logging_h",
-            ":raw_logging_h",
-            ":stl_logging_h",
-            ":vlog_is_on_h",
+            "src/glog/raw_logging.h",
+            "src/glog/stl_logging.h",
+            "src/glog/vlog_is_on.h",
         ],
         # https://github.com/google/glog/issues/837: Replacing
         # `strip_include_prefix` with `includes` would avoid spamming
@@ -261,10 +255,10 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         name = "strip_include_prefix_hack",
         hdrs = [
             "src/glog/log_severity.h",
-            ":logging_h",
-            ":raw_logging_h",
-            ":stl_logging_h",
-            ":vlog_is_on_h",
+            "src/glog/logging.h",
+            "src/glog/raw_logging.h",
+            "src/glog/stl_logging.h",
+            "src/glog/vlog_is_on.h",
         ],
     )
 
@@ -274,51 +268,3 @@ def glog_library(namespace = "google", with_gflags = 1, **kwargs):
         out = "glog_internal/config.h",
         substitutions = {"#cmakedefine": "//cmakedefine"},
     )
-
-    common_config = {
-        "@ac_cv_have_u_int16_t@": "0",
-        "@ac_cv_have_glog_export@": "0",
-        "@ac_google_start_namespace@": "namespace google {",
-        "@ac_google_end_namespace@": "}",
-        "@ac_google_namespace@": "google",
-    }
-
-    posix_config = dict_union(common_config, {
-        "@ac_cv___attribute___noinline@": "__attribute__((noinline))",
-        "@ac_cv___attribute___printf_4_5@": "__attribute__((__format__(__printf__, 4, 5)))",
-        "@ac_cv_have___builtin_expect@": "1",
-        "@ac_cv_have_libgflags@": "1" if with_gflags else "0",
-        "@ac_cv_have_mode_t@": "1",
-        "@ac_cv_have_ssize_t@": "1",
-        "@ac_cv_have_systypes_h@": "1",
-        "@ac_cv_have_unistd_h@": "1",
-    })
-
-    windows_config = dict_union(common_config, {
-        "@ac_cv___attribute___noinline@": "",
-        "@ac_cv___attribute___printf_4_5@": "",
-        "@ac_cv_have___builtin_expect@": "0",
-        "@ac_cv_have_libgflags@": "0",
-        "@ac_cv_have_mode_t@": "0",
-        "@ac_cv_have_ssize_t@": "0",
-        "@ac_cv_have_systypes_h@": "0",
-        "@ac_cv_have_unistd_h@": "0",
-    })
-
-    [
-        expand_template(
-            name = "%s_h" % f,
-            template = "src/glog/%s.h.in" % f,
-            out = "src/glog/%s.h" % f,
-            substitutions = select({
-                "@bazel_tools//src/conditions:windows": windows_config,
-                "//conditions:default": posix_config,
-            }),
-        )
-        for f in [
-            "vlog_is_on",
-            "stl_logging",
-            "raw_logging",
-            "logging",
-        ]
-    ]

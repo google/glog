@@ -92,18 +92,18 @@
 # endif
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // Gets the section header for the given name, if it exists. Returns true on
 // success. Otherwise, returns false.
 bool GetSectionHeaderByName(int fd, const char *name, size_t name_len,
                             ElfW(Shdr) *out);
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif  /* __ELF__ */
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // Restrictions on the callbacks that follow:
 //  - The callbacks must not use heaps but only use stacks.
@@ -135,11 +135,11 @@ using SymbolizeOpenObjectFileCallback = int (*)(uint64_t, uint64_t &,
 void InstallSymbolizeOpenObjectFileCallback(
     SymbolizeOpenObjectFileCallback callback);
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // Symbolizes a program counter.  On success, returns true and write the
 // symbol name to "out".  The symbol name is demangled if possible
@@ -147,6 +147,6 @@ _START_GOOGLE_NAMESPACE_
 // returns false.
 GLOG_EXPORT bool Symbolize(void* pc, char* out, size_t out_size);
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif  // BASE_SYMBOLIZE_H_

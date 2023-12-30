@@ -63,6 +63,19 @@
 
 #include "config.h"
 
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
+
+#if !defined(HAVE_SSIZE_T)
+#if defined(GLOG_OS_WINDOWS)
+#include <basetsd.h>
+using ssize_t = SSIZE_T;
+#else
+using ssize_t = std::ptrdiff_t;
+#endif
+#endif
+
 // There are three different ways we can try to get the stack trace:
 //
 // 1) The libunwind library.  This is still in development, and as a
@@ -127,17 +140,25 @@
 # define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 namespace glog_internal_namespace_ {
 
-#ifdef HAVE___ATTRIBUTE__
+#if defined(__has_attribute)
+#if __has_attribute(noinline)
 # define ATTRIBUTE_NOINLINE __attribute__ ((noinline))
 # define HAVE_ATTRIBUTE_NOINLINE
-#elif defined(GLOG_OS_WINDOWS)
+#endif
+#endif
+
+#if !defined(HAVE_ATTRIBUTE_NOINLINE)
+#if defined(GLOG_OS_WINDOWS)
 # define ATTRIBUTE_NOINLINE __declspec(noinline)
 # define HAVE_ATTRIBUTE_NOINLINE
-#else
+#endif
+#endif
+
+#if !defined(HAVE_ATTRIBUTE_NOINLINE)
 # define ATTRIBUTE_NOINLINE
 #endif
 
@@ -209,8 +230,8 @@ void ShutdownGoogleLoggingUtilities();
 
 }  // namespace glog_internal_namespace_
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
-using namespace GOOGLE_NAMESPACE::glog_internal_namespace_;
+using namespace google::glog_internal_namespace_;
 
 #endif  // UTILITIES_H__

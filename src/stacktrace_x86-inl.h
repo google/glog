@@ -42,7 +42,7 @@
 
 #include "stacktrace.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // Given a pointer to a stack frame, locate and return the calling
 // stackframe, or return nullptr if no stackframe can be found. Perform sanity
@@ -156,4 +156,4 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   return n;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google

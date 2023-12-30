@@ -1,9 +1,6 @@
 #ifndef GLOG_CONFIG_H
 #define GLOG_CONFIG_H
 
-/* Namespace for Google classes */
-#cmakedefine GOOGLE_NAMESPACE ${GOOGLE_NAMESPACE}
-
 /* Define if you have the `dladdr' function */
 #cmakedefine HAVE_DLADDR
 
@@ -25,9 +22,6 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #cmakedefine HAVE_LIBPTHREAD
 
-/* define if you have google gflags library */
-#cmakedefine HAVE_LIB_GFLAGS
-
 /* define if you have google gmock library */
 #cmakedefine HAVE_LIB_GMOCK
 
@@ -36,9 +30,6 @@
 
 /* define if you have dbghelp library */
 #cmakedefine HAVE_DBGHELP
-
-/* Define to 1 if you have the <memory.h> header file. */
-#cmakedefine HAVE_MEMORY_H
 
 /* define to disable multithreading support. */
 #cmakedefine NO_THREADS
@@ -64,17 +55,11 @@
 /* Define if you have the `sigaltstack' function */
 #cmakedefine HAVE_SIGALTSTACK
 
-/* Define to 1 if you have the <strings.h> header file. */
-#cmakedefine HAVE_STRINGS_H
-
 /* Define to 1 if you have the <syscall.h> header file. */
 #cmakedefine HAVE_SYSCALL_H
 
 /* Define to 1 if you have the <syslog.h> header file. */
 #cmakedefine HAVE_SYSLOG_H
-
-/* Define to 1 if you have the <sys/stat.h> header file. */
-#cmakedefine HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/syscall.h> header file. */
 #cmakedefine HAVE_SYS_SYSCALL_H
@@ -83,7 +68,7 @@
 #cmakedefine HAVE_SYS_TIME_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#cmakedefine HAVE_SYS_TYPES_H ${HAVE_SYS_TYPES_H}
+#cmakedefine HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <sys/ucontext.h> header file. */
 #cmakedefine HAVE_SYS_UCONTEXT_H
@@ -106,12 +91,6 @@
 /* define if you have libunwind */
 #cmakedefine HAVE_LIBUNWIND
 
-/* define if your compiler has __attribute__ */
-#cmakedefine HAVE___ATTRIBUTE__
-
-/* define if your compiler has __builtin_expect */
-#cmakedefine HAVE___BUILTIN_EXPECT ${HAVE___BUILTIN_EXPECT}
-
 /* define if your compiler has __sync_val_compare_and_swap */
 #cmakedefine HAVE___SYNC_VAL_COMPARE_AND_SWAP
 
@@ -127,9 +106,11 @@
 /* define if _chsize_s is available in io.h */
 #cmakedefine HAVE__CHSIZE_S
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#cmakedefine LT_OBJDIR
+/* define if ssize_t is defined */
+#cmakedefine HAVE_SSIZE_T
+
+/* define if mode_t is defined */
+#cmakedefine HAVE_MODE_T
 
 /* How to access the PC from a struct ucontext */
 #cmakedefine PC_FROM_UCONTEXT ${PC_FROM_UCONTEXT}
@@ -149,24 +130,6 @@
 
 /* Define if thread-local storage is enabled. */
 #cmakedefine GLOG_THREAD_LOCAL_STORAGE
-
-#ifdef GLOG_BAZEL_BUILD
-
-/* TODO(rodrigoq): remove this workaround once bazel#3979 is resolved:
- * https://github.com/bazelbuild/bazel/issues/3979 */
-#define _START_GOOGLE_NAMESPACE_ namespace GOOGLE_NAMESPACE {
-
-#define _END_GOOGLE_NAMESPACE_ }
-
-#else
-
-/* Stops putting the code inside the Google namespace */
-#cmakedefine _END_GOOGLE_NAMESPACE_ ${_END_GOOGLE_NAMESPACE_}
-
-/* Puts following code inside the Google namespace */
-#cmakedefine _START_GOOGLE_NAMESPACE_ ${_START_GOOGLE_NAMESPACE_}
-
-#endif
 
 /* Replacement for deprecated syscall(SYS_gettid) on macOS. */
 #cmakedefine HAVE_PTHREAD_THREADID_NP ${HAVE_PTHREAD_THREADID_NP}

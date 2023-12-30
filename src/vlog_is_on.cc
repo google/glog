@@ -58,7 +58,7 @@ GLOG_DEFINE_string(vmodule, "", "per-module verbose level."
 " (that is, name ignoring .cc/.h./-inl.h)."
 " <log level> overrides any value given by --v.");
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 namespace glog_internal_namespace_ {
 
@@ -291,4 +291,4 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default,
   return *site_flag_value >= verbose_level;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google

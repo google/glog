@@ -36,7 +36,7 @@
 #include "config.h"
 #include "glog/logging.h"
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 // This is similar to the GetStackFrames routine, except that it returns
 // the stack trace only, and not the stack frame sizes as well.
@@ -56,6 +56,6 @@ _START_GOOGLE_NAMESPACE_
 // "result" must not be nullptr.
 GLOG_EXPORT int GetStackTrace(void** result, int max_depth, int skip_count);
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif  // BASE_STACKTRACE_H_

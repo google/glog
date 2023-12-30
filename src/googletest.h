@@ -68,11 +68,11 @@ using std::map;
 using std::string;
 using std::vector;
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 extern GLOG_EXPORT void (*g_logging_fail_func)();
 
-_END_GOOGLE_NAMESPACE_
+}
 
 #undef GLOG_EXPORT
 #define GLOG_EXPORT
@@ -119,7 +119,7 @@ DEFINE_int32(benchmark_iters, 100000, "Number of iterations per benchmark");
 using testing::InitGoogleTest;
 #else
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 void InitGoogleTest(int*, char**);
 
@@ -213,11 +213,11 @@ static inline int RUN_ALL_TESTS() {
   return 0;
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 #endif  // ! HAVE_LIB_GTEST
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 static bool g_called_abort;
 static jmp_buf g_jmp_buf;
@@ -556,7 +556,7 @@ static inline bool MungeAndDiffTestStdout(const string& golden_filename) {
 }
 
 // Save flags used from logging_unittest.cc.
-#ifndef HAVE_LIB_GFLAGS
+#ifndef GLOG_USE_GFLAGS
 struct FlagSaver {
   FlagSaver()
       : v_(FLAGS_v),
@@ -638,11 +638,11 @@ static inline void SleepForMilliseconds(unsigned t) {
 
 void (*g_new_hook)() = nullptr;
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
 
 void* operator new(size_t size, const std::nothrow_t&) noexcept {
-  if (GOOGLE_NAMESPACE::g_new_hook) {
-    GOOGLE_NAMESPACE::g_new_hook();
+  if (google::g_new_hook) {
+    google::g_new_hook();
   }
   return malloc(size);
 }

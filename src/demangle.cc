@@ -46,7 +46,7 @@
 #include <dbghelp.h>
 #endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 #if !defined(GLOG_OS_WINDOWS)
 struct AbbrevPair {
@@ -1371,4 +1371,4 @@ bool Demangle(const char *mangled, char *out, size_t out_size) {
 #endif
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google

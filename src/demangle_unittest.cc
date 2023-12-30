@@ -42,7 +42,7 @@
 #include "googletest.h"
 #include "utilities.h"
 
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
 #include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
@@ -51,7 +51,7 @@ GLOG_DEFINE_bool(demangle_filter, false,
                  "Run demangle_unittest in filter mode");
 
 using namespace std;
-using namespace GOOGLE_NAMESPACE;
+using namespace google;
 
 // A wrapper function for Demangle() to make the unit test simple.
 static const char *DemangleIt(const char * const mangled) {
@@ -148,7 +148,7 @@ TEST(Demangle, FromFile) {
 #endif
 
 int main(int argc, char **argv) {
-#ifdef HAVE_LIB_GFLAGS
+#ifdef GLOG_USE_GFLAGS
   ParseCommandLineFlags(&argc, &argv, true);
 #endif
   InitGoogleTest(&argc, argv);

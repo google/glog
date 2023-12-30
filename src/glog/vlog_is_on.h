@@ -72,14 +72,15 @@
 // it's either FLAGS_v or an appropriate internal variable
 // matching the current source file that represents results of
 // parsing of --vmodule flag and/or SetVLOGLevel calls.
-#define VLOG_IS_ON(verboselevel)                                \
-  __extension__  \
-  ({ static @ac_google_namespace@::SiteFlag vlocal__ = {nullptr, nullptr, 0, nullptr};       \
-     GLOG_IFDEF_THREAD_SANITIZER( \
-             AnnotateBenignRaceSized(__FILE__, __LINE__, &vlocal__, sizeof(@ac_google_namespace@::SiteFlag), "")); \
-     @ac_google_namespace@::int32 verbose_level__ = (verboselevel);                    \
-     (vlocal__.level == nullptr ? @ac_google_namespace@::InitVLOG3__(&vlocal__, &FLAGS_v, \
-                        __FILE__, verbose_level__) : *vlocal__.level >= verbose_level__); \
+#define VLOG_IS_ON(verboselevel)                                               \
+  __extension__({                                                              \
+    static google::SiteFlag vlocal__ = {nullptr, nullptr, 0, nullptr};         \
+    GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                       \
+        __FILE__, __LINE__, &vlocal__, sizeof(google::SiteFlag), ""));         \
+    google::int32 verbose_level__ = (verboselevel);                            \
+    (vlocal__.level == nullptr                                                 \
+         ? google::InitVLOG3__(&vlocal__, &FLAGS_v, __FILE__, verbose_level__) \
+         : *vlocal__.level >= verbose_level__);                                \
   })
 #else
 // GNU extensions not available, so we do not support --vmodule.
@@ -100,7 +101,7 @@ extern GLOG_EXPORT int SetVLOGLevel(const char* module_pattern, int log_level);
 // Various declarations needed for VLOG_IS_ON above: =========================
 
 struct SiteFlag {
-  @ac_google_namespace@::int32* level;
+  google::int32* level;
   const char* base_name;
   std::size_t base_len;
   SiteFlag* next;
@@ -114,9 +115,9 @@ struct SiteFlag {
 //   verbose_level is the argument to VLOG_IS_ON
 // We will return the return value for VLOG_IS_ON
 // and if possible set *site_flag appropriately.
-extern GLOG_EXPORT bool InitVLOG3__(
-    @ac_google_namespace@::SiteFlag* site_flag,
-    @ac_google_namespace@::int32* site_default, const char* fname,
-    @ac_google_namespace@::int32 verbose_level);
+extern GLOG_EXPORT bool InitVLOG3__(google::SiteFlag* site_flag,
+                                    google::int32* site_default,
+                                    const char* fname,
+                                    google::int32 verbose_level);
 
 #endif  // BASE_VLOG_IS_ON_H_

@@ -1,4 +1,4 @@
-// Copyright (c) 2008, Google Inc.
+// Copyright (c) 2023, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 //
 // Implementation of InstallFailureSignalHandler().
 
+#include <algorithm>
 #include <csignal>
 #include <ctime>
 
@@ -38,15 +39,18 @@
 #include "stacktrace.h"
 #include "symbolize.h"
 #include "utilities.h"
+
 #ifdef HAVE_UCONTEXT_H
 # include <ucontext.h>
 #endif
 #ifdef HAVE_SYS_UCONTEXT_H
 # include <sys/ucontext.h>
 #endif
-#include <algorithm>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
-_START_GOOGLE_NAMESPACE_
+namespace google {
 
 namespace {
 
@@ -409,4 +413,4 @@ void InstallFailureWriter(void (*writer)(const char* data, size_t size)) {
 #endif  // HAVE_SIGACTION
 }
 
-_END_GOOGLE_NAMESPACE_
+}  // namespace google
