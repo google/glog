@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-diagnostic-*,clang-analyzer-*,google-*,-google-readability-todo,modernize-*,-modernize-use-trailing-return-type,readability-*,-readability-identifier-length,portability-*,performance-*,bugprone-*,android-*,darwin-*,clang-analyzer-*'
+Checks:          'clang-diagnostic-*,clang-analyzer-*,google-*,-google-readability-todo,modernize-*,-modernize-use-trailing-return-type,readability-*,-readability-identifier-length,portability-*,performance-*,bugprone-*,android-*,darwin-*,clang-analyzer-*,-*-cloexec-*'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
