@@ -136,7 +136,7 @@ typedef CRITICAL_SECTION MutexType;
 #  ifdef __linux__
 #    ifndef _XOPEN_SOURCE  // Some other header might have already set it for
                            // us.
-#      define _XOPEN_SOURCE 500  // may be needed to get the rwlock calls
+#      define XOPEN_SOURCE 500  // may be needed to get the rwlock calls
 #    endif
 #  endif
 #  include <pthread.h>
@@ -258,7 +258,9 @@ void Mutex::ReaderUnlock() { Unlock(); }
 
 Mutex::Mutex() {
   SetIsSafe();
-  if (is_safe_ && pthread_rwlock_init(&mutex_, nullptr) != 0) abort();
+  if (is_safe_ && pthread_rwlock_init(&mutex_, nullptr) != 0) {
+    abort();
+  }
 }
 Mutex::~Mutex() { SAFE_PTHREAD(pthread_rwlock_destroy); }
 void Mutex::Lock() { SAFE_PTHREAD(pthread_rwlock_wrlock); }

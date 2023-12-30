@@ -123,7 +123,7 @@ static void CheckRetAddrIsInFunction(void* ret_addr,
 #    pragma clang diagnostic ignored "-Wgnu-label-as-value"
 #  endif
 
-void ATTRIBUTE_NOINLINE CheckStackTrace(int);
+void ATTRIBUTE_NOINLINE CheckStackTrace(int /*i*/);
 static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
   const int STACK_LEN = 10;
   void* stack[STACK_LEN];
@@ -229,7 +229,7 @@ static
 
 //-----------------------------------------------------------------------//
 
-int main(int, char** argv) {
+int main(int /*unused*/, char** argv) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
 

@@ -137,14 +137,30 @@ static void CheckFailure(int a, int b, const char* file, int line,
                          const char* msg);
 static void BM_Check3(int n) {
   while (n-- > 0) {
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
-    if (n < x) CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
+    if (n < x) {
+      CheckFailure(n, x, __FILE__, __LINE__, "n < x");
+    }
   }
 }
 BENCHMARK(BM_Check3)
@@ -166,8 +182,8 @@ static void BM_Check2(int n) {
 }
 BENCHMARK(BM_Check2)
 
-static void CheckFailure(int, int, const char* /* file */, int /* line */,
-                         const char* /* msg */) {}
+static void CheckFailure(int /*unused*/, int /*unused*/, const char* /* file */,
+                         int /* line */, const char* /* msg */) {}
 
 static void BM_logspeed(int n) {
   while (n-- > 0) {
@@ -969,8 +985,10 @@ static void TestOneTruncate(const char* path, uint64 limit, uint64 keep,
   int fd;
   CHECK_ERR(fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600));
 
-  const char *discardstr = "DISCARDME!", *keepstr = "KEEPME!";
-  const size_t discard_size = strlen(discardstr), keep_size = strlen(keepstr);
+  const char* discardstr = "DISCARDME!";
+  const char* keepstr = "KEEPME!";
+  const size_t discard_size = strlen(discardstr);
+  const size_t keep_size = strlen(keepstr);
 
   // Fill the file with the requested data; first discard data, then kept data
   size_t written = 0;
@@ -1296,7 +1314,7 @@ class TestWaitingLogSink : public LogSink {
     // Push it to Writer thread if we are the original logging thread.
     // Note: Something like ThreadLocalLogSink is a better choice
     //       to do thread-specific LogSink logic for real.
-    if (pthread_equal(tid_, pthread_self())) {
+    if (pthread_equal(tid_, pthread_self()) != 0) {
       writer_.Buffer(ToString(severity, base_filename, line, logmsgtime,
                               message, message_len));
     }
@@ -1304,7 +1322,9 @@ class TestWaitingLogSink : public LogSink {
 
   void WaitTillSent() override {
     // Wait for Writer thread if we are the original logging thread.
-    if (pthread_equal(tid_, pthread_self())) writer_.Wait();
+    if (pthread_equal(tid_, pthread_self()) != 0) {
+      writer_.Wait();
+    }
   }
 
  private:
@@ -1495,10 +1515,10 @@ TEST(LogBacktraceAt, DoesBacktraceAtRightLineWhenEnabled) {
 #endif  // HAVE_LIB_GMOCK
 
 struct UserDefinedClass {
-  bool operator==(const UserDefinedClass&) const { return true; }
+  bool operator==(const UserDefinedClass& /*unused*/) const { return true; }
 };
 
-inline ostream& operator<<(ostream& out, const UserDefinedClass&) {
+inline ostream& operator<<(ostream& out, const UserDefinedClass& /*unused*/) {
   out << "OK";
   return out;
 }

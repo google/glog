@@ -58,9 +58,8 @@ static const char* DemangleIt(const char* const mangled) {
   static char demangled[4096];
   if (Demangle(mangled, demangled, sizeof(demangled))) {
     return demangled;
-  } else {
-    return mangled;
   }
+  return mangled;
 }
 
 #if defined(GLOG_OS_WINDOWS)
@@ -159,10 +158,10 @@ int main(int argc, char** argv) {
       cout << DemangleIt(line.c_str()) << endl;
     }
     return 0;
-  } else if (argc > 1) {
+  }
+  if (argc > 1) {
     cout << DemangleIt(argv[1]) << endl;
     return 0;
-  } else {
-    return RUN_ALL_TESTS();
   }
+  return RUN_ALL_TESTS();
 }

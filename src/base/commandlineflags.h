@@ -45,69 +45,69 @@
 // We also put the type of the variable in the namespace, so that
 // people can't DECLARE_int32 something that they DEFINE_bool'd
 // elsewhere.
-#ifndef BASE_COMMANDLINEFLAGS_H__
-#define BASE_COMMANDLINEFLAGS_H__
+#ifndef BASE_COMMANDLINEFLAGS_H_
+#  define BASE_COMMANDLINEFLAGS_H_
 
-#include <cstdlib>  // for getenv
-#include <cstring>  // for memchr
-#include <string>
+#  include <cstdlib>  // for getenv
+#  include <cstring>  // for memchr
+#  include <string>
 
-#include "config.h"
+#  include "config.h"
 
-#ifdef GLOG_USE_GFLAGS
+#  ifdef GLOG_USE_GFLAGS
 
-#  include <gflags/gflags.h>
+#    include <gflags/gflags.h>
 
-#else
+#  else
 
-#  include "glog/logging.h"
+#    include "glog/logging.h"
 
-#  define DECLARE_VARIABLE(type, shorttype, name, tn) \
-    namespace fL##shorttype {                         \
-      extern GLOG_EXPORT type FLAGS_##name;           \
-    }                                                 \
-    using fL##shorttype::FLAGS_##name
-#  define DEFINE_VARIABLE(type, shorttype, name, value, meaning, tn) \
-    namespace fL##shorttype {                                        \
-      GLOG_EXPORT type FLAGS_##name(value);                          \
-      char FLAGS_no##name;                                           \
-    }                                                                \
-    using fL##shorttype::FLAGS_##name
+#    define DECLARE_VARIABLE(type, shorttype, name, tn) \
+      namespace fL##shorttype {                         \
+        extern GLOG_EXPORT type FLAGS_##name;           \
+      }                                                 \
+      using fL##shorttype::FLAGS_##name
+#    define DEFINE_VARIABLE(type, shorttype, name, value, meaning, tn) \
+      namespace fL##shorttype {                                        \
+        GLOG_EXPORT type FLAGS_##name(value);                          \
+        char FLAGS_no##name;                                           \
+      }                                                                \
+      using fL##shorttype::FLAGS_##name
 
 // bool specialization
-#  define DECLARE_bool(name) DECLARE_VARIABLE(bool, B, name, bool)
-#  define DEFINE_bool(name, value, meaning) \
-    DEFINE_VARIABLE(bool, B, name, value, meaning, bool)
+#    define DECLARE_bool(name) DECLARE_VARIABLE(bool, B, name, bool)
+#    define DEFINE_bool(name, value, meaning) \
+      DEFINE_VARIABLE(bool, B, name, value, meaning, bool)
 
 // int32 specialization
-#  define DECLARE_int32(name) DECLARE_VARIABLE(google::int32, I, name, int32)
-#  define DEFINE_int32(name, value, meaning) \
-    DEFINE_VARIABLE(google::int32, I, name, value, meaning, int32)
+#    define DECLARE_int32(name) DECLARE_VARIABLE(google::int32, I, name, int32)
+#    define DEFINE_int32(name, value, meaning) \
+      DEFINE_VARIABLE(google::int32, I, name, value, meaning, int32)
 
 // uint32 specialization
-#  ifndef DECLARE_uint32
-#    define DECLARE_uint32(name) \
-      DECLARE_VARIABLE(google::uint32, U, name, uint32)
-#  endif  // DECLARE_uint64
-#  define DEFINE_uint32(name, value, meaning) \
-    DEFINE_VARIABLE(google::uint32, U, name, value, meaning, uint32)
+#    ifndef DECLARE_uint32
+#      define DECLARE_uint32(name) \
+        DECLARE_VARIABLE(google::uint32, U, name, uint32)
+#    endif  // DECLARE_uint64
+#    define DEFINE_uint32(name, value, meaning) \
+      DEFINE_VARIABLE(google::uint32, U, name, value, meaning, uint32)
 
 // Special case for string, because we have to specify the namespace
 // std::string, which doesn't play nicely with our FLAG__namespace hackery.
-#  define DECLARE_string(name)                    \
-    namespace fLS {                               \
-    extern GLOG_EXPORT std::string& FLAGS_##name; \
-    }                                             \
-    using fLS::FLAGS_##name
-#  define DEFINE_string(name, value, meaning)                   \
-    namespace fLS {                                             \
-    std::string FLAGS_##name##_buf(value);                      \
-    GLOG_EXPORT std::string& FLAGS_##name = FLAGS_##name##_buf; \
-    char FLAGS_no##name;                                        \
-    }                                                           \
-    using fLS::FLAGS_##name
+#    define DECLARE_string(name)                    \
+      namespace fLS {                               \
+      extern GLOG_EXPORT std::string& FLAGS_##name; \
+      }                                             \
+      using fLS::FLAGS_##name
+#    define DEFINE_string(name, value, meaning)                   \
+      namespace fLS {                                             \
+      std::string FLAGS_##name##_buf(value);                      \
+      GLOG_EXPORT std::string& FLAGS_##name = FLAGS_##name##_buf; \
+      char FLAGS_no##name;                                        \
+      }                                                           \
+      using fLS::FLAGS_##name
 
-#endif  // GLOG_USE_GFLAGS
+#  endif  // GLOG_USE_GFLAGS
 
 // Define GLOG_DEFINE_* using DEFINE_* . By using these macros, we
 // have GLOG_* environ variables even if we have gflags installed.
@@ -146,4 +146,4 @@
        ? (dflt)                  \
        : static_cast<unsigned>(strtoul(getenv(envname), nullptr, 10)))
 
-#endif  // BASE_COMMANDLINEFLAGS_H__
+#endif  // BASE_COMMANDLINEFLAGS_H_

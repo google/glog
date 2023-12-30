@@ -79,8 +79,8 @@
           __FILE__, __LINE__, &vlocal__, sizeof(google::SiteFlag), "")); \
       google::int32 verbose_level__ = (verboselevel);                    \
       (vlocal__.level == nullptr                                         \
-           ? google::InitVLOG3__(&vlocal__, &FLAGS_v, __FILE__,          \
-                                 verbose_level__)                        \
+           ? google::InitVLOG3_(&vlocal__, &FLAGS_v, __FILE__,           \
+                                verbose_level__)                         \
            : *vlocal__.level >= verbose_level__);                        \
     })
 #else
@@ -116,9 +116,9 @@ struct SiteFlag {
 //   verbose_level is the argument to VLOG_IS_ON
 // We will return the return value for VLOG_IS_ON
 // and if possible set *site_flag appropriately.
-extern GLOG_EXPORT bool InitVLOG3__(google::SiteFlag* site_flag,
-                                    google::int32* site_default,
-                                    const char* fname,
-                                    google::int32 verbose_level);
+extern GLOG_EXPORT bool InitVLOG3_(google::SiteFlag* site_flag,
+                                   google::int32* site_default,
+                                   const char* fname,
+                                   google::int32 verbose_level);
 
 #endif  // BASE_VLOG_IS_ON_H_

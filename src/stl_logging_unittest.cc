@@ -79,7 +79,9 @@ static void TestSTLLogging() {
     string expected;
     for (int i = 0; i < 100; i++) {
       v.push_back(i);
-      if (i > 0) expected += ' ';
+      if (i > 0) {
+        expected += ' ';
+      }
       const size_t buf_size = 256;
       char buf[buf_size];
       std::snprintf(buf, buf_size, "%d", i);
@@ -107,7 +109,7 @@ static void TestSTLLogging() {
   }
 }
 
-int main(int, char**) {
+int main(int /*unused*/, char** /*unused*/) {
   TestSTLLogging();
   std::cout << "PASS\n";
   return 0;

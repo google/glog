@@ -58,7 +58,6 @@
 #  include <sys/syscall.h>  // for syscall()
 #endif
 #ifdef HAVE_UNISTD_H
-#  include <unistd.h>
 #endif
 
 #if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) &&    \
@@ -96,7 +95,9 @@ static bool DoRawLog(char** buf, size_t* size, const char* format, ...) {
   va_start(ap, format);
   int n = std::vsnprintf(*buf, *size, format, ap);
   va_end(ap);
-  if (n < 0 || static_cast<size_t>(n) > *size) return false;
+  if (n < 0 || static_cast<size_t>(n) > *size) {
+    return false;
+  }
   *size -= static_cast<size_t>(n);
   *buf += n;
   return true;
@@ -113,7 +114,9 @@ inline static bool VADoRawLog(char** buf, size_t* size, const char* format,
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop
 #endif
-  if (n < 0 || static_cast<size_t>(n) > *size) return false;
+  if (n < 0 || static_cast<size_t>(n) > *size) {
+    return false;
+  }
   *size -= static_cast<size_t>(n);
   *buf += n;
   return true;
@@ -125,11 +128,11 @@ static CrashReason crash_reason;
 static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
 GLOG_ATTRIBUTE_FORMAT(printf, 4, 5)
-void RawLog__(LogSeverity severity, const char* file, int line,
-              const char* format, ...) {
-  if (!(FLAGS_logtostdout || FLAGS_logtostderr ||
-        severity >= FLAGS_stderrthreshold || FLAGS_alsologtostderr ||
-        !IsGoogleLoggingInitialized())) {
+void RawLog_(LogSeverity severity, const char* file, int line,
+             const char* format, ...) {
+  if (!FLAGS_logtostdout && !FLAGS_logtostderr &&
+      severity < FLAGS_stderrthreshold && !FLAGS_alsologtostderr &&
+      IsGoogleLoggingInitialized()) {
     return;  // this stderr log message is suppressed
   }
   // can't call localtime_r here: it can allocate

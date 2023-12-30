@@ -57,7 +57,9 @@ static void** NextStackFrame(void** old_sp) {
   if (STRICT_UNWINDING) {
     // With the stack growing downwards, older stack frame must be
     // at a greater address that the current one.
-    if (new_sp <= old_sp) return nullptr;
+    if (new_sp <= old_sp) {
+      return nullptr;
+    }
     // Assume stack frames larger than 100,000 bytes are bogus.
     if (reinterpret_cast<uintptr_t>(new_sp) -
             reinterpret_cast<uintptr_t>(old_sp) >
@@ -67,7 +69,9 @@ static void** NextStackFrame(void** old_sp) {
   } else {
     // In the non-strict mode, allow discontiguous stack frames.
     // (alternate-signal-stacks for example).
-    if (new_sp == old_sp) return nullptr;
+    if (new_sp == old_sp) {
+      return nullptr;
+    }
     // And allow frames upto about 1MB.
     if ((new_sp > old_sp) && (reinterpret_cast<uintptr_t>(new_sp) -
                                   reinterpret_cast<uintptr_t>(old_sp) >
@@ -139,7 +143,7 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
 #endif
 
   int n = 0;
-  while (sp && n < max_depth) {
+  while ((sp != nullptr) && n < max_depth) {
     if (*(sp + 1) == nullptr) {
       // In 64-bit code, we often see a frame that
       // points to itself and has a return address of 0.

@@ -90,7 +90,7 @@ using DebugWriter = void(const char*, void*);
 // For some environments, add two extra bytes for the leading "0x".
 static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
-static void DebugWriteToStderr(const char* data, void*) {
+static void DebugWriteToStderr(const char* data, void* /*unused*/) {
   // This one is signal-safe.
   if (write(STDERR_FILENO, data, strlen(data)) < 0) {
     // Ignore errors.
@@ -188,10 +188,8 @@ namespace glog_internal_namespace_ {
 const char* ProgramInvocationShortName() {
   if (g_program_invocation_short_name != nullptr) {
     return g_program_invocation_short_name;
-  } else {
-    // TODO(hamaji): Use /proc/self/cmdline and so?
-    return "UNKNOWN";
-  }
+  }  // TODO(hamaji): Use /proc/self/cmdline and so?
+  return "UNKNOWN";
 }
 
 #ifdef GLOG_OS_WINDOWS
@@ -304,7 +302,7 @@ const char* const_basename(const char* filepath) {
 #ifdef GLOG_OS_WINDOWS  // Look for either path separator in Windows
   if (!base) base = strrchr(filepath, '\\');
 #endif
-  return base ? (base + 1) : filepath;
+  return base != nullptr ? (base + 1) : filepath;
 }
 
 static string g_my_user_name;
@@ -325,7 +323,7 @@ static void MyUserNameInitializer() {
     char buffer[1024] = {'\0'};
     uid_t uid = geteuid();
     int pwuid_res = getpwuid_r(uid, &pwd, buffer, sizeof(buffer), &result);
-    if (pwuid_res == 0 && result) {
+    if (pwuid_res == 0 && (result != nullptr)) {
       g_my_user_name = pwd.pw_name;
     } else {
       std::snprintf(buffer, sizeof(buffer), "uid%d", uid);
@@ -361,7 +359,7 @@ void InitGoogleLoggingUtilities(const char* argv0) {
 #ifdef GLOG_OS_WINDOWS
   if (!slash) slash = strrchr(argv0, '\\');
 #endif
-  g_program_invocation_short_name = slash ? slash + 1 : argv0;
+  g_program_invocation_short_name = slash != nullptr ? slash + 1 : argv0;
 
 #ifdef HAVE_STACKTRACE
   InstallFailureFunction(&DumpStackTraceAndExit);

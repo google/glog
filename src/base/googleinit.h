@@ -30,13 +30,13 @@
 // ---
 // Author: Jacob Hoffman-Andrews
 
-#ifndef _GOOGLEINIT_H
-#define _GOOGLEINIT_H
+#ifndef GOOGLEINIT_H
+#  define GOOGLEINIT_H
 
 class GoogleInitializer {
  public:
   using void_function = void (*)();
-  GoogleInitializer(const char*, void_function f) { f(); }
+  GoogleInitializer(const char* /*unused*/, void_function f) { f(); }
 };
 
 #define REGISTER_MODULE_INITIALIZER(name, body)       \
@@ -46,4 +46,4 @@ class GoogleInitializer {
       #name, google_init_module_##name);              \
   }
 
-#endif /* _GOOGLEINIT_H */
+#endif /* GOOGLEINIT_H */

@@ -97,28 +97,28 @@ namespace google {
 
 #if !defined(STRIP_LOG) || STRIP_LOG == 0
 #  define RAW_LOG_INFO(...) \
-    google::RawLog__(google::GLOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
+    google::RawLog_(google::GLOG_INFO, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define RAW_LOG_INFO(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG == 0
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 1
 #  define RAW_LOG_WARNING(...) \
-    google::RawLog__(google::GLOG_WARNING, __FILE__, __LINE__, __VA_ARGS__)
+    google::RawLog_(google::GLOG_WARNING, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define RAW_LOG_WARNING(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG <= 1
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 2
 #  define RAW_LOG_ERROR(...) \
-    google::RawLog__(google::GLOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+    google::RawLog_(google::GLOG_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define RAW_LOG_ERROR(...) google::RawLogStub__(0, __VA_ARGS__)
 #endif  // STRIP_LOG <= 2
 
 #if !defined(STRIP_LOG) || STRIP_LOG <= 3
 #  define RAW_LOG_FATAL(...) \
-    google::RawLog__(google::GLOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
+    google::RawLog_(google::GLOG_FATAL, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #  define RAW_LOG_FATAL(...)                \
     do {                                    \
@@ -160,14 +160,14 @@ namespace google {
 
 // Stub log function used to work around for unused variable warnings when
 // building with STRIP_LOG > 0.
-static inline void RawLogStub__(int /* ignored */, ...) {}
+static inline void RawLogStub_(int /* ignored */, ...) {}
 
 // Helper function to implement RAW_LOG and RAW_VLOG
 // Logs format... at "severity" level, reporting it
 // as called from file:line.
 // This does not allocate memory or acquire locks.
-GLOG_EXPORT void RawLog__(LogSeverity severity, const char* file, int line,
-                          const char* format, ...)
+GLOG_EXPORT void RawLog_(LogSeverity severity, const char* file, int line,
+                         const char* format, ...)
 #if defined(__has_attribute)
 #  if __has_attribute(used)
     __attribute__((__format__(__printf__, 4, 5)))

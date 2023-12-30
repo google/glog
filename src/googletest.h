@@ -33,7 +33,7 @@
 #ifdef GOOGLETEST_H__
 #  error You must not include this file twice.
 #endif
-#define GOOGLETEST_H__
+#define GOOGLETEST_H_
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -256,7 +256,7 @@ static inline void CalledAbort() {
 
 // Benchmark tools.
 
-#define BENCHMARK(n) static BenchmarkRegisterer __benchmark_##n(#n, &n);
+#define BENCHMARK(n) static BenchmarkRegisterer __benchmark_##n(#n, &(n));
 
 map<string, void (*)(int)> g_benchlist;  // the benchmarks to run
 
@@ -330,7 +330,7 @@ class CapturedStream {
   }
 
   // Remove output redirection
-  void StopCapture() {
+  void StopCapture() const {
     // Restore original stream
     if (uncaptured_fd_ != -1) {
       fflush(nullptr);
@@ -420,9 +420,13 @@ static inline bool IsLoggingPrefix(const string& s) {
   if (s.size() != kLoggingPrefixLength) {
     return false;
   }
-  if (!strchr("IWEF", s[0])) return false;
+  if (strchr("IWEF", s[0]) == nullptr) {
+    return false;
+  }
   for (size_t i = 1; i <= 8; ++i) {
-    if (!isdigit(s[i]) && s[i] != "YEARDATE"[i - 1]) return false;
+    if ((isdigit(s[i]) == 0) && s[i] != "YEARDATE"[i - 1]) {
+      return false;
+    }
   }
   return true;
 }
@@ -433,7 +437,10 @@ static inline bool IsLoggingPrefix(const string& s) {
 //     I20200102 030405 logging_unittest.cc:345] RAW: vlog -1
 //  => IYEARDATE TIME__ logging_unittest.cc:LINE] RAW: vlog -1
 static inline string MungeLine(const string& line) {
-  string before, logcode_date, time, thread_lineinfo;
+  string before;
+  string logcode_date;
+  string time;
+  string thread_lineinfo;
   std::size_t begin_of_logging_prefix = 0;
   for (; begin_of_logging_prefix + kLoggingPrefixLength < line.size();
        ++begin_of_logging_prefix) {
@@ -444,7 +451,8 @@ static inline string MungeLine(const string& line) {
   }
   if (begin_of_logging_prefix + kLoggingPrefixLength >= line.size()) {
     return line;
-  } else if (begin_of_logging_prefix > 0) {
+  }
+  if (begin_of_logging_prefix > 0) {
     before = line.substr(0, begin_of_logging_prefix - 1);
   }
   std::istringstream iss(line.substr(begin_of_logging_prefix));
@@ -482,7 +490,7 @@ static inline string Munge(const string& filename) {
   CHECK(fp != nullptr) << filename << ": couldn't open";
   char buf[4096];
   string result;
-  while (fgets(buf, 4095, fp)) {
+  while (fgets(buf, 4095, fp) != nullptr) {
     string line = MungeLine(buf);
     const size_t str_size = 256;
     char null_str[str_size];
@@ -583,7 +591,7 @@ class Thread {
  public:
   virtual ~Thread() = default;
 
-  void SetJoinable(bool) {}
+  void SetJoinable(bool /*unused*/) {}
 #if defined(GLOG_OS_WINDOWS) && !defined(GLOG_OS_CYGWIN)
   void Start() {
     handle_ = CreateThread(nullptr, 0, &Thread::InvokeThreadW, this, 0, &th_);
@@ -592,7 +600,7 @@ class Thread {
   void Join() { WaitForSingleObject(handle_, INFINITE); }
 #elif defined(HAVE_PTHREAD)
   void Start() { pthread_create(&th_, nullptr, &Thread::InvokeThread, this); }
-  void Join() { pthread_join(th_, nullptr); }
+  void Join() const { pthread_join(th_, nullptr); }
 #else
   void Start() {}
   void Join() {}
@@ -638,8 +646,8 @@ void (*g_new_hook)() = nullptr;
 
 }  // namespace google
 
-void* operator new(size_t size, const std::nothrow_t&) noexcept {
-  if (google::g_new_hook) {
+void* operator new(size_t size, const std::nothrow_t& /*unused*/) noexcept {
+  if (google::g_new_hook != nullptr) {
     google::g_new_hook();
   }
   return malloc(size);
@@ -659,8 +667,12 @@ void* operator new[](size_t size) GOOGLE_GLOG_THROW_BAD_ALLOC {
 
 void operator delete(void* p) noexcept { free(p); }
 
-void operator delete(void* p, size_t) noexcept { ::operator delete(p); }
+void operator delete(void* p, size_t /*unused*/) noexcept {
+  ::operator delete(p);
+}
 
 void operator delete[](void* p) noexcept { ::operator delete(p); }
 
-void operator delete[](void* p, size_t) noexcept { ::operator delete(p); }
+void operator delete[](void* p, size_t /*unused*/) noexcept {
+  ::operator delete(p);
+}

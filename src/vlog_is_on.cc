@@ -78,16 +78,24 @@ GLOG_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
   size_t p = 0;
   size_t s = 0;
   while (true) {
-    if (p == patt_len && s == str_len) return true;
-    if (p == patt_len) return false;
-    if (s == str_len) return p + 1 == patt_len && pattern[p] == '*';
+    if (p == patt_len && s == str_len) {
+      return true;
+    }
+    if (p == patt_len) {
+      return false;
+    }
+    if (s == str_len) {
+      return p + 1 == patt_len && pattern[p] == '*';
+    }
     if (pattern[p] == str[s] || pattern[p] == '?') {
       p += 1;
       s += 1;
       continue;
     }
     if (pattern[p] == '*') {
-      if (p + 1 == patt_len) return true;
+      if (p + 1 == patt_len) {
+        return true;
+      }
       do {
         if (SafeFNMatch_(pattern + (p + 1), patt_len - (p + 1), str + s,
                          str_len - s)) {
@@ -147,7 +155,7 @@ static void VLOG2Initializer() {
       auto* info = new VModuleInfo;
       info->module_pattern = pattern;
       info->vlog_level = module_level;
-      if (head) {
+      if (head != nullptr) {
         tail->next = info;
       } else {
         head = info;
@@ -156,10 +164,12 @@ static void VLOG2Initializer() {
     }
     // Skip past this entry
     vmodule = strchr(sep, ',');
-    if (vmodule == nullptr) break;
+    if (vmodule == nullptr) {
+      break;
+    }
     vmodule++;  // Skip past ","
   }
-  if (head) {  // Put them into the list at the head:
+  if (head != nullptr) {  // Put them into the list at the head:
     tail->next = vmodule_list;
     vmodule_list = head;
   }
@@ -200,7 +210,7 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
 
       // We traverse the list fully because the pattern can match several items
       // from the list.
-      while (item) {
+      while (item != nullptr) {
         if (SafeFNMatch_(module_pattern, pattern_len, item->base_name,
                          item->base_len)) {
           // Redirect the cached value to its module override.
@@ -219,8 +229,8 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
 
 // NOTE: Individual VLOG statements cache the integer log level pointers.
 // NOTE: This function must not allocate memory or require any locks.
-bool InitVLOG3__(SiteFlag* site_flag, int32* level_default, const char* fname,
-                 int32 verbose_level) {
+bool InitVLOG3_(SiteFlag* site_flag, int32* level_default, const char* fname,
+                int32 verbose_level) {
   MutexLock l(&vmodule_lock);
   bool read_vmodule_flag = inited_vmodule;
   if (!read_vmodule_flag) {
@@ -243,10 +253,10 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default, const char* fname,
   }
 #endif
 
-  base = base ? (base + 1) : fname;
+  base = base != nullptr ? (base + 1) : fname;
   const char* base_end = strchr(base, '.');
   size_t base_length =
-      base_end ? static_cast<size_t>(base_end - base) : strlen(base);
+      base_end != nullptr ? static_cast<size_t>(base_end - base) : strlen(base);
 
   // Trim out trailing "-inl" if any
   if (base_length >= 4 && (memcmp(base + base_length - 4, "-inl", 4) == 0)) {
@@ -280,7 +290,7 @@ bool InitVLOG3__(SiteFlag* site_flag, int32* level_default, const char* fname,
     // SetVModule is called afterwards with new modules.
     // The performance penalty here is neglible, because InitVLOG3__ is called
     // once per site.
-    if (site_flag_value == level_default && !site_flag->base_name) {
+    if (site_flag_value == level_default && (site_flag->base_name == nullptr)) {
       site_flag->base_name = base;
       site_flag->base_len = base_length;
       site_flag->next = cached_site_list;

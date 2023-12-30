@@ -31,12 +31,12 @@
 //
 // Define utilities for glog internal usage.
 
-#ifndef UTILITIES_H__
-#define UTILITIES_H__
+#ifndef UTILITIES_H_
+#define UTILITIES_H_
 
 // printf macros for size_t, in the style of inttypes.h
 #ifdef _LP64
-#  define __PRIS_PREFIX "z"
+#  define PRIS_PREFIX "z"
 #else
 #  define __PRIS_PREFIX
 #endif
@@ -234,4 +234,4 @@ void ShutdownGoogleLoggingUtilities();
 
 using namespace google::glog_internal_namespace_;
 
-#endif  // UTILITIES_H__
+#endif  // UTILITIES_H_

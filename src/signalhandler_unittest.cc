@@ -51,7 +51,7 @@ using namespace GFLAGS_NAMESPACE;
 
 using namespace google;
 
-static void* DieInThread(void*) {
+static void* DieInThread(void* /*unused*/) {
   // We assume pthread_t is an integral number or a pointer, rather
   // than a complex struct.  In some environments, pthread_self()
   // returns an uint64 but in some other environments pthread_self()
@@ -89,8 +89,9 @@ int main(int argc, char** argv) {
     *a = 0;
   } else if (command == "loop") {
     fprintf(stderr, "looping\n");
-    while (true)
+    while (true) {
       ;
+    }
   } else if (command == "die_in_thread") {
 #  if defined(HAVE_PTHREAD)
     pthread_t thread;

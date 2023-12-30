@@ -199,7 +199,7 @@ static bool ParseCharClass(State* state, const char* char_class) {
 }
 
 // This function is used for handling an optional non-terminal.
-static bool Optional(bool) { return true; }
+static bool Optional(bool /*unused*/) { return true; }
 
 // This function is used for handling <non-terminal>+ syntax.
 using ParseFunc = bool (*)(State*);
@@ -450,10 +450,7 @@ static bool ParseEncoding(State* state) {
   }
   *state = copy;
 
-  if (ParseName(state) || ParseSpecialName(state)) {
-    return true;
-  }
-  return false;
+  return ParseName(state) || ParseSpecialName(state);
 }
 
 // <name> ::= <nested-name>
@@ -472,10 +469,7 @@ static bool ParseName(State* state) {
   *state = copy;
 
   // Less greedy than <unscoped-template-name> <template-args>.
-  if (ParseUnscopedName(state)) {
-    return true;
-  }
-  return false;
+  return ParseUnscopedName(state);
 }
 
 // <unscoped-name> ::= <unqualified-name>
@@ -538,9 +532,8 @@ static bool ParsePrefix(State* state) {
     MaybeCancelLastSeparator(state);
     if (has_something && ParseTemplateArgs(state)) {
       return ParsePrefix(state);
-    } else {
-      break;
     }
+    break;
   }
   return true;
 }
@@ -627,7 +620,7 @@ static bool ParseNumber(State* state, int* number_out) {
 static bool ParseFloatNumber(State* state) {
   const char* p = state->mangled_cur;
   for (; *p != '\0'; ++p) {
-    if (!IsDigit(*p) && !(*p >= 'a' && *p <= 'f')) {
+    if (!IsDigit(*p) && (*p < 'a' || *p > 'f')) {
       break;
     }
   }
@@ -643,7 +636,7 @@ static bool ParseFloatNumber(State* state) {
 static bool ParseSeqId(State* state) {
   const char* p = state->mangled_cur;
   for (; *p != '\0'; ++p) {
-    if (!IsDigit(*p) && !(*p >= 'A' && *p <= 'Z')) {
+    if (!IsDigit(*p) && (*p < 'A' || *p > 'Z')) {
       break;
     }
   }
@@ -928,11 +921,7 @@ static bool ParseType(State* state) {
   *state = copy;
 
   // Less greedy than <template-template-param> <template-args>.
-  if (ParseTemplateParam(state)) {
-    return true;
-  }
-
-  return false;
+  return ParseTemplateParam(state);
 }
 
 // <CV-qualifiers> ::= [r] [V] [K]
@@ -940,9 +929,9 @@ static bool ParseType(State* state) {
 // ParseType().
 static bool ParseCVQualifiers(State* state) {
   int num_cv_qualifiers = 0;
-  num_cv_qualifiers += ParseOneCharToken(state, 'r');
-  num_cv_qualifiers += ParseOneCharToken(state, 'V');
-  num_cv_qualifiers += ParseOneCharToken(state, 'K');
+  num_cv_qualifiers += static_cast<int>(ParseOneCharToken(state, 'r'));
+  num_cv_qualifiers += static_cast<int>(ParseOneCharToken(state, 'V'));
+  num_cv_qualifiers += static_cast<int>(ParseOneCharToken(state, 'K'));
   return num_cv_qualifiers > 0;
 }
 

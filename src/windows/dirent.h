@@ -37,10 +37,10 @@
 #include <cwchar>
 
 /* Indicates that d_type field is available in dirent structure */
-#define _DIRENT_HAVE_D_TYPE
+#define DIRENT_HAVE_D_TYPE
 
 /* Indicates that d_namlen field is available in dirent structure */
-#define _DIRENT_HAVE_D_NAMLEN
+#define DIRENT_HAVE_D_NAMLEN
 
 /* Entries missing from MSVC 6.0 */
 #if !defined(FILE_ATTRIBUTE_DEVICE)
@@ -206,10 +206,10 @@
 #endif
 
 /* Return the exact length of the file name without zero terminator */
-#define _D_EXACT_NAMLEN(p) ((p)->d_namlen)
+#define D_EXACT_NAMLEN(p) ((p)->d_namlen)
 
 /* Return the maximum size of a file name */
-#define _D_ALLOC_NAMLEN(p) ((PATH_MAX) + 1)
+#define D_ALLOC_NAMLEN(p) ((PATH_MAX) + 1)
 
 #ifdef __cplusplus
 extern "C" {
@@ -345,7 +345,7 @@ static _WDIR* _wopendir(const wchar_t* dirname) {
 
   /* Allocate new _WDIR structure */
   dirp = (_WDIR*)malloc(sizeof(struct _WDIR));
-  if (!dirp) {
+  if (dirp == nullptr) {
     return nullptr;
   }
 
@@ -507,7 +507,7 @@ static int _wreaddir_r(_WDIR* dirp, struct _wdirent* entry,
  */
 static int _wclosedir(_WDIR* dirp) {
   int ok;
-  if (dirp) {
+  if (dirp != nullptr) {
     /* Release search handle */
     if (dirp->handle != INVALID_HANDLE_VALUE) {
       FindClose(dirp->handle);
@@ -533,7 +533,7 @@ static int _wclosedir(_WDIR* dirp) {
  * file name again.
  */
 static void _wrewinddir(_WDIR* dirp) {
-  if (dirp) {
+  if (dirp != nullptr) {
     /* Release existing search handle */
     if (dirp->handle != INVALID_HANDLE_VALUE) {
       FindClose(dirp->handle);
@@ -632,7 +632,7 @@ static DIR* opendir(const char* dirname) {
 
   /* Allocate memory for DIR structure */
   dirp = (DIR*)malloc(sizeof(struct DIR));
-  if (!dirp) {
+  if (dirp == nullptr) {
     return nullptr;
   }
   {
@@ -642,7 +642,7 @@ static DIR* opendir(const char* dirname) {
 
     /* Convert directory name to wide-character string */
     error = dirent_mbstowcs_s(&n, wname, PATH_MAX + 1, dirname, PATH_MAX + 1);
-    if (error) {
+    if (error != 0) {
       /*
        * Cannot convert file name to wide-character string.  This
        * occurs if the string contains invalid multi-byte sequences or
@@ -654,7 +654,7 @@ static DIR* opendir(const char* dirname) {
 
     /* Open directory stream using wide-character name */
     dirp->wdirp = _wopendir(wname);
-    if (!dirp->wdirp) {
+    if (dirp->wdirp == nullptr) {
       goto exit_free;
     }
   }
@@ -718,7 +718,7 @@ static int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result) {
                                 datap->cAlternateFileName, PATH_MAX + 1);
     }
 
-    if (!error) {
+    if (error == 0) {
       DWORD attr;
 
       /* Length of file name excluding zero terminator */
@@ -771,7 +771,7 @@ static int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result) {
  */
 static int closedir(DIR* dirp) {
   int ok;
-  if (dirp) {
+  if (dirp != nullptr) {
     /* Close wide-character directory stream */
     ok = _wclosedir(dirp->wdirp);
     dirp->wdirp = nullptr;
@@ -814,7 +814,7 @@ static int scandir(const char* dirname, struct dirent*** namelist,
 
   /* Open directory stream */
   dir = opendir(dirname);
-  if (dir) {
+  if (dir != nullptr) {
     /* Read directory entries to memory */
     while (1) {
       /* Enlarge pointer table to make room for another pointer */
@@ -861,7 +861,7 @@ static int scandir(const char* dirname, struct dirent*** namelist,
           int pass;
 
           /* Determine whether to include the entry in result */
-          if (filter) {
+          if (filter != nullptr) {
             /* Let the filter function decide */
             pass = filter(tmp);
           } else {
@@ -869,7 +869,7 @@ static int scandir(const char* dirname, struct dirent*** namelist,
             pass = 1;
           }
 
-          if (pass) {
+          if (pass != 0) {
             /* Store the temporary entry to pointer table */
             files[size++] = tmp;
             tmp = nullptr;
@@ -913,12 +913,12 @@ static int scandir(const char* dirname, struct dirent*** namelist,
   }
 
   /* Close directory stream */
-  if (dir) {
+  if (dir != nullptr) {
     closedir(dir);
   }
 
   /* Pass pointer table to caller */
-  if (namelist) {
+  if (namelist != nullptr) {
     *namelist = files;
   }
   return result;
@@ -953,9 +953,9 @@ static int dirent_mbstowcs_s(size_t* pReturnValue, wchar_t* wcstr,
 
   /* Convert to wide-character string (or count characters) */
   n = mbstowcs(wcstr, mbstr, sizeInWords);
-  if (!wcstr || n < count) {
+  if ((wcstr == nullptr) || n < count) {
     /* Zero-terminate output buffer */
-    if (wcstr && sizeInWords) {
+    if ((wcstr != nullptr) && (sizeInWords != 0U)) {
       if (n >= sizeInWords) {
         n = sizeInWords - 1;
       }
@@ -963,7 +963,7 @@ static int dirent_mbstowcs_s(size_t* pReturnValue, wchar_t* wcstr,
     }
 
     /* Length of resulting multi-byte string WITH zero terminator */
-    if (pReturnValue) {
+    if (pReturnValue != nullptr) {
       *pReturnValue = n + 1;
     }
 
@@ -997,9 +997,9 @@ static int dirent_wcstombs_s(size_t* pReturnValue, char* mbstr,
 
   /* Convert to multi-byte string (or count the number of bytes needed) */
   n = wcstombs(mbstr, wcstr, sizeInBytes);
-  if (!mbstr || n < count) {
+  if ((mbstr == nullptr) || n < count) {
     /* Zero-terminate output buffer */
-    if (mbstr && sizeInBytes) {
+    if ((mbstr != nullptr) && (sizeInBytes != 0U)) {
       if (n >= sizeInBytes) {
         n = sizeInBytes - 1;
       }
@@ -1007,7 +1007,7 @@ static int dirent_wcstombs_s(size_t* pReturnValue, char* mbstr,
     }
 
     /* Length of resulting multi-bytes string WITH zero-terminator */
-    if (pReturnValue) {
+    if (pReturnValue != nullptr) {
       *pReturnValue = n + 1;
     }
 

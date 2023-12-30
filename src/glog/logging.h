@@ -90,16 +90,16 @@
 
 namespace google {
 
-typedef std::int32_t int32;
-typedef std::uint32_t uint32;
-typedef std::int64_t int64;
-typedef std::uint64_t uint64;
+using int32 = std::int32_t;
+using uint32 = std::uint32_t;
+using int64 = std::int64_t;
+using uint64 = std::uint64_t;
 
-typedef double WallTime;
+using WallTime = double;
 
 struct GLOG_EXPORT LogMessageTime {
   LogMessageTime();
-  LogMessageTime(std::tm t);
+  explicit LogMessageTime(std::tm t);
   LogMessageTime(std::time_t timestamp, WallTime now);
 
   const time_t& timestamp() const { return timestamp_; }
@@ -143,8 +143,8 @@ struct LogMessageInfo {
   const LogMessageTime& time;
 };
 
-typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
-                                     void* data);
+using CustomPrefixCallback = void (*)(std::ostream&, const LogMessageInfo&,
+                                      void*);
 
 }  // namespace google
 
@@ -632,9 +632,10 @@ GLOG_EXPORT bool IsGoogleLoggingInitialized();
 GLOG_EXPORT void ShutdownGoogleLogging();
 
 #if defined(__GNUC__)
-typedef void (*logging_fail_func_t)() __attribute__((noreturn));
+typedef void (*logging_fail_func_t)()
+    __attribute__((noreturn));  // NOLINT(modernize-use-using)
 #else
-typedef void (*logging_fail_func_t)();
+using logging_fail_func_t = void (*)();
 #endif
 
 // Install a function which will be called after LOG(FATAL).
@@ -711,10 +712,11 @@ class LogSink;  // defined below
 // A container for a string pointer which can be evaluated to a bool -
 // true iff the pointer is nullptr.
 struct CheckOpString {
+  // NOLINTNEXTLINE(google-explicit-constructor)
   CheckOpString(std::string* str) : str_(str) {}
   // No destructor: if str_ is non-nullptr, we're about to LOG(FATAL),
   // so there's no point in cleaning up str_.
-  operator bool() const {
+  explicit operator bool() const noexcept {
     return GOOGLE_PREDICT_BRANCH_NOT_TAKEN(str_ != nullptr);
   }
   std::string* str_;
@@ -749,8 +751,8 @@ struct DummyClassToDefineOperator {};
 // Define global operator<< to declare using ::operator<<.
 // This declaration will allow use to use CHECK macros for user
 // defined classes which have operator<< (e.g., stl_logging.h).
-inline std::ostream& operator<<(std::ostream& out,
-                                const google::DummyClassToDefineOperator&) {
+inline std::ostream& operator<<(
+    std::ostream& out, const google::DummyClassToDefineOperator& /*unused*/) {
   return out;
 }
 
@@ -964,8 +966,8 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
 #define CHECK_STRCASEEQ(s1, s2) CHECK_STROP(strcasecmp, ==, true, s1, s2)
 #define CHECK_STRCASENE(s1, s2) CHECK_STROP(strcasecmp, !=, false, s1, s2)
 
-#define CHECK_INDEX(I, A) CHECK(I < (sizeof(A) / sizeof(A[0])))
-#define CHECK_BOUND(B, A) CHECK(B <= (sizeof(A) / sizeof(A[0])))
+#define CHECK_INDEX(I, A) CHECK((I) < (sizeof(A) / sizeof((A)[0])))
+#define CHECK_BOUND(B, A) CHECK((B) <= (sizeof(A) / sizeof((A)[0])))
 
 #define CHECK_DOUBLE_EQ(val1, val2)                \
   do {                                             \
@@ -1088,23 +1090,23 @@ namespace google {
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                  \
       __FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), ""));    \
   ++LOG_OCCURRENCES;                                                    \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n;          \
+  if (++LOG_OCCURRENCES_MOD_N > (n)) LOG_OCCURRENCES_MOD_N -= (n);      \
   if (LOG_OCCURRENCES_MOD_N == 1)                                       \
   google::LogMessage(__FILE__, __LINE__, google::GLOG_##severity,       \
-                     LOG_OCCURRENCES, &what_to_do)                      \
+                     LOG_OCCURRENCES, (what_to_do))                     \
       .stream()
 
-#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do)       \
-  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0);       \
-  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                        \
-      __FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), ""));                \
-  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                        \
-      __FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), ""));          \
-  ++LOG_OCCURRENCES;                                                          \
-  if ((condition) &&                                                          \
-      ((LOG_OCCURRENCES_MOD_N = (LOG_OCCURRENCES_MOD_N + 1) % n) == (1 % n))) \
-  google::LogMessage(__FILE__, __LINE__, google::GLOG_##severity,             \
-                     LOG_OCCURRENCES, &what_to_do)                            \
+#define SOME_KIND_OF_LOG_IF_EVERY_N(severity, condition, n, what_to_do)      \
+  static std::atomic<int> LOG_OCCURRENCES(0), LOG_OCCURRENCES_MOD_N(0);      \
+  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                       \
+      __FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), ""));               \
+  GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                       \
+      __FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), ""));         \
+  ++LOG_OCCURRENCES;                                                         \
+  if ((condition) && ((LOG_OCCURRENCES_MOD_N =                               \
+                           (LOG_OCCURRENCES_MOD_N + 1) % (n)) == (1 % (n)))) \
+  google::LogMessage(__FILE__, __LINE__, google::GLOG_##severity,            \
+                     LOG_OCCURRENCES, (what_to_do))                          \
       .stream()
 
 #define SOME_KIND_OF_PLOG_EVERY_N(severity, n, what_to_do)              \
@@ -1114,20 +1116,20 @@ namespace google {
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(                  \
       __FILE__, __LINE__, &LOG_OCCURRENCES_MOD_N, sizeof(int), ""));    \
   ++LOG_OCCURRENCES;                                                    \
-  if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n;          \
+  if (++LOG_OCCURRENCES_MOD_N > (n)) LOG_OCCURRENCES_MOD_N -= (n);      \
   if (LOG_OCCURRENCES_MOD_N == 1)                                       \
   google::ErrnoLogMessage(__FILE__, __LINE__, google::GLOG_##severity,  \
-                          LOG_OCCURRENCES, &what_to_do)                 \
+                          LOG_OCCURRENCES, (what_to_do))                \
       .stream()
 
 #define SOME_KIND_OF_LOG_FIRST_N(severity, n, what_to_do)         \
   static std::atomic<int> LOG_OCCURRENCES(0);                     \
   GLOG_IFDEF_THREAD_SANITIZER(AnnotateBenignRaceSized(            \
       __FILE__, __LINE__, &LOG_OCCURRENCES, sizeof(int), ""));    \
-  if (LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES;                    \
-  if (LOG_OCCURRENCES <= n)                                       \
+  if (LOG_OCCURRENCES <= (n)) ++LOG_OCCURRENCES;                  \
+  if (LOG_OCCURRENCES <= (n))                                     \
   google::LogMessage(__FILE__, __LINE__, google::GLOG_##severity, \
-                     LOG_OCCURRENCES, &what_to_do)                \
+                     LOG_OCCURRENCES, (what_to_do))               \
       .stream()
 
 namespace glog_internal_namespace_ {
@@ -1141,23 +1143,23 @@ GLOG_EXPORT bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
 #define LOG_EVERY_N(severity, n) \
-  SOME_KIND_OF_LOG_EVERY_N(severity, (n), google::LogMessage::SendToLog)
+  SOME_KIND_OF_LOG_EVERY_N(severity, (n), &google::LogMessage::SendToLog)
 
 #define LOG_EVERY_T(severity, T) SOME_KIND_OF_LOG_EVERY_T(severity, (T))
 
 #define SYSLOG_EVERY_N(severity, n)       \
   SOME_KIND_OF_LOG_EVERY_N(severity, (n), \
-                           google::LogMessage::SendToSyslogAndLog)
+                           &google::LogMessage::SendToSyslogAndLog)
 
 #define PLOG_EVERY_N(severity, n) \
-  SOME_KIND_OF_PLOG_EVERY_N(severity, (n), google::LogMessage::SendToLog)
+  SOME_KIND_OF_PLOG_EVERY_N(severity, (n), &google::LogMessage::SendToLog)
 
 #define LOG_FIRST_N(severity, n) \
-  SOME_KIND_OF_LOG_FIRST_N(severity, (n), google::LogMessage::SendToLog)
+  SOME_KIND_OF_LOG_FIRST_N(severity, (n), &google::LogMessage::SendToLog)
 
 #define LOG_IF_EVERY_N(severity, condition, n)            \
   SOME_KIND_OF_LOG_IF_EVERY_N(severity, (condition), (n), \
-                              google::LogMessage::SendToLog)
+                              &google::LogMessage::SendToLog)
 
 // We want the special COUNTER value available for LOG_EVERY_X()'ed messages
 enum PRIVATE_Counter { COUNTER };
@@ -1324,7 +1326,7 @@ class GLOG_EXPORT LogStreamBuf : public std::streambuf {
   LogStreamBuf(char* buf, int len) { setp(buf, buf + len - 2); }
 
   // This effectively ignores overflow.
-  int_type overflow(int_type ch) { return ch; }
+  int_type overflow(int_type ch) override { return ch; }
 
   // Legacy public ostrstream method.
   size_t pcount() const { return static_cast<size_t>(pptr() - pbase()); }
@@ -1406,9 +1408,8 @@ class GLOG_EXPORT LogMessage {
     LogStream* self_;  // Consistency check hack
   };
 
- public:
   // icc 8 requires this typedef to avoid an internal compiler error.
-  typedef void (LogMessage::*SendMethod)();
+  using SendMethod = void (LogMessage::*)();
 
   LogMessage(const char* file, int line, LogSeverity severity, int64 ctr,
              SendMethod send_method);
@@ -1495,7 +1496,7 @@ class GLOG_EXPORT LogMessage {
             void (LogMessage::*send_method)());
 
   // Used to fill in crash information during LOG(FATAL) failures.
-  void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
+  static void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
 
   // Counts of messages sent at each priority:
   static int64 num_messages_[NUM_SEVERITIES];  // under log_mutex
@@ -1576,10 +1577,10 @@ class GLOG_EXPORT ErrnoLogMessage : public LogMessage {
 
 class GLOG_EXPORT LogMessageVoidify {
  public:
-  LogMessageVoidify() {}
+  LogMessageVoidify() = default;
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(std::ostream&) {}
+  void operator&(std::ostream& /*unused*/) {}
 };
 
 // Flushes all log files that contains messages that are at least of
@@ -1817,7 +1818,7 @@ class GLOG_EXPORT NullStream : public LogMessage::LogStream {
 // converted to LogStream and the message will be computed and then
 // quietly discarded.
 template <class T>
-inline NullStream& operator<<(NullStream& str, const T&) {
+inline NullStream& operator<<(NullStream& str, const T& /*unused*/) {
   return str;
 }
 
@@ -1828,7 +1829,7 @@ class GLOG_EXPORT NullStreamFatal : public NullStream {
   using NullStream::NullStream;
   [[noreturn]]
   // Prevent the linker from discarding the destructor.
-  GLOG_USED ~NullStreamFatal();
+  GLOG_USED ~NullStreamFatal() override;
 };
 
 // Install a signal handler that will dump signal information and a stack

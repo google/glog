@@ -51,19 +51,18 @@ int CheckNoReturn(bool b) {
   if (b) {
     LOG(FATAL) << "Fatal";
     return 0;  // Workaround for MSVC warning C4715
-  } else {
-    return 0;
   }
+  return 0;
 }
 
 struct A {};
-std::ostream& operator<<(std::ostream& str, const A&) { return str; }
+std::ostream& operator<<(std::ostream& str, const A& /*unused*/) { return str; }
 
 namespace {
 void handle_abort(int /*code*/) { std::exit(EXIT_FAILURE); }
 }  // namespace
 
-int main(int, char* argv[]) {
+int main(int /*unused*/, char* argv[]) {
 #if defined(_MSC_VER)
   // Avoid presenting an interactive dialog that will cause the test to time
   // out.
@@ -74,7 +73,7 @@ int main(int, char* argv[]) {
   FLAGS_logtostderr = true;
   InitGoogleLogging(argv[0]);
   if (FLAGS_check_mode) {
-    printf("%s\n", DEBUG_MODE ? "dbg" : "opt");
+    printf("%s\n", DEBUG_MODE != 0U ? "dbg" : "opt");
     return 0;
   }
   LOG(INFO) << "TESTMESSAGE INFO";

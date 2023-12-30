@@ -27,8 +27,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef BASE_LOG_SEVERITY_H__
-#define BASE_LOG_SEVERITY_H__
+#ifndef BASE_LOG_SEVERITY_H_
+#define BASE_LOG_SEVERITY_H_
+
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
+#endif
 
 // The recommended semantics of the log levels are as follows:
 //
@@ -95,4 +99,4 @@ enum { DEBUG_MODE = 1 };
 #  define IF_DEBUG_MODE(x) x
 #endif
 
-#endif  // BASE_LOG_SEVERITY_H__
+#endif  // BASE_LOG_SEVERITY_H_

@@ -264,7 +264,8 @@ bool GetSectionHeaderByName(int fd, const char* name, size_t name_len,
     ssize_t n_read = ReadFromOffset(fd, &header_name, name_len, name_offset);
     if (n_read == -1) {
       return false;
-    } else if (static_cast<size_t>(n_read) != name_len) {
+    }
+    if (static_cast<size_t>(n_read) != name_len) {
       // Short read -- name could be at end of file.
       continue;
     }
@@ -386,7 +387,7 @@ struct FileDescriptor {
       close(fd_);
     }
   }
-  int get() { return fd_; }
+  int get() const { return fd_; }
 
  private:
   FileDescriptor(const FileDescriptor&) = delete;
@@ -613,7 +614,7 @@ static ATTRIBUTE_NOINLINE int OpenObjectFileContainingPcAndGetStartAddress(
     }
 
     // Check start and end addresses.
-    if (!(start_address <= pc && pc < end_address)) {
+    if (start_address > pc || pc >= end_address) {
       continue;  // We skip this map.  PC isn't in this map.
     }
 
@@ -760,7 +761,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   out[0] = '\0';
   SafeAppendString("(", out, out_size);
 
-  if (g_symbolize_open_object_file_callback) {
+  if (g_symbolize_open_object_file_callback != nullptr) {
     object_fd = g_symbolize_open_object_file_callback(
         pc0, start_address, base_address, out + 1, out_size - 1);
   } else {
@@ -776,7 +777,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   // Check whether a file name was returned.
   if (object_fd < 0) {
 #    endif
-    if (out[1]) {
+    if (out[1] != 0) {
       // The object file containing PC was determined successfully however the
       // object file was not opened successfully.  This is still considered
       // success because the object file name and offset are known and tools
@@ -794,7 +795,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   if (elf_type == -1) {
     return false;
   }
-  if (g_symbolize_callback) {
+  if (g_symbolize_callback != nullptr) {
     // Run the call back if it's installed.
     // Note: relocation (and much of the rest of this code) will be
     // wrong for prelinked shared libraries and PIE executables.
@@ -808,7 +809,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   }
   if (!GetSymbolFromObjectFile(wrapped_object_fd.get(), pc0, out, out_size,
                                base_address)) {
-    if (out[1] && !g_symbolize_callback) {
+    if ((out[1] != 0) && (g_symbolize_callback == nullptr)) {
       // The object file containing PC was opened successfully however the
       // symbol was not found. The object may have been stripped. This is still
       // considered success because the object file name and offset are known

@@ -71,7 +71,7 @@ const struct {
     {SIGTERM, "SIGTERM"},
 };
 
-static bool kFailureSignalHandlerInstalled = false;
+bool kFailureSignalHandlerInstalled = false;
 
 #if !defined(GLOG_OS_WINDOWS)
 // Returns the program counter from signal context, nullptr if unknown.
@@ -79,7 +79,7 @@ void* GetPC(void* ucontext_in_void) {
 #  if (defined(HAVE_UCONTEXT_H) || defined(HAVE_SYS_UCONTEXT_H)) && \
       defined(PC_FROM_UCONTEXT)
   if (ucontext_in_void != nullptr) {
-    ucontext_t* context = reinterpret_cast<ucontext_t*>(ucontext_in_void);
+    auto* context = reinterpret_cast<ucontext_t*>(ucontext_in_void);
     return (void*)context->PC_FROM_UCONTEXT;
   }
 #  else
@@ -192,7 +192,7 @@ void DumpSignalInfo(int signal_number, siginfo_t* siginfo) {
   MinimalFormatter formatter(buf, sizeof(buf));
 
   formatter.AppendString("*** ");
-  if (signal_name) {
+  if (signal_name != nullptr) {
     formatter.AppendString(signal_name);
   } else {
     // Use the signal number if the name is unknown.  The signal name
@@ -270,7 +270,7 @@ void InvokeDefaultSignalHandler(int signal_number) {
 // dumping stuff while another thread is doing it.  Our policy is to let
 // the first thread dump stuff and let other threads wait.
 // See also comments in FailureSignalHandler().
-static pthread_t* g_entered_thread_id_pointer = nullptr;
+pthread_t* g_entered_thread_id_pointer = nullptr;
 
 // Dumps signal and stack frame information, and invokes the default
 // signal handler once our job is done.
@@ -299,7 +299,7 @@ void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
           &my_thread_id);
   if (old_thread_id_pointer != nullptr) {
     // We've already entered the signal handler.  What should we do?
-    if (pthread_equal(my_thread_id, *g_entered_thread_id_pointer)) {
+    if (pthread_equal(my_thread_id, *g_entered_thread_id_pointer) != 0) {
       // It looks the current thread is reentering the signal handler.
       // Something must be going wrong (maybe we are reentering by another
       // type of signal?).  Kill ourself by the default signal handler.

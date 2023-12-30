@@ -66,9 +66,8 @@ static const char* TrySymbolize(void* pc) {
   static char symbol[4096];
   if (Symbolize(pc, symbol, sizeof(symbol))) {
     return symbol;
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 #  endif
 
@@ -237,7 +236,8 @@ static const char* SymbolizeStackConsumption(void* pc, int* stack_consumed) {
   // Set up SIGUSR1 and SIGUSR2 signal handlers (and save the older ones).
   struct sigaction sa;
   memset(&sa, 0, sizeof(struct sigaction));
-  struct sigaction old_sa1, old_sa2;
+  struct sigaction old_sa1;
+  struct sigaction old_sa2;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_ONSTACK;
 
