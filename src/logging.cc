@@ -2401,14 +2401,6 @@ const vector<string>& GetLoggingDirectories() {
   return *logging_directories_list;
 }
 
-void TestOnly_ClearLoggingDirectoriesList() {
-  fprintf(stderr,
-          "TestOnly_ClearLoggingDirectoriesList should only be "
-          "called from test code.\n");
-  delete logging_directories_list;
-  logging_directories_list = nullptr;
-}
-
 void GetExistingTempDirectories(vector<string>* list) {
   GetTempDirectories(list);
   auto i_dir = list->begin();
