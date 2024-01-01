@@ -1692,11 +1692,6 @@ GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
 
 GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
 
-// For tests only:  Clear the internal [cached] list of logging directories to
-// force a refresh the next time GetLoggingDirectories is called.
-// Thread-hostile.
-void TestOnly_ClearLoggingDirectoriesList();
-
 // Returns a set of existing temporary directories, which will be a
 // subset of the directories returned by GetLoggingDirectories().
 // Thread-safe.
