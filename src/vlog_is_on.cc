@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <mutex>
 #include <string>
 
 #include "base/commandlineflags.h"
@@ -121,7 +122,7 @@ struct VModuleInfo {
 };
 
 // This protects the following global variables.
-static Mutex vmodule_lock;
+static std::mutex vmodule_mutex;
 // Pointer to head of the VModuleInfo list.
 // It's a map from module pattern to logging level for those module(s).
 static VModuleInfo* vmodule_list = nullptr;
@@ -130,9 +131,8 @@ static SiteFlag* cached_site_list = nullptr;
 // Boolean initialization flag.
 static bool inited_vmodule = false;
 
-// L >= vmodule_lock.
+// L >= vmodule_mutex.
 static void VLOG2Initializer() {
-  vmodule_lock.AssertHeld();
   // Can now parse --vmodule flag and initialize mapping of module-specific
   // logging levels.
   inited_vmodule = false;
@@ -172,7 +172,8 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
   size_t const pattern_len = strlen(module_pattern);
   bool found = false;
   {
-    MutexLock l(&vmodule_lock);  // protect whole read-modify-write
+    std::lock_guard<std::mutex> l(
+        vmodule_mutex);  // protect whole read-modify-write
     for (const VModuleInfo* info = vmodule_list; info != nullptr;
          info = info->next) {
       if (info->module_pattern == module_pattern) {
@@ -221,7 +222,7 @@ int SetVLOGLevel(const char* module_pattern, int log_level) {
 // NOTE: This function must not allocate memory or require any locks.
 bool InitVLOG3__(SiteFlag* site_flag, int32* level_default, const char* fname,
                  int32 verbose_level) {
-  MutexLock l(&vmodule_lock);
+  std::lock_guard<std::mutex> l(vmodule_mutex);
   bool read_vmodule_flag = inited_vmodule;
   if (!read_vmodule_flag) {
     VLOG2Initializer();

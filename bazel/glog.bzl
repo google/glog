@@ -59,7 +59,7 @@ def glog_library(with_gflags = 1, **kwargs):
         "-Wno-unused-function",
         "-Wno-unused-local-typedefs",
         "-Wno-unused-variable",
-        # Allows src/base/mutex.h to include pthread.h.
+        # Allows to include pthread.h.
         "-DHAVE_PTHREAD",
         # Allows src/logging.cc to determine the host name.
         "-DHAVE_SYS_UTSNAME_H",
@@ -154,7 +154,6 @@ def glog_library(with_gflags = 1, **kwargs):
         name = "shared_headers",
         srcs = [
             "src/base/commandlineflags.h",
-            "src/base/mutex.h",
             "src/stacktrace.h",
             "src/utilities.h",
         ]
