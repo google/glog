@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -560,6 +560,7 @@ class LogDestination {
   }
 
   static void DeleteLogDestinations();
+  LogDestination(LogSeverity severity, const char* base_filename);
 
  private:
 #if defined(__cpp_lib_shared_mutex) && (__cpp_lib_shared_mutex >= 201505L)
@@ -573,7 +574,7 @@ class LogDestination {
 #endif  // defined(__cpp_lib_shared_mutex) && (__cpp_lib_shared_mutex >=
         // 201505L)
 
-  LogDestination(LogSeverity severity, const char* base_filename);
+  friend std::default_delete<LogDestination>;
   ~LogDestination();
 
   // Take a log message of a particular severity and log it to stderr
@@ -614,14 +615,14 @@ class LogDestination {
   LogFileObject fileobject_;
   base::Logger* logger_;  // Either &fileobject_, or wrapper around it
 
-  static LogDestination* log_destinations_[NUM_SEVERITIES];
+  static std::unique_ptr<LogDestination> log_destinations_[NUM_SEVERITIES];
   static LogSeverity email_logging_severity_;
   static string addresses_;
   static string hostname_;
   static bool terminal_supports_color_;
 
   // arbitrary global logging destinations.
-  static vector<LogSink*>* sinks_;
+  static std::unique_ptr<vector<LogSink*>> sinks_;
 
   // Protects the vector sinks_,
   // but not the LogSink objects its elements reference.
@@ -638,7 +639,7 @@ LogSeverity LogDestination::email_logging_severity_ = 99999;
 string LogDestination::addresses_;
 string LogDestination::hostname_;
 
-vector<LogSink*>* LogDestination::sinks_ = nullptr;
+std::unique_ptr<vector<LogSink*>> LogDestination::sinks_;
 LogDestination::SinkMutex LogDestination::sink_mutex_;
 bool LogDestination::terminal_supports_color_ = TerminalSupportsColor();
 
@@ -674,14 +675,15 @@ void LogDestination::SetLoggerImpl(base::Logger* logger) {
 inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
   // assume we have the log_mutex or we simply don't care
   // about it
-  for (int i = min_severity; i < NUM_SEVERITIES; i++) {
-    LogDestination* log = log_destinations_[i];
-    if (log != nullptr) {
-      // Flush the base fileobject_ logger directly instead of going
-      // through any wrappers to reduce chance of deadlock.
-      log->fileobject_.FlushUnlocked();
-    }
-  }
+  std::for_each(std::next(std::begin(log_destinations_), min_severity),
+                std::end(log_destinations_),
+                [](std::unique_ptr<LogDestination>& log) {
+                  if (log != nullptr) {
+                    // Flush the base fileobject_ logger directly instead of
+                    // going through any wrappers to reduce chance of deadlock.
+                    log->fileobject_.FlushUnlocked();
+                  }
+                });
 }
 
 inline void LogDestination::FlushLogFiles(int min_severity) {
@@ -717,7 +719,7 @@ inline void LogDestination::AddLogSink(LogSink* destination) {
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   SinkLock l{sink_mutex_};
-  if (!sinks_) sinks_ = new vector<LogSink*>;
+  if (sinks_ == nullptr) sinks_ = std::make_unique<std::vector<LogSink*>>();
   sinks_->push_back(destination);
 }
 
@@ -935,24 +937,24 @@ inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
   }
 }
 
-LogDestination* LogDestination::log_destinations_[NUM_SEVERITIES];
+std::unique_ptr<LogDestination>
+    LogDestination::log_destinations_[NUM_SEVERITIES];
 
 inline LogDestination* LogDestination::log_destination(LogSeverity severity) {
   assert(severity >= 0 && severity < NUM_SEVERITIES);
-  if (!log_destinations_[severity]) {
-    log_destinations_[severity] = new LogDestination(severity, nullptr);
+  if (log_destinations_[severity] == nullptr) {
+    log_destinations_[severity] =
+        std::make_unique<LogDestination>(severity, nullptr);
   }
-  return log_destinations_[severity];
+  return log_destinations_[severity].get();
 }
 
 void LogDestination::DeleteLogDestinations() {
   for (auto& log_destination : log_destinations_) {
-    delete log_destination;
-    log_destination = nullptr;
+    log_destination.reset();
   }
   SinkLock l{sink_mutex_};
-  delete sinks_;
-  sinks_ = nullptr;
+  sinks_.reset();
 }
 
 namespace {
