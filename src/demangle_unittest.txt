@@ -143,3 +143,10 @@ _Zrm1XS_	operator%()
 # Template argument packs can start with I or J.
 _Z3addIIiEEvDpT_	add<>()
 _Z3addIJiEEvDpT_	add<>()
+
+# Nested templates with pack expansion
+_ZSt13__invoke_implIvPFvPiEJDnEET_St14__invoke_otherOT0_DpOT1_	std::__invoke_impl<>()
+_ZSt8__invokeIPFvPiEJDnEENSt15__invoke_resultIT_JDpT0_EE4typeEOS4_DpOS5_	std::__invoke<>()
+_ZNSt6thread8_InvokerISt5tupleIJPFvPiEDnEEE9_M_invokeIJLm0ELm1EEEEvSt12_Index_tupleIJXspT_EEE	std::thread::_Invoker<>::_M_invoke<>()
+_ZNSt6thread8_InvokerISt5tupleIJPFvPiEDnEEEclEv	std::thread::_Invoker<>::operator()()
+_ZNSt6thread11_State_implINS_8_InvokerISt5tupleIJPFvPiEDnEEEEE6_M_runEv	std::thread::_State_impl<>::_M_run()

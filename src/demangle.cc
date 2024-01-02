@@ -83,7 +83,8 @@ static const AbbrevPair kBuiltinTypeList[] = {
     {"n", "__int128"},    {"o", "unsigned __int128"},
     {"f", "float"},       {"d", "double"},
     {"e", "long double"}, {"g", "__float128"},
-    {"z", "ellipsis"},    {nullptr, nullptr}};
+    {"z", "ellipsis"},    {"Dn", "decltype(nullptr)"},
+    {nullptr, nullptr}};
 
 // List of substitutions Itanium C++ ABI.
 static const AbbrevPair kSubstitutionList[] = {
@@ -1067,7 +1068,7 @@ static bool ParseTemplateArgs(State* state) {
 //                 ::= X <expression> E
 static bool ParseTemplateArg(State* state) {
   // Avoid recursion above max_levels
-  constexpr uint32 max_levels = 5;
+  constexpr uint32 max_levels = 6;
 
   if (state->arg_level > max_levels) {
     return false;
@@ -1159,6 +1160,14 @@ static bool ParseExpression(State* state) {
     return true;
   }
   *state = copy;
+
+  // Pack expansion
+  if (ParseTwoCharToken(state, "sp") && ParseType(state)) {
+    --state->expr_level;
+    return true;
+  }
+  *state = copy;
+
   return false;
 }
 
@@ -1286,7 +1295,7 @@ static bool ParseTopLevelMangledName(State* state) {
         MaybeAppend(state, state->mangled_cur);
         return true;
       }
-      return false;  // Unconsumed suffix.
+      return ParseName(state);
     }
     return true;
   }
