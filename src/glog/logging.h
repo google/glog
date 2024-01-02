@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include <cstring>
 #include <ctime>
 #include <iosfwd>
+#include <memory>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -590,12 +591,13 @@ DECLARE_string(logmailer);
                                                 FORMAT_MESSAGE_FROM_SYSTEM |   \
                                                 FORMAT_MESSAGE_IGNORE_INSERTS, \
                                             0, result, 0, msg, 100, nullptr);  \
+      std::unique_ptr<char, decltype(&LocalFree)> release{message,             \
+                                                          &LocalFree};         \
       if (message_length > 0) {                                                \
         google::LogMessage(__FILE__, __LINE__, google::GLOG_ERROR, 0,          \
                            &google::LogMessage::SendToLog)                     \
                 .stream()                                                      \
             << reinterpret_cast<const char*>(message);                         \
-        LocalFree(message);                                                    \
       }                                                                        \
     }
 #endif
