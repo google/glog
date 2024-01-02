@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,11 @@ void ATTRIBUTE_NOINLINE Foo::func(int x) {
 TEST(Symbolize, SymbolizeWithDemangling) {
   Foo::func(100);
 #      if !defined(_MSC_VER) || !defined(NDEBUG)
+#        if defined(HAVE___CXA_DEMANGLE)
+  EXPECT_STREQ("Foo::func(int)", TrySymbolize((void*)(&Foo::func)));
+#        else
   EXPECT_STREQ("Foo::func()", TrySymbolize((void*)(&Foo::func)));
+#        endif
 #      endif
 }
 #    endif
@@ -282,12 +286,14 @@ static const char* SymbolizeStackConsumption(void* pc, int* stack_consumed) {
   return g_symbolize_result;
 }
 
-#      ifdef __ppc64__
+#      if !defined(HAVE___CXA_DEMANGLE)
+#        ifdef __ppc64__
 // Symbolize stack consumption should be within 4kB.
-const int kStackConsumptionUpperLimit = 4096;
-#      else
+constexpr int kStackConsumptionUpperLimit = 4096;
+#        else
 // Symbolize stack consumption should be within 2kB.
-const int kStackConsumptionUpperLimit = 2048;
+constexpr int kStackConsumptionUpperLimit = 2048;
+#        endif
 #      endif
 
 TEST(Symbolize, SymbolizeStackConsumption) {
@@ -298,7 +304,9 @@ TEST(Symbolize, SymbolizeStackConsumption) {
                                      &stack_consumed);
   EXPECT_STREQ("nonstatic_func", symbol);
   EXPECT_GT(stack_consumed, 0);
+#      if !defined(HAVE___CXA_DEMANGLE)
   EXPECT_LT(stack_consumed, kStackConsumptionUpperLimit);
+#      endif
 
   // The name of an internal linkage symbol is not specified; allow either a
   // mangled or an unmangled name here.
@@ -308,10 +316,12 @@ TEST(Symbolize, SymbolizeStackConsumption) {
   EXPECT_TRUE(strcmp("static_func", symbol) == 0 ||
               strcmp("static_func()", symbol) == 0);
   EXPECT_GT(stack_consumed, 0);
+#      if !defined(HAVE___CXA_DEMANGLE)
   EXPECT_LT(stack_consumed, kStackConsumptionUpperLimit);
+#      endif
 }
 
-#      ifdef TEST_WITH_MODERN_GCC
+#      if defined(TEST_WITH_MODERN_GCC) && !defined(HAVE___CXA_DEMANGLE)
 TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
   Foo::func(100);
   int stack_consumed;
@@ -320,7 +330,11 @@ TEST(Symbolize, SymbolizeWithDemanglingStackConsumption) {
   symbol = SymbolizeStackConsumption(reinterpret_cast<void*>(&Foo::func),
                                      &stack_consumed);
 
+#        if defined(HAVE___CXA_DEMANGLE)
+  EXPECT_STREQ("Foo::func(int)", symbol);
+#        else
   EXPECT_STREQ("Foo::func()", symbol);
+#        endif
   EXPECT_GT(stack_consumed, 0);
   EXPECT_LT(stack_consumed, kStackConsumptionUpperLimit);
 }

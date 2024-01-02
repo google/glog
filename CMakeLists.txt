@@ -170,6 +170,12 @@ int main(void)
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
+if (WITH_FUZZING STREQUAL none)
+  # Disable compiler demangler if fuzzing is active; we only want to use the
+  # glog demangler then.
+  check_cxx_symbol_exists (abi::__cxa_demangle cxxabi.h HAVE___CXA_DEMANGLE)
+endif (WITH_FUZZING STREQUAL none)
+
 if (WITH_TLS)
   set (GLOG_THREAD_LOCAL_STORAGE 1)
 endif (WITH_TLS)
@@ -576,6 +582,13 @@ if (BUILD_TESTING)
 
   target_link_libraries (demangle_unittest PRIVATE glog_test)
 
+  add_test (NAME demangle COMMAND demangle_unittest)
+
+  if (HAVE___CXA_DEMANGLE)
+    # Demangle tests use a different (reduced) representation of symbols
+    set_tests_properties (demangle PROPERTIES DISABLED ON)
+  endif (HAVE___CXA_DEMANGLE)
+
   if (HAVE_STACKTRACE)
     add_executable (stacktrace_unittest
       src/stacktrace_unittest.cc
@@ -598,7 +611,6 @@ if (BUILD_TESTING)
     target_link_libraries (signalhandler_unittest PRIVATE glog_test)
   endif (HAVE_STACKTRACE AND HAVE_SYMBOLIZE)
 
-  add_test (NAME demangle COMMAND demangle_unittest)
   add_test (NAME logging COMMAND logging_unittest)
 
   set_tests_properties (logging PROPERTIES TIMEOUT 30)

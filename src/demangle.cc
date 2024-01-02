@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,10 +36,16 @@
 
 #include "demangle.h"
 
+#include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <limits>
 
 #include "utilities.h"
+
+#if defined(HAVE___CXA_DEMANGLE)
+#  include <cxxabi.h>
+#endif
 
 #if defined(GLOG_OS_WINDOWS)
 #  include <dbghelp.h>
@@ -47,7 +53,7 @@
 
 namespace google {
 
-#if !defined(GLOG_OS_WINDOWS)
+#if !defined(GLOG_OS_WINDOWS) && !defined(HAVE___CXA_DEMANGLE)
 namespace {
 struct AbbrevPair {
   const char* const abbrev;
@@ -1334,6 +1340,18 @@ bool Demangle(const char* mangled, char* out, size_t out_size) {
   (void)out_size;
   return false;
 #  endif
+#elif defined(HAVE___CXA_DEMANGLE)
+  int status = -1;
+  std::size_t n = 0;
+  std::unique_ptr<char, decltype(&std::free)> unmangled{
+      abi::__cxa_demangle(mangled, nullptr, &n, &status), &std::free};
+
+  if (!unmangled) {
+    return false;
+  }
+
+  std::copy_n(unmangled.get(), std::min(n, out_size), out);
+  return status == 0;
 #else
   State state;
   InitState(&state, mangled, out, out_size);
