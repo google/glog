@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -355,10 +355,19 @@ struct NewHook {
   ~NewHook() { g_new_hook = nullptr; }
 };
 
+namespace {
+int* allocInt() { return new int; }
+}  // namespace
+
 TEST(DeathNoAllocNewHook, logging) {
   // tests that NewHook used below works
   NewHook new_hook;
-  ASSERT_DEATH({ new int; }, "unexpected new");
+  // Avoid unused warnings under MinGW
+  //
+  // NOTE MSVC produces warning C4551 here if we do not take the address of the
+  // function explicitly.
+  (void)&allocInt;
+  ASSERT_DEATH({ allocInt(); }, "unexpected new");
 }
 
 void TestRawLogging() {
