@@ -793,6 +793,69 @@ if (BUILD_TESTING)
     striplog10
     PROPERTIES WILL_FAIL ON
   )
+
+  set (_glog_TEST_ENVIRONMENT
+    glog_ROOT=${glog_BINARY_DIR}
+  )
+
+  add_test (NAME log_severity_constants COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/log_severity_unittest"
+    "${glog_BINARY_DIR}/Tests/log_severity_constants"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_log_severity_constants
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+  )
+  set_tests_properties (log_severity_constants PROPERTIES
+    ENVIRONMENT "${_glog_TEST_ENVIRONMENT}"
+    PASS_REGULAR_EXPRESSION "COMPACT_GOOGLE_LOG_[1-3]"
+  )
+
+  add_test (NAME log_severity_conversion COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/log_severity_unittest"
+    "${glog_BINARY_DIR}/Tests/log_severity_conversion"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_log_severity_conversion
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+  )
+  set_tests_properties (log_severity_conversion PROPERTIES
+    ENVIRONMENT "${_glog_TEST_ENVIRONMENT}"
+  )
+
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    set_tests_properties (log_severity_conversion PROPERTIES
+      PASS_REGULAR_EXPRESSION "error: invalid conversion from (‘|')int(’|')"
+    )
+  elseif (CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    set_tests_properties (log_severity_conversion PROPERTIES
+      PASS_REGULAR_EXPRESSION "no known conversion from 'int'"
+    )
+  elseif (MSVC)
+    set_tests_properties (log_severity_conversion PROPERTIES
+      PASS_REGULAR_EXPRESSION "error C2440"
+    )
+  else (CMAKE_COMPILER_IS_GNUCXX)
+    message (AUTHOR_WARNING
+      "Unsuuported C++ compiler ${CMAKE_CXX_COMPILER_ID}: "
+      "log_severity_conversion test will be disabled"
+    )
+    set_tests_properties (log_severity_conversion DISABLED ON)
+  endif (CMAKE_COMPILER_IS_GNUCXX)
+
+  unset (_glog_TEST_ENVIRONMENT)
 endif (BUILD_TESTING)
 
 install (TARGETS glog

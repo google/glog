@@ -353,7 +353,7 @@ void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
 
   // Flush the logs before we do anything in case 'anything'
   // causes problems.
-  FlushLogFilesUnsafe(0);
+  FlushLogFilesUnsafe(GLOG_INFO);
 
   // Kill ourself by the default signal handler.
   InvokeDefaultSignalHandler(signal_number);

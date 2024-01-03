@@ -1419,7 +1419,7 @@ TEST(LogAtLevel, Basic) {
   EXPECT_CALL(log, Log(GLOG_WARNING, StrNe(__FILE__), "function version"));
   EXPECT_CALL(log, Log(GLOG_INFO, __FILE__, "macro version"));
 
-  int severity = GLOG_WARNING;
+  LogSeverity severity = GLOG_WARNING;
   LogAtLevel(severity, "function version");
 
   severity = GLOG_INFO;

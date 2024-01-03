@@ -1526,7 +1526,7 @@ class GLOG_EXPORT LogMessageFatal : public LogMessage {
 
 // A non-macro interface to the log facility; (useful
 // when the logging level is not a compile-time constant).
-inline void LogAtLevel(int const severity, std::string const& msg) {
+inline void LogAtLevel(LogSeverity severity, std::string const& msg) {
   LogMessage(__FILE__, __LINE__, severity).stream() << msg;
 }
 
