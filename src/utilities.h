@@ -164,11 +164,6 @@ namespace glog_internal_namespace_ {
 
 const char* ProgramInvocationShortName();
 
-int64 CycleClock_Now();
-
-int64 UsecToCycles(int64 usec);
-WallTime WallTime_Now();
-
 int32 GetMainThreadPid();
 bool PidHasChanged();
 
