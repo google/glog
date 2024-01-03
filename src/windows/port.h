@@ -107,9 +107,6 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 #      define hash hash_compare
 #    endif
 
-/* Sleep is in ms, on windows */
-#    define sleep(secs) Sleep((secs)*1000)
-
 /* Windows doesn't support specifying the number of buckets as a
  * hash_map constructor arg, so we leave this blank.
  */
@@ -117,24 +114,7 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 
 #    define DEFAULT_TEMPLATE_ROOTDIR ".."
 
-// ----------------------------------- SYSTEM/PROCESS
-typedef int pid_t;
-#    define getpid _getpid
-
 #  endif  // _MSC_VER
-
-// ----------------------------------- THREADS
-#  if defined(HAVE_PTHREAD)
-#    include <pthread.h>
-#  else  // no PTHREAD
-typedef DWORD pthread_t;
-typedef DWORD pthread_key_t;
-typedef LONG pthread_once_t;
-enum { PTHREAD_ONCE_INIT = 0 };  // important that this be 0! for SpinLock
-#    define pthread_self GetCurrentThreadId
-#    define pthread_equal(pthread_t_1, pthread_t_2) \
-      ((pthread_t_1) == (pthread_t_2))
-#  endif  // HAVE_PTHREAD
 
 #  ifndef HAVE_LOCALTIME_R
 extern GLOG_EXPORT std::tm* localtime_r(const std::time_t* timep,

@@ -39,6 +39,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 
 #include "base/commandlineflags.h"  // to get the program name
 #include "base/googleinit.h"
@@ -1685,14 +1686,14 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
                << logmsgtime_.day() << ' ' << setw(2) << logmsgtime_.hour()
                << ':' << setw(2) << logmsgtime_.min() << ':' << setw(2)
                << logmsgtime_.sec() << "." << setw(6) << logmsgtime_.usec()
-               << ' ' << setfill(' ') << setw(5)
-               << static_cast<unsigned int>(GetTID()) << setfill('0') << ' '
-               << data_->basename_ << ':' << data_->line_ << "] ";
+               << ' ' << setfill(' ') << setw(5) << std::this_thread::get_id()
+               << setfill('0') << ' ' << data_->basename_ << ':' << data_->line_
+               << "] ";
     } else {
       custom_prefix_callback(
           stream(),
           LogMessageInfo(LogSeverityNames[severity], data_->basename_,
-                         data_->line_, GetTID(), logmsgtime_),
+                         data_->line_, std::this_thread::get_id(), logmsgtime_),
           custom_prefix_callback_data);
       stream() << " ";
     }
@@ -2124,7 +2125,8 @@ string LogSink::ToString(LogSeverity severity, const char* file, int line,
          << ' ' << setw(2) << logmsgtime.hour() << ':' << setw(2)
          << logmsgtime.min() << ':' << setw(2) << logmsgtime.sec() << '.'
          << setw(6) << logmsgtime.usec() << ' ' << setfill(' ') << setw(5)
-         << GetTID() << setfill('0') << ' ' << file << ':' << line << "] ";
+         << std::this_thread::get_id() << setfill('0') << ' ' << file << ':'
+         << line << "] ";
 
   // A call to `write' is enclosed in parenthneses to prevent possible macro
   // expansion.  On Windows, `write' could be a macro defined for portability.

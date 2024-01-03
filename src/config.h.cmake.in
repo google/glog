@@ -19,9 +19,6 @@
 /* Define to 1 if you have the <glob.h> header file. */
 #cmakedefine HAVE_GLOB_H
 
-/* Define to 1 if you have the `pthread' library (-lpthread). */
-#cmakedefine HAVE_LIBPTHREAD
-
 /* define if you have google gmock library */
 #cmakedefine HAVE_LIB_GMOCK
 
@@ -36,9 +33,6 @@
 
 /* Define if you have the 'pread' function */
 #cmakedefine HAVE_PREAD
-
-/* Define if you have POSIX threads libraries and header files. */
-#cmakedefine HAVE_PTHREAD
 
 /* Define to 1 if you have the <pwd.h> header file. */
 #cmakedefine HAVE_PWD_H
@@ -115,10 +109,6 @@
 /* define if we should print file offsets in traces instead of symbolizing. */
 #cmakedefine PRINT_UNSYMBOLIZED_STACK_TRACES
 
-/* Define to necessary symbol if this constant uses a non-standard name on
-   your system. */
-#cmakedefine PTHREAD_CREATE_JOINABLE
-
 /* The size of `void *', as computed by sizeof. */
 #cmakedefine SIZEOF_VOID_P ${SIZEOF_VOID_P}
 
@@ -127,8 +117,5 @@
 
 /* Define if thread-local storage is enabled. */
 #cmakedefine GLOG_THREAD_LOCAL_STORAGE
-
-/* Replacement for deprecated syscall(SYS_gettid) on macOS. */
-#cmakedefine HAVE_PTHREAD_THREADID_NP ${HAVE_PTHREAD_THREADID_NP}
 
 #endif  // GLOG_CONFIG_H
