@@ -27,14 +27,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <chrono>
-#include <system_error>
 #define _GNU_SOURCE 1  // needed for O_NOFOLLOW and pread()/pwrite()
 
 #include "glog/logging.h"
 
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <iomanip>
 #include <iterator>
@@ -42,6 +41,8 @@
 #include <shared_mutex>
 #include <string>
 #include <thread>
+#include <type_traits>
+#include <utility>
 
 #include "base/commandlineflags.h"  // to get the program name
 #include "base/googleinit.h"
@@ -304,29 +305,43 @@ static bool TerminalSupportsColor() {
   return term_supports_color;
 }
 
+#if defined(__cpp_lib_unreachable) && (__cpp_lib_unreachable >= 202202L)
+#  define GLOG_UNREACHABLE std::unreachable()
+#elif !defined(NDEBUG)
+#  define GLOG_UNREACHABLE assert(false)
+#else
+#  if defined(_MSC_VER)
+#    define GLOG_UNREACHABLE __assume(false)
+#  elif defined(__has_builtin)
+#    if __has_builtin(unreachable)
+#      define GLOG_UNREACHABLE __builtin_unreachable()
+#    endif
+#  endif
+#  if !defined(GLOG_UNREACHABLE) && defined(__GNUG__)
+#    define GLOG_UNREACHABLE __builtin_unreachable()
+#  endif
+#  if !defined(GLOG_UNREACHABLE)
+#    define GLOG_UNREACHABLE
+#  endif
+#endif
+
 namespace google {
 
 enum GLogColor { COLOR_DEFAULT, COLOR_RED, COLOR_GREEN, COLOR_YELLOW };
 
 static GLogColor SeverityToColor(LogSeverity severity) {
-  assert(severity >= 0 && severity < NUM_SEVERITIES);
-  GLogColor color = COLOR_DEFAULT;
   switch (severity) {
     case GLOG_INFO:
-      color = COLOR_DEFAULT;
-      break;
+      return COLOR_DEFAULT;
     case GLOG_WARNING:
-      color = COLOR_YELLOW;
-      break;
+      return COLOR_YELLOW;
     case GLOG_ERROR:
     case GLOG_FATAL:
-      color = COLOR_RED;
-      break;
-    default:
-      // should never get here.
-      assert(false);
+      return COLOR_RED;
   }
-  return color;
+
+  // should never get here.
+  GLOG_UNREACHABLE;
 }
 
 #ifdef GLOG_OS_WINDOWS
@@ -340,9 +355,10 @@ static WORD GetColorAttribute(GLogColor color) {
       return FOREGROUND_GREEN;
     case COLOR_YELLOW:
       return FOREGROUND_RED | FOREGROUND_GREEN;
-    default:
-      return 0;
+    case COLOR_DEFAULT:
+      break;
   }
+  return 0;
 }
 
 #else
@@ -382,8 +398,8 @@ struct LogMessage::LogMessageData {
   // Buffer space; contains complete message text.
   char message_text_[LogMessage::kMaxLogMessageLen + 1];
   LogStream stream_;
-  char severity_;  // What level is this LogMessage logged at?
-  int line_;       // line number where logging call is.
+  LogSeverity severity_;  // What level is this LogMessage logged at?
+  int line_;              // line number where logging call is.
   void (LogMessage::*send_method_)();  // Call this in destructor to send
   union {  // At most one of these is used: union to keep the size low.
     LogSink* sink_;  // nullptr or sink to send message to
@@ -621,7 +637,7 @@ class LogDestination {
   base::Logger* logger_;  // Either &fileobject_, or wrapper around it
 
   static std::unique_ptr<LogDestination> log_destinations_[NUM_SEVERITIES];
-  static LogSeverity email_logging_severity_;
+  static std::underlying_type_t<LogSeverity> email_logging_severity_;
   static string addresses_;
   static string hostname_;
   static bool terminal_supports_color_;
@@ -639,7 +655,8 @@ class LogDestination {
 };
 
 // Errors do not get logged to email by default.
-LogSeverity LogDestination::email_logging_severity_ = 99999;
+std::underlying_type_t<LogSeverity> LogDestination::email_logging_severity_ =
+    99999;
 
 string LogDestination::addresses_;
 string LogDestination::hostname_;
@@ -696,7 +713,7 @@ inline void LogDestination::FlushLogFiles(int min_severity) {
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
   for (int i = min_severity; i < NUM_SEVERITIES; i++) {
-    LogDestination* log = log_destination(i);
+    LogDestination* log = log_destination(static_cast<LogSeverity>(i));
     if (log != nullptr) {
       log->logger_->Flush();
     }
@@ -705,7 +722,6 @@ inline void LogDestination::FlushLogFiles(int min_severity) {
 
 inline void LogDestination::SetLogDestination(LogSeverity severity,
                                               const char* base_filename) {
-  assert(severity >= 0 && severity < NUM_SEVERITIES);
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
@@ -744,12 +760,12 @@ inline void LogDestination::SetLogFilenameExtension(const char* ext) {
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
   for (int severity = 0; severity < NUM_SEVERITIES; ++severity) {
-    log_destination(severity)->fileobject_.SetExtension(ext);
+    log_destination(static_cast<LogSeverity>(severity))
+        ->fileobject_.SetExtension(ext);
   }
 }
 
 inline void LogDestination::SetStderrLogging(LogSeverity min_severity) {
-  assert(min_severity >= 0 && min_severity < NUM_SEVERITIES);
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
@@ -759,15 +775,15 @@ inline void LogDestination::SetStderrLogging(LogSeverity min_severity) {
 inline void LogDestination::LogToStderr() {
   // *Don't* put this stuff in a mutex lock, since SetStderrLogging &
   // SetLogDestination already do the locking!
-  SetStderrLogging(0);  // thus everything is "also" logged to stderr
+  SetStderrLogging(GLOG_INFO);  // thus everything is "also" logged to stderr
   for (int i = 0; i < NUM_SEVERITIES; ++i) {
-    SetLogDestination(i, "");  // "" turns off logging to a logfile
+    SetLogDestination(static_cast<LogSeverity>(i),
+                      "");  // "" turns off logging to a logfile
   }
 }
 
 inline void LogDestination::SetEmailLogging(LogSeverity min_severity,
                                             const char* addresses) {
-  assert(min_severity >= 0 && min_severity < NUM_SEVERITIES);
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
@@ -907,7 +923,8 @@ inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
     ColoredWriteToStderr(severity, message, len);
   } else {
     for (int i = severity; i >= 0; --i) {
-      LogDestination::MaybeLogToLogfile(i, timestamp, message, len);
+      LogDestination::MaybeLogToLogfile(static_cast<LogSeverity>(i), timestamp,
+                                        message, len);
     }
   }
 }
@@ -946,7 +963,6 @@ std::unique_ptr<LogDestination>
     LogDestination::log_destinations_[NUM_SEVERITIES];
 
 inline LogDestination* LogDestination::log_destination(LogSeverity severity) {
-  assert(severity >= 0 && severity < NUM_SEVERITIES);
   if (log_destinations_[severity] == nullptr) {
     log_destinations_[severity] =
         std::make_unique<LogDestination>(severity, nullptr);
@@ -999,10 +1015,7 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
       filename_extension_(),
       severity_(severity),
       rollover_attempt_(kRolloverAttemptFrequency - 1),
-      start_time_(std::chrono::system_clock::now()) {
-  assert(severity >= 0);
-  assert(severity < NUM_SEVERITIES);
-}
+      start_time_(std::chrono::system_clock::now()) {}
 
 LogFileObject::~LogFileObject() {
   std::lock_guard<std::mutex> l{mutex_};
@@ -1818,7 +1831,6 @@ void ReprintFatalMessage() {
 // L >= log_mutex (callers must hold the log_mutex).
 void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   static bool already_warned_before_initgoogle = false;
-
 
   RAW_DCHECK(data_->num_chars_to_log_ > 0 &&
                  data_->message_text_[data_->num_chars_to_log_ - 1] == '\n',
