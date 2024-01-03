@@ -170,11 +170,6 @@ int main(void)
 }
 " HAVE___SYNC_VAL_COMPARE_AND_SWAP)
 
-check_cxx_source_compiles ("
-__declspec(selectany) int a;
-int main(void) { return 0; }
-" HAVE___DECLSPEC)
-
 if (WITH_TLS)
   set (GLOG_THREAD_LOCAL_STORAGE 1)
 endif (WITH_TLS)
