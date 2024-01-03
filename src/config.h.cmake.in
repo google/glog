@@ -118,4 +118,7 @@
 /* Define if thread-local storage is enabled. */
 #cmakedefine GLOG_THREAD_LOCAL_STORAGE
 
+/* define if abi::__cxa_demangle is available in cxxabi.h */
+#cmakedefine HAVE___CXA_DEMANGLE
+
 #endif  // GLOG_CONFIG_H
