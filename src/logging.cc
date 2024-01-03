@@ -27,6 +27,8 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <chrono>
+#include <system_error>
 #define _GNU_SOURCE 1  // needed for O_NOFOLLOW and pread()/pwrite()
 
 #include "glog/logging.h"
@@ -483,8 +485,9 @@ class LogFileObject : public base::Logger {
   uint32 dropped_mem_length_{0};
   uint32 file_length_{0};
   unsigned int rollover_attempt_;
-  int64 next_flush_time_{0};  // cycle count at which to flush log
-  WallTime start_time_;
+  std::chrono::system_clock::time_point
+      next_flush_time_;  // cycle count at which to flush log
+  std::chrono::system_clock::time_point start_time_;
 
   // Actually create a logfile using the value of base_filename_ and the
   // optional argument time_pid_string
@@ -522,7 +525,8 @@ class LogCleaner {
 
   bool enabled_{false};
   unsigned int overdue_days_{7};
-  int64 next_cleanup_time_{0};  // cycle count at which to clean overdue log
+  std::chrono::system_clock::time_point
+      next_cleanup_time_;  // cycle count at which to clean overdue log
 };
 
 LogCleaner log_cleaner;
@@ -977,14 +981,14 @@ const char possible_dir_delim[] = {'\\', '/'};
 const char possible_dir_delim[] = {'/'};
 #endif
 
-string PrettyDuration(int secs) {
+string PrettyDuration(const std::chrono::duration<int>& secs) {
   std::stringstream result;
-  int mins = secs / 60;
+  int mins = secs.count() / 60;
   int hours = mins / 60;
   mins = mins % 60;
-  secs = secs % 60;
+  int s = secs.count() % 60;
   result.fill('0');
-  result << hours << ':' << setw(2) << mins << ':' << setw(2) << secs;
+  result << hours << ':' << setw(2) << mins << ':' << setw(2) << s;
   return result.str();
 }
 
@@ -993,12 +997,9 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
       base_filename_((base_filename != nullptr) ? base_filename : ""),
       symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
       filename_extension_(),
-
       severity_(severity),
-
       rollover_attempt_(kRolloverAttemptFrequency - 1),
-
-      start_time_(WallTime_Now()) {
+      start_time_(std::chrono::system_clock::now()) {
   assert(severity >= 0);
   assert(severity < NUM_SEVERITIES);
 }
@@ -1054,9 +1055,10 @@ void LogFileObject::FlushUnlocked() {
     bytes_since_flush_ = 0;
   }
   // Figure out when we are due for another flush.
-  const int64 next =
-      (FLAGS_logbufsecs * static_cast<int64>(1000000));  // in usec
-  next_flush_time_ = CycleClock_Now() + UsecToCycles(next);
+  next_flush_time_ =
+      std::chrono::system_clock::now() +
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(
+          std::chrono::duration<int32>{FLAGS_logbufsecs});
 }
 
 bool LogFileObject::CreateLogfile(const string& time_pid_string) {
@@ -1279,12 +1281,14 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
       const char* const date_time_format = FLAGS_log_year_in_prefix
                                                ? "yyyymmdd hh:mm:ss.uuuuuu"
                                                : "mmdd hh:mm:ss.uuuuuu";
-      file_header_stream << "Running duration (h:mm:ss): "
-                         << PrettyDuration(
-                                static_cast<int>(WallTime_Now() - start_time_))
-                         << '\n'
-                         << "Log line format: [IWEF]" << date_time_format << " "
-                         << "threadid file:line] msg" << '\n';
+      file_header_stream
+          << "Running duration (h:mm:ss): "
+          << PrettyDuration(
+                 std::chrono::duration_cast<std::chrono::duration<int>>(
+                     std::chrono::system_clock::now() - start_time_))
+          << '\n'
+          << "Log line format: [IWEF]" << date_time_format << " "
+          << "threadid file:line] msg" << '\n';
       const string& file_header_string = file_header_stream.str();
 
       const size_t header_len = file_header_string.size();
@@ -1312,7 +1316,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
       bytes_since_flush_ += message_len;
     }
   } else {
-    if (CycleClock_Now() >= next_flush_time_) {
+    if (std::chrono::system_clock::now() >= next_flush_time_) {
       stop_writing = false;  // check to see if disk has free space.
     }
     return;  // no need to flush
@@ -1321,7 +1325,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
   // See important msgs *now*.  Also, flush logs at least every 10^6 chars,
   // or every "FLAGS_logbufsecs" seconds.
   if (force_flush || (bytes_since_flush_ >= 1000000) ||
-      (CycleClock_Now() >= next_flush_time_)) {
+      (std::chrono::system_clock::now() >= next_flush_time_)) {
     FlushUnlocked();
 #ifdef GLOG_OS_LINUX
     // Only consider files >= 3MiB
@@ -1364,8 +1368,10 @@ void LogCleaner::Enable(unsigned int overdue_days) {
 void LogCleaner::Disable() { enabled_ = false; }
 
 void LogCleaner::UpdateCleanUpTime() {
-  const int64 next = (FLAGS_logcleansecs * 1000000);  // in usec
-  next_cleanup_time_ = CycleClock_Now() + UsecToCycles(next);
+  next_cleanup_time_ =
+      std::chrono::system_clock::now() +
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(
+          std::chrono::duration<int32>{FLAGS_logcleansecs});
 }
 
 void LogCleaner::Run(bool base_filename_selected, const string& base_filename,
@@ -1374,7 +1380,7 @@ void LogCleaner::Run(bool base_filename_selected, const string& base_filename,
   assert(!base_filename_selected || !base_filename.empty());
 
   // avoid scanning logs too frequently
-  if (CycleClock_Now() < next_cleanup_time_) {
+  if (std::chrono::system_clock::now() < next_cleanup_time_) {
     return;
   }
   UpdateCleanUpTime();
@@ -1659,9 +1665,9 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
   data_->send_method_ = send_method;
   data_->sink_ = nullptr;
   data_->outvec_ = nullptr;
-  WallTime now = WallTime_Now();
-  auto timestamp_now = static_cast<time_t>(now);
-  logmsgtime_ = LogMessageTime(timestamp_now, now);
+
+  auto now = std::chrono::system_clock::now();
+  logmsgtime_ = LogMessageTime(now);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
@@ -2701,12 +2707,8 @@ void DisableLogCleaner() { log_cleaner.Disable(); }
 LogMessageTime::LogMessageTime()
     : time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
 
-LogMessageTime::LogMessageTime(std::tm t) {
-  std::time_t timestamp = std::mktime(&t);
-  init(t, timestamp, 0);
-}
-
-LogMessageTime::LogMessageTime(std::time_t timestamp, WallTime now) {
+LogMessageTime::LogMessageTime(std::chrono::system_clock::time_point now) {
+  std::time_t timestamp = std::chrono::system_clock::to_time_t(now);
   std::tm t;
   if (FLAGS_log_utc_time) {
     gmtime_r(&timestamp, &t);
@@ -2717,10 +2719,12 @@ LogMessageTime::LogMessageTime(std::time_t timestamp, WallTime now) {
 }
 
 void LogMessageTime::init(const std::tm& t, std::time_t timestamp,
-                          WallTime now) {
+                          std::chrono::system_clock::time_point now) {
   time_struct_ = t;
   timestamp_ = timestamp;
-  usecs_ = static_cast<int32>((now - timestamp) * 1000000);
+  usecs_ = std::chrono::duration_cast<std::chrono::duration<int32, std::micro>>(
+               now - std::chrono::system_clock::from_time_t(timestamp))
+               .count();
 
   CalcGmtOffset();
 }

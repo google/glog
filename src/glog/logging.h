@@ -97,12 +97,9 @@ typedef std::uint32_t uint32;
 typedef std::int64_t int64;
 typedef std::uint64_t uint64;
 
-typedef double WallTime;
-
 struct GLOG_EXPORT LogMessageTime {
   LogMessageTime();
-  LogMessageTime(std::tm t);
-  LogMessageTime(std::time_t timestamp, WallTime now);
+  explicit LogMessageTime(std::chrono::system_clock::time_point now);
 
   const time_t& timestamp() const { return timestamp_; }
   const int& sec() const { return time_struct_.tm_sec; }
@@ -119,7 +116,8 @@ struct GLOG_EXPORT LogMessageTime {
   const std::tm& tm() const { return time_struct_; }
 
  private:
-  void init(const std::tm& t, std::time_t timestamp, WallTime now);
+  void init(const std::tm& t, std::time_t timestamp,
+            std::chrono::system_clock::time_point now);
   std::tm time_struct_;  // Time of creation of LogMessage
   time_t timestamp_;     // Time of creation of LogMessage in seconds
   int32_t usecs_;        // Time of creation of LogMessage - microseconds part
