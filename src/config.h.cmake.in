@@ -82,9 +82,6 @@
 /* define if you have libunwind */
 #cmakedefine HAVE_LIBUNWIND
 
-/* define if your compiler has __sync_val_compare_and_swap */
-#cmakedefine HAVE___SYNC_VAL_COMPARE_AND_SWAP
-
 /* define if symbolize support is available */
 #cmakedefine HAVE_SYMBOLIZE
 

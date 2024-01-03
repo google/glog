@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,15 +31,18 @@
 
 #include "utilities.h"
 
+#include <atomic>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 
+#include "base/googleinit.h"
 #include "config.h"
+
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 #endif
-#include <ctime>
 #if defined(HAVE_SYSCALL_H)
 #  include <syscall.h>  // for syscall()
 #elif defined(HAVE_SYS_SYSCALL_H)
@@ -57,8 +60,6 @@
 #ifdef __ANDROID__
 #  include <android/log.h>
 #endif
-
-#include "base/googleinit.h"
 
 using std::string;
 
@@ -254,11 +255,11 @@ void DumpStackTraceToString(string* stacktrace) {
 
 // We use an atomic operation to prevent problems with calling CrashReason
 // from inside the Mutex implementation (potentially through RAW_CHECK).
-static const CrashReason* g_reason = nullptr;
+static std::atomic<const CrashReason*> g_reason{nullptr};
 
 void SetCrashReason(const CrashReason* r) {
-  sync_val_compare_and_swap(&g_reason, reinterpret_cast<const CrashReason*>(0),
-                            r);
+  const CrashReason* expected = nullptr;
+  g_reason.compare_exchange_strong(expected, r);
 }
 
 void InitGoogleLoggingUtilities(const char* argv0) {

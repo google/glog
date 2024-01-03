@@ -40,13 +40,6 @@ using namespace GFLAGS_NAMESPACE;
 
 using namespace google;
 
-TEST(utilities, sync_val_compare_and_swap) {
-  bool now_entering = false;
-  EXPECT_FALSE(sync_val_compare_and_swap(&now_entering, false, true));
-  EXPECT_TRUE(sync_val_compare_and_swap(&now_entering, false, true));
-  EXPECT_TRUE(sync_val_compare_and_swap(&now_entering, false, true));
-}
-
 TEST(utilities, InitGoogleLoggingDeathTest) {
   ASSERT_DEATH(InitGoogleLogging("foobar"), "");
 }

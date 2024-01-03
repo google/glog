@@ -173,34 +173,6 @@ const std::string& MyUserName();
 // (Doesn't modify filepath, contrary to basename() in libgen.h.)
 const char* const_basename(const char* filepath);
 
-// Wrapper of __sync_val_compare_and_swap. If the GCC extension isn't
-// defined, we try the CPU specific logics (we only support x86 and
-// x86_64 for now) first, then use a naive implementation, which has a
-// race condition.
-template <typename T>
-inline T sync_val_compare_and_swap(T* ptr, T oldval, T newval) {
-#if defined(HAVE___SYNC_VAL_COMPARE_AND_SWAP)
-  return __sync_val_compare_and_swap(ptr, oldval, newval);
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
-  T ret;
-  __asm__ __volatile__("lock; cmpxchg %1, (%2);"
-                       : "=a"(ret)
-                       // GCC may produces %sil or %dil for
-                       // constraint "r", but some of apple's gas
-                       // doesn't know the 8 bit registers.
-                       // We use "q" to avoid these registers.
-                       : "q"(newval), "q"(ptr), "a"(oldval)
-                       : "memory", "cc");
-  return ret;
-#else
-  T ret = *ptr;
-  if (ret == oldval) {
-    *ptr = newval;
-  }
-  return ret;
-#endif
-}
-
 void DumpStackTraceToString(std::string* stacktrace);
 
 struct CrashReason {

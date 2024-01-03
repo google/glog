@@ -34,6 +34,7 @@
 #include <algorithm>
 #include <csignal>
 #include <ctime>
+#include <mutex>
 #include <sstream>
 #include <thread>
 
@@ -266,50 +267,19 @@ void InvokeDefaultSignalHandler(int signal_number) {
 #endif
 }
 
-// This variable is used for protecting FailureSignalHandler() from
-// dumping stuff while another thread is doing it.  Our policy is to let
-// the first thread dump stuff and let other threads wait.
+// This variable is used for protecting FailureSignalHandler() from dumping
+// stuff while another thread is doing it.  Our policy is to let the first
+// thread dump stuff and let other threads do nothing.
 // See also comments in FailureSignalHandler().
-static std::thread::id* g_entered_thread_id_pointer = nullptr;
+static std::once_flag signaled;
 
-// Dumps signal and stack frame information, and invokes the default
-// signal handler once our job is done.
-#if defined(GLOG_OS_WINDOWS)
-void FailureSignalHandler(int signal_number)
-#else
-void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
-                          void* ucontext)
+static void HandleSignal(int signal_number
+#if !defined(GLOG_OS_WINDOWS)
+                         ,
+                         siginfo_t* signal_info, void* ucontext
 #endif
-{
-  // First check if we've already entered the function.  We use an atomic
-  // compare and swap operation for platforms that support it.  For other
-  // platforms, we use a naive method that could lead to a subtle race.
+) {
 
-  std::thread::id my_thread_id = std::this_thread::get_id();
-  // NOTE: We could simply use std::thread::id rather than std::thread::id* for
-  // this, if std::thread::get_id() is guaranteed to return non-zero value for
-  // thread ids, but there is no such guarantee.  We need to distinguish if the
-  // old value (value returned from __sync_val_compare_and_swap) is
-  // different from the original value (in this case nullptr).
-  std::thread::id* old_thread_id_pointer =
-      glog_internal_namespace_::sync_val_compare_and_swap(
-          &g_entered_thread_id_pointer, static_cast<std::thread::id*>(nullptr),
-          &my_thread_id);
-  if (old_thread_id_pointer != nullptr) {
-    // We've already entered the signal handler.  What should we do?
-    if (my_thread_id == *g_entered_thread_id_pointer) {
-      // It looks the current thread is reentering the signal handler.
-      // Something must be going wrong (maybe we are reentering by another
-      // type of signal?).  Kill ourself by the default signal handler.
-      InvokeDefaultSignalHandler(signal_number);
-    }
-    // Another thread is dumping stuff.  Let's wait until that thread
-    // finishes the job and kills the process.
-    while (true) {
-      using namespace std::chrono_literals;
-      std::this_thread::sleep_for(1s);
-    }
-  }
   // This is the first time we enter the signal handler.  We are going to
   // do some interesting stuff from here.
   // TODO(satorux): We might want to set timeout here using alarm(), but
@@ -357,6 +327,23 @@ void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
 
   // Kill ourself by the default signal handler.
   InvokeDefaultSignalHandler(signal_number);
+}
+
+// Dumps signal and stack frame information, and invokes the default
+// signal handler once our job is done.
+#if defined(GLOG_OS_WINDOWS)
+void FailureSignalHandler(int signal_number)
+#else
+void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
+                          void* ucontext)
+#endif
+{
+  std::call_once(signaled, &HandleSignal, signal_number
+#if !defined(GLOG_OS_WINDOWS)
+                 ,
+                 signal_info, ucontext
+#endif
+  );
 }
 
 }  // namespace
