@@ -646,14 +646,6 @@ std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
     ;
 
 namespace base {
-namespace internal {
-
-// If "s" is less than base_logging::INFO, returns base_logging::INFO.
-// If "s" is greater than base_logging::FATAL, returns
-// base_logging::ERROR.  Otherwise, returns "s".
-LogSeverity NormalizeSeverity(LogSeverity s);
-
-}  // namespace internal
 
 // A helper class for formatting "expr (V1 vs. V2)" in a CHECK_XX
 // statement.  See MakeCheckOpString for sample usage.  Other
