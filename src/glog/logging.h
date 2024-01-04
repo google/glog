@@ -959,9 +959,6 @@ template <bool>
 struct CompileAssert {};
 struct CrashReason;
 
-// Returns true if FailureSignalHandler is installed.
-// Needs to be exported since it's used by the signalhandler_unittest.
-GLOG_EXPORT bool IsFailureSignalHandlerInstalled();
 }  // namespace glog_internal_namespace_
 
 #define LOG_EVERY_N(severity, n) \
@@ -1647,6 +1644,9 @@ class GLOG_EXPORT NullStreamFatal : public NullStream {
 // will be shown only for the thread that receives the signal.  In other
 // words, stack traces of other threads won't be shown.
 GLOG_EXPORT void InstallFailureSignalHandler();
+
+// Returns true if FailureSignalHandler is installed.
+GLOG_EXPORT bool IsFailureSignalHandlerInstalled();
 
 // Installs a function that is used for writing the failure dump.  "data"
 // is the pointer to the beginning of a message to be written, and "size"

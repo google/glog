@@ -348,8 +348,6 @@ void FailureSignalHandler(int signal_number, siginfo_t* signal_info,
 
 }  // namespace
 
-namespace glog_internal_namespace_ {
-
 bool IsFailureSignalHandlerInstalled() {
 #ifdef HAVE_SIGACTION
   // TODO(andschwa): Return kFailureSignalHandlerInstalled?
@@ -365,8 +363,6 @@ bool IsFailureSignalHandlerInstalled() {
 #endif  // HAVE_SIGACTION
   return false;
 }
-
-}  // namespace glog_internal_namespace_
 
 void InstallFailureSignalHandler() {
 #ifdef HAVE_SIGACTION
