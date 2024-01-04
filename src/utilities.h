@@ -35,6 +35,13 @@
 #ifndef UTILITIES_H__
 #define UTILITIES_H__
 
+#include <cstddef>
+#include <cstdio>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+
 // printf macros for size_t, in the style of inttypes.h
 #ifdef _LP64
 #  define __PRIS_PREFIX "z"
@@ -52,12 +59,6 @@
 #define PRIuS __PRIS_PREFIX "u"
 #define PRIXS __PRIS_PREFIX "X"
 #define PRIoS __PRIS_PREFIX "o"
-
-#include <cstdio>
-#include <memory>
-#include <string>
-#include <thread>
-#include <type_traits>
 
 #include "glog/logging.h"
 
@@ -146,7 +147,26 @@ using ssize_t = std::ptrdiff_t;
 
 namespace google {
 
-namespace glog_internal_namespace_ {
+namespace logging {
+namespace internal {
+
+struct CrashReason {
+  CrashReason() = default;
+
+  const char* filename{nullptr};
+  int line_number{0};
+  const char* message{nullptr};
+
+  // We'll also store a bit of stack trace context at the time of crash as
+  // it may not be available later on.
+  void* stack[32];
+  int depth{0};
+};
+
+}  // namespace internal
+}  // namespace logging
+
+inline namespace glog_internal_namespace_ {
 
 #if defined(__has_attribute)
 #  if __has_attribute(noinline)
@@ -179,20 +199,7 @@ const char* const_basename(const char* filepath);
 
 void DumpStackTraceToString(std::string* stacktrace);
 
-struct CrashReason {
-  CrashReason() = default;
-
-  const char* filename{nullptr};
-  int line_number{0};
-  const char* message{nullptr};
-
-  // We'll also store a bit of stack trace context at the time of crash as
-  // it may not be available later on.
-  void* stack[32];
-  int depth{0};
-};
-
-void SetCrashReason(const CrashReason* r);
+void SetCrashReason(const logging::internal::CrashReason* r);
 
 void InitGoogleLoggingUtilities(const char* argv0);
 void ShutdownGoogleLoggingUtilities();
@@ -215,11 +222,95 @@ class ScopedExit final {
   Functor functor_;
 };
 
+// Thin wrapper around a file descriptor so that the file descriptor
+// gets closed for sure.
+class GLOG_NO_EXPORT FileDescriptor final {
+  static constexpr int InvalidHandle = -1;
+
+ public:
+  constexpr FileDescriptor() noexcept : FileDescriptor{nullptr} {}
+  constexpr explicit FileDescriptor(int fd) noexcept : fd_{fd} {}
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  constexpr FileDescriptor(std::nullptr_t) noexcept : fd_{InvalidHandle} {}
+
+  FileDescriptor(const FileDescriptor& other) = delete;
+  FileDescriptor& operator=(const FileDescriptor& other) = delete;
+
+  FileDescriptor(FileDescriptor&& other) noexcept : fd_{other.release()} {}
+  FileDescriptor& operator=(FileDescriptor&& other) noexcept {
+    // Close the file descriptor being held and assign a new file descriptor
+    // previously held by 'other' without closing it.
+    reset(other.release());
+    return *this;
+  }
+
+  constexpr explicit operator bool() const noexcept {
+    return fd_ != InvalidHandle;
+  }
+
+  constexpr int get() const noexcept { return fd_; }
+
+  int release() noexcept { return std::exchange(fd_, InvalidHandle); }
+  void reset(std::nullptr_t) noexcept { safe_close(); }
+  void reset() noexcept { reset(nullptr); }
+  void reset(int fd) noexcept {
+    reset();
+    fd_ = fd;
+  }
+
+  int close() noexcept { return unsafe_close(); }
+
+  ~FileDescriptor() { safe_close(); }
+
+ private:
+  int unsafe_close() noexcept { return ::close(release()); }
+  void safe_close() noexcept {
+    if (*this) {
+      unsafe_close();
+    }
+  }
+
+  int fd_;
+};
+
+// Provide variants of (in)equality comparison operators to avoid constructing
+// temporaries.
+
+constexpr bool operator==(const FileDescriptor& lhs, int rhs) noexcept {
+  return lhs.get() == rhs;
+}
+
+constexpr bool operator==(int lhs, const FileDescriptor& rhs) noexcept {
+  return rhs == lhs;
+}
+
+constexpr bool operator!=(const FileDescriptor& lhs, int rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+constexpr bool operator!=(int lhs, const FileDescriptor& rhs) noexcept {
+  return !(lhs == rhs);
+}
+
+constexpr bool operator==(const FileDescriptor& lhs, std::nullptr_t) noexcept {
+  return !lhs;
+}
+
+constexpr bool operator==(std::nullptr_t, const FileDescriptor& rhs) noexcept {
+  return !rhs;
+}
+
+constexpr bool operator!=(const FileDescriptor& lhs, std::nullptr_t) noexcept {
+  return static_cast<bool>(lhs);
+}
+
+constexpr bool operator!=(std::nullptr_t, const FileDescriptor& rhs) noexcept {
+  return static_cast<bool>(rhs);
+}
+
 }  // namespace glog_internal_namespace_
 
 }  // namespace google
-
-using namespace google::glog_internal_namespace_;
 
 template <>
 struct std::default_delete<std::FILE> {

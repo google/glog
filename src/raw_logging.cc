@@ -125,7 +125,7 @@ inline static bool VADoRawLog(char** buf, size_t* size, const char* format,
 
 static const int kLogBufSize = 3000;
 static std::once_flag crashed;
-static CrashReason crash_reason;
+static logging::internal::CrashReason crash_reason;
 static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
 namespace {

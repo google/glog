@@ -50,18 +50,14 @@ using std::string;
 
 namespace google {
 
-namespace glog_internal_namespace_ {
-
-// Used by logging_unittests.cc so can't make it static here.
-GLOG_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
-                              const char* str, size_t str_len);
+inline namespace glog_internal_namespace_ {
 
 // Implementation of fnmatch that does not need 0-termination
 // of arguments and does not allocate any memory,
 // but we only support "*" and "?" wildcards, not the "[...]" patterns.
 // It's not a static function for the unittest.
-GLOG_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
-                              const char* str, size_t str_len) {
+GLOG_NO_EXPORT bool SafeFNMatch_(const char* pattern, size_t patt_len,
+                                 const char* str, size_t str_len) {
   size_t p = 0;
   size_t s = 0;
   while (true) {

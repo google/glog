@@ -965,12 +965,13 @@ namespace google {
                      LOG_OCCURRENCES, &what_to_do)                \
       .stream()
 
-namespace glog_internal_namespace_ {
+namespace logging {
+namespace internal {
 template <bool>
 struct CompileAssert {};
 struct CrashReason;
-
-}  // namespace glog_internal_namespace_
+}  // namespace internal
+}  // namespace logging
 
 #define LOG_EVERY_N(severity, n) \
   SOME_KIND_OF_LOG_EVERY_N(severity, (n), google::LogMessage::SendToLog)
@@ -1334,7 +1335,7 @@ class GLOG_EXPORT LogMessage {
             void (LogMessage::*send_method)());
 
   // Used to fill in crash information during LOG(FATAL) failures.
-  void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
+  void RecordCrashReason(logging::internal::CrashReason* reason);
 
   // Counts of messages sent at each priority:
   static int64 num_messages_[NUM_SEVERITIES];  // under log_mutex

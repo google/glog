@@ -1011,11 +1011,12 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     // demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
   }
-  int fd = open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode));
-  if (fd == -1) return false;
+  FileDescriptor fd{
+      open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode))};
+  if (!fd) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
-  fcntl(fd, F_SETFD, FD_CLOEXEC);
+  fcntl(fd.get(), F_SETFD, FD_CLOEXEC);
 
   // Mark the file as exclusive write access to avoid two clients logging to the
   // same file. This applies particularly when !FLAGS_timestamp_in_logfile_name
@@ -1034,17 +1035,15 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   w_lock.l_whence = SEEK_SET;
   w_lock.l_len = 0;
 
-  int wlock_ret = fcntl(fd, F_SETLK, &w_lock);
+  int wlock_ret = fcntl(fd.get(), F_SETLK, &w_lock);
   if (wlock_ret == -1) {
-    close(fd);  // as we are failing already, do not check errors here
     return false;
   }
 #endif
 
   // fdopen in append mode so if the file exists it will fseek to the end
-  file_.reset(fdopen(fd, "a"));  // Make a FILE*.
-  if (file_ == nullptr) {        // Man, we're screwed!
-    close(fd);
+  file_.reset(fdopen(fd.release(), "a"));  // Make a FILE*.
+  if (file_ == nullptr) {                  // Man, we're screwed!
     if (FLAGS_timestamp_in_logfile_name) {
       unlink(filename);  // Erase the half-baked evidence: an unusable log file,
                          // only if we just created it.
@@ -1506,7 +1505,7 @@ bool LogCleaner::IsLogLastModifiedOver(
 // for exclusive use by the first thread, and one for shared use by
 // all other threads.
 static std::mutex fatal_msg_lock;
-static CrashReason crash_reason;
+static logging::internal::CrashReason crash_reason;
 static bool fatal_msg_exclusive = true;
 static LogMessage::LogMessageData fatal_msg_data_exclusive;
 static LogMessage::LogMessageData fatal_msg_data_shared;
@@ -1861,8 +1860,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
   }
 }
 
-void LogMessage::RecordCrashReason(
-    glog_internal_namespace_::CrashReason* reason) {
+void LogMessage::RecordCrashReason(logging::internal::CrashReason* reason) {
   reason->filename = fatal_msg_data_exclusive.fullname_;
   reason->line_number = fatal_msg_data_exclusive.line_;
   reason->message = fatal_msg_data_exclusive.message_text_ +
@@ -2396,8 +2394,8 @@ void TruncateLogFile(const char* path, uint64 limit, uint64 keep) {
   if (strncmp(procfd_prefix, path, strlen(procfd_prefix))) flags |= O_NOFOLLOW;
 #  endif
 
-  int fd = open(path, flags);
-  if (fd == -1) {
+  FileDescriptor fd{open(path, flags)};
+  if (!fd) {
     if (errno == EFBIG) {
       // The log file in question has got too big for us to open. The
       // real fix for this would be to compile logging.cc (or probably
@@ -2405,7 +2403,7 @@ void TruncateLogFile(const char* path, uint64 limit, uint64 keep) {
       // rather scary.
       // Instead just truncate the file to something we can manage
 #  ifdef HAVE__CHSIZE_S
-      if (_chsize_s(fd, 0) != 0) {
+      if (_chsize_s(fd.get(), 0) != 0) {
 #  else
       if (truncate(path, 0) == -1) {
 #  endif
@@ -2419,16 +2417,16 @@ void TruncateLogFile(const char* path, uint64 limit, uint64 keep) {
     return;
   }
 
-  if (fstat(fd, &statbuf) == -1) {
+  if (fstat(fd.get(), &statbuf) == -1) {
     PLOG(ERROR) << "Unable to fstat()";
-    goto out_close_fd;
+    return;
   }
 
   // See if the path refers to a regular file bigger than the
   // specified limit
-  if (!S_ISREG(statbuf.st_mode)) goto out_close_fd;
-  if (statbuf.st_size <= static_cast<off_t>(limit)) goto out_close_fd;
-  if (statbuf.st_size <= static_cast<off_t>(keep)) goto out_close_fd;
+  if (!S_ISREG(statbuf.st_mode)) return;
+  if (statbuf.st_size <= static_cast<off_t>(limit)) return;
+  if (statbuf.st_size <= static_cast<off_t>(keep)) return;
 
   // This log file is too large - we need to truncate it
   LOG(INFO) << "Truncating " << path << " to " << keep << " bytes";
@@ -2437,8 +2435,10 @@ void TruncateLogFile(const char* path, uint64 limit, uint64 keep) {
   read_offset = statbuf.st_size - static_cast<off_t>(keep);
   write_offset = 0;
   ssize_t bytesin, bytesout;
-  while ((bytesin = pread(fd, copybuf, sizeof(copybuf), read_offset)) > 0) {
-    bytesout = pwrite(fd, copybuf, static_cast<size_t>(bytesin), write_offset);
+  while ((bytesin = pread(fd.get(), copybuf, sizeof(copybuf), read_offset)) >
+         0) {
+    bytesout =
+        pwrite(fd.get(), copybuf, static_cast<size_t>(bytesin), write_offset);
     if (bytesout == -1) {
       PLOG(ERROR) << "Unable to write to " << path;
       break;
@@ -2454,15 +2454,13 @@ void TruncateLogFile(const char* path, uint64 limit, uint64 keep) {
     // end of the file after our last read() above, we lose their latest
     // data. Too bad ...
 #  ifdef HAVE__CHSIZE_S
-  if (_chsize_s(fd, write_offset) != 0) {
+  if (_chsize_s(fd.get(), write_offset) != 0) {
 #  else
-  if (ftruncate(fd, write_offset) == -1) {
+  if (ftruncate(fd.get(), write_offset) == -1) {
 #  endif
     PLOG(ERROR) << "Unable to truncate " << path;
   }
 
-out_close_fd:
-  close(fd);
 #else
   LOG(ERROR) << "No log truncation support.";
 #endif
