@@ -31,10 +31,10 @@
 //
 // logging_unittest.cc covers the functionality herein
 
-#include <cerrno>
 #include <cstdarg>
 #include <cstdio>
 #include <iomanip>
+#include <mutex>
 #include <ostream>
 #include <streambuf>
 #include <thread>
@@ -124,7 +124,7 @@ inline static bool VADoRawLog(char** buf, size_t* size, const char* format,
 }
 
 static const int kLogBufSize = 3000;
-static bool crashed = false;
+static std::once_flag crashed;
 static CrashReason crash_reason;
 static char crash_buf[kLogBufSize + 1] = {0};  // Will end in '\0'
 
@@ -195,7 +195,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // We write just once to avoid races with other invocations of RawLog__.
   safe_write(STDERR_FILENO, buffer, strlen(buffer));
   if (severity == GLOG_FATAL) {
-    if (!sync_val_compare_and_swap(&crashed, false, true)) {
+    std::call_once(crashed, [file, line, msg_start, msg_size] {
       crash_reason.filename = file;
       crash_reason.line_number = line;
       memcpy(crash_buf, msg_start, msg_size);  // Don't include prefix
@@ -207,7 +207,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
       crash_reason.depth = 0;
 #endif
       SetCrashReason(&crash_reason);
-    }
+    });
     LogMessage::Fail();  // abort()
   }
 }

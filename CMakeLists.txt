@@ -163,13 +163,6 @@ set (CMAKE_REQUIRED_LIBRARIES dbghelp)
 check_cxx_symbol_exists (UnDecorateSymbolName "windows.h;dbghelp.h" HAVE_DBGHELP)
 cmake_pop_check_state ()
 
-check_cxx_source_compiles ("
-int main(void)
-{
-  int a; if (__sync_val_compare_and_swap(&a, 0, 1)) return 1; return 0;
-}
-" HAVE___SYNC_VAL_COMPARE_AND_SWAP)
-
 if (WITH_FUZZING STREQUAL none)
   # Disable compiler demangler if fuzzing is active; we only want to use the
   # glog demangler then.
