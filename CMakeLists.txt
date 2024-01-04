@@ -37,7 +37,7 @@ option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_GTEST "Use Google Test" ON)
-option (WITH_PKGCONFIG "Enable pkg-config support" ON)
+option (WITH_PKGCONFIG "Enable pkg-config support" OFF)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
 option (WITH_THREADS "Enable multithreading support" ON)
 
