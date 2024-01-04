@@ -36,12 +36,16 @@
 #ifndef GLOG_RAW_LOGGING_H
 #define GLOG_RAW_LOGGING_H
 
-#include "glog/log_severity.h"
-#include "glog/vlog_is_on.h"
-
 #if defined(GLOG_USE_GLOG_EXPORT)
 #  include "glog/export.h"
 #endif
+
+#if !defined(GLOG_EXPORT)
+#  error <glog/raw_logging.h> was not included correctly. See the documention for how to consume the library.
+#endif
+
+#include "glog/log_severity.h"
+#include "glog/vlog_is_on.h"
 
 namespace google {
 

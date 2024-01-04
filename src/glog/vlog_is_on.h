@@ -67,6 +67,10 @@
 #  include "glog/export.h"
 #endif
 
+#if !defined(GLOG_EXPORT)
+#  error <glog/vlog_is_on.h> was not included correctly. See the documention for how to consume the library.
+#endif
+
 #include "glog/flags.h"
 #include "glog/types.h"
 
