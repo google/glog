@@ -327,6 +327,8 @@ static bool TerminalSupportsColor() {
 
 namespace google {
 
+std::string StrError(int err);
+
 enum GLogColor { COLOR_DEFAULT, COLOR_RED, COLOR_GREEN, COLOR_YELLOW };
 
 static GLogColor SeverityToColor(LogSeverity severity) {
@@ -2051,7 +2053,7 @@ int64 LogMessage::num_messages(int severity) {
 
 // Output the COUNTER value. This is only valid if ostream is a
 // LogStream.
-ostream& operator<<(ostream& os, const PRIVATE_Counter&) {
+ostream& operator<<(ostream& os, const Counter_t&) {
 #ifdef DISABLE_RTTI
   LogMessage::LogStream* log = static_cast<LogMessage::LogStream*>(&os);
 #else
@@ -2435,6 +2437,10 @@ const vector<string>& GetLoggingDirectories() {
   return *logging_directories_list;
 }
 
+// Returns a set of existing temporary directories, which will be a
+// subset of the directories returned by GetLoggingDirectories().
+// Thread-safe.
+GLOG_NO_EXPORT
 void GetExistingTempDirectories(vector<string>* list) {
   GetTempDirectories(list);
   auto i_dir = list->begin();
@@ -2567,6 +2573,18 @@ DEFINE_CHECK_STROP_IMPL(CHECK_STRCASEEQ, strcasecmp, true)
 DEFINE_CHECK_STROP_IMPL(CHECK_STRCASENE, strcasecmp, false)
 #undef DEFINE_CHECK_STROP_IMPL
 
+// glibc has traditionally implemented two incompatible versions of
+// strerror_r(). There is a poorly defined convention for picking the
+// version that we want, but it is not clear whether it even works with
+// all versions of glibc.
+// So, instead, we provide this wrapper that automatically detects the
+// version that is in use, and then implements POSIX semantics.
+// N.B. In addition to what POSIX says, we also guarantee that "buf" will
+// be set to an empty string, if this function failed. This means, in most
+// cases, you do not need to check the error code and you can directly
+// use the value of "buf". It will never have an undefined value.
+// DEPRECATED: Use StrError(int) instead.
+GLOG_NO_EXPORT
 int posix_strerror_r(int err, char* buf, size_t len) {
   // Sanity check input parameters
   if (buf == nullptr || len <= 0) {
@@ -2618,6 +2636,9 @@ int posix_strerror_r(int err, char* buf, size_t len) {
   }
 }
 
+// A thread-safe replacement for strerror(). Returns a string describing the
+// given POSIX error code.
+GLOG_NO_EXPORT
 string StrError(int err) {
   char buf[100];
   int rc = posix_strerror_r(err, buf, sizeof(buf));

@@ -72,6 +72,7 @@ def glog_library(with_gflags = 1, **kwargs):
 
     linux_or_darwin_copts = wasm_copts + [
         "-DGLOG_EXPORT=__attribute__((visibility(\\\"default\\\")))",
+        "-DGLOG_NO_EXPORT=__attribute__((visibility(\\\"default\\\")))",
         "-DHAVE_MODE_T",
         "-DHAVE_SSIZE_T",
         "-DHAVE_SYS_TYPES_H",
@@ -101,6 +102,7 @@ def glog_library(with_gflags = 1, **kwargs):
     windows_only_copts = [
         # Override -DGLOG_EXPORT= from the cc_library's defines.
         "-DGLOG_EXPORT=__declspec(dllexport)",
+        "-DGLOG_NO_EXPORT=",
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
         "-DHAVE__CHSIZE_S",
         "-I" + src_windows,
