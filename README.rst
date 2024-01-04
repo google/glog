@@ -39,20 +39,52 @@ particular `severity level <#severity-levels>`__>), e.g.,
    }
 
 
-For a detailed overview of glog features and their usage, please refer
-to the `user guide <#user-guide>`__.
+The library can be installed using various package managers or compiled from
+`source <#building-from-source>`__. For a detailed overview of glog features and
+their usage, please refer to the `user guide <#user-guide>`__.
+
+.. pull-quote::
+   [!IMPORTANT]
+
+   The above example requires further Bazel or CMake setup for
+   `use in own projects <#usage-in-projects>`__.
+
 
 .. contents:: Table of Contents
 
 
-Building from Source
---------------------
+Usage in Projects
+~~~~~~~~~~~~~~~~~
 
-glog supports multiple build systems for compiling the project from
-source: `Bazel <#bazel>`__, `CMake <#cmake>`__, `vcpkg <#vcpkg>`__, and `conan <#conan>`__.
+Assuming that glog was previously `built glog using CMake <#cmake>`__ or
+installed using a package manager, you can use the CMake command
+:cmake:`find_package` to build against glog in your CMake project as follows:
+
+.. code:: cmake
+
+   cmake_minimum_required (VERSION 3.16)
+   project (myproj VERSION 1.0)
+
+   find_package (glog 0.6.0 REQUIRED)
+
+   add_executable (myapp main.cpp)
+   target_link_libraries (myapp glog::glog)
+
+
+Compile definitions and options will be added automatically to your
+target as needed.
+
+Alternatively, glog can be incorporated into using the CMake command
+:cmake:`add_subdirectory` to include glog directly from a subdirectory of your
+project by replacing the :cmake:`find_package` call from the previous snippet by
+:cmake:`add_subdirectory`. The :cmake:`glog::glog` target is in this case an
+:cmake:`ALIAS` library target for the ``glog`` library target.
+
+Building from Source
+~~~~~~~~~~~~~~~~~~~~
 
 Bazel
-~~~~~
+^^^^^
 
 To use glog within a project which uses the
 `Bazel <https://bazel.build/>`__ build tool, add the following lines to
@@ -77,8 +109,8 @@ your ``WORKSPACE`` file:
    )
 
 You can then add :bazel:`@com_github_google_glog//:glog` to the deps section
-of a :bazel:`cc_binary` or :bazel:`cc_library` rule, and :code:`#include
-<glog/logging.h>` to include it in your source code. Here’s a simple example:
+of a :bazel:`cc_binary` or :bazel:`cc_library` rule, and :code:`#include <glog/logging.h>`
+to include it in your source code. Here’s a simple example:
 
 .. code:: bazel
 
@@ -89,25 +121,13 @@ of a :bazel:`cc_binary` or :bazel:`cc_library` rule, and :code:`#include
    )
 
 CMake
-~~~~~
+^^^^^
 
-glog also supports CMake that can be used to build the project on a wide
-range of platforms. If you don’t have CMake installed already, you can
-download it for from CMake’s `official
-website <http://www.cmake.org>`__.
+glog can be compiled using `CMake <http://www.cmake.org>`__ on a wide range of
+platforms. The typical workflow for building glog  on a Unix-like system with
+GNU Make as build tool is as follows:
 
-CMake works by generating native makefiles or build projects that can be
-used in the compiler environment of your choice. You can either build
-glog with CMake as a standalone project or it can be incorporated into
-an existing CMake build for another project.
-
-Building glog with CMake
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-When building glog as a standalone project, on Unix-like systems with
-GNU Make as build tool, the typical workflow is:
-
-1. Get the source code and change to it. e.g., cloning with git:
+1. Clone the repository and change into source directory.
 
   .. code:: bash
 
@@ -144,36 +164,26 @@ GNU Make as build tool, the typical workflow is:
 
      cmake --build build --target install
 
-Consuming glog in a CMake Project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have glog installed in your system, you can use the CMake command
-:cmake:`find_package` to build against glog in your CMake Project as follows:
+Once successfully built, glog can be
+`integrated into own projects <#usage-in-projects>`__.
 
-.. code:: cmake
 
-   cmake_minimum_required (VERSION 3.16)
-   project (myproj VERSION 1.0)
+conan
+~~~~~
 
-   find_package (glog 0.6.0 REQUIRED)
+You can download and install glog using the `conan
+<https://conan.io>`__ package manager:
 
-   add_executable (myapp main.cpp)
-   target_link_libraries (myapp glog::glog)
+.. code:: bash
 
-Compile definitions and options will be added automatically to your
-target as needed.
+   pip install conan
+   conan install -r conancenter glog/<glog-version>@
 
-Incorporating glog into a CMake Project
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You can also use the CMake command :cmake:`add_subdirectory` to include glog
-directly from a subdirectory of your project by replacing the
-:cmake:`find_package` call from the previous example by
-:cmake:`add_subdirectory`. The :cmake:`glog::glog` target is in this case an
-:cmake:`ALIAS` library target for the ``glog`` library target.
-
-Again, compile definitions and options will be added automatically to
-your target as needed.
+The glog recipe in conan center is kept up to date by conan center index community
+contributors. If the version is out of date, please create an
+issue or pull request on the `conan-center-index
+<https://github.com/conan-io/conan-center-index>`__ repository.
 
 vcpkg
 ~~~~~
@@ -192,22 +202,6 @@ You can download and install glog using the `vcpkg
 The glog port in vcpkg is kept up to date by Microsoft team members and
 community contributors. If the version is out of date, please create an
 issue or pull request on the vcpkg repository.
-
-conan
-~~~~~
-
-You can download and install glog using the `conan
-<https://conan.io>`__ package manager:
-
-.. code:: bash
-
-   pip install conan
-   conan install -r conancenter glog/<glog-version>@
-
-The glog recipe in conan center is kept up to date by conan center index community
-contributors. If the version is out of date, please create an
-issue or pull request on the `conan-center-index
-<https://github.com/conan-io/conan-center-index>`__ repository.
 
 User Guide
 ----------
