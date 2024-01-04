@@ -67,12 +67,16 @@ enum LogSeverity {
 
 #if defined(__cpp_inline_variables)
 #  if (__cpp_inline_variables >= 201606L)
-inline
+#    define GLOG_INLINE_VARIABLE inline
 #  endif  // (__cpp_inline_variables >= 201606L)
 #endif    // defined(__cpp_inline_variables)
-          // clang-format off
+
+#if !defined(GLOG_INLINE_VARIABLE)
+#  define GLOG_INLINE_VARIABLE
+#endif  // !defined(GLOG_INLINE_VARIABLE)
+
+GLOG_INLINE_VARIABLE
 constexpr int NUM_SEVERITIES = 4;
-// clang-format on
 
 // DFATAL is FATAL in debug mode, ERROR in normal mode
 #ifdef NDEBUG

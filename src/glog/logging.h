@@ -1162,7 +1162,8 @@ GLOG_EXPORT bool IsFailureSignalHandlerInstalled();
                               google::LogMessage::SendToLog)
 
 // We want the special COUNTER value available for LOG_EVERY_X()'ed messages
-enum PRIVATE_Counter { COUNTER };
+struct Counter_t {};
+GLOG_INLINE_VARIABLE constexpr Counter_t COUNTER{};
 
 #ifdef GLOG_NO_ABBREVIATED_SEVERITIES
 // wingdi.h defines ERROR to be 0. When we call LOG(ERROR), it gets
@@ -1173,7 +1174,8 @@ enum PRIVATE_Counter { COUNTER };
 #  define SYSLOG_0 SYSLOG_ERROR
 #  define LOG_TO_STRING_0 LOG_TO_STRING_ERROR
 // Needed for LOG_IS_ON(ERROR).
-const LogSeverity GLOG_0 = GLOG_ERROR;
+GLOG_INLINE_VARIABLE
+constexpr LogSeverity GLOG_0 = GLOG_ERROR;
 #else
 // Users may include windows.h after logging.h without
 // GLOG_NO_ABBREVIATED_SEVERITIES nor WIN32_LEAN_AND_MEAN.
@@ -1556,7 +1558,7 @@ T CheckNotNull(const char* file, int line, const char* names, T&& t) {
 // Allow folks to put a counter in the LOG_EVERY_X()'ed messages. This
 // only works if ostream is a LogStream. If the ostream is not a
 // LogStream you'll get an assert saying as much at runtime.
-GLOG_EXPORT std::ostream& operator<<(std::ostream& os, const PRIVATE_Counter&);
+GLOG_EXPORT std::ostream& operator<<(std::ostream& os, const Counter_t&);
 
 // Derived class for PLOG*() above.
 class GLOG_EXPORT ErrnoLogMessage : public LogMessage {
@@ -1694,11 +1696,6 @@ GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
 
 GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
 
-// Returns a set of existing temporary directories, which will be a
-// subset of the directories returned by GetLoggingDirectories().
-// Thread-safe.
-GLOG_EXPORT void GetExistingTempDirectories(std::vector<std::string>* list);
-
 // Print any fatal message again -- useful to call from signal handler
 // so that the last thing in the output is the fatal message.
 // Thread-hostile, but a race is unlikely.
@@ -1770,23 +1767,6 @@ extern GLOG_EXPORT Logger* GetLogger(LogSeverity level);
 extern GLOG_EXPORT void SetLogger(LogSeverity level, Logger* logger);
 
 }  // namespace base
-
-// glibc has traditionally implemented two incompatible versions of
-// strerror_r(). There is a poorly defined convention for picking the
-// version that we want, but it is not clear whether it even works with
-// all versions of glibc.
-// So, instead, we provide this wrapper that automatically detects the
-// version that is in use, and then implements POSIX semantics.
-// N.B. In addition to what POSIX says, we also guarantee that "buf" will
-// be set to an empty string, if this function failed. This means, in most
-// cases, you do not need to check the error code and you can directly
-// use the value of "buf". It will never have an undefined value.
-// DEPRECATED: Use StrError(int) instead.
-GLOG_EXPORT int posix_strerror_r(int err, char* buf, size_t len);
-
-// A thread-safe replacement for strerror(). Returns a string describing the
-// given POSIX error code.
-GLOG_EXPORT std::string StrError(int err);
 
 // A class for which we define operator<<, which does nothing.
 class GLOG_EXPORT NullStream : public LogMessage::LogStream {

@@ -69,9 +69,10 @@ using std::string;
 using std::vector;
 
 namespace google {
-
-extern GLOG_EXPORT void (*g_logging_fail_func)();
-
+extern void (*g_logging_fail_func)();
+extern void GetExistingTempDirectories(vector<string>* list);
+extern int posix_strerror_r(int err, char* buf, size_t len);
+extern std::string StrError(int err);
 }
 
 #undef GLOG_EXPORT
