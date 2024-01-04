@@ -36,6 +36,7 @@
 #ifndef GLOG_LOGGING_H
 #define GLOG_LOGGING_H
 
+#include <atomic>
 #include <cerrno>
 #include <chrono>
 #include <cstddef>
@@ -51,16 +52,13 @@
 #include <utility>
 #include <vector>
 
-#if defined(_MSC_VER)
-#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n) \
-    __pragma(warning(push)) __pragma(warning(disable : n))
-#  define GLOG_MSVC_POP_WARNING() __pragma(warning(pop))
-#else
-#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
-#  define GLOG_MSVC_POP_WARNING()
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
 #endif
 
+#include "glog/flags.h"
 #include "glog/platform.h"
+#include "glog/types.h"
 
 #if defined(__has_attribute)
 #  if __has_attribute(used)
@@ -72,30 +70,10 @@
 #  define GLOG_USED
 #endif  // !defined(GLOG_USED)
 
-#if defined(GLOG_USE_GLOG_EXPORT)
-#  include "glog/export.h"
-#endif
-
-// We care a lot about number of bits things take up.  Unfortunately,
-// systems define their bit-specific ints in a lot of different ways.
-// We use our own way, and have a typedef to get there.
-// Note: these commands below may look like "#if 1" or "#if 0", but
-// that's because they were constructed that way at ./configure time.
-// Look at logging.h.in to see how they're calculated (based on your config).
-#include <cstdint>  // the normal place uint16_t is defined
-
-#if defined(GLOG_USE_GFLAGS)
-#  include <gflags/gflags.h>
-#endif
-
-#include <atomic>
+#include "glog/log_severity.h"
+#include "glog/vlog_is_on.h"
 
 namespace google {
-
-typedef std::int32_t int32;
-typedef std::uint32_t uint32;
-typedef std::int64_t int64;
-typedef std::uint64_t uint64;
 
 struct GLOG_EXPORT LogMessageTime {
   LogMessageTime();
@@ -364,129 +342,6 @@ typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
 // synchronized.  Hence, use caution when comparing the low bits of
 // timestamps from different machines.
 
-#pragma push_macro("DECLARE_VARIABLE")
-#pragma push_macro("DECLARE_bool")
-#pragma push_macro("DECLARE_string")
-#pragma push_macro("DECLARE_int32")
-#pragma push_macro("DECLARE_uint32")
-
-#ifdef DECLARE_VARIABLE
-#  undef DECLARE_VARIABLE
-#endif
-
-#ifdef DECLARE_bool
-#  undef DECLARE_bool
-#endif
-
-#ifdef DECLARE_string
-#  undef DECLARE_string
-#endif
-
-#ifdef DECLARE_int32
-#  undef DECLARE_int32
-#endif
-
-#ifdef DECLARE_uint32
-#  undef DECLARE_uint32
-#endif
-
-#ifndef DECLARE_VARIABLE
-#  define DECLARE_VARIABLE(type, shorttype, name, tn) \
-    namespace fL##shorttype {                         \
-      extern GLOG_EXPORT type FLAGS_##name;           \
-    }                                                 \
-    using fL##shorttype::FLAGS_##name
-
-// bool specialization
-#  define DECLARE_bool(name) DECLARE_VARIABLE(bool, B, name, bool)
-
-// int32 specialization
-#  define DECLARE_int32(name) DECLARE_VARIABLE(google::int32, I, name, int32)
-
-#  if !defined(DECLARE_uint32)
-// uint32 specialization
-#    define DECLARE_uint32(name) \
-      DECLARE_VARIABLE(google::uint32, U, name, uint32)
-#  endif  // !defined(DECLARE_uint32) && !defined(GLOG_USE_GFLAGS)
-
-// Special case for string, because we have to specify the namespace
-// std::string, which doesn't play nicely with our FLAG__namespace hackery.
-#  define DECLARE_string(name)                    \
-    namespace fLS {                               \
-    extern GLOG_EXPORT std::string& FLAGS_##name; \
-    }                                             \
-    using fLS::FLAGS_##name
-#endif
-
-// Set whether appending a timestamp to the log file name
-DECLARE_bool(timestamp_in_logfile_name);
-
-// Set whether log messages go to stdout instead of logfiles
-DECLARE_bool(logtostdout);
-
-// Set color messages logged to stdout (if supported by terminal).
-DECLARE_bool(colorlogtostdout);
-
-// Set whether log messages go to stderr instead of logfiles
-DECLARE_bool(logtostderr);
-
-// Set whether log messages go to stderr in addition to logfiles.
-DECLARE_bool(alsologtostderr);
-
-// Set color messages logged to stderr (if supported by terminal).
-DECLARE_bool(colorlogtostderr);
-
-// Log messages at a level >= this flag are automatically sent to
-// stderr in addition to log files.
-DECLARE_int32(stderrthreshold);
-
-// Set whether the log file header should be written upon creating a file.
-DECLARE_bool(log_file_header);
-
-// Set whether the log prefix should be prepended to each line of output.
-DECLARE_bool(log_prefix);
-
-// Set whether the year should be included in the log prefix.
-DECLARE_bool(log_year_in_prefix);
-
-// Log messages at a level <= this flag are buffered.
-// Log messages at a higher level are flushed immediately.
-DECLARE_int32(logbuflevel);
-
-// Sets the maximum number of seconds which logs may be buffered for.
-DECLARE_int32(logbufsecs);
-
-// Log suppression level: messages logged at a lower level than this
-// are suppressed.
-DECLARE_int32(minloglevel);
-
-// If specified, logfiles are written into this directory instead of the
-// default logging directory.
-DECLARE_string(log_dir);
-
-// Set the log file mode.
-DECLARE_int32(logfile_mode);
-
-// Sets the path of the directory into which to put additional links
-// to the log files.
-DECLARE_string(log_link);
-
-DECLARE_int32(v);  // in vlog_is_on.cc
-
-DECLARE_string(vmodule);  // also in vlog_is_on.cc
-
-// Sets the maximum log file size (in MB).
-DECLARE_uint32(max_log_size);
-
-// Sets whether to avoid logging to the disk if the disk is full.
-DECLARE_bool(stop_logging_if_full_disk);
-
-// Use UTC time for logging
-DECLARE_bool(log_utc_time);
-
-// Mailer used to send logging email
-DECLARE_string(logmailer);
-
 // Log messages below the GOOGLE_STRIP_LOG level will be compiled away for
 // security reasons. See LOG(severtiy) below.
 
@@ -614,10 +469,6 @@ DECLARE_string(logmailer);
 #define SYSLOG(severity) SYSLOG_##severity(0).stream()
 
 namespace google {
-
-// They need the definitions of integer types.
-#include "glog/log_severity.h"
-#include "glog/vlog_is_on.h"
 
 // Initialize google's logging library. You will see the program name
 // specified by argv0 in log outputs.
@@ -1030,34 +881,9 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
 #define LOG_CURRENT_TIME LOG_EVERY_N_VARNAME(currentTime_, __LINE__)
 #define LOG_PREVIOUS_TIME LOG_EVERY_N_VARNAME(previousTime_, __LINE__)
 
-#if defined(__has_feature)
-#  if __has_feature(thread_sanitizer)
-#    define GLOG_SANITIZE_THREAD 1
-#  endif
-#endif
-
-#if !defined(GLOG_SANITIZE_THREAD) && defined(__SANITIZE_THREAD__) && \
-    __SANITIZE_THREAD__
-#  define GLOG_SANITIZE_THREAD 1
-#endif
-
-#if defined(GLOG_SANITIZE_THREAD)
-#  define GLOG_IFDEF_THREAD_SANITIZER(X) X
-#else
-#  define GLOG_IFDEF_THREAD_SANITIZER(X)
-#endif
-
-#if defined(GLOG_SANITIZE_THREAD)
 }  // namespace google
 
-// We need to identify the static variables as "benign" races
-// to avoid noisy reports from TSAN.
-extern "C" void AnnotateBenignRaceSized(const char* file, int line,
-                                        const volatile void* mem, size_t size,
-                                        const char* description);
-
 namespace google {
-#endif
 
 #define SOME_KIND_OF_LOG_EVERY_T(severity, seconds)                            \
   constexpr std::chrono::nanoseconds LOG_TIME_PERIOD =                         \
@@ -1834,11 +1660,5 @@ GLOG_EXPORT void InstallFailureWriter(void (*writer)(const char* data,
                                                      size_t size));
 
 }  // namespace google
-
-#pragma pop_macro("DECLARE_VARIABLE")
-#pragma pop_macro("DECLARE_bool")
-#pragma pop_macro("DECLARE_string")
-#pragma pop_macro("DECLARE_int32")
-#pragma pop_macro("DECLARE_uint32")
 
 #endif  // GLOG_LOGGING_H

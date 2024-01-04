@@ -63,8 +63,6 @@
 #include "glog/raw_logging.h"
 #include "googletest.h"
 
-DECLARE_string(log_backtrace_at);  // logging.cc
-
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;

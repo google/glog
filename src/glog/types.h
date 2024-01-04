@@ -1,3 +1,4 @@
+
 // Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
@@ -27,34 +28,54 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: Shinichiro Hamaji
-//
-// Detect supported platforms.
 
-#ifndef GLOG_PLATFORM_H
-#define GLOG_PLATFORM_H
+#ifndef GLOG_TYPES_H
+#define GLOG_TYPES_H
 
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__)
-#  define GLOG_OS_WINDOWS
-#elif defined(__CYGWIN__) || defined(__CYGWIN32__)
-#  define GLOG_OS_CYGWIN
-#elif defined(linux) || defined(__linux) || defined(__linux__)
-#  ifndef GLOG_OS_LINUX
-#    define GLOG_OS_LINUX
+#include <cstddef>
+#include <cstdint>
+
+namespace google {
+
+using int32 = std::int32_t;
+using uint32 = std::uint32_t;
+using int64 = std::int64_t;
+using uint64 = std::uint64_t;
+
+}  // namespace google
+
+#if defined(__has_feature)
+#  if __has_feature(thread_sanitizer)
+#    define GLOG_SANITIZE_THREAD 1
 #  endif
-#elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
-#  define GLOG_OS_MACOSX
-#elif defined(__FreeBSD__)
-#  define GLOG_OS_FREEBSD
-#elif defined(__NetBSD__)
-#  define GLOG_OS_NETBSD
-#elif defined(__OpenBSD__)
-#  define GLOG_OS_OPENBSD
-#elif defined(__EMSCRIPTEN__)
-#  define GLOG_OS_EMSCRIPTEN
-#else
-// TODO(hamaji): Add other platforms.
-#error Platform not supported by glog. Please consider to contribute platform information by submitting a pull request on Github.
 #endif
 
-#endif  // GLOG_PLATFORM_H
+#if !defined(GLOG_SANITIZE_THREAD) && defined(__SANITIZE_THREAD__) && \
+    __SANITIZE_THREAD__
+#  define GLOG_SANITIZE_THREAD 1
+#endif
+
+#if defined(GLOG_SANITIZE_THREAD)
+#  define GLOG_IFDEF_THREAD_SANITIZER(X) X
+#else
+#  define GLOG_IFDEF_THREAD_SANITIZER(X)
+#endif
+
+#if defined(_MSC_VER)
+#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n) \
+    __pragma(warning(push)) __pragma(warning(disable : n))
+#  define GLOG_MSVC_POP_WARNING() __pragma(warning(pop))
+#else
+#  define GLOG_MSVC_PUSH_DISABLE_WARNING(n)
+#  define GLOG_MSVC_POP_WARNING()
+#endif
+
+#if defined(GLOG_SANITIZE_THREAD)
+// We need to identify the static variables as "benign" races
+// to avoid noisy reports from TSAN.
+extern "C" void AnnotateBenignRaceSized(const char* file, int line,
+                                        const volatile void* mem, size_t size,
+                                        const char* description);
+#endif  // defined(GLOG_SANITIZE_THREAD)
+
+#endif  // GLOG_TYPES_H

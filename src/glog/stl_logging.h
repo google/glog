@@ -36,8 +36,8 @@
 // CHECK_EQ(v1, v2);
 //
 
-#ifndef UTIL_GTL_STL_LOGGING_INL_H_
-#define UTIL_GTL_STL_LOGGING_INL_H_
+#ifndef GLOG_STL_LOGGING_H
+#define GLOG_STL_LOGGING_H
 
 #include <deque>
 #include <list>
@@ -165,4 +165,4 @@ namespace std {
 using ::operator<<;
 }
 
-#endif  // UTIL_GTL_STL_LOGGING_INL_H_
+#endif  // GLOG_STL_LOGGING_H

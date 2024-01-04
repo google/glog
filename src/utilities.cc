@@ -80,9 +80,6 @@ bool IsGoogleLoggingInitialized() {
 #  include "stacktrace.h"
 #  include "symbolize.h"
 
-GLOG_DEFINE_bool(symbolize_stacktrace, true,
-                 "Symbolize the stack trace in the tombstone");
-
 namespace google {
 
 using DebugWriter = void(const char*, void*);

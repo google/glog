@@ -128,7 +128,6 @@ jobs:
         run: |
           cd build_${{matrix.build_type}}
           gcovr -r .. . -s --xml coverage.xml
-          cd ..
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
