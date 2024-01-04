@@ -30,6 +30,12 @@
 #ifndef BASE_LOG_SEVERITY_H__
 #define BASE_LOG_SEVERITY_H__
 
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
+#endif
+
+namespace google {
+
 // The recommended semantics of the log levels are as follows:
 //
 // INFO:
@@ -112,5 +118,7 @@ enum { DEBUG_MODE = 0 };
 enum { DEBUG_MODE = 1 };
 #  define IF_DEBUG_MODE(x) x
 #endif
+
+} // namespace google
 
 #endif  // BASE_LOG_SEVERITY_H__

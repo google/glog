@@ -166,6 +166,7 @@ def glog_library(with_gflags = 1, **kwargs):
             "src/base/googleinit.h",
             "src/demangle.cc",
             "src/demangle.h",
+            "src/flags.cc",
             "src/logging.cc",
             "src/raw_logging.cc",
             "src/signalhandler.cc",
@@ -184,11 +185,13 @@ def glog_library(with_gflags = 1, **kwargs):
             "//conditions:default": [],
         }),
         hdrs = [
+            "src/glog/flags.h",
             "src/glog/log_severity.h",
             "src/glog/logging.h",
             "src/glog/platform.h",
             "src/glog/raw_logging.h",
             "src/glog/stl_logging.h",
+            "src/glog/types.h",
             "src/glog/vlog_is_on.h",
         ],
         # https://github.com/google/glog/issues/837: Replacing
@@ -251,10 +254,13 @@ def glog_library(with_gflags = 1, **kwargs):
     native.cc_library(
         name = "strip_include_prefix_hack",
         hdrs = [
+            "src/glog/flags.h",
             "src/glog/log_severity.h",
             "src/glog/logging.h",
+            "src/glog/platform.h",
             "src/glog/raw_logging.h",
             "src/glog/stl_logging.h",
+            "src/glog/types.h",
             "src/glog/vlog_is_on.h",
         ],
     )

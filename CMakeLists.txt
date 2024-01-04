@@ -354,6 +354,8 @@ set (GLOG_PUBLIC_H
   src/glog/platform.h
   src/glog/raw_logging.h
   src/glog/stl_logging.h
+  src/glog/types.h
+  src/glog/flags.h
   src/glog/vlog_is_on.h
 )
 
@@ -363,6 +365,7 @@ set (GLOG_SRCS
   src/base/googleinit.h
   src/demangle.cc
   src/demangle.h
+  src/flags.cc
   src/logging.cc
   src/raw_logging.cc
   src/signalhandler.cc
@@ -787,10 +790,6 @@ if (BUILD_TESTING)
     PROPERTIES WILL_FAIL ON
   )
 
-  set (_glog_TEST_ENVIRONMENT
-    glog_ROOT=${glog_BINARY_DIR}
-  )
-
   add_test (NAME log_severity_constants COMMAND ${CMAKE_CTEST_COMMAND}
     --build-config $<CONFIG>
     --build-and-test
@@ -804,9 +803,9 @@ if (BUILD_TESTING)
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -Dglog_DIR=${glog_BINARY_DIR}
   )
   set_tests_properties (log_severity_constants PROPERTIES
-    ENVIRONMENT "${_glog_TEST_ENVIRONMENT}"
     PASS_REGULAR_EXPRESSION "COMPACT_GOOGLE_LOG_[1-3]"
   )
 
@@ -823,9 +822,7 @@ if (BUILD_TESTING)
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
-  )
-  set_tests_properties (log_severity_conversion PROPERTIES
-    ENVIRONMENT "${_glog_TEST_ENVIRONMENT}"
+    -Dglog_DIR=${glog_BINARY_DIR}
   )
 
   if (CMAKE_COMPILER_IS_GNUCXX)
@@ -842,13 +839,75 @@ if (BUILD_TESTING)
     )
   else (CMAKE_COMPILER_IS_GNUCXX)
     message (AUTHOR_WARNING
-      "Unsuuported C++ compiler ${CMAKE_CXX_COMPILER_ID}: "
+      "Unsupported C++ compiler ${CMAKE_CXX_COMPILER_ID}: "
       "log_severity_conversion test will be disabled"
     )
     set_tests_properties (log_severity_conversion DISABLED ON)
   endif (CMAKE_COMPILER_IS_GNUCXX)
 
-  unset (_glog_TEST_ENVIRONMENT)
+  add_test (NAME includes_logging COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/includes_unittest"
+    "${glog_BINARY_DIR}/Tests/includes_logging"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_includes_logging
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -Dglog_DIR=${glog_BINARY_DIR}
+  )
+
+  add_test (NAME includes_vlog_is_on COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/includes_unittest"
+    "${glog_BINARY_DIR}/Tests/includes_vlog_is_on"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_includes_vlog_is_on
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -Dglog_DIR=${glog_BINARY_DIR}
+  )
+
+  add_test (NAME includes_raw_logging COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/includes_unittest"
+    "${glog_BINARY_DIR}/Tests/includes_raw_logging"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_includes_raw_logging
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -Dglog_DIR=${glog_BINARY_DIR}
+  )
+
+  add_test (NAME includes_stl_logging COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config $<CONFIG>
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/includes_unittest"
+    "${glog_BINARY_DIR}/Tests/includes_stl_logging"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_includes_stl_logging
+    --build-options
+    -DCMAKE_BUILD_TYPE=$<CONFIG>
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
+    -Dglog_DIR=${glog_BINARY_DIR}
+  )
 endif (BUILD_TESTING)
 
 install (TARGETS glog

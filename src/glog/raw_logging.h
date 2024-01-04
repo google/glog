@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -36,17 +36,14 @@
 #ifndef GLOG_RAW_LOGGING_H
 #define GLOG_RAW_LOGGING_H
 
-#include <ctime>
-
-namespace google {
 #include "glog/log_severity.h"
-#include "glog/logging.h"
 #include "glog/vlog_is_on.h"
 
-#if defined(__GNUC__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wvariadic-macros"
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
 #endif
+
+namespace google {
 
 // This is similar to LOG(severity) << format... and VLOG(level) << format..,
 // but
@@ -153,10 +150,6 @@ namespace google {
     while (false) RAW_CHECK(condition, message)
 
 #endif  // NDEBUG
-
-#if defined(__GNUC__)
-#  pragma GCC diagnostic pop
-#endif
 
 // Stub log function used to work around for unused variable warnings when
 // building with STRIP_LOG > 0.

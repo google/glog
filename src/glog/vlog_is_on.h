@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -58,12 +58,17 @@
 // CAVEAT: --vmodule functionality is not available in non gcc compilers.
 //
 
-#ifndef BASE_VLOG_IS_ON_H_
-#define BASE_VLOG_IS_ON_H_
+#ifndef GLOG_VLOG_IS_ON_H
+#define GLOG_VLOG_IS_ON_H
 
 #include <cstddef>
 
-#include "glog/log_severity.h"
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
+#endif
+
+#include "glog/flags.h"
+#include "glog/types.h"
 
 #if defined(__GNUC__)
 // We emit an anonymous static int* variable at every VLOG_IS_ON(n) site.
@@ -89,6 +94,8 @@
 #  define VLOG_IS_ON(verboselevel) (FLAGS_v >= (verboselevel))
 #endif
 
+namespace google {
+
 // Set VLOG(_IS_ON) level for module_pattern to log_level.
 // This lets us dynamically control what is normally set by the --vmodule flag.
 // Returns the level that previously applied to module_pattern.
@@ -102,7 +109,7 @@ extern GLOG_EXPORT int SetVLOGLevel(const char* module_pattern, int log_level);
 // Various declarations needed for VLOG_IS_ON above: =========================
 
 struct SiteFlag {
-  google::int32* level;
+  int32* level;
   const char* base_name;
   std::size_t base_len;
   SiteFlag* next;
@@ -116,9 +123,10 @@ struct SiteFlag {
 //   verbose_level is the argument to VLOG_IS_ON
 // We will return the return value for VLOG_IS_ON
 // and if possible set *site_flag appropriately.
-extern GLOG_EXPORT bool InitVLOG3__(google::SiteFlag* site_flag,
-                                    google::int32* site_default,
+extern GLOG_EXPORT bool InitVLOG3__(SiteFlag* site_flag,
+                                    int32* site_default,
                                     const char* fname,
-                                    google::int32 verbose_level);
+                                    int32 verbose_level);
+} // namespace google
 
-#endif  // BASE_VLOG_IS_ON_H_
+#endif  // GLOG_VLOG_IS_ON_H

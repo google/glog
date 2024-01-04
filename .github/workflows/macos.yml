@@ -63,8 +63,8 @@ jobs:
         if: matrix.build_type == 'Debug'
         run: |
           cd build_${{matrix.build_type}}
+          rm -r Tests/
           gcovr -r .. . -s --cobertura coverage.xml
-          cd ..
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
