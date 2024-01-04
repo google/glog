@@ -34,7 +34,9 @@
 #include <dbghelp.h>
 
 #include "config.h"
-#include "port.h"
+#if defined(GLOG_USE_WINDOWS_PORT)
+#  include "port.h"
+#endif
 #include "stacktrace.h"
 
 namespace google {

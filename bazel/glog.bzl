@@ -104,6 +104,7 @@ def glog_library(with_gflags = 1, **kwargs):
         "-DGLOG_EXPORT=__declspec(dllexport)",
         "-DGLOG_NO_EXPORT=",
         "-DGLOG_NO_ABBREVIATED_SEVERITIES",
+        "-DGLOG_USE_WINDOWS_PORT",
         "-DHAVE__CHSIZE_S",
         "-I" + src_windows,
     ]
