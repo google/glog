@@ -342,6 +342,28 @@ static bool SendEmailInternal(const char* dest, const char* subject,
 
 base::Logger::~Logger() = default;
 
+void base::Logger::Write(bool /*force_flush*/, time_t /*timestamp*/,
+                         const char* /*message*/, size_t /*message_len*/) {}
+
+void base::Logger::Write(bool force_flush,
+                         const std::chrono::system_clock::time_point& timestamp,
+                         const char* message, size_t message_len) {
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
+  return Write(force_flush, std::chrono::system_clock::to_time_t(timestamp),
+               message, message_len);
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+}
+
 namespace {
 
 constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
@@ -359,7 +381,8 @@ class LogFileObject : public base::Logger {
   ~LogFileObject() override;
 
   void Write(bool force_flush,  // Should we force a flush here?
-             time_t timestamp,  // Timestamp for this entry
+             const std::chrono::system_clock::time_point&
+                 timestamp,  // Timestamp for this entry
              const char* message, size_t message_len) override;
 
   // Configuration options
@@ -506,13 +529,17 @@ class LogDestination {
                               size_t len);
   // Take a log message of a particular severity and log it to a file
   // iff the base filename is not "" (which means "don't log to me")
-  static void MaybeLogToLogfile(LogSeverity severity, time_t timestamp,
-                                const char* message, size_t len);
+  static void MaybeLogToLogfile(
+      LogSeverity severity,
+      const std::chrono::system_clock::time_point& timestamp,
+      const char* message, size_t len);
   // Take a log message of a particular severity and log it to the file
   // for that severity and also for all files with severity less than
   // this severity.
-  static void LogToAllLogfiles(LogSeverity severity, time_t timestamp,
-                               const char* message, size_t len);
+  static void LogToAllLogfiles(
+      LogSeverity severity,
+      const std::chrono::system_clock::time_point& timestamp,
+      const char* message, size_t len);
 
   // Send logging info to all registered sinks.
   static void LogToSinks(LogSeverity severity, const char* full_filename,
@@ -804,17 +831,19 @@ inline void LogDestination::MaybeLogToEmail(LogSeverity severity,
   }
 }
 
-inline void LogDestination::MaybeLogToLogfile(LogSeverity severity,
-                                              time_t timestamp,
-                                              const char* message, size_t len) {
+inline void LogDestination::MaybeLogToLogfile(
+    LogSeverity severity,
+    const std::chrono::system_clock::time_point& timestamp, const char* message,
+    size_t len) {
   const bool should_flush = severity > FLAGS_logbuflevel;
   LogDestination* destination = log_destination(severity);
   destination->logger_->Write(should_flush, timestamp, message, len);
 }
 
-inline void LogDestination::LogToAllLogfiles(LogSeverity severity,
-                                             time_t timestamp,
-                                             const char* message, size_t len) {
+inline void LogDestination::LogToAllLogfiles(
+    LogSeverity severity,
+    const std::chrono::system_clock::time_point& timestamp, const char* message,
+    size_t len) {
   if (FLAGS_logtostdout) {  // global flag: never log to file
     ColoredWriteToStdout(severity, message, len);
   } else if (FLAGS_logtostderr) {  // global flag: never log to file
@@ -1077,8 +1106,9 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   return true;  // Everything worked
 }
 
-void LogFileObject::Write(bool force_flush, time_t timestamp,
-                          const char* message, size_t message_len) {
+void LogFileObject::Write(
+    bool force_flush, const std::chrono::system_clock::time_point& timestamp,
+    const char* message, size_t message_len) {
   std::lock_guard<std::mutex> l{mutex_};
 
   // We don't log if the base_name_ is "" (which means "don't write")
@@ -1086,9 +1116,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
     return;
   }
 
-  const auto now = std::chrono::system_clock::now();
-
-  auto cleanupLogs = [this, current_time = now] {
+  auto cleanupLogs = [this, current_time = timestamp] {
     if (log_cleaner.enabled()) {
       log_cleaner.Run(current_time, base_filename_selected_, base_filename_,
                       filename_extension_);
@@ -1114,10 +1142,12 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
     rollover_attempt_ = 0;
 
     struct ::tm tm_time;
+    std::time_t t = std::chrono::system_clock::to_time_t(timestamp);
+
     if (FLAGS_log_utc_time) {
-      gmtime_r(&timestamp, &tm_time);
+      gmtime_r(&t, &tm_time);
     } else {
-      localtime_r(&timestamp, &tm_time);
+      localtime_r(&t, &tm_time);
     }
 
     // The logfile's filename will have the date/time & pid in it
@@ -1208,7 +1238,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
           << "Running duration (h:mm:ss): "
           << PrettyDuration(
                  std::chrono::duration_cast<std::chrono::duration<int>>(
-                     now - start_time_))
+                     timestamp - start_time_))
           << '\n'
           << "Log line format: [IWEF]" << date_time_format << " "
           << "threadid file:line] msg" << '\n';
@@ -1239,7 +1269,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
       bytes_since_flush_ += message_len;
     }
   } else {
-    if (now >= next_flush_time_) {
+    if (timestamp >= next_flush_time_) {
       stop_writing = false;  // check to see if disk has free space.
     }
     return;  // no need to flush
@@ -1248,8 +1278,8 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
   // See important msgs *now*.  Also, flush logs at least every 10^6 chars,
   // or every "FLAGS_logbufsecs" seconds.
   if (force_flush || (bytes_since_flush_ >= 1000000) ||
-      (now >= next_flush_time_)) {
-    FlushUnlocked(now);
+      (timestamp >= next_flush_time_)) {
+    FlushUnlocked(timestamp);
 #ifdef GLOG_OS_LINUX
     // Only consider files >= 3MiB
     if (FLAGS_drop_log_memory && file_length_ >= (3U << 20U)) {
@@ -1587,8 +1617,8 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
   data_->sink_ = nullptr;
   data_->outvec_ = nullptr;
 
-  auto now = std::chrono::system_clock::now();
-  logmsgtime_ = LogMessageTime(now);
+  const auto now = std::chrono::system_clock::now();
+  time_ = LogMessageTime(now);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;
@@ -1607,20 +1637,19 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
     if (custom_prefix_callback == nullptr) {
       stream() << LogSeverityNames[severity][0];
       if (FLAGS_log_year_in_prefix) {
-        stream() << setw(4) << 1900 + logmsgtime_.year();
+        stream() << setw(4) << 1900 + time_.year();
       }
-      stream() << setw(2) << 1 + logmsgtime_.month() << setw(2)
-               << logmsgtime_.day() << ' ' << setw(2) << logmsgtime_.hour()
-               << ':' << setw(2) << logmsgtime_.min() << ':' << setw(2)
-               << logmsgtime_.sec() << "." << setw(6) << logmsgtime_.usec()
-               << ' ' << setfill(' ') << setw(5) << std::this_thread::get_id()
-               << setfill('0') << ' ' << data_->basename_ << ':' << data_->line_
-               << "] ";
+      stream() << setw(2) << 1 + time_.month() << setw(2) << time_.day() << ' '
+               << setw(2) << time_.hour() << ':' << setw(2) << time_.min()
+               << ':' << setw(2) << time_.sec() << "." << setw(6)
+               << time_.usec() << ' ' << setfill(' ') << setw(5)
+               << std::this_thread::get_id() << setfill('0') << ' '
+               << data_->basename_ << ':' << data_->line_ << "] ";
     } else {
       custom_prefix_callback(
           stream(),
           LogMessageInfo(LogSeverityNames[severity], data_->basename_,
-                         data_->line_, std::this_thread::get_id(), logmsgtime_),
+                         data_->line_, std::this_thread::get_id(), time_),
           custom_prefix_callback_data);
       stream() << " ";
     }
@@ -1641,9 +1670,7 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
   }
 }
 
-const LogMessageTime& LogMessage::getLogMessageTime() const {
-  return logmsgtime_;
-}
+const LogMessageTime& LogMessage::time() const { return time_; }
 
 LogMessage::~LogMessage() {
   Flush();
@@ -1722,7 +1749,7 @@ void LogMessage::Flush() {
 // Copy of first FATAL log message so that we can print it out again
 // after all the stack traces.  To preserve legacy behavior, we don't
 // use fatal_msg_data_exclusive.
-static time_t fatal_time;
+static std::chrono::system_clock::time_point fatal_time;
 static char fatal_message[256];
 
 void ReprintFatalMessage() {
@@ -1769,11 +1796,11 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     // this could be protected by a flag if necessary.
     LogDestination::LogToSinks(
         data_->severity_, data_->fullname_, data_->basename_, data_->line_,
-        logmsgtime_, data_->message_text_ + data_->num_prefix_chars_,
+        time_, data_->message_text_ + data_->num_prefix_chars_,
         (data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1));
   } else {
     // log this message to all log files of severity <= severity_
-    LogDestination::LogToAllLogfiles(data_->severity_, logmsgtime_.timestamp(),
+    LogDestination::LogToAllLogfiles(data_->severity_, time_.when(),
                                      data_->message_text_,
                                      data_->num_chars_to_log_);
 
@@ -1784,7 +1811,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                                     data_->num_chars_to_log_);
     LogDestination::LogToSinks(
         data_->severity_, data_->fullname_, data_->basename_, data_->line_,
-        logmsgtime_, data_->message_text_ + data_->num_prefix_chars_,
+        time_, data_->message_text_ + data_->num_prefix_chars_,
         (data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1));
     // NOTE: -1 removes trailing \n
   }
@@ -1804,13 +1831,14 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
           min(data_->num_chars_to_log_, sizeof(fatal_message) - 1);
       memcpy(fatal_message, data_->message_text_, copy);
       fatal_message[copy] = '\0';
-      fatal_time = logmsgtime_.timestamp();
+      fatal_time = time_.when();
     }
 
     if (!FLAGS_logtostderr && !FLAGS_logtostdout) {
       for (auto& log_destination : LogDestination::log_destinations_) {
         if (log_destination) {
-          log_destination->logger_->Write(true, 0, "", 0);
+          log_destination->logger_->Write(
+              true, std::chrono::system_clock::time_point{}, "", 0);
         }
       }
     }
@@ -1880,7 +1908,7 @@ void LogMessage::SendToSink() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
                "");
     data_->sink_->send(
         data_->severity_, data_->fullname_, data_->basename_, data_->line_,
-        logmsgtime_, data_->message_text_ + data_->num_prefix_chars_,
+        time_, data_->message_text_ + data_->num_prefix_chars_,
         (data_->num_chars_to_log_ - data_->num_prefix_chars_ - 1));
   }
 }
@@ -2005,20 +2033,20 @@ void LogSink::send(LogSeverity severity, const char* full_filename,
                    const char* base_filename, int line,
                    const LogMessageTime& time, const char* message,
                    size_t message_len) {
-#if defined(__GNUC__)
+#if defined(__GNUG__)
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #elif defined(_MSC_VER)
 #  pragma warning(push)
 #  pragma warning(disable : 4996)
-#endif  // __GNUC__
+#endif  // __GNUG__
   send(severity, full_filename, base_filename, line, &time.tm(), message,
        message_len);
-#if defined(__GNUC__)
+#if defined(__GNUG__)
 #  pragma GCC diagnostic pop
 #elif defined(_MSC_VER)
 #  pragma warning(pop)
-#endif  // __GNUC__
+#endif  // __GNUG__
 }
 
 void LogSink::send(LogSeverity severity, const char* full_filename,
@@ -2649,49 +2677,41 @@ void EnableLogCleaner(const std::chrono::minutes& overdue) {
 
 void DisableLogCleaner() { log_cleaner.Disable(); }
 
-LogMessageTime::LogMessageTime()
-    : time_struct_(), timestamp_(0), usecs_(0), gmtoffset_(0) {}
+LogMessageTime::LogMessageTime() = default;
 
-LogMessageTime::LogMessageTime(std::chrono::system_clock::time_point now) {
+LogMessageTime::LogMessageTime(std::chrono::system_clock::time_point now)
+    : timestamp_{now} {
   std::time_t timestamp = std::chrono::system_clock::to_time_t(now);
-  std::tm t;
   if (FLAGS_log_utc_time) {
-    gmtime_r(&timestamp, &t);
+    gmtime_r(&timestamp, &tm_);
   } else {
-    localtime_r(&timestamp, &t);
+    localtime_r(&timestamp, &tm_);
   }
-  init(t, timestamp, now);
+  usecs_ = std::chrono::duration_cast<std::chrono::microseconds>(
+      now - std::chrono::system_clock::from_time_t(timestamp));
+  CalcGmtOffset(timestamp);
 }
 
-void LogMessageTime::init(const std::tm& t, std::time_t timestamp,
-                          std::chrono::system_clock::time_point now) {
-  time_struct_ = t;
-  timestamp_ = timestamp;
-  usecs_ = std::chrono::duration_cast<std::chrono::duration<int32, std::micro>>(
-               now - std::chrono::system_clock::from_time_t(timestamp))
-               .count();
-
-  CalcGmtOffset();
-}
-
-void LogMessageTime::CalcGmtOffset() {
+void LogMessageTime::CalcGmtOffset(std::time_t t) {
   std::tm gmt_struct;
   int isDst = 0;
   if (FLAGS_log_utc_time) {
-    localtime_r(&timestamp_, &gmt_struct);
+    localtime_r(&t, &gmt_struct);
     isDst = gmt_struct.tm_isdst;
-    gmt_struct = time_struct_;
+    gmt_struct = tm_;
   } else {
-    isDst = time_struct_.tm_isdst;
-    gmtime_r(&timestamp_, &gmt_struct);
+    isDst = tm_.tm_isdst;
+    gmtime_r(&t, &gmt_struct);
   }
 
   time_t gmt_sec = mktime(&gmt_struct);
-  const long hour_secs = 3600;
+
   // If the Daylight Saving Time(isDst) is active subtract an hour from the
   // current timestamp.
-  gmtoffset_ =
-      static_cast<long int>(timestamp_ - gmt_sec + (isDst ? hour_secs : 0));
+  using namespace std::chrono_literals;
+  gmtoffset_ = std::chrono::duration_cast<std::chrono::seconds>(
+      timestamp_ - std::chrono::system_clock::from_time_t(gmt_sec) +
+      (isDst ? 1h : 0h));
 }
 
 }  // namespace google

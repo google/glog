@@ -937,7 +937,8 @@ struct MyLogger : public base::Logger {
 
   ~MyLogger() override { *set_on_destruction_ = true; }
 
-  void Write(bool /* should_flush */, time_t /* timestamp */,
+  void Write(bool /* should_flush */,
+             const std::chrono::system_clock::time_point& /* timestamp */,
              const char* message, size_t length) override {
     data.append(message, length);
   }
@@ -1070,8 +1071,9 @@ struct RecordDeletionLogger : public base::Logger {
     *set_on_destruction_ = false;
   }
   ~RecordDeletionLogger() override { *set_on_destruction_ = true; }
-  void Write(bool force_flush, time_t timestamp, const char* message,
-             size_t length) override {
+  void Write(bool force_flush,
+             const std::chrono::system_clock::time_point& timestamp,
+             const char* message, size_t length) override {
     wrapped_logger_->Write(force_flush, timestamp, message, length);
   }
   void Flush() override { wrapped_logger_->Flush(); }
@@ -1535,10 +1537,11 @@ TEST(LogMsgTime, gmtoff) {
    * */
   google::LogMessage log_obj(__FILE__, __LINE__);
 
-  long int nGmtOff = log_obj.getLogMessageTime().gmtoff();
+  std::chrono::seconds nGmtOff = log_obj.time().gmtoffset();
   // GMT offset ranges from UTC-12:00 to UTC+14:00
-  const long utc_min_offset = -43200;
-  const long utc_max_offset = 50400;
+  using namespace std::chrono_literals;
+  const std::chrono::hours utc_min_offset = -12h;
+  const std::chrono::hours utc_max_offset = 14h;
   EXPECT_TRUE((nGmtOff >= utc_min_offset) && (nGmtOff <= utc_max_offset));
 }
 
