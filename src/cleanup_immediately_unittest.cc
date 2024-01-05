@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,9 @@ using testing::StrNe;
 using namespace google;
 
 TEST(CleanImmediately, logging) {
+  using namespace std::chrono_literals;
   google::SetLogFilenameExtension(".foobar");
-  google::EnableLogCleaner(0);
+  google::EnableLogCleaner(0h);
 
   for (unsigned i = 0; i < 1000; ++i) {
     LOG(INFO) << "cleanup test";

@@ -1,4 +1,4 @@
-// Copyright (c) 2021, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,8 @@ using testing::StrNe;
 using namespace google;
 
 TEST(CleanImmediatelyWithRelativePrefix, logging) {
-  google::EnableLogCleaner(0);
+  using namespace std::chrono_literals;
+  google::EnableLogCleaner(0h);
   google::SetLogFilenameExtension(".relativefoo");
   google::SetLogDestination(GLOG_INFO, "test_subdir/test_cleanup_");
 
