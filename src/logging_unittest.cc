@@ -1537,12 +1537,12 @@ TEST(LogMsgTime, gmtoff) {
    * */
   google::LogMessage log_obj(__FILE__, __LINE__);
 
-  std::chrono::seconds nGmtOff = log_obj.time().gmtoffset();
+  std::chrono::seconds gmtoff = log_obj.time().gmtoffset();
   // GMT offset ranges from UTC-12:00 to UTC+14:00
   using namespace std::chrono_literals;
-  const std::chrono::hours utc_min_offset = -12h;
-  const std::chrono::hours utc_max_offset = 14h;
-  EXPECT_TRUE((nGmtOff >= utc_min_offset) && (nGmtOff <= utc_max_offset));
+  constexpr std::chrono::hours utc_min_offset = -12h;
+  constexpr std::chrono::hours utc_max_offset = +14h;
+  EXPECT_TRUE((gmtoff >= utc_min_offset) && (gmtoff <= utc_max_offset));
 }
 
 TEST(EmailLogging, ValidAddress) {
