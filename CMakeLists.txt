@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.21)
+cmake_minimum_required (VERSION 3.22)
 project (glog
   VERSION 0.7.0
   DESCRIPTION "C++ implementation of the Google logging module"
@@ -907,6 +907,51 @@ if (BUILD_TESTING)
     -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
     -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}
     -Dglog_DIR=${glog_BINARY_DIR}
+  )
+
+  add_test (NAME dcheck_on COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config Debug
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/dcheck_unittest"
+    "${glog_BINARY_DIR}/Tests/dcheck_on"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-generator-platform "${CMAKE_GENERATOR_PLATFORM}"
+    --build-generator-toolset "${CMAKE_GENERATOR_TOOLSET}"
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_dcheck
+    --build-options
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON
+    -Dglog_DIR=${glog_BINARY_DIR}
+    --test-command glog_dcheck
+  )
+  set_tests_properties (dcheck_on PROPERTIES
+    DISABLED $<NOT:$<CONFIG:Debug,RelWithDebInfo>>
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:glog>"
+    PASS_REGULAR_EXPRESSION "Assert failed: false"
+  )
+
+  add_test (NAME dcheck_off COMMAND ${CMAKE_CTEST_COMMAND}
+    --build-config Release
+    --build-and-test
+    "${glog_SOURCE_DIR}/src/dcheck_unittest"
+    "${glog_BINARY_DIR}/Tests/dcheck_off"
+    --build-generator ${CMAKE_GENERATOR}
+    --build-generator-platform "${CMAKE_GENERATOR_PLATFORM}"
+    --build-generator-toolset "${CMAKE_GENERATOR_TOOLSET}"
+    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+    --build-target glog_dcheck
+    --build-options
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_FIND_PACKAGE_NO_PACKAGE_REGISTRY=ON
+    -Dglog_DIR=${glog_BINARY_DIR}
+    --test-command glog_dcheck
+  )
+  # There should be no output
+  set_tests_properties (dcheck_off PROPERTIES
+    DISABLED $<NOT:$<CONFIG:Release,MinSizeRel>>
+    ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:glog>"
+    PASS_REGULAR_EXPRESSION ""
   )
 endif (BUILD_TESTING)
 
