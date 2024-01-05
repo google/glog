@@ -1070,7 +1070,7 @@ constexpr LogSeverity GLOG_0 = GLOG_ERROR;
         true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_ASSERT(condition) \
-    static_cast<void>(0), true ? (void)0 : LOG_ASSERT(condition)
+    static_cast<void>(0), true ? (void)0 : (LOG_ASSERT(condition))
 
 // MSVC warning C4127: conditional expression is constant
 #  define DCHECK(condition)              \
