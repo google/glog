@@ -2300,12 +2300,10 @@ static void GetTempDirectories(vector<string>* list) {
   //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
   //   C:/TMP/
   //   C:/TEMP/
-  //   C:/WINDOWS/ or C:/WINNT/
-  //   .
   char tmp[MAX_PATH];
   if (GetTempPathA(MAX_PATH, tmp)) list->push_back(tmp);
-  list->push_back("C:\\tmp\\");
-  list->push_back("C:\\temp\\");
+  list->push_back("C:\\TMP\\");
+  list->push_back("C:\\TEMP\\");
 #else
   // Directories, in order of preference. If we find a dir that
   // exists, we stop adding other less-preferred dirs
@@ -2337,7 +2335,6 @@ static void GetTempDirectories(vector<string>* list) {
       return;
     }
   }
-
 #endif
 }
 
