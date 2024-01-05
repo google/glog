@@ -57,7 +57,7 @@
 
 #include "glog/logging.h"
 
-#if defined(GLOG_OS_WINDOWS)
+#if defined(GLOG_USE_WINDOWS_PORT)
 #  include "port.h"
 #endif
 

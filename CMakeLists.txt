@@ -363,12 +363,14 @@ set (GLOG_SRCS
   src/vlog_is_on.cc
 )
 
-if (CYGWIN OR WIN32)
+# NOTE MSYS2 defines both WIN32 and UNIX. Do not use windows port in this case.
+if ((CYGWIN OR WIN32) AND NOT UNIX)
   list (APPEND GLOG_SRCS
     src/windows/port.cc
     src/windows/port.h
   )
-endif (CYGWIN OR WIN32)
+  set (_glog_USE_WINDOWS_PORT TRUE)
+endif ((CYGWIN OR WIN32) AND NOT UNIX)
 
 add_library (glog_internal OBJECT
   ${_glog_BINARY_CMake_MODULES}
@@ -398,6 +400,12 @@ set (glog_libraries_options_for_static_linking)
 
 # CMake always uses the generated export header
 target_compile_definitions (glog PUBLIC GLOG_USE_GLOG_EXPORT)
+
+if (_glog_USE_WINDOWS_PORT)
+  target_compile_definitions (glog PRIVATE GLOG_USE_WINDOWS_PORT)
+endif (_glog_USE_WINDOWS_PORT)
+
+unset (_glog_USE_WINDOWS_PORT)
 
 if (WIN32)
   # Do not define min and max as macros
