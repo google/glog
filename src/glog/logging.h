@@ -83,29 +83,40 @@ struct GLOG_EXPORT LogMessageTime {
   LogMessageTime();
   explicit LogMessageTime(std::chrono::system_clock::time_point now);
 
-  const time_t& timestamp() const { return timestamp_; }
-  const int& sec() const { return time_struct_.tm_sec; }
-  const int32_t& usec() const { return usecs_; }
-  const int&(min)() const { return time_struct_.tm_min; }
-  const int& hour() const { return time_struct_.tm_hour; }
-  const int& day() const { return time_struct_.tm_mday; }
-  const int& month() const { return time_struct_.tm_mon; }
-  const int& year() const { return time_struct_.tm_year; }
-  const int& dayOfWeek() const { return time_struct_.tm_wday; }
-  const int& dayInYear() const { return time_struct_.tm_yday; }
-  const int& dst() const { return time_struct_.tm_isdst; }
-  const long int& gmtoff() const { return gmtoffset_; }
-  const std::tm& tm() const { return time_struct_; }
+  [[deprecated("Use LogMessageTime::when() instead.")]] std::time_t timestamp()
+      const noexcept {
+    return std::chrono::system_clock::to_time_t(when());
+  }
+  const std::chrono::system_clock::time_point& when() const noexcept {
+    return timestamp_;
+  }
+  int sec() const noexcept { return tm_.tm_sec; }
+  long usec() const noexcept { return usecs_.count(); }
+  int(min)() const noexcept { return tm_.tm_min; }
+  int hour() const noexcept { return tm_.tm_hour; }
+  int day() const noexcept { return tm_.tm_mday; }
+  int month() const noexcept { return tm_.tm_mon; }
+  int year() const noexcept { return tm_.tm_year; }
+  int dayOfWeek() const noexcept { return tm_.tm_wday; }
+  int dayInYear() const noexcept { return tm_.tm_yday; }
+  int dst() const noexcept { return tm_.tm_isdst; }
+  [[deprecated("Use LogMessageTime::gmtoffset() instead.")]] long gmtoff()
+      const noexcept {
+    return gmtoffset_.count();
+  }
+  std::chrono::seconds gmtoffset() const noexcept { return gmtoffset_; }
+  const std::tm& tm() const noexcept { return tm_; }
 
  private:
   void init(const std::tm& t, std::time_t timestamp,
             std::chrono::system_clock::time_point now);
-  std::tm time_struct_;  // Time of creation of LogMessage
-  time_t timestamp_;     // Time of creation of LogMessage in seconds
-  int32_t usecs_;        // Time of creation of LogMessage - microseconds part
-  long int gmtoffset_;
+  void CalcGmtOffset(std::time_t t);
 
-  void CalcGmtOffset();
+  std::tm tm_{};  // Time of creation of LogMessage
+  std::chrono::system_clock::time_point
+      timestamp_;  // Time of creation of LogMessage in seconds
+  std::chrono::microseconds usecs_;
+  std::chrono::seconds gmtoffset_;
 };
 
 struct LogMessageInfo {
@@ -347,7 +358,7 @@ typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
 // timestamps from different machines.
 
 // Log messages below the GOOGLE_STRIP_LOG level will be compiled away for
-// security reasons. See LOG(severtiy) below.
+// security reasons. See LOG(severity) below.
 
 // A few definitions of macros that don't generate much code.  Since
 // LOG(INFO) and its ilk are used all over our code, it's
@@ -1304,7 +1315,12 @@ class GLOG_EXPORT LogMessage {
   // Must be called without the log_mutex held.  (L < log_mutex)
   static int64 num_messages(int severity);
 
-  const LogMessageTime& getLogMessageTime() const;
+  [[deprecated("Use LogMessage::time() instead.")]] const LogMessageTime&
+  getLogMessageTime() const {
+    return time();
+  }
+
+  const LogMessageTime& time() const;
 
   struct LogMessageData;
 
@@ -1331,7 +1347,7 @@ class GLOG_EXPORT LogMessage {
   // LogMessage uses less stack space.
   LogMessageData* allocated_;
   LogMessageData* data_;
-  LogMessageTime logmsgtime_;
+  LogMessageTime time_;
 
   friend class LogDestination;
 
@@ -1567,8 +1583,15 @@ class GLOG_EXPORT Logger {
   // appropriate by the higher level logging facility.  For example,
   // textual log messages already contain timestamps, and the
   // file:linenumber header.
-  virtual void Write(bool force_flush, time_t timestamp, const char* message,
-                     size_t message_len) = 0;
+  [[deprecated(
+      "Logger::Write accepting a std::time_t timestamp is provided for "
+      "compatibility purposes only. New code should implement the "
+      "std::chrono::system_clock::time_point overload.")]] virtual void
+  Write(bool force_flush, time_t timestamp, const char* message,
+        size_t message_len);
+  virtual void Write(bool force_flush,
+                     const std::chrono::system_clock::time_point& timestamp,
+                     const char* message, size_t message_len);
 
   // Flush any buffered messages
   virtual void Flush() = 0;
