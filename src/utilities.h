@@ -1,4 +1,4 @@
-// Copyright (c) 2023, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: Shinichiro Hamaji
+//         Sergiu Deitsch
 //
 // Define utilities for glog internal usage.
 
@@ -54,6 +55,7 @@
 
 #include <string>
 #include <thread>
+#include <type_traits>
 
 #include "glog/logging.h"
 
@@ -192,6 +194,24 @@ void SetCrashReason(const CrashReason* r);
 
 void InitGoogleLoggingUtilities(const char* argv0);
 void ShutdownGoogleLoggingUtilities();
+
+template <class Functor>
+class ScopedExit final {
+ public:
+  template <class F, std::enable_if_t<
+                         std::is_constructible<Functor, F&&>::value>* = nullptr>
+  constexpr explicit ScopedExit(F&& functor) noexcept(
+      std::is_nothrow_constructible<Functor, F&&>::value)
+      : functor_{std::forward<F>(functor)} {}
+  ~ScopedExit() noexcept(noexcept(std::declval<Functor&>()())) { functor_(); }
+  ScopedExit(const ScopedExit& other) = delete;
+  ScopedExit& operator=(const ScopedExit& other) = delete;
+  ScopedExit(ScopedExit&& other) noexcept = delete;
+  ScopedExit& operator=(ScopedExit&& other) noexcept = delete;
+
+ private:
+  Functor functor_;
+};
 
 }  // namespace glog_internal_namespace_
 

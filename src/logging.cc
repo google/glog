@@ -35,6 +35,7 @@
 #include <cassert>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <iomanip>
 #include <iterator>
 #include <mutex>
@@ -120,10 +121,6 @@ using std::perror;
 
 #ifdef __QNX__
 using std::fdopen;
-#endif
-
-#ifdef _WIN32
-#  define fdopen _fdopen
 #endif
 
 // There is no thread annotation support.
@@ -346,13 +343,14 @@ static bool SendEmailInternal(const char* dest, const char* subject,
 base::Logger::~Logger() = default;
 
 namespace {
+
+constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
+constexpr std::intmax_t kSecondsInWeek = kSecondsInDay * 7;
+
 // Optional user-configured callback to print custom prefixes.
 CustomPrefixCallback custom_prefix_callback = nullptr;
 // User-provided data to pass to the callback:
 void* custom_prefix_callback_data = nullptr;
-}  // namespace
-
-namespace {
 
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
@@ -382,7 +380,7 @@ class LogFileObject : public base::Logger {
   // Internal flush routine.  Exposed so that FlushLogFilesUnsafe()
   // can avoid grabbing a lock.  Usually Flush() calls it after
   // acquiring lock_.
-  void FlushUnlocked();
+  void FlushUnlocked(const std::chrono::system_clock::time_point& now);
 
  private:
   static const uint32 kRolloverAttemptFrequency = 0x20;
@@ -413,31 +411,33 @@ class LogCleaner {
  public:
   LogCleaner();
 
-  // Setting overdue_days to 0 days will delete all logs.
-  void Enable(unsigned int overdue_days);
+  // Setting overdue to 0 days will delete all logs.
+  void Enable(const std::chrono::minutes& overdue);
   void Disable();
 
-  // update next_cleanup_time_
-  void UpdateCleanUpTime();
-
-  void Run(bool base_filename_selected, const string& base_filename,
+  void Run(const std::chrono::system_clock::time_point& current_time,
+           bool base_filename_selected, const string& base_filename,
            const string& filename_extension);
 
   bool enabled() const { return enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(string log_directory, unsigned int days,
-                                    const string& base_filename,
-                                    const string& filename_extension) const;
+  vector<string> GetOverdueLogNames(
+      string log_directory,
+      const std::chrono::system_clock::time_point& current_time,
+      const string& base_filename, const string& filename_extension) const;
 
   bool IsLogFromCurrentProject(const string& filepath,
                                const string& base_filename,
                                const string& filename_extension) const;
 
-  bool IsLogLastModifiedOver(const string& filepath, unsigned int days) const;
+  bool IsLogLastModifiedOver(
+      const string& filepath,
+      const std::chrono::system_clock::time_point& current_time) const;
 
   bool enabled_{false};
-  unsigned int overdue_days_{7};
+  std::chrono::minutes overdue_{
+      std::chrono::duration<int, std::ratio<kSecondsInWeek>>{1}};
   std::chrono::system_clock::time_point
       next_cleanup_time_;  // cycle count at which to clean overdue log
 };
@@ -596,11 +596,12 @@ inline void LogDestination::FlushLogFilesUnsafe(int min_severity) {
   // about it
   std::for_each(std::next(std::begin(log_destinations_), min_severity),
                 std::end(log_destinations_),
-                [](std::unique_ptr<LogDestination>& log) {
+                [now = std::chrono::system_clock::now()](
+                    std::unique_ptr<LogDestination>& log) {
                   if (log != nullptr) {
                     // Flush the base fileobject_ logger directly instead of
                     // going through any wrappers to reduce chance of deadlock.
-                    log->fileobject_.FlushUnlocked();
+                    log->fileobject_.FlushUnlocked(now);
                   }
                 });
 }
@@ -956,19 +957,19 @@ void LogFileObject::SetSymlinkBasename(const char* symlink_basename) {
 
 void LogFileObject::Flush() {
   std::lock_guard<std::mutex> l{mutex_};
-  FlushUnlocked();
+  FlushUnlocked(std::chrono::system_clock::now());
 }
 
-void LogFileObject::FlushUnlocked() {
+void LogFileObject::FlushUnlocked(
+    const std::chrono::system_clock::time_point& now) {
   if (file_ != nullptr) {
     fflush(file_);
     bytes_since_flush_ = 0;
   }
   // Figure out when we are due for another flush.
   next_flush_time_ =
-      std::chrono::system_clock::now() +
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(
-          std::chrono::duration<int32>{FLAGS_logbufsecs});
+      now + std::chrono::duration_cast<std::chrono::system_clock::duration>(
+                std::chrono::duration<int32>{FLAGS_logbufsecs});
 }
 
 bool LogFileObject::CreateLogfile(const string& time_pid_string) {
@@ -1085,6 +1086,18 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
     return;
   }
 
+  const auto now = std::chrono::system_clock::now();
+
+  auto cleanupLogs = [this, current_time = now] {
+    if (log_cleaner.enabled()) {
+      log_cleaner.Run(current_time, base_filename_selected_, base_filename_,
+                      filename_extension_);
+    }
+  };
+
+  // Remove old logs
+  ScopedExit<decltype(cleanupLogs)> cleanupAtEnd{cleanupLogs};
+
   if (file_length_ >> 20U >= MaxLogSize() || PidHasChanged()) {
     if (file_ != nullptr) fclose(file_);
     file_ = nullptr;
@@ -1195,7 +1208,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
           << "Running duration (h:mm:ss): "
           << PrettyDuration(
                  std::chrono::duration_cast<std::chrono::duration<int>>(
-                     std::chrono::system_clock::now() - start_time_))
+                     now - start_time_))
           << '\n'
           << "Log line format: [IWEF]" << date_time_format << " "
           << "threadid file:line] msg" << '\n';
@@ -1226,7 +1239,7 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
       bytes_since_flush_ += message_len;
     }
   } else {
-    if (std::chrono::system_clock::now() >= next_flush_time_) {
+    if (now >= next_flush_time_) {
       stop_writing = false;  // check to see if disk has free space.
     }
     return;  // no need to flush
@@ -1235,8 +1248,8 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
   // See important msgs *now*.  Also, flush logs at least every 10^6 chars,
   // or every "FLAGS_logbufsecs" seconds.
   if (force_flush || (bytes_since_flush_ >= 1000000) ||
-      (std::chrono::system_clock::now() >= next_flush_time_)) {
-    FlushUnlocked();
+      (now >= next_flush_time_)) {
+    FlushUnlocked(now);
 #ifdef GLOG_OS_LINUX
     // Only consider files >= 3MiB
     if (FLAGS_drop_log_memory && file_length_ >= (3U << 20U)) {
@@ -1259,41 +1272,33 @@ void LogFileObject::Write(bool force_flush, time_t timestamp,
       }
     }
 #endif
-
-    // Remove old logs
-    if (log_cleaner.enabled()) {
-      log_cleaner.Run(base_filename_selected_, base_filename_,
-                      filename_extension_);
-    }
   }
 }
 
 LogCleaner::LogCleaner() = default;
 
-void LogCleaner::Enable(unsigned int overdue_days) {
+void LogCleaner::Enable(const std::chrono::minutes& overdue) {
   enabled_ = true;
-  overdue_days_ = overdue_days;
+  overdue_ = overdue;
 }
 
 void LogCleaner::Disable() { enabled_ = false; }
 
-void LogCleaner::UpdateCleanUpTime() {
-  next_cleanup_time_ =
-      std::chrono::system_clock::now() +
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(
-          std::chrono::duration<int32>{FLAGS_logcleansecs});
-}
-
-void LogCleaner::Run(bool base_filename_selected, const string& base_filename,
+void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
+                     bool base_filename_selected, const string& base_filename,
                      const string& filename_extension) {
   assert(enabled_);
   assert(!base_filename_selected || !base_filename.empty());
 
   // avoid scanning logs too frequently
-  if (std::chrono::system_clock::now() < next_cleanup_time_) {
+  if (current_time < next_cleanup_time_) {
     return;
   }
-  UpdateCleanUpTime();
+
+  next_cleanup_time_ =
+      current_time +
+      std::chrono::duration_cast<std::chrono::system_clock::duration>(
+          std::chrono::duration<int32>{FLAGS_logcleansecs});
 
   vector<string> dirs;
 
@@ -1310,18 +1315,23 @@ void LogCleaner::Run(bool base_filename_selected, const string& base_filename,
     }
   }
 
-  for (auto& dir : dirs) {
-    vector<string> logs = GetOverdueLogNames(dir, overdue_days_, base_filename,
+  for (const std::string& dir : dirs) {
+    vector<string> logs = GetOverdueLogNames(dir, current_time, base_filename,
                                              filename_extension);
-    for (auto& log : logs) {
-      static_cast<void>(unlink(log.c_str()));
+    for (const std::string& log : logs) {
+      // NOTE May fail on Windows if the file is still open
+      int result = unlink(log.c_str());
+      if (result != 0) {
+        perror(("Could not remove overdue log " + log).c_str());
+      }
     }
   }
 }
 
 vector<string> LogCleaner::GetOverdueLogNames(
-    string log_directory, unsigned int days, const string& base_filename,
-    const string& filename_extension) const {
+    string log_directory,
+    const std::chrono::system_clock::time_point& current_time,
+    const string& base_filename, const string& filename_extension) const {
   // The names of overdue logs.
   vector<string> overdue_log_names;
 
@@ -1347,7 +1357,7 @@ vector<string> LogCleaner::GetOverdueLogNames(
 
       if (IsLogFromCurrentProject(filepath, base_filename,
                                   filename_extension) &&
-          IsLogLastModifiedOver(filepath, days)) {
+          IsLogLastModifiedOver(filepath, current_time)) {
         overdue_log_names.push_back(filepath);
       }
     }
@@ -1444,16 +1454,17 @@ bool LogCleaner::IsLogFromCurrentProject(
   return true;
 }
 
-bool LogCleaner::IsLogLastModifiedOver(const string& filepath,
-                                       unsigned int days) const {
+bool LogCleaner::IsLogLastModifiedOver(
+    const string& filepath,
+    const std::chrono::system_clock::time_point& current_time) const {
   // Try to get the last modified time of this file.
   struct stat file_stat;
 
   if (stat(filepath.c_str(), &file_stat) == 0) {
-    const time_t seconds_in_a_day = 60 * 60 * 24;
-    time_t last_modified_time = file_stat.st_mtime;
-    time_t current_time = time(nullptr);
-    return difftime(current_time, last_modified_time) > days * seconds_in_a_day;
+    const auto last_modified_time =
+        std::chrono::system_clock::from_time_t(file_stat.st_mtime);
+    const auto diff = current_time - last_modified_time;
+    return diff >= overdue_;
   }
 
   // If failed to get file stat, don't return true!
@@ -2627,7 +2638,13 @@ void ShutdownGoogleLogging() {
 }
 
 void EnableLogCleaner(unsigned int overdue_days) {
-  log_cleaner.Enable(overdue_days);
+  log_cleaner.Enable(std::chrono::duration_cast<std::chrono::minutes>(
+      std::chrono::duration<unsigned, std::ratio<kSecondsInDay>>{
+          overdue_days}));
+}
+
+void EnableLogCleaner(const std::chrono::minutes& overdue) {
+  log_cleaner.Enable(overdue);
 }
 
 void DisableLogCleaner() { log_cleaner.Disable(); }
