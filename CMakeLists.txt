@@ -39,13 +39,12 @@ option (WITH_GFLAGS "Use gflags" ON)
 option (WITH_GTEST "Use Google Test" ON)
 option (WITH_PKGCONFIG "Enable pkg-config support" OFF)
 option (WITH_SYMBOLIZE "Enable symbolize module" ON)
-option (WITH_THREADS "Enable multithreading support" ON)
+option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON)
 
 set (WITH_UNWIND libunwind CACHE STRING "unwind driver")
 set_property (CACHE WITH_UNWIND PROPERTY STRINGS none unwind libunwind)
 
 cmake_dependent_option (WITH_GMOCK "Use Google Mock" ON WITH_GTEST OFF)
-cmake_dependent_option (WITH_TLS "Enable Thread Local Storage (TLS) support" ON WITH_THREADS OFF)
 
 set (WITH_FUZZING none CACHE STRING "Fuzzing engine")
 set_property (CACHE WITH_FUZZING PROPERTY STRINGS none libfuzzer ossfuzz)
@@ -57,10 +56,6 @@ endif (WITH_UNWIND STREQUAL none)
 if (NOT WITH_GTEST)
   set (CMAKE_DISABLE_FIND_PACKAGE_GTest ON)
 endif (NOT WITH_GTEST)
-
-if (NOT WITH_THREADS)
-  set (CMAKE_DISABLE_FIND_PACKAGE_Threads ON)
-endif (NOT WITH_THREADS)
 
 set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -88,7 +83,7 @@ if (WITH_GFLAGS)
   endif (gflags_FOUND)
 endif (WITH_GFLAGS)
 
-find_package (Threads)
+find_package (Threads REQUIRED)
 find_package (Unwind)
 
 if (Unwind_FOUND)
@@ -288,14 +283,6 @@ check_cxx_symbol_exists (localtime_r "cstdlib;ctime" HAVE_LOCALTIME_R)
 
 set (SIZEOF_VOID_P ${CMAKE_SIZEOF_VOID_P})
 
-if (WITH_THREADS AND Threads_FOUND)
-  if (CMAKE_USE_PTHREADS_INIT)
-    set (HAVE_PTHREAD 1)
-  endif (CMAKE_USE_PTHREADS_INIT)
-else (WITH_THREADS AND Threads_FOUND)
-  set (NO_THREADS 1)
-endif (WITH_THREADS AND Threads_FOUND)
-
 # fopen/open on Cygwin can not handle unix-type paths like /home/....
 # therefore we translate TEST_SRC_DIR to windows-path.
 if (CYGWIN)
@@ -434,15 +421,11 @@ if (HAVE_DBGHELP)
   set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} -ldbghelp")
 endif (HAVE_DBGHELP)
 
-if (HAVE_PTHREAD)
-  target_link_libraries (glog PRIVATE Threads::Threads)
+target_link_libraries (glog PRIVATE Threads::Threads)
 
-  set (Threads_DEPENDENCY "find_dependency (Threads)")
-
-  if (CMAKE_THREAD_LIBS_INIT)
-    set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} ${CMAKE_THREAD_LIBS_INIT}")
-  endif (CMAKE_THREAD_LIBS_INIT)
-endif (HAVE_PTHREAD)
+if (CMAKE_THREAD_LIBS_INIT)
+  set (glog_libraries_options_for_static_linking "${glog_libraries_options_for_static_linking} ${CMAKE_THREAD_LIBS_INIT}")
+endif (CMAKE_THREAD_LIBS_INIT)
 
 if (gflags_FOUND)
   # Prefer the gflags target that uses double colon convention
