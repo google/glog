@@ -28,9 +28,6 @@
 /* define if you have dbghelp library */
 #cmakedefine HAVE_DBGHELP
 
-/* define to disable multithreading support. */
-#cmakedefine NO_THREADS
-
 /* Define if you have the 'pread' function */
 #cmakedefine HAVE_PREAD
 
