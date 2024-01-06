@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define _GNU_SOURCE 1  // needed for O_NOFOLLOW and pread()/pwrite()
+#define _POSIX_C_SOURCE 1
 
 #include "glog/logging.h"
 

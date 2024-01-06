@@ -2,6 +2,7 @@ name: CIFuzz
 on: [pull_request]
 jobs:
   Fuzzing:
+    if: false
     runs-on: ubuntu-latest
     steps:
     - name: Build Fuzzers

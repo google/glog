@@ -28,6 +28,9 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Author: Shinichiro Hamaji
+
+#define _XOPEN_SOURCE 500
+
 #include "utilities.h"
 
 #include "glog/logging.h"

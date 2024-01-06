@@ -29,24 +29,15 @@
 //
 // Author: Ray Sidney
 
-#include <fcntl.h>
+#define _POSIX_C_SOURCE 200112L
+#define _XOPEN_SOURCE 500
 
-#include "config.h"
-#include "utilities.h"
-#ifdef HAVE_GLOB_H
-#  include <glob.h>
-#endif
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
-#ifdef HAVE_SYS_WAIT_H
-#  include <sys/wait.h>
-#endif
+#include <fcntl.h>
 
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -58,15 +49,28 @@
 #include <thread>
 #include <vector>
 
-#include "base/commandlineflags.h"
-#include "glog/logging.h"
-#include "glog/raw_logging.h"
-#include "googletest.h"
+#include "config.h"
+#ifdef HAVE_GLOB_H
+#  include <glob.h>
+#endif
+#include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+#ifdef HAVE_SYS_WAIT_H
+#  include <sys/wait.h>
+#endif
 
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
 #endif
+
+#include "base/commandlineflags.h"
+#include "glog/logging.h"
+#include "glog/raw_logging.h"
+#include "googletest.h"
+#include "utilities.h"
 
 #ifdef HAVE_LIB_GMOCK
 #  include <gmock/gmock.h>

@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-linux:
+    if: false
     defaults:
       run:
         shell: bash

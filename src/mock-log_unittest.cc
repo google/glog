@@ -31,6 +31,8 @@
 
 // Tests the ScopedMockLog class.
 
+#define _XOPEN_SOURCE 500
+
 #include "mock-log.h"
 
 #include <gmock/gmock.h>

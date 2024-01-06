@@ -29,6 +29,8 @@
 //
 // Author: Shinichiro Hamaji
 
+#define _POSIX_C_SOURCE 1
+
 #include "utilities.h"
 
 #include <atomic>

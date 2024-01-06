@@ -31,6 +31,8 @@
 //
 // Unit tests for functions in demangle.c.
 
+#define _XOPEN_SOURCE 500
+
 #include "demangle.h"
 
 #include <fstream>

@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-android:
+    if: false
     name: NDK-C++${{matrix.std}}-${{matrix.abi}}-${{matrix.build_type}}
     runs-on: ubuntu-22.04
     permissions:

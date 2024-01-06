@@ -31,6 +31,8 @@
 //
 // Implementation of InstallFailureSignalHandler().
 
+#define _POSIX_C_SOURCE 199309L
+
 #include <algorithm>
 #include <csignal>
 #include <ctime>

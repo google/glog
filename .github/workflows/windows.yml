@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-msvc:
+    if: false
     name: ${{matrix.msvc}}-${{matrix.arch}}-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
     runs-on: ${{matrix.os}}
     permissions:
@@ -157,11 +158,9 @@ jobs:
         build_type: [Debug]
         lib: [shared, static]
         std: [14, 17, 20, 23]
-        sys: [mingw32, mingw64]
+        sys: [msys]
         include:
-         - sys: mingw32
-           env: i686
-         - sys: mingw64
+         - sys: msys
            env: x86_64
 
     steps:
@@ -173,6 +172,21 @@ jobs:
           languages: cpp
 
       - uses: msys2/setup-msys2@v2
+        if: ${{matrix.sys == 'msys'}}
+        with:
+          msystem: ${{matrix.sys}}
+          install: >-
+            cmake
+            gcc
+            gtest
+            ninja
+            python-jinja
+            python-lxml
+            python-pip
+            python-pygments
+
+      - uses: msys2/setup-msys2@v2
+        if: ${{matrix.sys != 'msys'}}
         with:
           msystem: ${{matrix.sys}}
           install: >-

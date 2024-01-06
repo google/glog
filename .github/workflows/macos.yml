@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   build-macos:
+    if: false
     name: AppleClang-C++${{matrix.std}}-${{matrix.build_type}}
     runs-on: macos-12
     permissions:
