@@ -400,7 +400,7 @@ static _WDIR* _wopendir(const wchar_t* dirname) {
     case '/':
     case ':':
         /* Directory ends in path separator, e.g. c:\temp\ */
-        /*NOP*/;
+        /*NOP*/
       break;
 
     default:
