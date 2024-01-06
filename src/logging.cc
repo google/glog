@@ -42,6 +42,7 @@
 #include <shared_mutex>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -2679,39 +2680,82 @@ void DisableLogCleaner() { log_cleaner.Disable(); }
 
 LogMessageTime::LogMessageTime() = default;
 
-LogMessageTime::LogMessageTime(std::chrono::system_clock::time_point now)
-    : timestamp_{now} {
+namespace {
+
+template <class... Args>
+struct void_impl {
+  using type = void;
+};
+
+template <class... Args>
+using void_t = typename void_impl<Args...>::type;
+
+template <class T, class E = void>
+struct has_member_tm_gmtoff : std::false_type {};
+
+template <class T>
+struct has_member_tm_gmtoff<T, void_t<decltype(&T::tm_gmtoff)>>
+    : std::true_type {};
+
+template <class T = std::tm>
+auto Breakdown(const std::chrono::system_clock::time_point& now)
+    -> std::enable_if_t<!has_member_tm_gmtoff<T>::value,
+                        std::tuple<std::tm, std::time_t, std::chrono::hours>> {
   std::time_t timestamp = std::chrono::system_clock::to_time_t(now);
-  if (FLAGS_log_utc_time) {
-    gmtime_r(&timestamp, &tm_);
-  } else {
-    localtime_r(&timestamp, &tm_);
-  }
-  usecs_ = std::chrono::duration_cast<std::chrono::microseconds>(
-      now - std::chrono::system_clock::from_time_t(timestamp));
-  CalcGmtOffset(timestamp);
-}
+  std::tm tm_local;
+  std::tm tm_utc;
+  int isdst = 0;
 
-void LogMessageTime::CalcGmtOffset(std::time_t t) {
-  std::tm gmt_struct;
-  int isDst = 0;
   if (FLAGS_log_utc_time) {
-    localtime_r(&t, &gmt_struct);
-    isDst = gmt_struct.tm_isdst;
-    gmt_struct = tm_;
+    gmtime_r(&timestamp, &tm_local);
+    localtime_r(&timestamp, &tm_utc);
+    isdst = tm_utc.tm_isdst;
+    tm_utc = tm_local;
   } else {
-    isDst = tm_.tm_isdst;
-    gmtime_r(&t, &gmt_struct);
+    localtime_r(&timestamp, &tm_local);
+    isdst = tm_local.tm_isdst;
+    gmtime_r(&timestamp, &tm_utc);
   }
 
-  time_t gmt_sec = mktime(&gmt_struct);
+  std::time_t gmt_sec = std::mktime(&tm_utc);
 
   // If the Daylight Saving Time(isDst) is active subtract an hour from the
   // current timestamp.
   using namespace std::chrono_literals;
-  gmtoffset_ = std::chrono::duration_cast<std::chrono::seconds>(
-      timestamp_ - std::chrono::system_clock::from_time_t(gmt_sec) +
-      (isDst ? 1h : 0h));
+  const auto gmtoffset = std::chrono::duration_cast<std::chrono::hours>(
+      now - std::chrono::system_clock::from_time_t(gmt_sec) +
+      (isdst ? 1h : 0h));
+
+  return std::make_tuple(tm_local, timestamp, gmtoffset);
+}
+
+template <class T = std::tm>
+auto Breakdown(const std::chrono::system_clock::time_point& now)
+    -> std::enable_if_t<has_member_tm_gmtoff<T>::value,
+                        std::tuple<std::tm, std::time_t, std::chrono::hours>> {
+  std::time_t timestamp = std::chrono::system_clock::to_time_t(now);
+  T tm;
+
+  if (FLAGS_log_utc_time) {
+    gmtime_r(&timestamp, &tm);
+  } else {
+    localtime_r(&timestamp, &tm);
+  }
+
+  const auto gmtoffset = std::chrono::duration_cast<std::chrono::hours>(
+      std::chrono::seconds{tm.tm_gmtoff});
+
+  return std::make_tuple(tm, timestamp, gmtoffset);
+}
+
+}  // namespace
+
+LogMessageTime::LogMessageTime(std::chrono::system_clock::time_point now)
+    : timestamp_{now} {
+  std::time_t timestamp;
+  std::tie(tm_, timestamp, gmtoffset_) = Breakdown(now);
+  usecs_ = std::chrono::duration_cast<std::chrono::microseconds>(
+      now - std::chrono::system_clock::from_time_t(timestamp));
 }
 
 }  // namespace google

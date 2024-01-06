@@ -108,10 +108,6 @@ struct GLOG_EXPORT LogMessageTime {
   const std::tm& tm() const noexcept { return tm_; }
 
  private:
-  void init(const std::tm& t, std::time_t timestamp,
-            std::chrono::system_clock::time_point now);
-  void CalcGmtOffset(std::time_t t);
-
   std::tm tm_{};  // Time of creation of LogMessage
   std::chrono::system_clock::time_point
       timestamp_;  // Time of creation of LogMessage in seconds
