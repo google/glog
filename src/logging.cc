@@ -1880,7 +1880,7 @@ void LogMessage::RecordCrashReason(
 #endif
 }
 
-GLOG_EXPORT logging_fail_func_t g_logging_fail_func =
+GLOG_NO_EXPORT logging_fail_func_t g_logging_fail_func =
     reinterpret_cast<logging_fail_func_t>(&abort);
 
 NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 2, 0) {}
