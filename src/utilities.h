@@ -53,6 +53,8 @@
 #define PRIXS __PRIS_PREFIX "X"
 #define PRIoS __PRIS_PREFIX "o"
 
+#include <cstdio>
+#include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -218,5 +220,10 @@ class ScopedExit final {
 }  // namespace google
 
 using namespace google::glog_internal_namespace_;
+
+template <>
+struct std::default_delete<std::FILE> {
+  void operator()(FILE* p) const noexcept { fclose(p); }
+};
 
 #endif  // UTILITIES_H__

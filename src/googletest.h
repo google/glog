@@ -70,7 +70,7 @@ using std::vector;
 
 namespace google {
 extern void (*g_logging_fail_func)();
-extern void GetExistingTempDirectories(vector<string>* list);
+extern void GetExistingTempDirectories(std::vector<std::string>& list);
 extern int posix_strerror_r(int err, char* buf, size_t len);
 extern std::string StrError(int err);
 }
@@ -80,7 +80,7 @@ extern std::string StrError(int err);
 
 static inline string GetTempDir() {
   vector<string> temp_directories_list;
-  google::GetExistingTempDirectories(&temp_directories_list);
+  google::GetExistingTempDirectories(temp_directories_list);
 
   if (temp_directories_list.empty()) {
     fprintf(stderr, "No temporary directory found\n");

@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <iomanip>
 #include <iterator>
+#include <memory>
 #include <mutex>
 #include <shared_mutex>
 #include <string>
@@ -414,7 +415,7 @@ class LogFileObject : public base::Logger {
   string base_filename_;
   string symlink_basename_;
   string filename_extension_;  // option users can specify (eg to add port#)
-  FILE* file_{nullptr};
+  std::unique_ptr<FILE> file_;
   LogSeverity severity_;
   uint32 bytes_since_flush_{0};
   uint32 dropped_mem_length_{0};
@@ -947,10 +948,7 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
 
 LogFileObject::~LogFileObject() {
   std::lock_guard<std::mutex> l{mutex_};
-  if (file_ != nullptr) {
-    fclose(file_);
-    file_ = nullptr;
-  }
+  file_ = nullptr;
 }
 
 void LogFileObject::SetBasename(const char* basename) {
@@ -959,7 +957,6 @@ void LogFileObject::SetBasename(const char* basename) {
   if (base_filename_ != basename) {
     // Get rid of old log file since we are changing names
     if (file_ != nullptr) {
-      fclose(file_);
       file_ = nullptr;
       rollover_attempt_ = kRolloverAttemptFrequency - 1;
     }
@@ -972,7 +969,6 @@ void LogFileObject::SetExtension(const char* ext) {
   if (filename_extension_ != ext) {
     // Get rid of old log file since we are changing names
     if (file_ != nullptr) {
-      fclose(file_);
       file_ = nullptr;
       rollover_attempt_ = kRolloverAttemptFrequency - 1;
     }
@@ -993,7 +989,7 @@ void LogFileObject::Flush() {
 void LogFileObject::FlushUnlocked(
     const std::chrono::system_clock::time_point& now) {
   if (file_ != nullptr) {
-    fflush(file_);
+    fflush(file_.get());
     bytes_since_flush_ = 0;
   }
   // Figure out when we are due for another flush.
@@ -1046,8 +1042,8 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
 #endif
 
   // fdopen in append mode so if the file exists it will fseek to the end
-  file_ = fdopen(fd, "a");  // Make a FILE*.
-  if (file_ == nullptr) {   // Man, we're screwed!
+  file_.reset(fdopen(fd, "a"));  // Make a FILE*.
+  if (file_ == nullptr) {        // Man, we're screwed!
     close(fd);
     if (FLAGS_timestamp_in_logfile_name) {
       unlink(filename);  // Erase the half-baked evidence: an unusable log file,
@@ -1059,7 +1055,7 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   // https://github.com/golang/go/issues/27638 - make sure we seek to the end to
   // append empirically replicated with wine over mingw build
   if (!FLAGS_timestamp_in_logfile_name) {
-    if (fseek(file_, 0, SEEK_END) != 0) {
+    if (fseek(file_.get(), 0, SEEK_END) != 0) {
       return false;
     }
   }
@@ -1128,7 +1124,6 @@ void LogFileObject::Write(
   ScopedExit<decltype(cleanupLogs)> cleanupAtEnd{cleanupLogs};
 
   if (file_length_ >> 20U >= MaxLogSize() || PidHasChanged()) {
-    if (file_ != nullptr) fclose(file_);
     file_ = nullptr;
     file_length_ = bytes_since_flush_ = dropped_mem_length_ = 0;
     rollover_attempt_ = kRolloverAttemptFrequency - 1;
@@ -1246,7 +1241,7 @@ void LogFileObject::Write(
       const string& file_header_string = file_header_stream.str();
 
       const size_t header_len = file_header_string.size();
-      fwrite(file_header_string.data(), 1, header_len, file_);
+      fwrite(file_header_string.data(), 1, header_len, file_.get());
       file_length_ += header_len;
       bytes_since_flush_ += header_len;
     }
@@ -1260,7 +1255,7 @@ void LogFileObject::Write(
     // 4096 bytes. fwrite() returns 4096 for message lengths that are
     // greater than 4096, thereby indicating an error.
     errno = 0;
-    fwrite(message, 1, message_len, file_);
+    fwrite(message, 1, message_len, file_.get());
     if (FLAGS_stop_logging_if_full_disk &&
         errno == ENOSPC) {  // disk full, stop writing to disk
       stop_writing = true;  // until the disk is
@@ -1295,9 +1290,9 @@ void LogFileObject::Write(
         // 'posix_fadvise' introduced in API 21:
         // * https://android.googlesource.com/platform/bionic/+/6880f936173081297be0dc12f687d341b86a4cfa/libc/libc.map.txt#732
 #  else
-        posix_fadvise(fileno(file_), static_cast<off_t>(dropped_mem_length_),
-                      static_cast<off_t>(this_drop_length),
-                      POSIX_FADV_DONTNEED);
+        posix_fadvise(
+            fileno(file_.get()), static_cast<off_t>(dropped_mem_length_),
+            static_cast<off_t>(this_drop_length), POSIX_FADV_DONTNEED);
 #  endif
         dropped_mem_length_ = total_drop_length;
       }
@@ -2293,17 +2288,17 @@ bool SendEmail(const char* dest, const char* subject, const char* body) {
   return SendEmailInternal(dest, subject, body, true);
 }
 
-static void GetTempDirectories(vector<string>* list) {
-  list->clear();
+static void GetTempDirectories(vector<string>& list) {
+  list.clear();
 #ifdef GLOG_OS_WINDOWS
   // On windows we'll try to find a directory in this order:
   //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
   //   C:/TMP/
   //   C:/TEMP/
   char tmp[MAX_PATH];
-  if (GetTempPathA(MAX_PATH, tmp)) list->push_back(tmp);
-  list->push_back("C:\\TMP\\");
-  list->push_back("C:\\TEMP\\");
+  if (GetTempPathA(MAX_PATH, tmp)) list.push_back(tmp);
+  list.push_back("C:\\TMP\\");
+  list.push_back("C:\\TEMP\\");
 #else
   // Directories, in order of preference. If we find a dir that
   // exists, we stop adding other less-preferred dirs
@@ -2327,7 +2322,7 @@ static void GetTempDirectories(vector<string>* list) {
     if (dstr[dstr.size() - 1] != '/') {
       dstr += "/";
     }
-    list->push_back(dstr);
+    list.push_back(dstr);
 
     struct stat statbuf;
     if (!stat(d, &statbuf) && S_ISDIR(statbuf.st_mode)) {
@@ -2338,12 +2333,12 @@ static void GetTempDirectories(vector<string>* list) {
 #endif
 }
 
-static vector<string>* logging_directories_list;
+static std::unique_ptr<std::vector<std::string>> logging_directories_list;
 
 const vector<string>& GetLoggingDirectories() {
   // Not strictly thread-safe but we're called early in InitGoogle().
   if (logging_directories_list == nullptr) {
-    logging_directories_list = new vector<string>;
+    logging_directories_list = std::make_unique<std::vector<std::string>>();
 
     if (!FLAGS_log_dir.empty()) {
       // Ensure the specified path ends with a directory delimiter.
@@ -2355,7 +2350,7 @@ const vector<string>& GetLoggingDirectories() {
         logging_directories_list->push_back(FLAGS_log_dir);
       }
     } else {
-      GetTempDirectories(logging_directories_list);
+      GetTempDirectories(*logging_directories_list);
 #ifdef GLOG_OS_WINDOWS
       char tmp[MAX_PATH];
       if (GetWindowsDirectoryA(tmp, MAX_PATH))
@@ -2373,14 +2368,14 @@ const vector<string>& GetLoggingDirectories() {
 // subset of the directories returned by GetLoggingDirectories().
 // Thread-safe.
 GLOG_NO_EXPORT
-void GetExistingTempDirectories(vector<string>* list) {
+void GetExistingTempDirectories(vector<string>& list) {
   GetTempDirectories(list);
-  auto i_dir = list->begin();
-  while (i_dir != list->end()) {
+  auto i_dir = list.begin();
+  while (i_dir != list.end()) {
     // zero arg to access means test for existence; no constant
     // defined on windows
     if (access(i_dir->c_str(), 0)) {
-      i_dir = list->erase(i_dir);
+      i_dir = list.erase(i_dir);
     } else {
       ++i_dir;
     }
@@ -2659,7 +2654,6 @@ void InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
 void ShutdownGoogleLogging() {
   glog_internal_namespace_::ShutdownGoogleLoggingUtilities();
   LogDestination::DeleteLogDestinations();
-  delete logging_directories_list;
   logging_directories_list = nullptr;
 }
 
