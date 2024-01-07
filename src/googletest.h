@@ -1,4 +1,4 @@
-// Copyright (c) 2009, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -73,7 +73,7 @@ extern void (*g_logging_fail_func)();
 extern void GetExistingTempDirectories(std::vector<std::string>& list);
 extern int posix_strerror_r(int err, char* buf, size_t len);
 extern std::string StrError(int err);
-}
+}  // namespace google
 
 #undef GLOG_EXPORT
 #define GLOG_EXPORT
@@ -300,60 +300,53 @@ static inline void RunSpecifiedBenchmarks() {
 class CapturedStream {
  public:
   CapturedStream(int fd, string filename)
-      : fd_(fd),
-
-        filename_(std::move(filename)) {
+      : fd_(fd), filename_(std::move(filename)) {
     Capture();
-  }
-
-  ~CapturedStream() {
-    if (uncaptured_fd_ != -1) {
-      CHECK(close(uncaptured_fd_) != -1);
-    }
   }
 
   // Start redirecting output to a file
   void Capture() {
     // Keep original stream for later
-    CHECK(uncaptured_fd_ == -1) << ", Stream " << fd_ << " already captured!";
-    uncaptured_fd_ = dup(fd_);
-    CHECK(uncaptured_fd_ != -1);
+    CHECK(!uncaptured_fd_) << ", Stream " << fd_ << " already captured!";
+    uncaptured_fd_.reset(dup(fd_));
+    CHECK(uncaptured_fd_);
 
     // Open file to save stream to
-    int cap_fd = open(filename_.c_str(), O_CREAT | O_TRUNC | O_WRONLY,
-                      S_IRUSR | S_IWUSR);
-    CHECK(cap_fd != -1);
+    FileDescriptor cap_fd{open(filename_.c_str(), O_CREAT | O_TRUNC | O_WRONLY,
+                               S_IRUSR | S_IWUSR)};
+    CHECK(cap_fd);
 
     // Send stdout/stderr to this file
     fflush(nullptr);
-    CHECK(dup2(cap_fd, fd_) != -1);
-    CHECK(close(cap_fd) != -1);
+    CHECK(dup2(cap_fd.get(), fd_) != -1);
+    CHECK(cap_fd.close() != -1);
   }
 
   // Remove output redirection
   void StopCapture() {
     // Restore original stream
-    if (uncaptured_fd_ != -1) {
+    if (uncaptured_fd_) {
       fflush(nullptr);
-      CHECK(dup2(uncaptured_fd_, fd_) != -1);
+      CHECK(dup2(uncaptured_fd_.get(), fd_) != -1);
     }
   }
 
   const string& filename() const { return filename_; }
 
  private:
-  int fd_;                 // file descriptor being captured
-  int uncaptured_fd_{-1};  // where the stream was originally being sent to
-  string filename_;        // file where stream is being saved
+  int fd_;  // file descriptor being captured
+  FileDescriptor
+      uncaptured_fd_;  // where the stream was originally being sent to
+  string filename_;    // file where stream is being saved
 };
-static CapturedStream* s_captured_streams[STDERR_FILENO + 1];
+static std::unique_ptr<CapturedStream> s_captured_streams[STDERR_FILENO + 1];
 // Redirect a file descriptor to a file.
 //   fd       - Should be STDOUT_FILENO or STDERR_FILENO
 //   filename - File where output should be stored
 static inline void CaptureTestOutput(int fd, const string& filename) {
   CHECK((fd == STDOUT_FILENO) || (fd == STDERR_FILENO));
   CHECK(s_captured_streams[fd] == nullptr);
-  s_captured_streams[fd] = new CapturedStream(fd, filename);
+  s_captured_streams[fd] = std::make_unique<CapturedStream>(fd, filename);
 }
 static inline void CaptureTestStdout() {
   CaptureTestOutput(STDOUT_FILENO, FLAGS_test_tmpdir + "/captured.out");
@@ -369,7 +362,7 @@ static inline size_t GetFileSize(FILE* file) {
 // Read the entire content of a file as a string
 static inline string ReadEntireFile(FILE* file) {
   const size_t file_size = GetFileSize(file);
-  char* const buffer = new char[file_size];
+  std::vector<char> content(file_size);
 
   size_t bytes_last_read = 0;  // # of bytes read in the last fread()
   size_t bytes_read = 0;       // # of bytes read so far
@@ -380,32 +373,26 @@ static inline string ReadEntireFile(FILE* file) {
   // pre-determined file size is reached.
   do {
     bytes_last_read =
-        fread(buffer + bytes_read, 1, file_size - bytes_read, file);
+        fread(content.data() + bytes_read, 1, file_size - bytes_read, file);
     bytes_read += bytes_last_read;
   } while (bytes_last_read > 0 && bytes_read < file_size);
 
-  const string content = string(buffer, buffer + bytes_read);
-  delete[] buffer;
-
-  return content;
+  return std::string(content.data(), bytes_read);
 }
 // Get the captured stdout (when fd is STDOUT_FILENO) or stderr (when
 // fd is STDERR_FILENO) as a string
 static inline string GetCapturedTestOutput(int fd) {
   CHECK(fd == STDOUT_FILENO || fd == STDERR_FILENO);
-  CapturedStream* const cap = s_captured_streams[fd];
+  std::unique_ptr<CapturedStream> cap = std::move(s_captured_streams[fd]);
   CHECK(cap) << ": did you forget CaptureTestStdout() or CaptureTestStderr()?";
 
   // Make sure everything is flushed.
   cap->StopCapture();
 
   // Read the captured file.
-  FILE* const file = fopen(cap->filename().c_str(), "r");
-  const string content = ReadEntireFile(file);
-  fclose(file);
-
-  delete cap;
-  s_captured_streams[fd] = nullptr;
+  std::unique_ptr<FILE> file{fopen(cap->filename().c_str(), "r")};
+  const string content = ReadEntireFile(file.get());
+  file.reset();
 
   return content;
 }
@@ -479,11 +466,11 @@ static inline void StringReplace(string* str, const string& oldsub,
 }
 
 static inline string Munge(const string& filename) {
-  FILE* fp = fopen(filename.c_str(), "rb");
+  std::unique_ptr<FILE> fp{fopen(filename.c_str(), "rb")};
   CHECK(fp != nullptr) << filename << ": couldn't open";
   char buf[4096];
   string result;
-  while (fgets(buf, 4095, fp)) {
+  while (fgets(buf, 4095, fp.get())) {
     string line = MungeLine(buf);
     const size_t str_size = 256;
     char null_str[str_size];
@@ -502,19 +489,17 @@ static inline string Munge(const string& filename) {
     StringReplace(&line, "__ENOEXEC__", StrError(ENOEXEC));
     result += line + "\n";
   }
-  fclose(fp);
   return result;
 }
 
 static inline void WriteToFile(const string& body, const string& file) {
-  FILE* fp = fopen(file.c_str(), "wb");
-  fwrite(body.data(), 1, body.size(), fp);
-  fclose(fp);
+  std::unique_ptr<FILE> fp{fopen(file.c_str(), "wb")};
+  fwrite(body.data(), 1, body.size(), fp.get());
 }
 
 static inline bool MungeAndDiffTest(const string& golden_filename,
                                     CapturedStream* cap) {
-  if (cap == s_captured_streams[STDOUT_FILENO]) {
+  if (cap == s_captured_streams[STDOUT_FILENO].get()) {
     CHECK(cap) << ": did you forget CaptureTestStdout()?";
   } else {
     CHECK(cap) << ": did you forget CaptureTestStderr()?";
@@ -549,11 +534,13 @@ static inline bool MungeAndDiffTest(const string& golden_filename,
 }
 
 static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
-  return MungeAndDiffTest(golden_filename, s_captured_streams[STDERR_FILENO]);
+  return MungeAndDiffTest(golden_filename,
+                          s_captured_streams[STDERR_FILENO].get());
 }
 
 static inline bool MungeAndDiffTestStdout(const string& golden_filename) {
-  return MungeAndDiffTest(golden_filename, s_captured_streams[STDOUT_FILENO]);
+  return MungeAndDiffTest(golden_filename,
+                          s_captured_streams[STDOUT_FILENO].get());
 }
 
 // Save flags used from logging_unittest.cc.

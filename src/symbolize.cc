@@ -376,22 +376,6 @@ static bool GetSymbolFromObjectFile(const int fd, uint64_t pc, char* out,
 }
 
 namespace {
-// Thin wrapper around a file descriptor so that the file descriptor
-// gets closed for sure.
-struct FileDescriptor {
-  const int fd_;
-  explicit FileDescriptor(int fd) : fd_(fd) {}
-  ~FileDescriptor() {
-    if (fd_ >= 0) {
-      close(fd_);
-    }
-  }
-  int get() { return fd_; }
-
- private:
-  FileDescriptor(const FileDescriptor&) = delete;
-  void operator=(const FileDescriptor&) = delete;
-};
 
 // Helper class for reading lines from file.
 //
@@ -520,14 +504,14 @@ static ATTRIBUTE_NOINLINE int OpenObjectFileContainingPcAndGetStartAddress(
   int maps_fd;
   NO_INTR(maps_fd = open("/proc/self/maps", O_RDONLY));
   FileDescriptor wrapped_maps_fd(maps_fd);
-  if (wrapped_maps_fd.get() < 0) {
+  if (!wrapped_maps_fd) {
     return -1;
   }
 
   int mem_fd;
   NO_INTR(mem_fd = open("/proc/self/mem", O_RDONLY));
   FileDescriptor wrapped_mem_fd(mem_fd);
-  if (wrapped_mem_fd.get() < 0) {
+  if (!wrapped_mem_fd) {
     return -1;
   }
 

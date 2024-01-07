@@ -71,6 +71,12 @@ bool IsGoogleLoggingInitialized() {
   return g_program_invocation_short_name != nullptr;
 }
 
+inline namespace glog_internal_namespace_ {
+
+constexpr int FileDescriptor::InvalidHandle;
+
+}  // namespace glog_internal_namespace_
+
 }  // namespace google
 
 // The following APIs are all internal.
@@ -181,7 +187,7 @@ DumpStackTraceAndExit() {
 
 namespace google {
 
-namespace glog_internal_namespace_ {
+inline namespace glog_internal_namespace_ {
 
 const char* ProgramInvocationShortName() {
   if (g_program_invocation_short_name != nullptr) {
@@ -252,10 +258,10 @@ void DumpStackTraceToString(string* stacktrace) {
 
 // We use an atomic operation to prevent problems with calling CrashReason
 // from inside the Mutex implementation (potentially through RAW_CHECK).
-static std::atomic<const CrashReason*> g_reason{nullptr};
+static std::atomic<const logging::internal::CrashReason*> g_reason{nullptr};
 
-void SetCrashReason(const CrashReason* r) {
-  const CrashReason* expected = nullptr;
+void SetCrashReason(const logging::internal::CrashReason* r) {
+  const logging::internal::CrashReason* expected = nullptr;
   g_reason.compare_exchange_strong(expected, r);
 }
 

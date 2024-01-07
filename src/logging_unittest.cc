@@ -31,19 +31,6 @@
 
 #include <fcntl.h>
 
-#include "config.h"
-#include "utilities.h"
-#ifdef HAVE_GLOB_H
-#  include <glob.h>
-#endif
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-#endif
-#ifdef HAVE_SYS_WAIT_H
-#  include <sys/wait.h>
-#endif
-
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
@@ -58,10 +45,23 @@
 #include <thread>
 #include <vector>
 
+#include "config.h"
+#ifdef HAVE_GLOB_H
+#  include <glob.h>
+#endif
+#include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+#endif
+#ifdef HAVE_SYS_WAIT_H
+#  include <sys/wait.h>
+#endif
+
 #include "base/commandlineflags.h"
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
 #include "googletest.h"
+#include "utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
@@ -785,19 +785,17 @@ static void CheckFile(const string& name, const string& expected_string,
   GetFiles(name + "*", &files);
   CHECK_EQ(files.size(), 1UL);
 
-  FILE* file = fopen(files[0].c_str(), "r");
+  std::unique_ptr<std::FILE> file{fopen(files[0].c_str(), "r")};
   CHECK(file != nullptr) << ": could not open " << files[0];
   char buf[1000];
-  while (fgets(buf, sizeof(buf), file) != nullptr) {
+  while (fgets(buf, sizeof(buf), file.get()) != nullptr) {
     char* first = strstr(buf, expected_string.c_str());
     // if first == nullptr, not found.
     // Terser than if (checkInFileOrNot && first != nullptr || !check...
     if (checkInFileOrNot != (first == nullptr)) {
-      fclose(file);
       return;
     }
   }
-  fclose(file);
   LOG(FATAL) << "Did " << (checkInFileOrNot ? "not " : "") << "find "
              << expected_string << " in " << files[0];
 }
@@ -977,8 +975,8 @@ static void TestErrno() {
 
 static void TestOneTruncate(const char* path, uint64 limit, uint64 keep,
                             size_t dsize, size_t ksize, size_t expect) {
-  int fd;
-  CHECK_ERR(fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0600));
+  FileDescriptor fd{open(path, O_RDWR | O_CREAT | O_TRUNC, 0600)};
+  CHECK_ERR(fd);
 
   const char *discardstr = "DISCARDME!", *keepstr = "KEEPME!";
   const size_t discard_size = strlen(discardstr), keep_size = strlen(keepstr);
@@ -987,13 +985,13 @@ static void TestOneTruncate(const char* path, uint64 limit, uint64 keep,
   size_t written = 0;
   while (written < dsize) {
     size_t bytes = min(dsize - written, discard_size);
-    CHECK_ERR(write(fd, discardstr, bytes));
+    CHECK_ERR(write(fd.get(), discardstr, bytes));
     written += bytes;
   }
   written = 0;
   while (written < ksize) {
     size_t bytes = min(ksize - written, keep_size);
-    CHECK_ERR(write(fd, keepstr, bytes));
+    CHECK_ERR(write(fd.get(), keepstr, bytes));
     written += bytes;
   }
 
@@ -1001,25 +999,22 @@ static void TestOneTruncate(const char* path, uint64 limit, uint64 keep,
 
   // File should now be shorter
   struct stat statbuf;
-  CHECK_ERR(fstat(fd, &statbuf));
+  CHECK_ERR(fstat(fd.get(), &statbuf));
   CHECK_EQ(static_cast<size_t>(statbuf.st_size), expect);
-  CHECK_ERR(lseek(fd, 0, SEEK_SET));
+  CHECK_ERR(lseek(fd.get(), 0, SEEK_SET));
 
   // File should contain the suffix of the original file
   const size_t buf_size = static_cast<size_t>(statbuf.st_size) + 1;
-  char* buf = new char[buf_size];
-  memset(buf, 0, buf_size);
-  CHECK_ERR(read(fd, buf, buf_size));
+  std::vector<char> buf(buf_size);
+  CHECK_ERR(read(fd.get(), buf.data(), buf_size));
 
-  const char* p = buf;
+  const char* p = buf.data();
   size_t checked = 0;
   while (checked < expect) {
     size_t bytes = min(expect - checked, keep_size);
     CHECK(!memcmp(p, keepstr, bytes));
     checked += bytes;
   }
-  close(fd);
-  delete[] buf;
 }
 
 static void TestTruncate() {
@@ -1155,13 +1150,11 @@ static void TestLogPeriodically() {
 }
 
 namespace google {
-namespace glog_internal_namespace_ {
-extern  // in logging.cc
-    bool
-    SafeFNMatch_(const char* pattern, size_t patt_len, const char* str,
-                 size_t str_len);
+inline namespace glog_internal_namespace_ {
+// in logging.cc
+extern bool SafeFNMatch_(const char* pattern, size_t patt_len, const char* str,
+                         size_t str_len);
 }  // namespace glog_internal_namespace_
-using glog_internal_namespace_::SafeFNMatch_;
 }  // namespace google
 
 static bool WrapSafeFNMatch(string pattern, string str) {
@@ -1352,28 +1345,26 @@ static void TestLogSinkWaitTillSent() {
 
 TEST(Strerror, logging) {
   int errcode = EINTR;
-  char* msg = strdup(strerror(errcode));
-  const size_t buf_size = strlen(msg) + 1;
-  char* buf = new char[buf_size];
+  std::string msg = strerror(errcode);
+  const size_t buf_size = msg.size() + 1;
+  std::vector<char> buf(buf_size);
   CHECK_EQ(posix_strerror_r(errcode, nullptr, 0), -1);
   buf[0] = 'A';
-  CHECK_EQ(posix_strerror_r(errcode, buf, 0), -1);
+  CHECK_EQ(posix_strerror_r(errcode, buf.data(), 0), -1);
   CHECK_EQ(buf[0], 'A');
   CHECK_EQ(posix_strerror_r(errcode, nullptr, buf_size), -1);
 #if defined(GLOG_OS_MACOSX) || defined(GLOG_OS_FREEBSD) || \
     defined(GLOG_OS_OPENBSD)
   // MacOSX or FreeBSD considers this case is an error since there is
   // no enough space.
-  CHECK_EQ(posix_strerror_r(errcode, buf, 1), -1);
+  CHECK_EQ(posix_strerror_r(errcode, buf.data(), 1), -1);
 #else
-  CHECK_EQ(posix_strerror_r(errcode, buf, 1), 0);
+  CHECK_EQ(posix_strerror_r(errcode, buf.data(), 1), 0);
 #endif
-  CHECK_STREQ(buf, "");
-  CHECK_EQ(posix_strerror_r(errcode, buf, buf_size), 0);
-  CHECK_STREQ(buf, msg);
-  delete[] buf;
+  CHECK_STREQ(buf.data(), "");
+  CHECK_EQ(posix_strerror_r(errcode, buf.data(), buf_size), 0);
+  CHECK_STREQ(buf.data(), msg.c_str());
   CHECK_EQ(msg, StrError(errcode));
-  free(msg);
 }
 
 // Simple routines to look at the sizes of generated code for LOG(FATAL) and
