@@ -186,6 +186,9 @@ inline namespace glog_internal_namespace_ {
 #  define ATTRIBUTE_NOINLINE
 #endif
 
+void AlsoErrorWrite(LogSeverity severity, const char* tag,
+                    const char* message) noexcept;
+
 const char* ProgramInvocationShortName();
 
 int32 GetMainThreadPid();

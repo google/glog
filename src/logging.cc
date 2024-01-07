@@ -88,10 +88,6 @@
 #  include <syslog.h>
 #endif
 
-#ifdef __ANDROID__
-#  include <android/log.h>
-#endif
-
 #ifdef HAVE_SYS_TYPES_H
 #  include <sys/types.h>
 #endif
@@ -787,24 +783,9 @@ inline void LogDestination::MaybeLogToStderr(LogSeverity severity,
                                              size_t prefix_len) {
   if ((severity >= FLAGS_stderrthreshold) || FLAGS_alsologtostderr) {
     ColoredWriteToStderr(severity, message, message_len);
-#ifdef GLOG_OS_WINDOWS
-    (void)prefix_len;
-    // On Windows, also output to the debugger
-    ::OutputDebugStringA(message);
-#elif defined(__ANDROID__)
-    // On Android, also output to logcat
-    const int android_log_levels[NUM_SEVERITIES] = {
-        ANDROID_LOG_INFO,
-        ANDROID_LOG_WARN,
-        ANDROID_LOG_ERROR,
-        ANDROID_LOG_FATAL,
-    };
-    __android_log_write(android_log_levels[severity],
-                        glog_internal_namespace_::ProgramInvocationShortName(),
-                        message + prefix_len);
-#else
-    (void)prefix_len;
-#endif
+    AlsoErrorWrite(severity,
+                   glog_internal_namespace_::ProgramInvocationShortName(),
+                   message + prefix_len);
   }
 }
 
@@ -1850,12 +1831,9 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     if (write(STDERR_FILENO, message, strlen(message)) < 0) {
       // Ignore errors.
     }
-#if defined(__ANDROID__)
-    // ANDROID_LOG_FATAL as this message is of FATAL severity.
-    __android_log_write(ANDROID_LOG_FATAL,
-                        glog_internal_namespace_::ProgramInvocationShortName(),
-                        message);
-#endif
+    AlsoErrorWrite(GLOG_FATAL,
+                   glog_internal_namespace_::ProgramInvocationShortName(),
+                   message);
     Fail();
   }
 }
