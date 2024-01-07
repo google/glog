@@ -279,6 +279,47 @@ The default path to a log file on Linux, for instance, could be
 By default, glog echos ``ERROR`` and ``FATAL`` messages to standard error in
 addition to log files.
 
+
+Log Line Prefix Format
+~~~~~~~~~~~~~~~~~~~~~~
+
+Log lines have this form:
+
+::
+
+    Lyyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg...
+
+where the fields are defined as follows:
+
+==================== =========================================================================
+Placeholder          Meaning
+==================== =========================================================================
+``L``                A single character, representing the log level (e.g., ``I`` for ``INFO``)
+``yyyy``             The year
+``mm``               The month (zero padded; i.e., May is ``05``)
+``dd``               The day (zero padded)
+``hh:mm:ss.uuuuuu``  Time in hours, minutes and fractional seconds
+``threadid``         The space-padded thread ID
+``file``             The file name
+``line``             The line number
+``msg``              The user-supplied message
+==================== =========================================================================
+
+Example:
+
+::
+
+  I1103 11:57:31.739339 24395 google.cc:2341] Command line: ./some_prog
+  I1103 11:57:31.739403 24395 google.cc:2342] Process id 24395
+
+.. pull-quote::
+   [!NOTE]
+
+   Although microseconds are useful for comparing events on a single machine,
+   clocks on different machines may not be well synchronized. Hence, use with
+   caution when comparing the low bits of timestamps from different machines.
+
+
 Setting Flags
 ~~~~~~~~~~~~~
 
