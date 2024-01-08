@@ -38,11 +38,13 @@
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
 
 #include "base/googleinit.h"
 #include "config.h"
 
+#ifdef __ANDROID__
+#  include <android/log.h>
+#endif
 #ifdef HAVE_SYS_TIME_H
 #  include <sys/time.h>
 #endif
@@ -59,9 +61,6 @@
 #endif
 #ifdef HAVE_PWD_H
 #  include <pwd.h>
-#endif
-#ifdef __ANDROID__
-#  include <android/log.h>
 #endif
 
 #if defined(HAVE___PROGNAME)
@@ -81,6 +80,29 @@ bool IsGoogleLoggingInitialized() {
 inline namespace glog_internal_namespace_ {
 
 constexpr int FileDescriptor::InvalidHandle;
+
+void AlsoErrorWrite(LogSeverity severity, const char* tag,
+                    const char* message) noexcept {
+#if defined(GLOG_OS_WINDOWS)
+  (void)severity;
+  (void)tag;
+  // On Windows, also output to the debugger
+  ::OutputDebugStringA(message);
+#elif defined(__ANDROID__)
+  constexpr int android_log_levels[] = {
+      ANDROID_LOG_INFO,
+      ANDROID_LOG_WARN,
+      ANDROID_LOG_ERROR,
+      ANDROID_LOG_FATAL,
+  };
+
+  __android_log_write(android_log_levels[severity], tag, message);
+#else
+  (void)severity;
+  (void)tag;
+  (void)message;
+#endif
+}
 
 }  // namespace glog_internal_namespace_
 
@@ -106,12 +128,8 @@ static void DebugWriteToStderr(const char* data, void*) {
   if (write(STDERR_FILENO, data, strlen(data)) < 0) {
     // Ignore errors.
   }
-#  if defined(__ANDROID__)
-  // ANDROID_LOG_FATAL as fatal error occurred and now is dumping call stack.
-  __android_log_write(ANDROID_LOG_FATAL,
-                      glog_internal_namespace_::ProgramInvocationShortName(),
-                      data);
-#  endif
+  AlsoErrorWrite(GLOG_FATAL,
+                 glog_internal_namespace_::ProgramInvocationShortName(), data);
 }
 
 static void DebugWriteToString(const char* data, void* arg) {
