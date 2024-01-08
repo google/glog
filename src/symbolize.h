@@ -1,4 +1,4 @@
-// Copyright (c) 2006, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -132,6 +132,7 @@ void InstallSymbolizeCallback(SymbolizeCallback callback);
 // (including the null-terminator).
 using SymbolizeOpenObjectFileCallback = int (*)(uint64_t, uint64_t&, uint64_t&,
                                                 char*, size_t);
+GLOG_EXPORT
 void InstallSymbolizeOpenObjectFileCallback(
     SymbolizeOpenObjectFileCallback callback);
 

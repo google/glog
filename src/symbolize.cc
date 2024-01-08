@@ -57,52 +57,51 @@
 #if defined(HAVE_SYMBOLIZE)
 
 #  include <algorithm>
+#  include <cstdlib>
 #  include <cstring>
 #  include <limits>
 
 #  include "demangle.h"
 #  include "symbolize.h"
 
-namespace google {
-
 // We don't use assert() since it's not guaranteed to be
 // async-signal-safe.  Instead we define a minimal assertion
 // macro. So far, we don't need pretty printing for __FILE__, etc.
+#  define GLOG_SAFE_ASSERT(expr) ((expr) ? 0 : (std::abort(), 0))
 
-// A wrapper for abort() to make it callable in ? :.
-static int AssertFail() {
-  abort();
-  return 0;  // Should not reach.
-}
+namespace google {
 
-#  define SAFE_ASSERT(expr) ((expr) ? 0 : AssertFail())
+namespace {
 
-static SymbolizeCallback g_symbolize_callback = nullptr;
-void InstallSymbolizeCallback(SymbolizeCallback callback) {
-  g_symbolize_callback = callback;
-}
-
-static SymbolizeOpenObjectFileCallback g_symbolize_open_object_file_callback =
-    nullptr;
-void InstallSymbolizeOpenObjectFileCallback(
-    SymbolizeOpenObjectFileCallback callback) {
-  g_symbolize_open_object_file_callback = callback;
-}
+SymbolizeCallback g_symbolize_callback = nullptr;
+SymbolizeOpenObjectFileCallback g_symbolize_open_object_file_callback = nullptr;
 
 // This function wraps the Demangle function to provide an interface
 // where the input symbol is demangled in-place.
 // To keep stack consumption low, we would like this function to not
 // get inlined.
-static ATTRIBUTE_NOINLINE void DemangleInplace(char* out, size_t out_size) {
+ATTRIBUTE_NOINLINE
+void DemangleInplace(char* out, size_t out_size) {
   char demangled[256];  // Big enough for sane demangled symbols.
   if (Demangle(out, demangled, sizeof(demangled))) {
     // Demangling succeeded. Copy to out if the space allows.
     size_t len = strlen(demangled);
     if (len + 1 <= out_size) {  // +1 for '\0'.
-      SAFE_ASSERT(len < sizeof(demangled));
+      GLOG_SAFE_ASSERT(len < sizeof(demangled));
       memmove(out, demangled, len + 1);
     }
   }
+}
+
+}  // namespace
+
+void InstallSymbolizeCallback(SymbolizeCallback callback) {
+  g_symbolize_callback = callback;
+}
+
+void InstallSymbolizeOpenObjectFileCallback(
+    SymbolizeOpenObjectFileCallback callback) {
+  g_symbolize_open_object_file_callback = callback;
 }
 
 }  // namespace google
@@ -134,19 +133,23 @@ static ATTRIBUTE_NOINLINE void DemangleInplace(char* out, size_t out_size) {
 #    include "glog/raw_logging.h"
 #    include "symbolize.h"
 
+namespace google {
+
+namespace {
+
 // Re-runs run until it doesn't cause EINTR.
 // Similar to the TEMP_FAILURE_RETRY macro from GNU C.
 template <class Functor>
 auto FailureRetry(Functor run, int error = EINTR) noexcept(noexcept(run())) {
   decltype(run()) result;
 
-  do {
-  } while ((result = run()) == -1 && errno == error);
+  while ((result = run()) == -1 && errno == error) {
+  }
 
   return result;
 }
 
-namespace google {
+}  // namespace
 
 // Read up to "count" bytes from "offset" in the file pointed by file
 // descriptor "fd" into the buffer starting at "buf" while handling short reads
@@ -154,9 +157,9 @@ namespace google {
 // -1.
 static ssize_t ReadFromOffset(const int fd, void* buf, const size_t count,
                               const size_t offset) {
-  SAFE_ASSERT(fd >= 0);
-  SAFE_ASSERT(count <=
-              static_cast<size_t>(std::numeric_limits<ssize_t>::max()));
+  GLOG_SAFE_ASSERT(fd >= 0);
+  GLOG_SAFE_ASSERT(count <=
+                   static_cast<size_t>(std::numeric_limits<ssize_t>::max()));
   char* buf0 = reinterpret_cast<char*>(buf);
   size_t num_bytes = 0;
   while (num_bytes < count) {
@@ -172,7 +175,7 @@ static ssize_t ReadFromOffset(const int fd, void* buf, const size_t count,
     }
     num_bytes += static_cast<size_t>(len);
   }
-  SAFE_ASSERT(num_bytes <= count);
+  GLOG_SAFE_ASSERT(num_bytes <= count);
   return static_cast<ssize_t>(num_bytes);
 }
 
@@ -219,9 +222,9 @@ static ATTRIBUTE_NOINLINE bool GetSectionHeaderByType(const int fd,
     if (len == -1) {
       return false;
     }
-    SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
+    GLOG_SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
     const size_t num_headers_in_buf = static_cast<size_t>(len) / sizeof(buf[0]);
-    SAFE_ASSERT(num_headers_in_buf <= sizeof(buf) / sizeof(buf[0]));
+    GLOG_SAFE_ASSERT(num_headers_in_buf <= sizeof(buf) / sizeof(buf[0]));
     for (size_t j = 0; j < num_headers_in_buf; ++j) {
       if (buf[j].sh_type == type) {
         *out = buf[j];
@@ -315,9 +318,9 @@ static ATTRIBUTE_NOINLINE bool FindSymbol(uint64_t pc, const int fd, char* out,
     size_t num_symbols_to_read = std::min(NUM_SYMBOLS, num_symbols - i);
     const ssize_t len =
         ReadFromOffset(fd, &buf, sizeof(buf[0]) * num_symbols_to_read, offset);
-    SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
+    GLOG_SAFE_ASSERT(static_cast<size_t>(len) % sizeof(buf[0]) == 0);
     const size_t num_symbols_in_buf = static_cast<size_t>(len) / sizeof(buf[0]);
-    SAFE_ASSERT(num_symbols_in_buf <= num_symbols_to_read);
+    GLOG_SAFE_ASSERT(num_symbols_in_buf <= num_symbols_to_read);
     for (unsigned j = 0; j < num_symbols_in_buf; ++j) {
       const ElfW(Sym)& symbol = buf[j];
       uint64_t start_address = symbol.st_value;
@@ -416,8 +419,8 @@ class LineReader {
       eod_ = buf_ + num_bytes;
       bol_ = buf_;
     } else {
-      bol_ = eol_ + 1;            // Advance to the next line in the buffer.
-      SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
+      bol_ = eol_ + 1;  // Advance to the next line in the buffer.
+      GLOG_SAFE_ASSERT(bol_ <= eod_);  // "bol_" can point to "eod_".
       if (!HasCompleteLine()) {
         const auto incomplete_line_length = static_cast<size_t>(eod_ - bol_);
         // Move the trailing incomplete line to the beginning.
@@ -492,7 +495,7 @@ static char* GetHex(const char* start, const char* end, uint64_t* hex) {
       break;
     }
   }
-  SAFE_ASSERT(p <= end);
+  GLOG_SAFE_ASSERT(p <= end);
   return const_cast<char*>(p);
 }
 
@@ -715,7 +718,7 @@ static char* itoa_r(uintptr_t i, char* buf, size_t sz, unsigned base,
 // buffer size |dest_size| and guarantees that |dest| is null-terminated.
 static void SafeAppendString(const char* source, char* dest, size_t dest_size) {
   size_t dest_string_length = strlen(dest);
-  SAFE_ASSERT(dest_string_length < dest_size);
+  GLOG_SAFE_ASSERT(dest_string_length < dest_size);
   dest += dest_string_length;
   dest_size -= dest_string_length;
   strncpy(dest, source, dest_size);
