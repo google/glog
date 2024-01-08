@@ -164,6 +164,15 @@ if (WITH_FUZZING STREQUAL none)
   check_cxx_symbol_exists (abi::__cxa_demangle cxxabi.h HAVE___CXA_DEMANGLE)
 endif (WITH_FUZZING STREQUAL none)
 
+check_cxx_symbol_exists (__argv cstdlib HAVE___ARGV)
+check_cxx_symbol_exists (getprogname cstdlib HAVE_GETPROGNAME)
+check_cxx_symbol_exists (program_invocation_short_name cerrno HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+check_cxx_source_compiles ([=[
+#include <cstdlib>
+extern char* __progname;
+int main() { return __progname != nullptr ? EXIT_SUCCESS : EXIT_FAILURE; }
+]=] HAVE___PROGNAME)
+
 if (WITH_TLS)
   set (GLOG_THREAD_LOCAL_STORAGE 1)
 endif (WITH_TLS)

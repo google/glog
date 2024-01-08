@@ -29,9 +29,12 @@
 //
 // Author: Shinichiro Hamaji
 
+#define _GNU_SOURCE 1
+
 #include "utilities.h"
 
 #include <atomic>
+#include <cerrno>
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
@@ -59,6 +62,10 @@
 #endif
 #ifdef __ANDROID__
 #  include <android/log.h>
+#endif
+
+#if defined(HAVE___PROGNAME)
+extern char* __progname;
 #endif
 
 using std::string;
@@ -189,13 +196,29 @@ namespace google {
 
 inline namespace glog_internal_namespace_ {
 
+const char* const_basename(const char* filepath) {
+  const char* base = strrchr(filepath, '/');
+#ifdef GLOG_OS_WINDOWS  // Look for either path separator in Windows
+  if (!base) base = strrchr(filepath, '\\');
+#endif
+  return base ? (base + 1) : filepath;
+}
+
 const char* ProgramInvocationShortName() {
   if (g_program_invocation_short_name != nullptr) {
     return g_program_invocation_short_name;
-  } else {
-    // TODO(hamaji): Use /proc/self/cmdline and so?
-    return "UNKNOWN";
   }
+#if defined(HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+  return program_invocation_short_name;
+#elif defined(HAVE_GETPROGNAME)
+  return getprogname();
+#elif defined(HAVE___PROGNAME)
+  return __progname;
+#elif defined(HAVE___ARGV)
+  return const_basename(__argv[0]);
+#else
+  return "UNKNOWN";
+#endif
 }
 
 static int32 g_main_thread_pid = getpid();
@@ -208,14 +231,6 @@ bool PidHasChanged() {
   }
   g_main_thread_pid = pid;
   return true;
-}
-
-const char* const_basename(const char* filepath) {
-  const char* base = strrchr(filepath, '/');
-#ifdef GLOG_OS_WINDOWS  // Look for either path separator in Windows
-  if (!base) base = strrchr(filepath, '\\');
-#endif
-  return base ? (base + 1) : filepath;
 }
 
 static string g_my_user_name;
@@ -268,11 +283,7 @@ void SetCrashReason(const logging::internal::CrashReason* r) {
 void InitGoogleLoggingUtilities(const char* argv0) {
   CHECK(!IsGoogleLoggingInitialized())
       << "You called InitGoogleLogging() twice!";
-  const char* slash = strrchr(argv0, '/');
-#ifdef GLOG_OS_WINDOWS
-  if (!slash) slash = strrchr(argv0, '\\');
-#endif
-  g_program_invocation_short_name = slash ? slash + 1 : argv0;
+  g_program_invocation_short_name = const_basename(argv0);
 
 #ifdef HAVE_STACKTRACE
   InstallFailureFunction(&DumpStackTraceAndExit);

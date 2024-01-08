@@ -115,4 +115,16 @@
 /* define if abi::__cxa_demangle is available in cxxabi.h */
 #cmakedefine HAVE___CXA_DEMANGLE
 
+/* define if __argv is available in cstdlib */
+#cmakedefine HAVE___ARGV
+
+/* define if __progname is available */
+#cmakedefine HAVE___PROGNAME
+
+/* define if getprogname is available in cstdlib */
+#cmakedefine HAVE_GETPROGNAME
+
+/* define if program_invocation_short_name is available in cerrno */
+#cmakedefine HAVE_PROGRAM_INVOCATION_SHORT_NAME
+
 #endif  // GLOG_CONFIG_H
