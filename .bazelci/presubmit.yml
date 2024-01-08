@@ -1,8 +1,8 @@
 ---
 tasks:
   ubuntu1804:
-    name: "Ubuntu 18.04"
-    platform: ubuntu1804
+    name: "Ubuntu 22.04"
+    platform: ubuntu2204
     build_flags:
     - "--features=layering_check"
     - "--copt=-Werror"

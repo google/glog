@@ -307,10 +307,10 @@ struct LogMessageData {
   const char* fullname_;        // fullname of file that called LOG
   bool has_been_flushed_;       // false => data has not been flushed
   bool first_fatal_;            // true => this was first fatal msg
+  std::thread::id thread_id_;
 
- private:
   LogMessageData(const LogMessageData&) = delete;
-  void operator=(const LogMessageData&) = delete;
+  LogMessageData& operator=(const LogMessageData&) = delete;
 };
 }  // namespace internal
 }  // namespace logging
@@ -370,9 +370,78 @@ constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
 constexpr std::intmax_t kSecondsInWeek = kSecondsInDay * 7;
 
 // Optional user-configured callback to print custom prefixes.
-CustomPrefixCallback custom_prefix_callback = nullptr;
-// User-provided data to pass to the callback:
-void* custom_prefix_callback_data = nullptr;
+class PrefixFormatter {
+ public:
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
+  PrefixFormatter(CustomPrefixCallback callback, void* data) noexcept
+      : version{V1}, callback_v1{callback}, data{data} {}
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+  PrefixFormatter(PrefixFormatterCallback callback, void* data) noexcept
+      : version{V2}, callback_v2{callback}, data{data} {}
+
+  void operator()(std::ostream& s, const LogMessage& message) const {
+    switch (version) {
+      case V1:
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
+        callback_v1(s,
+                    LogMessageInfo(LogSeverityNames[message.severity()],
+                                   message.basename(), message.line(),
+                                   message.thread_id(), message.time()),
+                    data);
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+        break;
+      case V2:
+        callback_v2(s, message, data);
+        break;
+    }
+  }
+
+  PrefixFormatter(const PrefixFormatter& other) = delete;
+  PrefixFormatter& operator=(const PrefixFormatter& other) = delete;
+
+ private:
+  enum Version { V1, V2 } version;
+  union {
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
+    CustomPrefixCallback callback_v1;
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+    PrefixFormatterCallback callback_v2;
+  };
+  // User-provided data to pass to the callback:
+  void* data;
+};
+
+std::unique_ptr<PrefixFormatter> g_prefix_formatter;
 
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
@@ -544,7 +613,7 @@ class LogDestination {
   // Send logging info to all registered sinks.
   static void LogToSinks(LogSeverity severity, const char* full_filename,
                          const char* base_filename, int line,
-                         const LogMessageTime& logmsgtime, const char* message,
+                         const LogMessageTime& time, const char* message,
                          size_t message_len);
 
   // Wait for all registered sinks via WaitTillSent
@@ -844,14 +913,14 @@ inline void LogDestination::LogToAllLogfiles(
 inline void LogDestination::LogToSinks(LogSeverity severity,
                                        const char* full_filename,
                                        const char* base_filename, int line,
-                                       const LogMessageTime& logmsgtime,
+                                       const LogMessageTime& time,
                                        const char* message,
                                        size_t message_len) {
   std::shared_lock<SinkMutex> l{sink_mutex_};
   if (sinks_) {
     for (size_t i = sinks_->size(); i-- > 0;) {
-      (*sinks_)[i]->send(severity, full_filename, base_filename, line,
-                         logmsgtime, message, message_len);
+      (*sinks_)[i]->send(severity, full_filename, base_filename, line, time,
+                         message, message_len);
     }
   }
 }
@@ -1602,6 +1671,7 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
   data_->basename_ = const_basename(file);
   data_->fullname_ = file;
   data_->has_been_flushed_ = false;
+  data_->thread_id_ = std::this_thread::get_id();
 
   // If specified, prepend a prefix to each line.  For example:
   //    I20201018 160715 f5d4fbb0 logging.cc:1153]
@@ -1611,7 +1681,7 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
     std::ios saved_fmt(nullptr);
     saved_fmt.copyfmt(stream());
     stream().fill('0');
-    if (custom_prefix_callback == nullptr) {
+    if (g_prefix_formatter == nullptr) {
       stream() << LogSeverityNames[severity][0];
       if (FLAGS_log_year_in_prefix) {
         stream() << setw(4) << 1900 + time_.year();
@@ -1620,14 +1690,10 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
                << setw(2) << time_.hour() << ':' << setw(2) << time_.min()
                << ':' << setw(2) << time_.sec() << "." << setw(6)
                << time_.usec() << ' ' << setfill(' ') << setw(5)
-               << std::this_thread::get_id() << setfill('0') << ' '
-               << data_->basename_ << ':' << data_->line_ << "] ";
+               << data_->thread_id_ << setfill('0') << ' ' << data_->basename_
+               << ':' << data_->line_ << "] ";
     } else {
-      custom_prefix_callback(
-          stream(),
-          LogMessageInfo(LogSeverityNames[severity], data_->basename_,
-                         data_->line_, std::this_thread::get_id(), time_),
-          custom_prefix_callback_data);
+      (*g_prefix_formatter)(stream(), *this);
       stream() << " ";
     }
     stream().copyfmt(saved_fmt);
@@ -1647,7 +1713,15 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
   }
 }
 
-const LogMessageTime& LogMessage::time() const { return time_; }
+LogSeverity LogMessage::severity() const noexcept { return data_->severity_; }
+
+int LogMessage::line() const noexcept { return data_->line_; }
+const std::thread::id& LogMessage::thread_id() const noexcept {
+  return data_->thread_id_;
+}
+const char* LogMessage::fullname() const noexcept { return data_->fullname_; }
+const char* LogMessage::basename() const noexcept { return data_->basename_; }
+const LogMessageTime& LogMessage::time() const noexcept { return time_; }
 
 LogMessage::~LogMessage() {
   Flush();
@@ -2039,21 +2113,20 @@ void LogSink::WaitTillSent() {
 }
 
 string LogSink::ToString(LogSeverity severity, const char* file, int line,
-                         const LogMessageTime& logmsgtime, const char* message,
+                         const LogMessageTime& time, const char* message,
                          size_t message_len) {
   ostringstream stream;
   stream.fill('0');
 
   stream << LogSeverityNames[severity][0];
   if (FLAGS_log_year_in_prefix) {
-    stream << setw(4) << 1900 + logmsgtime.year();
+    stream << setw(4) << 1900 + time.year();
   }
-  stream << setw(2) << 1 + logmsgtime.month() << setw(2) << logmsgtime.day()
-         << ' ' << setw(2) << logmsgtime.hour() << ':' << setw(2)
-         << logmsgtime.min() << ':' << setw(2) << logmsgtime.sec() << '.'
-         << setw(6) << logmsgtime.usec() << ' ' << setfill(' ') << setw(5)
-         << std::this_thread::get_id() << setfill('0') << ' ' << file << ':'
-         << line << "] ";
+  stream << setw(2) << 1 + time.month() << setw(2) << time.day() << ' '
+         << setw(2) << time.hour() << ':' << setw(2) << time.min() << ':'
+         << setw(2) << time.sec() << '.' << setw(6) << time.usec() << ' '
+         << setfill(' ') << setw(5) << std::this_thread::get_id()
+         << setfill('0') << ' ' << file << ':' << line << "] ";
 
   // A call to `write' is enclosed in parenthneses to prevent possible macro
   // expansion.  On Windows, `write' could be a macro defined for portability.
@@ -2624,17 +2697,42 @@ void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& /*v*/) {
 
 void InitGoogleLogging(const char* argv0) { InitGoogleLoggingUtilities(argv0); }
 
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
 void InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
                        void* prefix_callback_data) {
-  custom_prefix_callback = prefix_callback;
-  custom_prefix_callback_data = prefix_callback_data;
+  if (prefix_callback != nullptr) {
+    g_prefix_formatter = std::make_unique<PrefixFormatter>(
+        prefix_callback, prefix_callback_data);
+  } else {
+    g_prefix_formatter = nullptr;
+  }
   InitGoogleLogging(argv0);
+}
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+
+void InstallPrefixFormatter(PrefixFormatterCallback callback, void* data) {
+  if (callback != nullptr) {
+    g_prefix_formatter = std::make_unique<PrefixFormatter>(callback, data);
+  } else {
+    g_prefix_formatter = nullptr;
+  }
 }
 
 void ShutdownGoogleLogging() {
   ShutdownGoogleLoggingUtilities();
   LogDestination::DeleteLogDestinations();
   logging_directories_list = nullptr;
+  g_prefix_formatter = nullptr;
 }
 
 void EnableLogCleaner(unsigned int overdue_days) {

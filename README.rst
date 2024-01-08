@@ -320,6 +320,54 @@ Example:
    caution when comparing the low bits of timestamps from different machines.
 
 
+Customizing the Log Line Prefix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The predefined log line prefix can be replaced using a user-provided callback
+that formats the corresponding output.
+
+For each log entry, the callback will be invoked with a reference to a
+``google::LogMessage`` instance containing the severity, filename, line number,
+thread ID, and time of the event. It will also be given a reference to the
+output stream, whose contents will be prepended to the actual message in the
+final log line.
+
+For example, the following function outputs a prefix that matches glog's default
+format. The third parameter ``data`` can be used to access user-supplied data
+which unless specified defaults to :cpp:`nullptr`.
+
+.. code:: cpp
+
+    void MyPrefixFormatter(std::ostream& s, const google::LogMessage& m, void* /*data*/) {
+       s << google::GetLogSeverityName(m.severity())[0]
+       << setw(4) << 1900 + m.time().year()
+       << setw(2) << 1 + m.time().month()
+       << setw(2) << m.time().day()
+       << ' '
+       << setw(2) << m.time().hour() << ':'
+       << setw(2) << m.time().min()  << ':'
+       << setw(2) << m.time().sec() << "."
+       << setw(6) << m.time().usec()
+       << ' '
+       << setfill(' ') << setw(5)
+       << m.thread_id() << setfill('0')
+       << ' '
+       << m.basename() << ':' << m.line() << "]";
+    }
+
+
+To enable the use of a prefix formatter, use the
+
+.. code:: cpp
+
+    google::InstallPrefixFormatter(&MyPrefixFormatter);
+
+function to pass a pointer to the corresponding :cpp:`MyPrefixFormatter`
+callback during initialization. :cpp:`InstallPrefixFormatter` takes a second
+optional argument of type  :cpp:`void*` that allows supplying user data to the
+callback.
+
+
 Setting Flags
 ~~~~~~~~~~~~~
 
@@ -650,50 +698,6 @@ severity level.
          "Present occurrence is " << google::COUNTER;
 
 
-Custom Log Prefix Format
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-glog supports changing the format of the prefix attached to log messages by
-receiving a user-provided callback that generates such strings.
-
-For each log entry, the callback will be invoked with a ``LogMessageInfo``
-struct containing the severity, filename, line number, thread ID, and time of
-the event. It will also be given a reference to the output stream, whose
-contents will be prepended to the actual message in the final log line.
-
-For example, the following function outputs a prefix that matches glog's default
-format. The third parameter ``data`` can be used to access user-supplied data
-which unless specified defaults to :cpp:`nullptr`.
-
-.. code:: cpp
-
-    void CustomPrefix(std::ostream& s, const LogMessageInfo& l, void* /*data*/) {
-       s << l.severity[0]
-       << setw(4) << 1900 + l.time.year()
-       << setw(2) << 1 + l.time.month()
-       << setw(2) << l.time.day()
-       << ' '
-       << setw(2) << l.time.hour() << ':'
-       << setw(2) << l.time.min()  << ':'
-       << setw(2) << l.time.sec() << "."
-       << setw(6) << l.time.usec()
-       << ' '
-       << setfill(' ') << setw(5)
-       << l.thread_id << setfill('0')
-       << ' '
-       << l.filename << ':' << l.line_number << "]";
-    }
-
-
-To enable the use of a custom prefix, use the
-
-.. code:: cpp
-
-    InitGoogleLogging(argv[0], &CustomPrefix);
-
-overload to pass a pointer to the corresponding :cpp:`CustomPrefix` function during
-initialization. :cpp:`InitGoogleLogging()` takes a third optional argument of
-type  :cpp:`void*` that allows supplying user data to the callback.
 
 Failure Signal Handler
 ~~~~~~~~~~~~~~~~~~~~~~

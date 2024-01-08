@@ -115,7 +115,7 @@ struct GLOG_EXPORT LogMessageTime {
   std::chrono::seconds gmtoffset_;
 };
 
-struct LogMessageInfo {
+struct [[deprecated("Use LogMessage instead.")]] LogMessageInfo {
   explicit LogMessageInfo(const char* const severity_,
                           const char* const filename_, const int& line_number_,
                           std::thread::id thread_id_,
@@ -132,9 +132,6 @@ struct LogMessageInfo {
   std::thread::id thread_id;
   const LogMessageTime& time;
 };
-
-typedef void (*CustomPrefixCallback)(std::ostream& s, const LogMessageInfo& l,
-                                     void* data);
 
 }  // namespace google
 
@@ -485,9 +482,26 @@ namespace google {
 // specified by argv0 in log outputs.
 GLOG_EXPORT void InitGoogleLogging(const char* argv0);
 
-GLOG_EXPORT void InitGoogleLogging(const char* argv0,
-                                   CustomPrefixCallback prefix_callback,
-                                   void* prefix_callback_data = nullptr);
+class LogMessage;
+
+#if defined(__GNUG__)
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#  pragma warning(push)
+#  pragma warning(disable : 4996)
+#endif  // __GNUG__
+using CustomPrefixCallback
+    [[deprecated("Use PrefixFormatterCallback instead.")]] =
+        void (*)(std::ostream&, const LogMessageInfo&, void*);
+#if defined(__GNUG__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
+#endif  // __GNUG__
+[[deprecated("Use InstallPrefixFormatter instead.")]] GLOG_EXPORT void
+InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
+                  void* prefix_callback_data = nullptr);
 
 // Check if google's logging library has been initialized.
 GLOG_EXPORT bool IsGoogleLoggingInitialized();
@@ -500,6 +514,12 @@ typedef void (*logging_fail_func_t)() __attribute__((noreturn));
 #else
 typedef void (*logging_fail_func_t)();
 #endif
+
+using PrefixFormatterCallback = void (*)(std::ostream&, const LogMessage&,
+                                         void*);
+
+GLOG_EXPORT void InstallPrefixFormatter(PrefixFormatterCallback callback,
+                                        void* data = nullptr);
 
 // Install a function which will be called after LOG(FATAL).
 GLOG_EXPORT void InstallFailureFunction(logging_fail_func_t fail_func);
@@ -1343,9 +1363,15 @@ class GLOG_EXPORT LogMessage {
     return time();
   }
 
-  const LogMessageTime& time() const;
+  LogSeverity severity() const noexcept;
+  int line() const noexcept;
+  const std::thread::id& thread_id() const noexcept;
+  const char* fullname() const noexcept;
+  const char* basename() const noexcept;
+  const LogMessageTime& time() const noexcept;
 
-  struct LogMessageData;
+  LogMessage(const LogMessage&) = delete;
+  LogMessage& operator=(const LogMessage&) = delete;
 
  private:
   // Fully internal SendMethod cases:
@@ -1373,9 +1399,6 @@ class GLOG_EXPORT LogMessage {
   LogMessageTime time_;
 
   friend class LogDestination;
-
-  LogMessage(const LogMessage&);
-  void operator=(const LogMessage&);
 };
 
 // This class happens to be thread-hostile because all instances share
@@ -1493,7 +1516,7 @@ class GLOG_EXPORT LogSink {
   // during this call.
   virtual void send(LogSeverity severity, const char* full_filename,
                     const char* base_filename, int line,
-                    const LogMessageTime& logmsgtime, const char* message,
+                    const LogMessageTime& time, const char* message,
                     size_t message_len);
   // Provide an overload for compatibility purposes
   GLOG_DEPRECATED
@@ -1519,8 +1542,8 @@ class GLOG_EXPORT LogSink {
   // Returns the normal text output of the log message.
   // Can be useful to implement send().
   static std::string ToString(LogSeverity severity, const char* file, int line,
-                              const LogMessageTime& logmsgtime,
-                              const char* message, size_t message_len);
+                              const LogMessageTime& time, const char* message,
+                              size_t message_len);
 };
 
 // Add or remove a LogSink as a consumer of logging data.  Thread-safe.
