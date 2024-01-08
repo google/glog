@@ -62,9 +62,10 @@ using namespace google;
 
 #  if defined(__ELF__) || defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
 // A wrapper function for Symbolize() to make the unit test simple.
-static const char* TrySymbolize(void* pc) {
+static const char* TrySymbolize(void* pc, google::SymbolizeOptions options =
+                                              google::SymbolizeOptions::kNone) {
   static char symbol[4096];
-  if (Symbolize(pc, symbol, sizeof(symbol))) {
+  if (Symbolize(pc, symbol, sizeof(symbol), options)) {
     return symbol;
   } else {
     return nullptr;
@@ -394,7 +395,8 @@ static void ATTRIBUTE_NOINLINE TestWithPCInsideInlineFunction() {
 static void ATTRIBUTE_NOINLINE TestWithReturnAddress() {
 #    if defined(HAVE_ATTRIBUTE_NOINLINE)
   void* return_address = __builtin_return_address(0);
-  const char* symbol = TrySymbolize(return_address);
+  const char* symbol =
+      TrySymbolize(return_address, google::SymbolizeOptions::kNoLineNumbers);
 
 #      if !defined(_MSC_VER) || !defined(NDEBUG)
   CHECK(symbol != nullptr);
@@ -439,7 +441,8 @@ __declspec(noinline) void TestWithReturnAddress() {
       _ReturnAddress()
 #    endif
       ;
-  const char* symbol = TrySymbolize(return_address);
+  const char* symbol =
+      TrySymbolize(return_address, google::SymbolizeOptions::kNoLineNumbers);
 #    if !defined(_MSC_VER) || !defined(NDEBUG)
   CHECK(symbol != nullptr);
   CHECK_STREQ(symbol, "main");
