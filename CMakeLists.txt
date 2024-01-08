@@ -461,7 +461,7 @@ if (ANDROID)
 endif (ANDROID)
 
 set_target_properties (glog PROPERTIES VERSION ${glog_VERSION})
-set_target_properties (glog PROPERTIES SOVERSION 1)
+set_target_properties (glog PROPERTIES SOVERSION 2)
 
 if (CYGWIN OR WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
