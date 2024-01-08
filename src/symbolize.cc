@@ -52,6 +52,8 @@
 #  include GLOG_BUILD_CONFIG_INCLUDE
 #endif  // GLOG_BUILD_CONFIG_INCLUDE
 
+#include "symbolize.h"
+
 #include "utilities.h"
 
 #if defined(HAVE_SYMBOLIZE)
@@ -62,7 +64,6 @@
 #  include <limits>
 
 #  include "demangle.h"
-#  include "symbolize.h"
 
 // We don't use assert() since it's not guaranteed to be
 // async-signal-safe.  Instead we define a minimal assertion
@@ -743,8 +744,8 @@ static void SafeAppendHexNumber(uint64_t value, char* dest, size_t dest_size) {
 // and "out" is used as its output.
 // To keep stack consumption low, we would like this function to not
 // get inlined.
-static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
-                                                    size_t out_size) {
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
+    void* pc, char* out, size_t out_size, SymbolizeOptions /*options*/) {
   auto pc0 = reinterpret_cast<uintptr_t>(pc);
   uint64_t start_address = 0;
   uint64_t base_address = 0;
@@ -831,8 +832,8 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
 
 namespace google {
 
-static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
-                                                    size_t out_size) {
+static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
+    void* pc, char* out, size_t out_size, SymbolizeOptions /*options*/) {
   Dl_info info;
   if (dladdr(pc, &info)) {
     if (info.dli_sname) {
@@ -854,24 +855,19 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
 #    include <dbghelp.h>
 #    include <windows.h>
 
-#    ifdef _MSC_VER
-#      pragma comment(lib, "dbghelp")
-#    endif
-
 namespace google {
 
-class SymInitializer {
+class SymInitializer final {
  public:
   HANDLE process;
   bool ready;
-  SymInitializer() : process(nullptr), ready(false) {
+  SymInitializer() : process(GetCurrentProcess()), ready(false) {
     // Initialize the symbol handler.
     // https://msdn.microsoft.com/en-us/library/windows/desktop/ms680344(v=vs.85).aspx
-    process = GetCurrentProcess();
     // Defer symbol loading.
     // We do not request undecorated symbols with SYMOPT_UNDNAME
     // because the mangling library calls UnDecorateSymbolName.
-    SymSetOptions(SYMOPT_DEFERRED_LOADS);
+    SymSetOptions(SYMOPT_DEFERRED_LOADS | SYMOPT_LOAD_LINES);
     if (SymInitialize(process, nullptr, true)) {
       ready = true;
     }
@@ -881,13 +877,15 @@ class SymInitializer {
     // We do not need to close `HANDLE process` because it's a "pseudo handle."
   }
 
- private:
-  SymInitializer(const SymInitializer&);
-  SymInitializer& operator=(const SymInitializer&);
+  SymInitializer(const SymInitializer&) = delete;
+  SymInitializer& operator=(const SymInitializer&) = delete;
+  SymInitializer(SymInitializer&&) = delete;
+  SymInitializer& operator=(SymInitializer&&) = delete;
 };
 
 static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
-                                                    size_t out_size) {
+                                                    size_t out_size,
+                                                    SymbolizeOptions options) {
   const static SymInitializer symInitializer;
   if (!symInitializer.ready) {
     return false;
@@ -902,12 +900,43 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   // This could break if a symbol has Unicode in it.
   BOOL ret = SymFromAddr(symInitializer.process, reinterpret_cast<DWORD64>(pc),
                          0, symbol);
-  if (ret == 1 && static_cast<ssize_t>(symbol->NameLen) < out_size) {
-    // `NameLen` does not include the null terminating character.
-    strncpy(out, symbol->Name, static_cast<size_t>(symbol->NameLen) + 1);
-    out[static_cast<size_t>(symbol->NameLen)] = '\0';
+  std::size_t namelen = static_cast<size_t>(symbol->NameLen);
+  if (ret && namelen < out_size) {
+    std::strncpy(out, symbol->Name, namelen);
+    out[namelen] = '\0';
+
+    DWORD displacement;
+    IMAGEHLP_LINE64 line{sizeof(IMAGEHLP_LINE64)};
+
+    BOOL found = FALSE;
+
+    if ((options & SymbolizeOptions::kNoLineNumbers) !=
+        SymbolizeOptions::kNoLineNumbers) {
+      found = SymGetLineFromAddr64(symInitializer.process,
+                                   reinterpret_cast<DWORD64>(pc), &displacement,
+                                   &line);
+    }
+
     // Symbolization succeeded.  Now we try to demangle the symbol.
     DemangleInplace(out, out_size);
+    out_size -= std::strlen(out);
+
+    if (found) {
+      std::size_t fnlen = std::strlen(line.FileName);
+      // Determine the number of digits (base 10) necessary to represent the
+      // line number
+      std::size_t digits = 1;  // At least one digit required
+      for (DWORD value = line.LineNumber; (value /= 10) != 0; ++digits) {
+      }
+      constexpr std::size_t extralen = 4;  // space + parens () + :
+      const std::size_t suffixlen = fnlen + extralen + fnlen + digits;
+
+      if (suffixlen < out_size) {
+        out_size -= std::snprintf(out + namelen, out_size, " (%s:%u)",
+                                  line.FileName, line.LineNumber);
+      }
+    }
+
     return true;
   }
   return false;
@@ -921,8 +950,8 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
 
 namespace google {
 
-bool Symbolize(void* pc, char* out, size_t out_size) {
-  return SymbolizeAndDemangle(pc, out, out_size);
+bool Symbolize(void* pc, char* out, size_t out_size, SymbolizeOptions options) {
+  return SymbolizeAndDemangle(pc, out, out_size, options);
 }
 
 }  // namespace google
@@ -936,7 +965,8 @@ bool Symbolize(void* pc, char* out, size_t out_size) {
 namespace google {
 
 // TODO: Support other environments.
-bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/) {
+bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/,
+               SymbolizeOptions /*options*/) {
   assert(0);
   return false;
 }

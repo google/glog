@@ -210,6 +210,10 @@ def glog_library(with_gflags = 1, **kwargs):
             "@bazel_tools//src/conditions:windows": [":strip_include_prefix_hack"],
             "//conditions:default": [],
         }),
+        linkopts = select({
+            "@bazel_tools//src/conditions:windows": ["dbghelp.lib"],
+            "//conditions:default": [],
+        }),
         **kwargs
     )
 
