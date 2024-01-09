@@ -37,7 +37,6 @@
 #include "demangle.h"
 
 #include <algorithm>
-#include <cstddef>
 #include <cstdlib>
 #include <limits>
 
@@ -52,6 +51,7 @@
 #endif
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 #if !defined(GLOG_OS_WINDOWS) && !defined(HAVE___CXA_DEMANGLE)
 namespace {
@@ -1359,4 +1359,5 @@ bool Demangle(const char* mangled, char* out, size_t out_size) {
 #endif
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google

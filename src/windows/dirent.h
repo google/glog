@@ -6,8 +6,8 @@
  * under the MIT license.  For all details and documentation, see
  * https://github.com/tronkko/dirent
  */
-#ifndef DIRENT_H
-#define DIRENT_H
+#ifndef GLOG_INTERNAL_WINDOWS_DIRENT_H
+#define GLOG_INTERNAL_WINDOWS_DIRENT_H
 
 /* Hide warnings about unreferenced local functions */
 #if defined(__clang__)
@@ -1037,4 +1037,4 @@ static void dirent_set_errno(int error) {
 #ifdef __cplusplus
 }
 #endif
-#endif /*DIRENT_H*/
+#endif /*GLOG_INTERNAL_WINDOWS_DIRENT_H*/

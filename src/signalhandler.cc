@@ -33,12 +33,15 @@
 
 #include <algorithm>
 #include <csignal>
+#include <cstring>
 #include <ctime>
 #include <mutex>
 #include <sstream>
 #include <thread>
 
+#include "config.h"
 #include "glog/logging.h"
+#include "glog/platform.h"
 #include "stacktrace.h"
 #include "symbolize.h"
 #include "utilities.h"
@@ -155,7 +158,7 @@ class MinimalFormatter {
 
 // Writes the given data with the size to the standard error.
 void WriteToStderr(const char* data, size_t size) {
-  if (write(STDERR_FILENO, data, size) < 0) {
+  if (write(fileno(stderr), data, size) < 0) {
     // Ignore errors.
   }
 }
@@ -231,6 +234,7 @@ void DumpSignalInfo(int signal_number, siginfo_t* siginfo) {
 void DumpStackFrameInfo(const char* prefix, void* pc) {
   // Get the symbol name.
   const char* symbol = "(unknown)";
+#if defined(HAVE_SYMBOLIZE)
   char symbolized[1024];  // Big enough for a sane symbol.
   // Symbolizes the previous address of pc because pc may be in the
   // next function.
@@ -238,6 +242,10 @@ void DumpStackFrameInfo(const char* prefix, void* pc) {
                 sizeof(symbolized))) {
     symbol = symbolized;
   }
+#else
+#  pragma message( \
+          "Symbolize functionality is not available for target platform: stack dump will contain empty frames.")
+#endif  // defined(HAVE_SYMBOLIZE)
 
   char buf[1024];  // Big enough for stack frame info.
   MinimalFormatter formatter(buf, sizeof(buf));

@@ -1,4 +1,4 @@
-// Copyright (c) 2000 - 2007, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -30,13 +30,46 @@
 // Routines to extract the current stack trace.  These functions are
 // thread-safe.
 
-#ifndef BASE_STACKTRACE_H_
-#define BASE_STACKTRACE_H_
+#ifndef GLOG_INTERNAL_STACKTRACE_H
+#define GLOG_INTERNAL_STACKTRACE_H
+
+#include "glog/platform.h"
+
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
+#endif
+
+#if !defined(GLOG_NO_EXPORT)
+#  error "stacktrace.h" was not included correctly.
+#endif
 
 #include "config.h"
-#include "glog/logging.h"
+#if defined(HAVE_LIBUNWIND)
+#  define STACKTRACE_H "stacktrace_libunwind-inl.h"
+#elif defined(HAVE_UNWIND)
+#  define STACKTRACE_H "stacktrace_unwind-inl.h"
+#elif !defined(NO_FRAME_POINTER)
+#  if defined(__i386__) && __GNUC__ >= 2
+#    define STACKTRACE_H "stacktrace_x86-inl.h"
+#  elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
+#    define STACKTRACE_H "stacktrace_powerpc-inl.h"
+#  elif defined(GLOG_OS_WINDOWS)
+#    define STACKTRACE_H "stacktrace_windows-inl.h"
+#  endif
+#endif
+
+#if !defined(STACKTRACE_H) && defined(HAVE_EXECINFO_BACKTRACE)
+#  define STACKTRACE_H "stacktrace_generic-inl.h"
+#endif
+
+#if defined(STACKTRACE_H)
+#  define HAVE_STACKTRACE
+#endif
 
 namespace google {
+inline namespace glog_internal_namespace_ {
+
+#if defined(HAVE_STACKTRACE)
 
 // This is similar to the GetStackFrames routine, except that it returns
 // the stack trace only, and not the stack frame sizes as well.
@@ -54,8 +87,11 @@ namespace google {
 //           ....       ...
 //
 // "result" must not be nullptr.
-GLOG_EXPORT int GetStackTrace(void** result, int max_depth, int skip_count);
+GLOG_NO_EXPORT int GetStackTrace(void** result, int max_depth, int skip_count);
 
+#endif  // defined(HAVE_STACKTRACE)
+
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
-#endif  // BASE_STACKTRACE_H_
+#endif  // GLOG_INTERNAL_STACKTRACE_H

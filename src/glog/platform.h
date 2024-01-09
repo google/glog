@@ -52,6 +52,8 @@
 #  define GLOG_OS_OPENBSD
 #elif defined(__EMSCRIPTEN__)
 #  define GLOG_OS_EMSCRIPTEN
+#elif defined(__ANDROID__)
+#  define GLOG_OS_ANDROID
 #else
 // TODO(hamaji): Add other platforms.
 #error Platform not supported by glog. Please consider to contribute platform information by submitting a pull request on Github.

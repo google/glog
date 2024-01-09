@@ -1,4 +1,4 @@
-// Copyright (c) 2000 - 2007, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,27 +27,12 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Author: Andrew Schwartzmeyer
-//
-// Windows implementation - just use CaptureStackBackTrace
+// Routines to extract the current stack trace.  These functions are
+// thread-safe.
 
-// clang-format off
-#include <windows.h> // Must come before <dbghelp.h>
-#include <dbghelp.h>
-// clang-format on
+#include "stacktrace.h"
 
-namespace google {
-inline namespace glog_internal_namespace_ {
-
-int GetStackTrace(void** result, int max_depth, int skip_count) {
-  if (max_depth > 64) {
-    max_depth = 64;
-  }
-  skip_count++;  // we want to skip the current frame as well
-  // This API is thread-safe (moreover it walks only the current thread).
-  return CaptureStackBackTrace(static_cast<DWORD>(skip_count),
-                               static_cast<DWORD>(max_depth), result, nullptr);
-}
-
-}  // namespace glog_internal_namespace_
-}  // namespace google
+// Make an implementation of stacktrace compiled.
+#if defined(STACKTRACE_H)
+#  include STACKTRACE_H
+#endif

@@ -41,8 +41,12 @@
 
 #include "base/googleinit.h"
 #include "config.h"
+#include "glog/flags.h"
+#include "glog/logging.h"
+#include "stacktrace.h"
+#include "symbolize.h"
 
-#ifdef __ANDROID__
+#ifdef GLOG_OS_ANDROID
 #  include <android/log.h>
 #endif
 #ifdef HAVE_SYS_TIME_H
@@ -88,7 +92,7 @@ void AlsoErrorWrite(LogSeverity severity, const char* tag,
   (void)tag;
   // On Windows, also output to the debugger
   ::OutputDebugStringA(message);
-#elif defined(__ANDROID__)
+#elif defined(GLOG_OS_ANDROID)
   constexpr int android_log_levels[] = {
       ANDROID_LOG_INFO,
       ANDROID_LOG_WARN,
@@ -125,7 +129,7 @@ static const int kPrintfPointerFieldWidth = 2 + 2 * sizeof(void*);
 
 static void DebugWriteToStderr(const char* data, void*) {
   // This one is signal-safe.
-  if (write(STDERR_FILENO, data, strlen(data)) < 0) {
+  if (write(fileno(stderr), data, strlen(data)) < 0) {
     // Ignore errors.
   }
   AlsoErrorWrite(GLOG_FATAL,
@@ -319,18 +323,4 @@ void ShutdownGoogleLoggingUtilities() {
 }
 
 }  // namespace glog_internal_namespace_
-
 }  // namespace google
-
-// Make an implementation of stacktrace compiled.
-#ifdef STACKTRACE_H
-#  include STACKTRACE_H
-#  if 0
-// For include scanners which can't handle macro expansions.
-#    include "stacktrace_generic-inl.h"
-#    include "stacktrace_libunwind-inl.h"
-#    include "stacktrace_powerpc-inl.h"
-#    include "stacktrace_x86-inl.h"
-#    include "stacktrace_x86_64-inl.h"
-#  endif
-#endif

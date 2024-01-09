@@ -56,7 +56,7 @@
 #  include "glog/export.h"
 #endif
 
-#if !defined(GLOG_EXPORT)
+#if !defined(GLOG_EXPORT) || !defined(GLOG_NO_EXPORT)
 #  error <glog/logging.h> was not included correctly. See the documention for how to consume the library.
 #endif
 
@@ -580,13 +580,16 @@ class LogSink;  // defined below
   LOG_IF(FATAL, GOOGLE_PREDICT_BRANCH_NOT_TAKEN(!(condition))) \
       << "Check failed: " #condition " "
 
+namespace logging {
+namespace internal {
+
 // A container for a string pointer which can be evaluated to a bool -
 // true iff the pointer is nullptr.
 struct CheckOpString {
   CheckOpString(std::string* str) : str_(str) {}
   // No destructor: if str_ is non-nullptr, we're about to LOG(FATAL),
   // so there's no point in cleaning up str_.
-  operator bool() const {
+  explicit operator bool() const noexcept {
     return GOOGLE_PREDICT_BRANCH_NOT_TAKEN(str_ != nullptr);
   }
   std::string* str_;
@@ -616,17 +619,13 @@ inline unsigned long long GetReferenceableValue(unsigned long long t) {
 // This is a dummy class to define the following operator.
 struct DummyClassToDefineOperator {};
 
-}  // namespace google
-
 // Define global operator<< to declare using ::operator<<.
 // This declaration will allow use to use CHECK macros for user
 // defined classes which have operator<< (e.g., stl_logging.h).
 inline std::ostream& operator<<(std::ostream& out,
-                                const google::DummyClassToDefineOperator&) {
+                                const DummyClassToDefineOperator&) {
   return out;
 }
-
-namespace google {
 
 // This formats a value for a failing CHECK_XX statement.  Ordinarily,
 // it uses the definition for operator<<, with a few special cases below.
@@ -660,8 +659,6 @@ std::string* MakeCheckOpString(const T1& v1, const T2& v2, const char* exprtext)
 #endif
     ;
 
-namespace base {
-
 // A helper class for formatting "expr (V1 vs. V2)" in a CHECK_XX
 // statement.  See MakeCheckOpString for sample usage.  Other
 // approaches were considered: use of a template method (e.g.,
@@ -685,12 +682,10 @@ class GLOG_EXPORT CheckOpMessageBuilder {
   std::ostringstream* stream_;
 };
 
-}  // namespace base
-
 template <typename T1, typename T2>
 std::string* MakeCheckOpString(const T1& v1, const T2& v2,
                                const char* exprtext) {
-  base::CheckOpMessageBuilder comb(exprtext);
+  CheckOpMessageBuilder comb(exprtext);
   MakeCheckOpValueString(comb.ForVar1(), v1);
   MakeCheckOpValueString(comb.ForVar2(), v2);
   return comb.NewString();
@@ -717,13 +712,13 @@ std::string* MakeCheckOpString(const T1& v1, const T2& v2,
 // base/logging.h provides its own #defines for the simpler names EQ, NE, etc.
 // This happens if, for example, those are used as token names in a
 // yacc grammar.
-DEFINE_CHECK_OP_IMPL(Check_EQ,
-                     ==)  // Compilation error with CHECK_EQ(nullptr, x)?
-DEFINE_CHECK_OP_IMPL(Check_NE, !=)  // Use CHECK(x == nullptr) instead.
+DEFINE_CHECK_OP_IMPL(Check_EQ, ==)
+DEFINE_CHECK_OP_IMPL(Check_NE, !=)
 DEFINE_CHECK_OP_IMPL(Check_LE, <=)
 DEFINE_CHECK_OP_IMPL(Check_LT, <)
 DEFINE_CHECK_OP_IMPL(Check_GE, >=)
 DEFINE_CHECK_OP_IMPL(Check_GT, >)
+
 #undef DEFINE_CHECK_OP_IMPL
 
 // Helper macro for binary operators.
@@ -743,18 +738,23 @@ DEFINE_CHECK_OP_IMPL(Check_GT, >)
 // file is included).  Save the current meaning now and use it
 // in the macro.
 typedef std::string _Check_string;
-#  define CHECK_OP_LOG(name, op, val1, val2, log)                             \
-    while (google::_Check_string* _result = google::Check##name##Impl(        \
-               google::GetReferenceableValue(val1),                           \
-               google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
-    log(__FILE__, __LINE__, google::CheckOpString(_result)).stream()
+#  define CHECK_OP_LOG(name, op, val1, val2, log)                              \
+    while (google::logging::internal::_Check_string* _result =                 \
+               google::logging::internal::Check##name##Impl(                   \
+                   google::logging::internal::GetReferenceableValue(val1),     \
+                   google::logging::internal::GetReferenceableValue(val2),     \
+                   #val1 " " #op " " #val2))                                   \
+    log(__FILE__, __LINE__, google::logging::internal::CheckOpString(_result)) \
+        .stream()
 #else
 // In optimized mode, use CheckOpString to hint to compiler that
 // the while condition is unlikely.
-#  define CHECK_OP_LOG(name, op, val1, val2, log)                             \
-    while (google::CheckOpString _result = google::Check##name##Impl(         \
-               google::GetReferenceableValue(val1),                           \
-               google::GetReferenceableValue(val2), #val1 " " #op " " #val2)) \
+#  define CHECK_OP_LOG(name, op, val1, val2, log)                          \
+    while (google::logging::internal::CheckOpString _result =              \
+               google::logging::internal::Check##name##Impl(               \
+                   google::logging::internal::GetReferenceableValue(val1), \
+                   google::logging::internal::GetReferenceableValue(val2), \
+                   #val1 " " #op " " #val2))                               \
     log(__FILE__, __LINE__, _result).stream()
 #endif  // STATIC_ANALYSIS, DCHECK_IS_ON()
 
@@ -794,26 +794,32 @@ typedef std::string _Check_string;
 // Check that the input is non nullptr.  This very useful in constructor
 // initializer lists.
 
-#define CHECK_NOTNULL(val)                                                   \
-  google::CheckNotNull(__FILE__, __LINE__, "'" #val "' Must be non nullptr", \
-                       (val))
+#define CHECK_NOTNULL(val)                 \
+  google::logging::internal::CheckNotNull( \
+      __FILE__, __LINE__, "'" #val "' Must be non nullptr", (val))
 
 // Helper functions for string comparisons.
 // To avoid bloat, the definitions are in logging.cc.
 #define DECLARE_CHECK_STROP_IMPL(func, expected)        \
   GLOG_EXPORT std::string* Check##func##expected##Impl( \
       const char* s1, const char* s2, const char* names);
+
 DECLARE_CHECK_STROP_IMPL(strcmp, true)
 DECLARE_CHECK_STROP_IMPL(strcmp, false)
 DECLARE_CHECK_STROP_IMPL(strcasecmp, true)
 DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
+
+}  // namespace internal
+}  // namespace logging
+
 #undef DECLARE_CHECK_STROP_IMPL
 
 // Helper macro for string comparisons.
 // Don't use this macro directly in your code, use CHECK_STREQ et al below.
-#define CHECK_STROP(func, op, expected, s1, s2)                               \
-  while (google::CheckOpString _result = google::Check##func##expected##Impl( \
-             (s1), (s2), #s1 " " #op " " #s2))                                \
+#define CHECK_STROP(func, op, expected, s1, s2)                      \
+  while (google::logging::internal::CheckOpString _result =          \
+             google::logging::internal::Check##func##expected##Impl( \
+                 (s1), (s2), #s1 " " #op " " #s2))                   \
   LOG(FATAL) << *_result.str_
 
 // String (char*) equality/inequality checks.
@@ -1181,6 +1187,12 @@ class GLOG_EXPORT LogStreamBuf : public std::streambuf {
 
 }  // namespace base_logging
 
+namespace logging {
+namespace internal {
+struct GLOG_NO_EXPORT LogMessageData;
+}  // namespace internal
+}  // namespace logging
+
 //
 // This class more or less represents a particular log message.  You
 // create an instance of LogMessage and then stream stuff to it.
@@ -1297,7 +1309,8 @@ class GLOG_EXPORT LogMessage {
              std::string* message);
 
   // A special constructor used for check failures
-  LogMessage(const char* file, int line, const CheckOpString& result);
+  LogMessage(const char* file, int line,
+             const logging::internal::CheckOpString& result);
 
   ~LogMessage();
 
@@ -1355,8 +1368,8 @@ class GLOG_EXPORT LogMessage {
 
   // We keep the data in a separate struct so that each instance of
   // LogMessage uses less stack space.
-  LogMessageData* allocated_;
-  LogMessageData* data_;
+  logging::internal::LogMessageData* allocated_;
+  logging::internal::LogMessageData* data_;
   LogMessageTime time_;
 
   friend class LogDestination;
@@ -1371,7 +1384,8 @@ class GLOG_EXPORT LogMessage {
 class GLOG_EXPORT LogMessageFatal : public LogMessage {
  public:
   LogMessageFatal(const char* file, int line);
-  LogMessageFatal(const char* file, int line, const CheckOpString& result);
+  LogMessageFatal(const char* file, int line,
+                  const logging::internal::CheckOpString& result);
   [[noreturn]] ~LogMessageFatal();
 };
 
@@ -1387,22 +1401,6 @@ inline void LogAtLevel(LogSeverity severity, std::string const& msg) {
 // LOG macros, 2. this macro can be used as C++ stream.
 #define LOG_AT_LEVEL(severity) \
   google::LogMessage(__FILE__, __LINE__, severity).stream()
-
-// Helper for CHECK_NOTNULL().
-//
-// In C++11, all cases can be handled by a single function. Since the value
-// category of the argument is preserved (also for rvalue references),
-// member initializer lists like the one below will compile correctly:
-//
-//   Foo()
-//     : x_(CHECK_NOTNULL(MethodReturningUniquePtr())) {}
-template <typename T>
-T CheckNotNull(const char* file, int line, const char* names, T&& t) {
-  if (t == nullptr) {
-    LogMessageFatal(file, line, new std::string(names));
-  }
-  return std::forward<T>(t);
-}
 
 // Allow folks to put a counter in the LOG_EVERY_X()'ed messages. This
 // only works if ostream is a LogStream. If the ostream is not a
@@ -1429,13 +1427,29 @@ class GLOG_EXPORT ErrnoLogMessage : public LogMessage {
 
 namespace logging {
 namespace internal {
-class LogMessageVoidify {
- public:
-  LogMessageVoidify() {}
+
+// Helper for CHECK_NOTNULL().
+//
+// In C++11, all cases can be handled by a single function. Since the value
+// category of the argument is preserved (also for rvalue references),
+// member initializer lists like the one below will compile correctly:
+//
+//   Foo()
+//     : x_(CHECK_NOTNULL(MethodReturningUniquePtr())) {}
+template <typename T>
+T CheckNotNull(const char* file, int line, const char* names, T&& t) {
+  if (t == nullptr) {
+    LogMessageFatal(file, line, new std::string(names));
+  }
+  return std::forward<T>(t);
+}
+
+struct LogMessageVoidify {
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(std::ostream&) {}
+  void operator&(std::ostream&) noexcept {}
 };
+
 }  // namespace internal
 }  // namespace logging
 
@@ -1637,7 +1651,7 @@ class GLOG_EXPORT NullStream : public LogMessage::LogStream {
   // the overloaded NullStream::operator<< will not be invoked.
   NullStream();
   NullStream(const char* /*file*/, int /*line*/,
-             const CheckOpString& /*result*/);
+             const logging::internal::CheckOpString& /*result*/);
   NullStream& stream();
 
  private:

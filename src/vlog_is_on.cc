@@ -1,4 +1,4 @@
-// Copyright (c) 1999, 2007, Google Inc.
+// Copyright (c) 2024, Google Inc.
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,7 @@
 #include <mutex>
 #include <string>
 
-#include "glog/logging.h"
 #include "glog/raw_logging.h"
-#include "utilities.h"
 
 // glog doesn't have annotation
 #define ANNOTATE_BENIGN_RACE(address, description)

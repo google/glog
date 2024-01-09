@@ -61,6 +61,7 @@
 #include "glog/logging.h"
 #include "glog/raw_logging.h"
 #include "googletest.h"
+#include "stacktrace.h"
 #include "utilities.h"
 
 #ifdef GLOG_USE_GFLAGS

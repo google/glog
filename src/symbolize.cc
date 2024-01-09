@@ -71,6 +71,7 @@
 #  define GLOG_SAFE_ASSERT(expr) ((expr) ? 0 : (std::abort(), 0))
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 namespace {
 
@@ -105,6 +106,7 @@ void InstallSymbolizeOpenObjectFileCallback(
   g_symbolize_open_object_file_callback = callback;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
 #  if defined(__ELF__)
@@ -135,6 +137,7 @@ void InstallSymbolizeOpenObjectFileCallback(
 #    include "symbolize.h"
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 namespace {
 
@@ -822,6 +825,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
   return true;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
 #  elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
@@ -831,6 +835,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
 #    include <cstring>
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
     void* pc, char* out, size_t out_size, SymbolizeOptions /*options*/) {
@@ -848,6 +853,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
   return false;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
 #  elif defined(GLOG_OS_WINDOWS) || defined(GLOG_OS_CYGWIN)
@@ -856,6 +862,9 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
 #    include <windows.h>
 
 namespace google {
+inline namespace glog_internal_namespace_ {
+
+namespace {
 
 class SymInitializer final {
  public:
@@ -882,6 +891,8 @@ class SymInitializer final {
   SymInitializer(SymInitializer&&) = delete;
   SymInitializer& operator=(SymInitializer&&) = delete;
 };
+
+}  // namespace
 
 static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
                                                     size_t out_size,
@@ -942,6 +953,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
   return false;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
 #  else
@@ -949,28 +961,13 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
 #  endif
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 bool Symbolize(void* pc, char* out, size_t out_size, SymbolizeOptions options) {
   return SymbolizeAndDemangle(pc, out, out_size, options);
 }
 
-}  // namespace google
-
-#else /* HAVE_SYMBOLIZE */
-
-#  include <cassert>
-
-#  include "config.h"
-
-namespace google {
-
-// TODO: Support other environments.
-bool Symbolize(void* /*pc*/, char* /*out*/, size_t /*out_size*/,
-               SymbolizeOptions /*options*/) {
-  assert(0);
-  return false;
-}
-
+}  // namespace glog_internal_namespace_
 }  // namespace google
 
 #endif
