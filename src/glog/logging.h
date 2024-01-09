@@ -558,10 +558,14 @@ class LogSink;  // defined below
 
 #define LOG_IF(severity, condition) \
   static_cast<void>(0),             \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+      !(condition)                  \
+          ? (void)0                 \
+          : google::logging::internal::LogMessageVoidify() & LOG(severity)
 #define SYSLOG_IF(severity, condition) \
   static_cast<void>(0),                \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & SYSLOG(severity)
+      !(condition)                     \
+          ? (void)0                    \
+          : google::logging::internal::LogMessageVoidify() & SYSLOG(severity)
 
 #define LOG_ASSERT(condition) \
   LOG_IF(FATAL, !(condition)) << "Assert failed: " #condition
@@ -853,7 +857,9 @@ DECLARE_CHECK_STROP_IMPL(strcasecmp, false)
 
 #define PLOG_IF(severity, condition) \
   static_cast<void>(0),              \
-      !(condition) ? (void)0 : google::LogMessageVoidify() & PLOG(severity)
+      !(condition)                   \
+          ? (void)0                  \
+          : google::logging::internal::LogMessageVoidify() & PLOG(severity)
 
 // A CHECK() macro that postpends errno if the condition is false. E.g.
 //
@@ -1052,34 +1058,41 @@ constexpr LogSeverity GLOG_0 = GLOG_ERROR;
 
 #  define DLOG(severity)  \
     static_cast<void>(0), \
-        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+        true ? (void)0    \
+             : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
-#  define DVLOG(verboselevel)                                 \
-    static_cast<void>(0), (true || !VLOG_IS_ON(verboselevel)) \
-                              ? (void)0                       \
-                              : google::LogMessageVoidify() & LOG(INFO)
+#  define DVLOG(verboselevel)               \
+    static_cast<void>(0),                   \
+        (true || !VLOG_IS_ON(verboselevel)) \
+            ? (void)0                       \
+            : google::logging::internal::LogMessageVoidify() & LOG(INFO)
 
-#  define DLOG_IF(severity, condition)           \
-    static_cast<void>(0), (true || !(condition)) \
-                              ? (void)0          \
-                              : google::LogMessageVoidify() & LOG(severity)
+#  define DLOG_IF(severity, condition) \
+    static_cast<void>(0),              \
+        (true || !(condition))         \
+            ? (void)0                  \
+            : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_EVERY_N(severity, n) \
     static_cast<void>(0),           \
-        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+        true ? (void)0              \
+             : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_IF_EVERY_N(severity, condition, n) \
-    static_cast<void>(0), (true || !(condition))  \
-                              ? (void)0           \
-                              : google::LogMessageVoidify() & LOG(severity)
+    static_cast<void>(0),                         \
+        (true || !(condition))                    \
+            ? (void)0                             \
+            : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_FIRST_N(severity, n) \
     static_cast<void>(0),           \
-        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+        true ? (void)0              \
+             : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_EVERY_T(severity, T) \
     static_cast<void>(0),           \
-        true ? (void)0 : google::LogMessageVoidify() & LOG(severity)
+        true ? (void)0              \
+             : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 #  define DLOG_ASSERT(condition) \
     static_cast<void>(0), true ? (void)0 : (LOG_ASSERT(condition))
@@ -1414,13 +1427,17 @@ class GLOG_EXPORT ErrnoLogMessage : public LogMessage {
 // logging macros.  This avoids compiler warnings like "value computed
 // is not used" and "statement has no effect".
 
-class GLOG_EXPORT LogMessageVoidify {
+namespace logging {
+namespace internal {
+class LogMessageVoidify {
  public:
   LogMessageVoidify() {}
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
   void operator&(std::ostream&) {}
 };
+}  // namespace internal
+}  // namespace logging
 
 // Flushes all log files that contains messages that are at least of
 // the specified severity level.  Thread-safe.
