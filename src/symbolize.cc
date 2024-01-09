@@ -943,7 +943,7 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(void* pc, char* out,
       const std::size_t suffixlen = fnlen + extralen + fnlen + digits;
 
       if (suffixlen < out_size) {
-        out_size -= std::snprintf(out + namelen, out_size, " (%s:%u)",
+        out_size -= std::snprintf(out + namelen, out_size, " (%s:%lu)",
                                   line.FileName, line.LineNumber);
       }
     }
