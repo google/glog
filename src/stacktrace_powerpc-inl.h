@@ -41,6 +41,7 @@
 #include "stacktrace.h"
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 // Given a pointer to a stack frame, locate and return the calling
 // stackframe, or return nullptr if no stackframe can be found. Perform sanity
@@ -131,4 +132,5 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   return n;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google

@@ -41,6 +41,7 @@ extern "C" {
 #include "stacktrace.h"
 
 namespace google {
+inline namespace glog_internal_namespace_ {
 
 // Sometimes, we can try to get a stack trace from within a stack
 // trace, because libunwind can call mmap (maybe indirectly via an
@@ -90,4 +91,5 @@ int GetStackTrace(void** result, int max_depth, int skip_count) {
   return n;
 }
 
+}  // namespace glog_internal_namespace_
 }  // namespace google

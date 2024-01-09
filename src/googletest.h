@@ -51,12 +51,16 @@
 #include <utility>
 #include <vector>
 
-#include "utilities.h"
+#include "config.h"
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
 
+#if defined(GLOG_USE_WINDOWS_PORT)
+#  include "port.h"
+#endif  // defined(GLOG_USE_WINDOWS_PORT)
 #include "base/commandlineflags.h"
+#include "utilities.h"
 
 #if __cplusplus < 201103L && !defined(_MSC_VER)
 #  define GOOGLE_GLOG_THROW_BAD_ALLOC throw(std::bad_alloc)
@@ -339,20 +343,20 @@ class CapturedStream {
       uncaptured_fd_;  // where the stream was originally being sent to
   string filename_;    // file where stream is being saved
 };
-static std::unique_ptr<CapturedStream> s_captured_streams[STDERR_FILENO + 1];
+static std::map<int, std::unique_ptr<CapturedStream>> s_captured_streams;
 // Redirect a file descriptor to a file.
-//   fd       - Should be STDOUT_FILENO or STDERR_FILENO
+//   fd       - Should be stdout or stderr
 //   filename - File where output should be stored
 static inline void CaptureTestOutput(int fd, const string& filename) {
-  CHECK((fd == STDOUT_FILENO) || (fd == STDERR_FILENO));
-  CHECK(s_captured_streams[fd] == nullptr);
+  CHECK((fd == fileno(stdout)) || (fd == fileno(stderr)));
+  CHECK(s_captured_streams.find(fd) == s_captured_streams.end());
   s_captured_streams[fd] = std::make_unique<CapturedStream>(fd, filename);
 }
 static inline void CaptureTestStdout() {
-  CaptureTestOutput(STDOUT_FILENO, FLAGS_test_tmpdir + "/captured.out");
+  CaptureTestOutput(fileno(stdout), FLAGS_test_tmpdir + "/captured.out");
 }
 static inline void CaptureTestStderr() {
-  CaptureTestOutput(STDERR_FILENO, FLAGS_test_tmpdir + "/captured.err");
+  CaptureTestOutput(fileno(stderr), FLAGS_test_tmpdir + "/captured.err");
 }
 // Return the size (in bytes) of a file
 static inline size_t GetFileSize(FILE* file) {
@@ -379,11 +383,11 @@ static inline string ReadEntireFile(FILE* file) {
 
   return std::string(content.data(), bytes_read);
 }
-// Get the captured stdout (when fd is STDOUT_FILENO) or stderr (when
-// fd is STDERR_FILENO) as a string
+// Get the captured stdout  or stderr as a string
 static inline string GetCapturedTestOutput(int fd) {
-  CHECK(fd == STDOUT_FILENO || fd == STDERR_FILENO);
-  std::unique_ptr<CapturedStream> cap = std::move(s_captured_streams[fd]);
+  CHECK((fd == fileno(stdout)) || (fd == fileno(stderr)));
+  std::unique_ptr<CapturedStream> cap = std::move(s_captured_streams.at(fd));
+  s_captured_streams.erase(fd);
   CHECK(cap) << ": did you forget CaptureTestStdout() or CaptureTestStderr()?";
 
   // Make sure everything is flushed.
@@ -398,7 +402,7 @@ static inline string GetCapturedTestOutput(int fd) {
 }
 // Get the captured stderr of a test as a string.
 static inline string GetCapturedTestStderr() {
-  return GetCapturedTestOutput(STDERR_FILENO);
+  return GetCapturedTestOutput(fileno(stderr));
 }
 
 static const std::size_t kLoggingPrefixLength = 9;
@@ -499,7 +503,9 @@ static inline void WriteToFile(const string& body, const string& file) {
 
 static inline bool MungeAndDiffTest(const string& golden_filename,
                                     CapturedStream* cap) {
-  if (cap == s_captured_streams[STDOUT_FILENO].get()) {
+  auto pos = s_captured_streams.find(fileno(stdout));
+
+  if (pos != s_captured_streams.end() && cap == pos->second.get()) {
     CHECK(cap) << ": did you forget CaptureTestStdout()?";
   } else {
     CHECK(cap) << ": did you forget CaptureTestStderr()?";
@@ -535,12 +541,12 @@ static inline bool MungeAndDiffTest(const string& golden_filename,
 
 static inline bool MungeAndDiffTestStderr(const string& golden_filename) {
   return MungeAndDiffTest(golden_filename,
-                          s_captured_streams[STDERR_FILENO].get());
+                          s_captured_streams.at(fileno(stderr)).get());
 }
 
 static inline bool MungeAndDiffTestStdout(const string& golden_filename) {
   return MungeAndDiffTest(golden_filename,
-                          s_captured_streams[STDOUT_FILENO].get());
+                          s_captured_streams.at(fileno(stdout)).get());
 }
 
 // Save flags used from logging_unittest.cc.

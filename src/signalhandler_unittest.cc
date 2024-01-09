@@ -39,12 +39,20 @@
 #include <string>
 #include <thread>
 
+#include "config.h"
 #include "glog/logging.h"
-#include "utilities.h"
+#include "stacktrace.h"
+#include "symbolize.h"
 
+#if defined(HAVE_UNISTD_H)
+#  include <unistd.h>
+#endif
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
 using namespace GFLAGS_NAMESPACE;
+#endif
+#if defined(_MSC_VER)
+#  include <io.h>  // write
 #endif
 
 using namespace google;
@@ -59,7 +67,7 @@ static void DieInThread(int* a) {
 }
 
 static void WriteToStdout(const char* data, size_t size) {
-  if (write(STDOUT_FILENO, data, size) < 0) {
+  if (write(fileno(stdout), data, size) < 0) {
     // Ignore errors.
   }
 }

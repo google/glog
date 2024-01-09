@@ -43,6 +43,14 @@
 
 #include "config.h"
 
+#if defined(GLOG_USE_GLOG_EXPORT)
+#  include "glog/export.h"
+#endif
+
+#if !defined(GLOG_EXPORT)
+#  error "port.h" was not included correctly.
+#endif
+
 #ifdef _WIN32
 
 #  ifndef WIN32_LEAN_AND_MEAN
@@ -61,8 +69,6 @@
 /* Note: the C++ #includes are all together at the bottom.  This file is
  * used by both C and C++ code, so we put all the C++ together.
  */
-
-#  include "glog/logging.h"
 
 #  ifdef _MSC_VER
 
@@ -89,9 +95,6 @@
 #    define O_CREAT _O_CREAT
 #    define O_EXCL _O_EXCL
 
-#    ifndef __MINGW32__
-enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
-#    endif
 #    define S_IRUSR S_IREAD
 #    define S_IWUSR S_IWRITE
 
@@ -116,24 +119,23 @@ enum { STDIN_FILENO = 0, STDOUT_FILENO = 1, STDERR_FILENO = 2 };
 
 #  endif  // _MSC_VER
 
+namespace google {
+inline namespace glog_internal_namespace_ {
 #  ifndef HAVE_LOCALTIME_R
-extern GLOG_EXPORT std::tm* localtime_r(const std::time_t* timep,
-                                        std::tm* result);
+GLOG_NO_EXPORT std::tm* localtime_r(const std::time_t* timep, std::tm* result);
 #  endif  // not HAVE_LOCALTIME_R
 
 #  ifndef HAVE_GMTIME_R
-extern GLOG_EXPORT std::tm* gmtime_r(const std::time_t* timep, std::tm* result);
+GLOG_NO_EXPORT std::tm* gmtime_r(const std::time_t* timep, std::tm* result);
 #  endif  // not HAVE_GMTIME_R
 
+GLOG_NO_EXPORT
 inline char* strerror_r(int errnum, char* buf, std::size_t buflen) {
   strerror_s(buf, buflen, errnum);
   return buf;
 }
-
-#  ifndef __cplusplus
-/* I don't see how to get inlining for C code in MSVC.  Ah well. */
-#    define inline
-#  endif
+}  // namespace glog_internal_namespace_
+}  // namespace google
 
 #endif /* _WIN32 */
 

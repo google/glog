@@ -142,6 +142,7 @@ check_type_size (ssize_t HAVE_SSIZE_T LANGUAGE CXX)
 
 check_cxx_symbol_exists (dladdr dlfcn.h HAVE_DLADDR)
 check_cxx_symbol_exists (fcntl fcntl.h HAVE_FCNTL)
+check_cxx_symbol_exists (posix_fadvise fcntl.h HAVE_POSIX_FADVISE)
 check_cxx_symbol_exists (pread unistd.h HAVE_PREAD)
 check_cxx_symbol_exists (pwrite unistd.h HAVE_PWRITE)
 check_cxx_symbol_exists (sigaction csignal HAVE_SIGACTION)
@@ -364,6 +365,8 @@ set (GLOG_SRCS
   src/logging.cc
   src/raw_logging.cc
   src/signalhandler.cc
+  src/stacktrace.cc
+  src/stacktrace.h
   src/symbolize.cc
   src/symbolize.h
   src/utilities.cc

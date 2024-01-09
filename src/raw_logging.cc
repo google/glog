@@ -33,29 +33,18 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 #include <iomanip>
 #include <mutex>
 #include <ostream>
 #include <streambuf>
 #include <thread>
 
-#include "utilities.h"
+#include "config.h"
+
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>  // for close() and write()
 #endif
-#include <fcntl.h>  // for open()
-
-#include <ctime>
-
-#include "base/commandlineflags.h"
-#include "config.h"
-#include "glog/logging.h"  // To pick up flag settings etc.
-#include "glog/raw_logging.h"
-
-#ifdef HAVE_STACKTRACE
-#  include "stacktrace.h"
-#endif
-
 #if defined(HAVE_SYSCALL_H)
 #  include <syscall.h>  // for syscall()
 #elif defined(HAVE_SYS_SYSCALL_H)
@@ -64,6 +53,12 @@
 #ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 #endif
+#include <fcntl.h>  // for open()
+
+#include "glog/logging.h"
+#include "glog/raw_logging.h"
+#include "stacktrace.h"
+#include "utilities.h"
 
 #if (defined(HAVE_SYSCALL_H) || defined(HAVE_SYS_SYSCALL_H)) &&    \
     (!(defined(GLOG_OS_MACOSX)) && !(defined(GLOG_OS_OPENBSD))) && \
@@ -173,7 +168,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
 
   // NOTE: this format should match the specification in base/logging.h
   DoRawLog(&buf, &size, "%c00000000 00:00:00.000000 %s %s:%d] RAW: ",
-           LogSeverityNames[severity][0], sbuf.data(),
+           GetLogSeverityName(severity)[0], sbuf.data(),
            const_basename(const_cast<char*>(file)), line);
 
   // Record the position and size of the buffer after the prefix
@@ -193,7 +188,7 @@ void RawLog__(LogSeverity severity, const char* file, int line,
   // avoiding FILE buffering (to avoid invoking malloc()), and bypassing
   // libc (to side-step any libc interception).
   // We write just once to avoid races with other invocations of RawLog__.
-  safe_write(STDERR_FILENO, buffer, strlen(buffer));
+  safe_write(fileno(stderr), buffer, strlen(buffer));
   if (severity == GLOG_FATAL) {
     std::call_once(crashed, [file, line, msg_start, msg_size] {
       crash_reason.filename = file;

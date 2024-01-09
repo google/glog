@@ -95,8 +95,6 @@ constexpr int NUM_SEVERITIES = 4;
 #  define DFATAL_LEVEL FATAL
 #endif
 
-extern GLOG_EXPORT const char* const LogSeverityNames[NUM_SEVERITIES];
-
 // NDEBUG usage helpers related to (RAW_)DCHECK:
 //
 // DEBUG_MODE is for small !NDEBUG uses like

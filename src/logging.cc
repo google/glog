@@ -48,12 +48,10 @@
 #include <utility>
 
 #include "config.h"
+#include "glog/platform.h"
 #include "glog/raw_logging.h"
+#include "stacktrace.h"
 #include "utilities.h"
-
-#ifdef HAVE_STACKTRACE
-#  include "stacktrace.h"
-#endif
 
 #ifdef GLOG_OS_WINDOWS
 #  include "windows/dirent.h"
@@ -217,6 +215,7 @@ static bool TerminalSupportsColor() {
 
 namespace google {
 
+GLOG_NO_EXPORT
 std::string StrError(int err);
 
 enum GLogColor { COLOR_DEFAULT, COLOR_RED, COLOR_GREEN, COLOR_YELLOW };
@@ -283,13 +282,15 @@ static uint32 MaxLogSize() {
 // is so that streaming can be done more efficiently.
 const size_t LogMessage::kMaxLogMessageLen = 30000;
 
-struct LogMessage::LogMessageData {
+namespace logging {
+namespace internal {
+struct LogMessageData {
   LogMessageData();
 
   int preserved_errno_;  // preserved errno
   // Buffer space; contains complete message text.
   char message_text_[LogMessage::kMaxLogMessageLen + 1];
-  LogStream stream_;
+  LogMessage::LogStream stream_;
   LogSeverity severity_;  // What level is this LogMessage logged at?
   int line_;              // line number where logging call is.
   void (LogMessage::*send_method_)();  // Call this in destructor to send
@@ -311,6 +312,8 @@ struct LogMessage::LogMessageData {
   LogMessageData(const LogMessageData&) = delete;
   void operator=(const LogMessageData&) = delete;
 };
+}  // namespace internal
+}  // namespace logging
 
 // A mutex that allows only one thread to log at a time, to keep things from
 // getting jumbled.  Some other very uncommon logging operations (like
@@ -325,8 +328,7 @@ int64 LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
 // Globally disable log writing (if disk is full)
 static bool stop_writing = false;
 
-const char* const LogSeverityNames[NUM_SEVERITIES] = {"INFO", "WARNING",
-                                                      "ERROR", "FATAL"};
+const char* const LogSeverityNames[] = {"INFO", "WARNING", "ERROR", "FATAL"};
 
 // Has the user called SetExitOnDFatal(true)?
 static bool exit_on_dfatal = true;
@@ -547,7 +549,7 @@ class LogDestination {
 
   // Wait for all registered sinks via WaitTillSent
   // including the optional one in "data".
-  static void WaitForSinks(LogMessage::LogMessageData* data);
+  static void WaitForSinks(logging::internal::LogMessageData* data);
 
   static LogDestination* log_destination(LogSeverity severity);
 
@@ -854,7 +856,8 @@ inline void LogDestination::LogToSinks(LogSeverity severity,
   }
 }
 
-inline void LogDestination::WaitForSinks(LogMessage::LogMessageData* data) {
+inline void LogDestination::WaitForSinks(
+    logging::internal::LogMessageData* data) {
   std::shared_lock<SinkMutex> l{sink_mutex_};
   if (sinks_) {
     for (size_t i = sinks_->size(); i-- > 0;) {
@@ -1266,10 +1269,7 @@ void LogFileObject::Write(
       uint32 this_drop_length = total_drop_length - dropped_mem_length_;
       if (this_drop_length >= (2U << 20U)) {
         // Only advise when >= 2MiB to drop
-#  if defined(__ANDROID__) && defined(__ANDROID_API__) && (__ANDROID_API__ < 21)
-        // 'posix_fadvise' introduced in API 21:
-        // * https://android.googlesource.com/platform/bionic/+/6880f936173081297be0dc12f687d341b86a4cfa/libc/libc.map.txt#732
-#  else
+#  if defined(HAVE_POSIX_FADVISE)
         posix_fadvise(
             fileno(file_.get()), static_cast<off_t>(dropped_mem_length_),
             static_cast<off_t>(this_drop_length), POSIX_FADV_DONTNEED);
@@ -1488,8 +1488,8 @@ bool LogCleaner::IsLogLastModifiedOver(
 static std::mutex fatal_msg_lock;
 static logging::internal::CrashReason crash_reason;
 static bool fatal_msg_exclusive = true;
-static LogMessage::LogMessageData fatal_msg_data_exclusive;
-static LogMessage::LogMessageData fatal_msg_data_shared;
+static logging::internal::LogMessageData fatal_msg_data_exclusive;
+static logging::internal::LogMessageData fatal_msg_data_shared;
 
 #ifdef GLOG_THREAD_LOCAL_STORAGE
 // Static thread-local log data space to use, because typically at most one
@@ -1499,16 +1499,16 @@ static thread_local bool thread_data_available = true;
 
 #  if defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
 // std::aligned_storage is deprecated in C++23
-alignas(LogMessage::LogMessageData) static thread_local std::byte
-    thread_msg_data[sizeof(LogMessage::LogMessageData)];
+alignas(logging::internal::LogMessageData) static thread_local std::byte
+    thread_msg_data[sizeof(logging::internal::LogMessageData)];
 #  else   // !(defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L)
 static thread_local std::aligned_storage<
-    sizeof(LogMessage::LogMessageData),
-    alignof(LogMessage::LogMessageData)>::type thread_msg_data;
+    sizeof(logging::internal::LogMessageData),
+    alignof(logging::internal::LogMessageData)>::type thread_msg_data;
 #  endif  // defined(__cpp_lib_byte) && __cpp_lib_byte >= 201603L
 #endif    // defined(GLOG_THREAD_LOCAL_STORAGE)
 
-LogMessage::LogMessageData::LogMessageData()
+logging::internal::LogMessageData::LogMessageData()
     : stream_(message_text_, LogMessage::kMaxLogMessageLen, 0) {}
 
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
@@ -1518,7 +1518,8 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
   data_->stream_.set_ctr(ctr);
 }
 
-LogMessage::LogMessage(const char* file, int line, const CheckOpString& result)
+LogMessage::LogMessage(const char* file, int line,
+                       const logging::internal::CheckOpString& result)
     : allocated_(nullptr) {
   Init(file, line, GLOG_FATAL, &LogMessage::SendToLog);
   stream() << "Check failed: " << (*result.str_) << " ";
@@ -1564,13 +1565,13 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
     // No need for locking, because this is thread local.
     if (thread_data_available) {
       thread_data_available = false;
-      data_ = new (&thread_msg_data) LogMessageData;
+      data_ = new (&thread_msg_data) logging::internal::LogMessageData;
     } else {
-      allocated_ = new LogMessageData();
+      allocated_ = new logging::internal::LogMessageData();
       data_ = allocated_;
     }
 #else   // !defined(GLOG_THREAD_LOCAL_STORAGE)
-    allocated_ = new LogMessageData();
+    allocated_ = new logging::internal::LogMessageData();
     data_ = allocated_;
 #endif  // defined(GLOG_THREAD_LOCAL_STORAGE)
     data_->first_fatal_ = false;
@@ -1828,7 +1829,7 @@ void LogMessage::SendToLog() EXCLUSIVE_LOCKS_REQUIRED(log_mutex) {
     LogDestination::WaitForSinks(data_);
 
     const char* message = "*** Check failure stack trace: ***\n";
-    if (write(STDERR_FILENO, message, strlen(message)) < 0) {
+    if (write(fileno(stderr), message, strlen(message)) < 0) {
       // Ignore errors.
     }
     AlsoErrorWrite(GLOG_FATAL,
@@ -1856,7 +1857,7 @@ GLOG_NO_EXPORT logging_fail_func_t g_logging_fail_func =
 
 NullStream::NullStream() : LogMessage::LogStream(message_buffer_, 2, 0) {}
 NullStream::NullStream(const char* /*file*/, int /*line*/,
-                       const CheckOpString& /*result*/)
+                       const logging::internal::CheckOpString& /*result*/)
     : LogMessage::LogStream(message_buffer_, 2, 0) {}
 NullStream& NullStream::stream() { return *this; }
 
@@ -2455,6 +2456,8 @@ void TruncateStdoutStderr() {
 #endif
 }
 
+namespace logging {
+namespace internal {
 // Helper functions for string comparisons.
 #define DEFINE_CHECK_STROP_IMPL(name, func, expected)                         \
   string* Check##func##expected##Impl(const char* s1, const char* s2,         \
@@ -2475,6 +2478,8 @@ DEFINE_CHECK_STROP_IMPL(CHECK_STRNE, strcmp, false)
 DEFINE_CHECK_STROP_IMPL(CHECK_STRCASEEQ, strcasecmp, true)
 DEFINE_CHECK_STROP_IMPL(CHECK_STRCASENE, strcasecmp, false)
 #undef DEFINE_CHECK_STROP_IMPL
+}  // namespace internal
+}  // namespace logging
 
 // glibc has traditionally implemented two incompatible versions of
 // strerror_r(). There is a poorly defined convention for picking the
@@ -2541,7 +2546,6 @@ int posix_strerror_r(int err, char* buf, size_t len) {
 
 // A thread-safe replacement for strerror(). Returns a string describing the
 // given POSIX error code.
-GLOG_NO_EXPORT
 string StrError(int err) {
   char buf[100];
   int rc = posix_strerror_r(err, buf, sizeof(buf));
@@ -2555,7 +2559,7 @@ LogMessageFatal::LogMessageFatal(const char* file, int line)
     : LogMessage(file, line, GLOG_FATAL) {}
 
 LogMessageFatal::LogMessageFatal(const char* file, int line,
-                                 const CheckOpString& result)
+                                 const logging::internal::CheckOpString& result)
     : LogMessage(file, line, result) {}
 
 LogMessageFatal::~LogMessageFatal() {
@@ -2563,7 +2567,8 @@ LogMessageFatal::~LogMessageFatal() {
   LogMessage::Fail();
 }
 
-namespace base {
+namespace logging {
+namespace internal {
 
 CheckOpMessageBuilder::CheckOpMessageBuilder(const char* exprtext)
     : stream_(new ostringstream) {
@@ -2581,8 +2586,6 @@ string* CheckOpMessageBuilder::NewString() {
   *stream_ << ")";
   return new string(stream_->str());
 }
-
-}  // namespace base
 
 template <>
 void MakeCheckOpValueString(std::ostream* os, const char& v) {
@@ -2616,9 +2619,10 @@ void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& /*v*/) {
   (*os) << "nullptr";
 }
 
-void InitGoogleLogging(const char* argv0) {
-  glog_internal_namespace_::InitGoogleLoggingUtilities(argv0);
-}
+}  // namespace internal
+}  // namespace logging
+
+void InitGoogleLogging(const char* argv0) { InitGoogleLoggingUtilities(argv0); }
 
 void InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
                        void* prefix_callback_data) {
@@ -2628,7 +2632,7 @@ void InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
 }
 
 void ShutdownGoogleLogging() {
-  glog_internal_namespace_::ShutdownGoogleLoggingUtilities();
+  ShutdownGoogleLoggingUtilities();
   LogDestination::DeleteLogDestinations();
   logging_directories_list = nullptr;
 }

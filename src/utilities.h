@@ -32,8 +32,8 @@
 //
 // Define utilities for glog internal usage.
 
-#ifndef UTILITIES_H__
-#define UTILITIES_H__
+#ifndef GLOG_INTERNAL_UTILITIES_H
+#define GLOG_INTERNAL_UTILITIES_H
 
 #include <cstddef>
 #include <cstdio>
@@ -60,18 +60,14 @@
 #define PRIXS __PRIS_PREFIX "X"
 #define PRIoS __PRIS_PREFIX "o"
 
-#include "glog/logging.h"
-
+#include "config.h"
+#include "glog/platform.h"
 #if defined(GLOG_USE_WINDOWS_PORT)
 #  include "port.h"
 #endif
-
-#include "config.h"
-
 #if defined(HAVE_UNISTD_H)
 #  include <unistd.h>
 #endif
-
 #if !defined(HAVE_SSIZE_T)
 #  if defined(GLOG_OS_WINDOWS)
 #    include <basetsd.h>
@@ -80,6 +76,9 @@ using ssize_t = SSIZE_T;
 using ssize_t = std::ptrdiff_t;
 #  endif
 #endif
+
+#include "glog/log_severity.h"
+#include "glog/types.h"
 
 // There are three different ways we can try to get the stack trace:
 //
@@ -102,43 +101,6 @@ using ssize_t = std::ptrdiff_t;
 // Note: if you add a new implementation here, make sure it works
 // correctly when GetStackTrace() is called with max_depth == 0.
 // Some code may do that.
-
-#if defined(HAVE_LIBUNWIND)
-#  define STACKTRACE_H "stacktrace_libunwind-inl.h"
-#elif defined(HAVE_UNWIND)
-#  define STACKTRACE_H "stacktrace_unwind-inl.h"
-#elif !defined(NO_FRAME_POINTER)
-#  if defined(__i386__) && __GNUC__ >= 2
-#    define STACKTRACE_H "stacktrace_x86-inl.h"
-#  elif (defined(__ppc__) || defined(__PPC__)) && __GNUC__ >= 2
-#    define STACKTRACE_H "stacktrace_powerpc-inl.h"
-#  elif defined(GLOG_OS_WINDOWS)
-#    define STACKTRACE_H "stacktrace_windows-inl.h"
-#  endif
-#endif
-
-#if !defined(STACKTRACE_H) && defined(HAVE_EXECINFO_BACKTRACE)
-#  define STACKTRACE_H "stacktrace_generic-inl.h"
-#endif
-
-#if defined(STACKTRACE_H)
-#  define HAVE_STACKTRACE
-#endif
-
-#ifndef GLOG_NO_SYMBOLIZE_DETECTION
-#  ifndef HAVE_SYMBOLIZE
-// defined by gcc
-#    if defined(__ELF__) && defined(GLOG_OS_LINUX)
-#      define HAVE_SYMBOLIZE
-#    elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
-// Use dladdr to symbolize.
-#      define HAVE_SYMBOLIZE
-#    elif defined(GLOG_OS_WINDOWS)
-// Use DbgHelp to symbolize
-#      define HAVE_SYMBOLIZE
-#    endif
-#  endif  // !defined(HAVE_SYMBOLIZE)
-#endif    // !defined(GLOG_NO_SYMBOLIZE_DETECTION)
 
 #ifndef ARRAYSIZE
 // There is a better way, but this is good enough for our purpose.
@@ -320,4 +282,4 @@ struct std::default_delete<std::FILE> {
   void operator()(FILE* p) const noexcept { fclose(p); }
 };
 
-#endif  // UTILITIES_H__
+#endif  // GLOG_INTERNAL_UTILITIES_H

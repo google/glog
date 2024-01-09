@@ -41,8 +41,6 @@
 #  include <execinfo.h>
 #endif
 
-using namespace google;
-
 #ifdef HAVE_STACKTRACE
 
 // Obtain a backtrace, verify that the expected callers are present in the
@@ -132,7 +130,7 @@ static void ATTRIBUTE_NOINLINE CheckStackTraceLeaf() {
   ADJUST_ADDRESS_RANGE_FROM_RA(&expected_range[1]);
   INIT_ADDRESS_RANGE(CheckStackTraceLeaf, start, end, &expected_range[0]);
   DECLARE_ADDRESS_LABEL(start);
-  size = GetStackTrace(stack, STACK_LEN, 0);
+  size = google::GetStackTrace(stack, STACK_LEN, 0);
   printf("Obtained %d stack frames.\n", size);
   CHECK_GE(size, 1);
   CHECK_LE(size, STACK_LEN);
@@ -231,7 +229,7 @@ static
 
 int main(int, char** argv) {
   FLAGS_logtostderr = true;
-  InitGoogleLogging(argv[0]);
+  google::InitGoogleLogging(argv[0]);
 
   CheckStackTrace(0);
 
