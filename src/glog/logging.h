@@ -1471,6 +1471,7 @@ struct LogMessageVoidify {
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
   void operator&(std::ostream&) noexcept {}
+  void operator&(std::ostream&&) noexcept {}
 };
 
 }  // namespace internal
