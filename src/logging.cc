@@ -446,6 +446,9 @@ class LogCleaner {
 
   bool enabled() const { return enabled_; }
 
+  std::chrono::system_clock::time_point
+      next_cleanup_time;  // cycle count at which to clean overdue log
+
  private:
   vector<string> GetOverdueLogNames(
       string log_directory,
@@ -463,8 +466,6 @@ class LogCleaner {
   bool enabled_{false};
   std::chrono::minutes overdue_{
       std::chrono::duration<int, std::ratio<kSecondsInWeek>>{1}};
-  std::chrono::system_clock::time_point
-      next_cleanup_time_;  // cycle count at which to clean overdue log
 };
 
 LogCleaner log_cleaner;
@@ -854,6 +855,13 @@ inline void LogDestination::LogToAllLogfiles(
     for (int i = severity; i >= 0; --i) {
       LogDestination::MaybeLogToLogfile(static_cast<LogSeverity>(i), timestamp,
                                         message, len);
+    }
+
+    // avoid scanning logs too frequently
+    if (timestamp >= log_cleaner.next_cleanup_time) {
+      log_cleaner.next_cleanup_time = timestamp +
+        std::chrono::duration_cast<std::chrono::system_clock::duration>(
+          std::chrono::duration<int32>{FLAGS_logcleansecs}); // set next cleanup time
     }
   }
 }
@@ -1317,14 +1325,9 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
   assert(!base_filename_selected || !base_filename.empty());
 
   // avoid scanning logs too frequently
-  if (current_time < next_cleanup_time_) {
+  if (current_time < next_cleanup_time) {
     return;
   }
-
-  next_cleanup_time_ =
-      current_time +
-      std::chrono::duration_cast<std::chrono::system_clock::duration>(
-          std::chrono::duration<int32>{FLAGS_logcleansecs});
 
   vector<string> dirs;
 
