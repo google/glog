@@ -79,6 +79,28 @@ Alternatively, glog can be incorporated into using the CMake command
 project by replacing the :cmake:`find_package` call from the previous snippet by
 :cmake:`add_subdirectory`. The :cmake:`glog::glog` target is in this case an
 :cmake:`ALIAS` library target for the ``glog`` library target.
+Here is an example which using :cmake:`FetchContent` and :cmake:`add_subdirectory`
+to enable glog in your CMake project:
+.. code:: cmake
+
+   cmake_minimum_required (VERSION 3.16)
+   project (myproj VERSION 1.0)
+
+   include(FetchContent)
+   FetchContent_Declare(
+      glog
+      GIT_REPOSITORY https://github.com/google/glog.git
+      GIT_TAG        v0.6.0
+   )
+   FetchContent_GetProperties(glog)
+   if(NOT glog_POPULATED)
+      FetchContent_Populate(glog)
+      add_subdirectory(${glog_SOURCE_DIR} ${glog_BINARY_DIR})
+   endif()
+
+   add_executable (myapp main.cpp)
+   target_link_libraries (myapp glog::glog)
+
 
 Building from Source
 ~~~~~~~~~~~~~~~~~~~~
