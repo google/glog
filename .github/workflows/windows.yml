@@ -42,7 +42,7 @@ jobs:
 
       - name: Cache GTest
         id: cache-gtest
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: gtest/
           key: ${{runner.os}}-gtest-1.11-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
@@ -67,7 +67,7 @@ jobs:
 
       - name: Cache gflags
         id: cache-gflags
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: gflags/
           key: ${{runner.os}}-gflags-2.2.2-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
