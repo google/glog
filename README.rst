@@ -77,6 +77,8 @@ target as needed.
 Alternatively, glog can be incorporated into using the CMake command
 :cmake:`add_subdirectory` to include glog directly from a subdirectory of your
 project by replacing the :cmake:`find_package` call from the previous snippet by
+:cmake:`add_subdirectory`. The CMake official `document <https://cmake.org/cmake/help/latest/module/FetchContent.html#overview>`__
+shows the way that enables glog in your CMake project via :cmake:`FetchContent` and
 :cmake:`add_subdirectory`. The :cmake:`glog::glog` target is in this case an
 :cmake:`ALIAS` library target for the ``glog`` library target.
 
