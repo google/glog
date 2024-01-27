@@ -152,9 +152,9 @@ GLOG_DEFINE_string(
     "of the default logging directory.");
 
 GLOG_DEFINE_wstring(
-    log_wdir, L"",
+    log_wdir, DefaultLogDir<wchar_t>(),
     L"If specified, logfiles are written into this directory instead "
-    L"of the default logging directory.");
+    "of the default logging directory.");
 
 GLOG_DEFINE_string(log_link, "",
                    "Put additional links to the log "
