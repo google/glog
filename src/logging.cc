@@ -72,6 +72,7 @@
 #include <regex>
 #include <sstream>
 #include <vector>
+#include <array>
 
 #ifdef HAVE__CHSIZE_S
 #  include <io.h>  // for truncate log file
@@ -106,6 +107,7 @@ using std::ostringstream;
 using std::setfill;
 using std::setw;
 using std::string;
+using std::wstring;
 using std::vector;
 
 using std::fclose;
@@ -123,7 +125,12 @@ using std::fdopen;
 #define EXCLUSIVE_LOCKS_REQUIRED(mu)
 
 // TODO(hamaji): consider windows
-enum { PATH_SEPARATOR = '/' };
+#ifdef  GLOG_OS_WINDOWS
+const wchar_t * const PATH_SEPARATOR = L"\\/";
+#else
+const wchar_t* const PATH_SEPARATOR = L"/";
+#endif  //  GLOG_OS_WINDOWS
+
 
 #ifndef HAVE_PREAD
 static ssize_t pread(int fd, void* buf, size_t count, off_t offset) {
@@ -148,6 +155,113 @@ static ssize_t pwrite(int fd, void* buf, size_t count, off_t offset) {
   return len;
 }
 #endif  // !HAVE_PWRITE
+
+namespace details {
+int open(const char* filename, int flags, mode_t mode) {
+  return ::open(filename, flags, mode);
+}
+
+int open(const wchar_t* filename, int flags, mode_t mode) {
+#ifdef GLOG_OS_WINDOWS
+  return _wopen(filename, flags, mode);
+#else
+  auto str_filename = google::logging::internal::StrConvert<wchar_t, char>(filename);
+  return open(str_filename.c_str(), flags, mode);
+#endif  //  GLOG_OS_WINDOWS
+}
+
+int unlink(const char* filename) { 
+    return ::unlink(filename); 
+}
+int unlink(const wchar_t* filename) { 
+#ifdef GLOG_OS_WINDOWS
+  return ::_wunlink(filename); 
+#else
+  auto str_filename = google::logging::internal::StrConvert<wchar_t, char>(filename);
+  return unlink(str_filename.c_str());
+#endif
+}
+
+int symlink(const char* dest, const char* src) {
+#ifdef GLOG_OS_WINDOWS
+  // the CreateSymbolicLinkA func requires  a privilege
+  return ::CreateSymbolicLinkA(dest, src, 0x0) == 0 ? GetLastError() : 0;
+#elif defined(HAVE_UNISTD_H)
+  return ::symlink(dest, src);
+#endif  // GLOG_OS_WINDOWS
+}
+
+int symlink(const wchar_t* target, const wchar_t* symlink_file) {
+#ifdef GLOG_OS_WINDOWS
+  return ::CreateSymbolicLinkW(symlink_file, target, 0x0) == 0 ? GetLastError()
+                                                               : 0;
+#elif defined(HAVE_UNISTD_H)
+  auto str_target = google::logging::internal::StrConvert<wchar_t, char>(target);
+  auto str_symlink_file =
+      google::logging::internal::StrConvert<wchar_t, char>(symlink_file);
+  return symlink(str_target.c_str(), str_symlink_file.c_str());
+#endif  // GLOG_OS_WINDOWS
+}
+
+decltype(auto) opendir(const char* dir_name) { return ::opendir(dir_name); }
+decltype(auto) opendir(const wchar_t* dir_name) {
+#ifdef GLOG_OS_WINDOWS
+  return ::wopendir(dir_name);
+#else 
+  auto str_dir = google::logging::internal::StrConvert<wchar_t, char>(dir_name);
+  return opendir(str_dir.c_str());
+#endif  // GLOG_OS_WINDOWS
+}
+
+dirent* readdir(DIR* dir) { return ::readdir(dir); }
+int closedir(DIR* dir) { return ::closedir(dir); }
+#ifdef GLOG_OS_WINDOWS
+wdirent* readdir(WDIR* dir) { return ::wreaddir(dir); }
+int closedir(WDIR* dir) { return ::wclosedir(dir); }
+#endif  // GLOG_OS_WINDOWS
+
+#ifdef  GLOG_OS_WINDOWS
+typedef struct _stat64i32 wstat;
+#else
+typedef  struct stat wstat;
+#endif  //  GLOG_OS_WINDOWS
+
+int stat(const char* filename, struct stat* const s) {
+  return ::stat(filename, s);
+}
+int stat(const wchar_t* filename, wstat* s) {
+#ifdef GLOG_OS_WINDOWS
+  return ::_wstat(filename, s);
+#else
+  auto str_filename =
+      google::logging::internal::StrConvert<wchar_t, char>(filename);
+  return ::stat(str_filename.c_str(), s);
+#endif  // GLOG_OS_WINDOWS
+}
+int access(const char* dir_name, int access_mode) {
+  return ::access(dir_name, access_mode);
+}
+int access(const wchar_t* dir_name, int access_mode) {
+#ifdef GLOG_OS_WINDOWS
+  return ::_waccess(dir_name, access_mode);
+#else
+  auto str_dir_name =
+      google::logging::internal::StrConvert<wchar_t, char>(dir_name);
+  return ::access(str_dir_name.c_str(), access_mode);
+#endif  // GLOG_OS_WINDOWS
+}
+void perror(const char* msg) {
+  ::perror(msg);
+}
+void perror(const wchar_t *msg) {
+#ifdef GLOG_OS_WINDOWS
+  _wperror(msg);
+#else
+  auto str_msg =  google::logging::internal::StrConvert<wchar_t, char>(msg);
+  perror(str_msg.c_str());
+#endif
+}
+}  // namespace details
 
 static void GetHostName(string* hostname) {
 #if defined(HAVE_SYS_UTSNAME_H)
@@ -329,8 +443,9 @@ int64 LogMessage::num_messages_[NUM_SEVERITIES] = {0, 0, 0, 0};
 static bool stop_writing = false;
 
 const char* const LogSeverityNames[] = {"INFO", "WARNING", "ERROR", "FATAL"};
-
-// Has the user called SetExitOnDFatal(true)?
+const wchar_t* const LogSeverityNamesW[] = {L"INFO", L"WARNING", L"ERROR",
+                                           L"FATAL"};
+    // Has the user called SetExitOnDFatal(true)?
 static bool exit_on_dfatal = true;
 
 const char* GetLogSeverityName(LogSeverity severity) {
@@ -365,7 +480,6 @@ void base::Logger::Write(bool force_flush,
 }
 
 namespace {
-
 constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
 constexpr std::intmax_t kSecondsInWeek = kSecondsInDay * 7;
 
@@ -446,7 +560,7 @@ std::unique_ptr<PrefixFormatter> g_prefix_formatter;
 // Encapsulates all file-system related state
 class LogFileObject : public base::Logger {
  public:
-  LogFileObject(LogSeverity severity, const char* base_filename);
+  LogFileObject(LogSeverity severity, const wchar_t* base_filename);
   ~LogFileObject() override;
 
   void Write(bool force_flush,  // Should we force a flush here?
@@ -455,9 +569,9 @@ class LogFileObject : public base::Logger {
              const char* message, size_t message_len) override;
 
   // Configuration options
-  void SetBasename(const char* basename);
-  void SetExtension(const char* ext);
-  void SetSymlinkBasename(const char* symlink_basename);
+  void SetBasename(const wchar_t* basename);
+  void SetExtension(const wchar_t* ext);
+  void SetSymlinkBasename(const wchar_t* symlink_basename);
 
   // Normal flushing routine
   void Flush() override;
@@ -479,9 +593,9 @@ class LogFileObject : public base::Logger {
 
   std::mutex mutex_;
   bool base_filename_selected_;
-  string base_filename_;
-  string symlink_basename_;
-  string filename_extension_;  // option users can specify (eg to add port#)
+  wstring base_filename_;
+  wstring symlink_basename_;
+  wstring filename_extension_;  // option users can specify (eg to add port#)
   std::unique_ptr<FILE> file_;
   LogSeverity severity_;
   uint32 bytes_since_flush_{0};
@@ -495,7 +609,9 @@ class LogFileObject : public base::Logger {
   // Actually create a logfile using the value of base_filename_ and the
   // optional argument time_pid_string
   // REQUIRES: lock_ is held
-  bool CreateLogfile(const string& time_pid_string);
+  bool CreateLogfile(const wstring& time_pid_string);
+  void CreateSymlink(const wstring& link_des_w, const wstring& link_path_w,
+                     const wstring& line_name_w);
 };
 
 // Encapsulate all log cleaner related states
@@ -508,23 +624,23 @@ class LogCleaner {
   void Disable();
 
   void Run(const std::chrono::system_clock::time_point& current_time,
-           bool base_filename_selected, const string& base_filename,
-           const string& filename_extension);
+           bool base_filename_selected, const wstring& base_filename,
+           const wstring& filename_extension);
 
   bool enabled() const { return enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(
-      string log_directory,
+  vector<std::wstring> GetOverdueLogNames(
+      const std::wstring &log_directory,
       const std::chrono::system_clock::time_point& current_time,
-      const string& base_filename, const string& filename_extension) const;
+      const std::wstring& base_filename, const std::wstring& filename_extension) const;
 
-  bool IsLogFromCurrentProject(const string& filepath,
-                               const string& base_filename,
-                               const string& filename_extension) const;
+  bool IsLogFromCurrentProject(const std::wstring& filepath,
+                               const std::wstring& base_filename,
+                               const std::wstring& filename_extension) const;
 
   bool IsLogLastModifiedOver(
-      const string& filepath,
+      const std::wstring& filepath,
       const std::chrono::system_clock::time_point& current_time) const;
 
   bool enabled_{false};
@@ -547,11 +663,11 @@ class LogDestination {
 
   // These methods are just forwarded to by their global versions.
   static void SetLogDestination(LogSeverity severity,
-                                const char* base_filename);
-  static void SetLogSymlink(LogSeverity severity, const char* symlink_basename);
+                                const wchar_t* base_filename);
+  static void SetLogSymlink(LogSeverity severity, const wchar_t* symlink_basename);
   static void AddLogSink(LogSink* destination);
   static void RemoveLogSink(LogSink* destination);
-  static void SetLogFilenameExtension(const char* filename_extension);
+  static void SetLogFilenameExtension(const wchar_t* filename_extension);
   static void SetStderrLogging(LogSeverity min_severity);
   static void SetEmailLogging(LogSeverity min_severity, const char* addresses);
   static void LogToStderr();
@@ -570,7 +686,7 @@ class LogDestination {
   }
 
   static void DeleteLogDestinations();
-  LogDestination(LogSeverity severity, const char* base_filename);
+  LogDestination(LogSeverity severity, const wchar_t* base_filename);
 
  private:
 #if defined(__cpp_lib_shared_mutex) && (__cpp_lib_shared_mutex >= 201505L)
@@ -669,7 +785,7 @@ const string& LogDestination::hostname() {
   return hostname_;
 }
 
-LogDestination::LogDestination(LogSeverity severity, const char* base_filename)
+LogDestination::LogDestination(LogSeverity severity, const wchar_t* base_filename)
     : fileobject_(severity, base_filename), logger_(&fileobject_) {}
 
 LogDestination::~LogDestination() { ResetLoggerImpl(); }
@@ -715,7 +831,7 @@ inline void LogDestination::FlushLogFiles(int min_severity) {
 }
 
 inline void LogDestination::SetLogDestination(LogSeverity severity,
-                                              const char* base_filename) {
+                                              const wchar_t* base_filename) {
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
@@ -723,7 +839,7 @@ inline void LogDestination::SetLogDestination(LogSeverity severity,
 }
 
 inline void LogDestination::SetLogSymlink(LogSeverity severity,
-                                          const char* symlink_basename) {
+                                          const wchar_t* symlink_basename) {
   CHECK_GE(severity, 0);
   CHECK_LT(severity, NUM_SEVERITIES);
   std::lock_guard<std::mutex> l{log_mutex};
@@ -749,7 +865,7 @@ inline void LogDestination::RemoveLogSink(LogSink* destination) {
   }
 }
 
-inline void LogDestination::SetLogFilenameExtension(const char* ext) {
+inline void LogDestination::SetLogFilenameExtension(const wchar_t* ext) {
   // Prevent any subtle race conditions by wrapping a mutex lock around
   // all this stuff.
   std::lock_guard<std::mutex> l{log_mutex};
@@ -771,8 +887,7 @@ inline void LogDestination::LogToStderr() {
   // SetLogDestination already do the locking!
   SetStderrLogging(GLOG_INFO);  // thus everything is "also" logged to stderr
   for (int i = 0; i < NUM_SEVERITIES; ++i) {
-    SetLogDestination(static_cast<LogSeverity>(i),
-                      "");  // "" turns off logging to a logfile
+    SetLogDestination(static_cast<LogSeverity>(i), L"");  // "" turns off logging to a logfile
   }
 }
 
@@ -972,11 +1087,10 @@ void SetApplicationFingerprint(const std::string& fingerprint) {
 
 namespace {
 
-// Directory delimiter; Windows supports both forward slashes and backslashes
 #ifdef GLOG_OS_WINDOWS
-const char possible_dir_delim[] = {'\\', '/'};
+const wchar_t possible_dir_delim[] = {L'\\', L'/'};
 #else
-const char possible_dir_delim[] = {'/'};
+const wchar_t possible_dir_delim[] = {L'/'};
 #endif
 
 string PrettyDuration(const std::chrono::duration<int>& secs) {
@@ -990,10 +1104,10 @@ string PrettyDuration(const std::chrono::duration<int>& secs) {
   return result.str();
 }
 
-LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
+LogFileObject::LogFileObject(LogSeverity severity, const wchar_t* base_filename)
     : base_filename_selected_(base_filename != nullptr),
-      base_filename_((base_filename != nullptr) ? base_filename : ""),
-      symlink_basename_(glog_internal_namespace_::ProgramInvocationShortName()),
+      base_filename_((base_filename != nullptr) ? base_filename : L""),
+      symlink_basename_(logging::internal::StrConvert<char, wchar_t>(glog_internal_namespace_::ProgramInvocationShortName())),
       filename_extension_(),
       severity_(severity),
       rollover_attempt_(kRolloverAttemptFrequency - 1),
@@ -1004,7 +1118,7 @@ LogFileObject::~LogFileObject() {
   file_ = nullptr;
 }
 
-void LogFileObject::SetBasename(const char* basename) {
+void LogFileObject::SetBasename(const wchar_t* basename) {
   std::lock_guard<std::mutex> l{mutex_};
   base_filename_selected_ = true;
   if (base_filename_ != basename) {
@@ -1017,7 +1131,7 @@ void LogFileObject::SetBasename(const char* basename) {
   }
 }
 
-void LogFileObject::SetExtension(const char* ext) {
+void LogFileObject::SetExtension(const wchar_t* ext) {
   std::lock_guard<std::mutex> l{mutex_};
   if (filename_extension_ != ext) {
     // Get rid of old log file since we are changing names
@@ -1029,7 +1143,7 @@ void LogFileObject::SetExtension(const char* ext) {
   }
 }
 
-void LogFileObject::SetSymlinkBasename(const char* symlink_basename) {
+void LogFileObject::SetSymlinkBasename(const wchar_t* symlink_basename) {
   std::lock_guard<std::mutex> l{mutex_};
   symlink_basename_ = symlink_basename;
 }
@@ -1051,21 +1165,21 @@ void LogFileObject::FlushUnlocked(
                 std::chrono::duration<int32>{FLAGS_logbufsecs});
 }
 
-bool LogFileObject::CreateLogfile(const string& time_pid_string) {
-  string string_filename = base_filename_;
+bool LogFileObject::CreateLogfile(const wstring& time_pid_string) {
+  wstring string_filename = base_filename_;
   if (FLAGS_timestamp_in_logfile_name) {
     string_filename += time_pid_string;
   }
   string_filename += filename_extension_;
-  const char* filename = string_filename.c_str();
   // only write to files, create if non-existant.
   int flags = O_WRONLY | O_CREAT;
   if (FLAGS_timestamp_in_logfile_name) {
     // demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
   }
-  FileDescriptor fd{
-      open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode))};
+  FileDescriptor fd{details::open(string_filename.c_str(), flags,
+                           static_cast<mode_t>(FLAGS_logfile_mode))};
+
   if (!fd) return false;
 #ifdef HAVE_FCNTL
   // Mark the file close-on-exec. We don't really care if this fails
@@ -1098,7 +1212,9 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   file_.reset(fdopen(fd.release(), "a"));  // Make a FILE*.
   if (file_ == nullptr) {                  // Man, we're screwed!
     if (FLAGS_timestamp_in_logfile_name) {
-      unlink(filename);  // Erase the half-baked evidence: an unusable log file,
+      details::unlink(string_filename.c_str());  // Erase the half-baked evidence: an
+                                          // unusable log
+                           // file,
                          // only if we just created it.
     }
     return false;
@@ -1119,40 +1235,35 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   // no error.
   if (!symlink_basename_.empty()) {
     // take directory from filename
-    const char* slash = strrchr(filename, PATH_SEPARATOR);
-    const string linkname =
-        symlink_basename_ + '.' + LogSeverityNames[severity_];
-    string linkpath;
-    if (slash)
-      linkpath = string(
-          filename, static_cast<size_t>(slash - filename + 1));  // get dirname
+    std::size_t slash = string_filename.find_last_of(PATH_SEPARATOR);
+    const wstring linkname =
+        symlink_basename_ + L'.' + LogSeverityNamesW[severity_];
+    wstring linkpath;
+    if (slash != std::string::npos)
+      linkpath = string_filename.substr(0, slash + 1);  // get dirname
     linkpath += linkname;
-    unlink(linkpath.c_str());  // delete old one if it exists
+    details::unlink(linkpath.c_str());  // delete old one if it exists
 
-#if defined(GLOG_OS_WINDOWS)
-    // TODO(hamaji): Create lnk file on Windows?
-#elif defined(HAVE_UNISTD_H)
-    // We must have unistd.h.
-    // Make the symlink be relative (in the same dir) so that if the
-    // entire log directory gets relocated the link is still valid.
-    const char* linkdest = slash ? (slash + 1) : filename;
-    if (symlink(linkdest, linkpath.c_str()) != 0) {
-      // silently ignore failures
-    }
 
-    // Make an additional link to the log file in a place specified by
-    // FLAGS_log_link, if indicated
-    if (!FLAGS_log_link.empty()) {
-      linkpath = FLAGS_log_link + "/" + linkname;
-      unlink(linkpath.c_str());  // delete old one if it exists
-      if (symlink(filename, linkpath.c_str()) != 0) {
-        // silently ignore failures
-      }
-    }
-#endif
+    wstring link_dest = slash != std::string::npos
+                            ? (string_filename.substr(slash + 1))
+                            : string_filename;
+    CreateSymlink(link_dest, linkpath, linkname);
   }
 
   return true;  // Everything worked
+}
+void LogFileObject::CreateSymlink(const wstring& link_dest_w,
+                                  const wstring& link_path_w,
+                                  const wstring& link_name_w) {
+  details::symlink(link_dest_w.c_str(), link_path_w.c_str());
+  if (!FLAGS_log_link.empty()) {
+    auto new_link_path =
+        logging::internal::StrConvert<char, wchar_t>(FLAGS_log_link) + L"/" +
+        link_name_w;
+    details::unlink(new_link_path.c_str());
+    details::symlink(link_dest_w.c_str(), new_link_path.c_str());
+  }
 }
 
 void LogFileObject::Write(
@@ -1199,18 +1310,18 @@ void LogFileObject::Write(
     }
 
     // The logfile's filename will have the date/time & pid in it
-    ostringstream time_pid_stream;
-    time_pid_stream.fill('0');
+    std::wostringstream time_pid_stream;
+    time_pid_stream.fill(L'0');
     time_pid_stream << 1900 + tm_time.tm_year << setw(2) << 1 + tm_time.tm_mon
-                    << setw(2) << tm_time.tm_mday << '-' << setw(2)
+                    << setw(2) << tm_time.tm_mday << L'-' << setw(2)
                     << tm_time.tm_hour << setw(2) << tm_time.tm_min << setw(2)
-                    << tm_time.tm_sec << '.' << GetMainThreadPid();
-    const string& time_pid_string = time_pid_stream.str();
+                    << tm_time.tm_sec << L'.' << GetMainThreadPid();
+    const wstring& time_pid_string = time_pid_stream.str();
 
     if (base_filename_selected_) {
       if (!CreateLogfile(time_pid_string)) {
         perror("Could not create log file");
-        fprintf(stderr, "COULD NOT CREATE LOGFILE '%s'!\n",
+        fwprintf(stderr, L"COULD NOT CREATE LOGFILE '%s'!\n",
                 time_pid_string.c_str());
         return;
       }
@@ -1241,13 +1352,15 @@ void LogFileObject::Write(
       stripped_filename = stripped_filename + '.' + hostname + '.' + uidname +
                           ".log." + LogSeverityNames[severity_] + '.';
       // We're going to (potentially) try to put logs in several different dirs
-      const vector<string>& log_dirs = GetLoggingDirectories();
+      const vector<wstring> log_dirs = GetLoggingDirectoriesW();
 
       // Go through the list of dirs, and try to create the log file in each
       // until we succeed or run out of options
       bool success = false;
+      wstring stripped_filename_w =
+          logging::internal::StrConvert<char, wchar_t>(stripped_filename);
       for (const auto& log_dir : log_dirs) {
-        base_filename_ = log_dir + "/" + stripped_filename;
+        base_filename_ = log_dir  + stripped_filename_w;
         if (CreateLogfile(time_pid_string)) {
           success = true;
           break;
@@ -1256,7 +1369,7 @@ void LogFileObject::Write(
       // If we never succeeded, we have to give up
       if (success == false) {
         perror("Could not create logging file");
-        fprintf(stderr, "COULD NOT CREATE A LOGGINGFILE %s!",
+        fwprintf(stderr, L"COULD NOT CREATE A LOGGINGFILE %s!",
                 time_pid_string.c_str());
         return;
       }
@@ -1360,8 +1473,8 @@ void LogCleaner::Enable(const std::chrono::minutes& overdue) {
 void LogCleaner::Disable() { enabled_ = false; }
 
 void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
-                     bool base_filename_selected, const string& base_filename,
-                     const string& filename_extension) {
+                     bool base_filename_selected, const wstring& base_filename,
+                     const wstring& filename_extension) {
   assert(enabled_);
   assert(!base_filename_selected || !base_filename.empty());
 
@@ -1375,55 +1488,53 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
       std::chrono::duration_cast<std::chrono::system_clock::duration>(
           std::chrono::duration<int32>{FLAGS_logcleansecs});
 
-  vector<string> dirs;
+  vector<wstring> dirs;
 
   if (!base_filename_selected) {
-    dirs = GetLoggingDirectories();
+    dirs = GetLoggingDirectoriesW();
   } else {
     size_t pos = base_filename.find_last_of(possible_dir_delim, string::npos,
                                             sizeof(possible_dir_delim));
     if (pos != string::npos) {
-      string dir = base_filename.substr(0, pos + 1);
+      wstring dir = base_filename.substr(0, pos + 1);
       dirs.push_back(dir);
     } else {
-      dirs.emplace_back(".");
+      dirs.emplace_back(L".");
     }
   }
 
-  for (const std::string& dir : dirs) {
-    vector<string> logs = GetOverdueLogNames(dir, current_time, base_filename,
+  for (const std::wstring& dir : dirs) {
+    vector<wstring> logs = GetOverdueLogNames(dir, current_time, base_filename,
                                              filename_extension);
-    for (const std::string& log : logs) {
+    for (const std::wstring& log : logs) {
       // NOTE May fail on Windows if the file is still open
-      int result = unlink(log.c_str());
+      int result = details::unlink(log.c_str());
       if (result != 0) {
-        perror(("Could not remove overdue log " + log).c_str());
+        details::perror((L"Could not remove overdue log " + log).c_str());
       }
     }
   }
 }
-
-vector<string> LogCleaner::GetOverdueLogNames(
-    string log_directory,
+vector<std::wstring> LogCleaner::GetOverdueLogNames(
+    const std::wstring &log_directory,
     const std::chrono::system_clock::time_point& current_time,
-    const string& base_filename, const string& filename_extension) const {
+    const std::wstring& base_filename, const std::wstring& filename_extension) const {
   // The names of overdue logs.
-  vector<string> overdue_log_names;
+  vector<std::wstring> overdue_log_names;
 
   // Try to get all files within log_directory.
-  DIR* dir;
-  struct dirent* ent;
+  auto dir = details::opendir(log_directory.c_str());
 
-  if ((dir = opendir(log_directory.c_str()))) {
-    while ((ent = readdir(dir))) {
-      if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+  if (dir) {
+    auto ent = details::readdir(dir);
+    while (ent) {
+      std::wstring filepath = logging::internal::StrConvert(ent->d_name);
+      if (filepath == L"." || filepath == L"..") {
         continue;
       }
 
-      string filepath = ent->d_name;
-      const char* const dir_delim_end =
+      const wchar_t* const dir_delim_end =
           possible_dir_delim + sizeof(possible_dir_delim);
-
       if (!log_directory.empty() &&
           std::find(possible_dir_delim, dir_delim_end,
                     log_directory[log_directory.size() - 1]) != dir_delim_end) {
@@ -1436,25 +1547,25 @@ vector<string> LogCleaner::GetOverdueLogNames(
         overdue_log_names.push_back(filepath);
       }
     }
-    closedir(dir);
+    details::closedir(dir);
   }
 
   return overdue_log_names;
 }
 
 bool LogCleaner::IsLogFromCurrentProject(
-    const string& filepath, const string& base_filename,
-    const string& filename_extension) const {
+    const std::wstring& filepath, const std::wstring& base_filename,
+    const std::wstring& filename_extension) const {
   // We should remove duplicated delimiters from `base_filename`, e.g.,
   // before: "/tmp//<base_filename>.<create_time>.<pid>"
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
-  string cleaned_base_filename;
+ std::wstring cleaned_base_filename;
 
-  const char* const dir_delim_end =
+  const wchar_t* const dir_delim_end =
       possible_dir_delim + sizeof(possible_dir_delim);
 
   size_t real_filepath_size = filepath.size();
-  for (char c : base_filename) {
+  for (wchar_t c : base_filename) {
     if (cleaned_base_filename.empty()) {
       cleaned_base_filename += c;
     } else if (std::find(possible_dir_delim, dir_delim_end, c) ==
@@ -1478,7 +1589,7 @@ bool LogCleaner::IsLogFromCurrentProject(
       return false;
     }
     // for origin version, `filename_extension` is middle of the `filepath`.
-    string ext = filepath.substr(cleaned_base_filename.size(),
+    std::wstring ext = filepath.substr(cleaned_base_filename.size(),
                                  filename_extension.size());
     if (ext == filename_extension) {
       cleaned_base_filename += filename_extension;
@@ -1497,30 +1608,30 @@ bool LogCleaner::IsLogFromCurrentProject(
   // The characters after `cleaned_base_filename` should match the format:
   // YYYYMMDD-HHMMSS.pid
   for (size_t i = cleaned_base_filename.size(); i < real_filepath_size; i++) {
-    const char& c = filepath[i];
+    const wchar_t& c = filepath[i];
 
     if (i <= cleaned_base_filename.size() + 7) {  // 0 ~ 7 : YYYYMMDD
-      if (c < '0' || c > '9') {
+      if (c < L'0' || c > L'9') {
         return false;
       }
 
     } else if (i == cleaned_base_filename.size() + 8) {  // 8: -
-      if (c != '-') {
+      if (c != L'-') {
         return false;
       }
 
     } else if (i <= cleaned_base_filename.size() + 14) {  // 9 ~ 14: HHMMSS
-      if (c < '0' || c > '9') {
+      if (c < L'0' || c > L'9') {
         return false;
       }
 
     } else if (i == cleaned_base_filename.size() + 15) {  // 15: .
-      if (c != '.') {
+      if (c != L'.') {
         return false;
       }
 
     } else if (i >= cleaned_base_filename.size() + 16) {  // 16+: pid
-      if (c < '0' || c > '9') {
+      if (c < L'0' || c > L'9') {
         return false;
       }
     }
@@ -1530,12 +1641,12 @@ bool LogCleaner::IsLogFromCurrentProject(
 }
 
 bool LogCleaner::IsLogLastModifiedOver(
-    const string& filepath,
+    const std::wstring& filepath,
     const std::chrono::system_clock::time_point& current_time) const {
   // Try to get the last modified time of this file.
-  struct stat file_stat;
+  details::wstat  file_stat;
 
-  if (stat(filepath.c_str(), &file_stat) == 0) {
+  if (details::stat(filepath.c_str(), &file_stat) == 0) {
     const auto last_modified_time =
         std::chrono::system_clock::from_time_t(file_stat.st_mtime);
     const auto diff = current_time - last_modified_time;
@@ -2067,10 +2178,18 @@ void FlushLogFilesUnsafe(LogSeverity min_severity) {
 }
 
 void SetLogDestination(LogSeverity severity, const char* base_filename) {
+  auto w_base_filename = logging::internal::StrConvert<char, wchar_t>(base_filename);
+  SetLogDestination(severity, w_base_filename.c_str());
+}
+void SetLogDestination(LogSeverity severity, const wchar_t* base_filename) {
   LogDestination::SetLogDestination(severity, base_filename);
 }
 
 void SetLogSymlink(LogSeverity severity, const char* symlink_basename) {
+  auto w_symlink_basename = logging::internal::StrConvert<char, wchar_t>(symlink_basename);
+  SetLogSymlink(severity, w_symlink_basename.c_str());
+}
+void SetLogSymlink(LogSeverity severity, const wchar_t* symlink_basename) {
   LogDestination::SetLogSymlink(severity, symlink_basename);
 }
 
@@ -2141,8 +2260,11 @@ void AddLogSink(LogSink* destination) {
 void RemoveLogSink(LogSink* destination) {
   LogDestination::RemoveLogSink(destination);
 }
-
-void SetLogFilenameExtension(const char* ext) {
+void SetLogFilenameExtension(const char* filename_extension) {
+  auto w_extension = logging::internal::StrConvert<char, wchar_t>(filename_extension);
+  SetLogFilenameExtension(w_extension.c_str());
+}
+void SetLogFilenameExtension(const wchar_t* ext) {
   LogDestination::SetLogFilenameExtension(ext);
 }
 
@@ -2338,44 +2460,43 @@ bool SendEmail(const char* dest, const char* subject, const char* body) {
   return SendEmailInternal(dest, subject, body, true);
 }
 
-static void GetTempDirectories(vector<string>& list) {
+static void GetTempDirectories(vector<wstring>& list) {
   list.clear();
 #ifdef GLOG_OS_WINDOWS
   // On windows we'll try to find a directory in this order:
   //   C:/Documents & Settings/whomever/TEMP (or whatever GetTempPath() is)
   //   C:/TMP/
   //   C:/TEMP/
-  char tmp[MAX_PATH];
-  if (GetTempPathA(MAX_PATH, tmp)) list.push_back(tmp);
-  list.push_back("C:\\TMP\\");
-  list.push_back("C:\\TEMP\\");
+  wchar_t tmp[MAX_PATH];
+  if (GetTempPathW(MAX_PATH, tmp)) list.push_back(tmp);
+  list.push_back(L"C:\\TMP\\");
+  list.push_back(L"C:\\TEMP\\");
 #else
   // Directories, in order of preference. If we find a dir that
   // exists, we stop adding other less-preferred dirs
-  const char* candidates[] = {
+  const std::wstring candidates[] = {
       // Non-null only during unittest/regtest
-      getenv("TEST_TMPDIR"),
+      google::logging::internal::getenv(L"TEST_TMPDIR"),
 
       // Explicitly-supplied temp dirs
-      getenv("TMPDIR"),
-      getenv("TMP"),
+      google::logging::internal::getenv(L"TMPDIR"),
+      google::logging::internal::getenv(L"TMP"),
 
       // If all else fails
-      "/tmp",
+      L"/tmp",
   };
 
-  for (auto d : candidates) {
-    if (!d) continue;  // Empty env var
+  for (auto dstr : candidates) {
+    if (dstr.empty()) continue;  // Empty env var
 
     // Make sure we don't surprise anyone who's expecting a '/'
-    string dstr = d;
-    if (dstr[dstr.size() - 1] != '/') {
-      dstr += "/";
+    if (dstr[dstr.size() - 1] != L'/') {
+      dstr += L"/";
     }
     list.push_back(dstr);
 
-    struct stat statbuf;
-    if (!stat(d, &statbuf) && S_ISDIR(statbuf.st_mode)) {
+    details::wstat statbuf;
+    if (!details::stat(dstr.c_str(), &statbuf) && S_ISDIR(statbuf.st_mode)) {
       // We found a dir that exists - we're done.
       return;
     }
@@ -2383,48 +2504,65 @@ static void GetTempDirectories(vector<string>& list) {
 #endif
 }
 
-static std::unique_ptr<std::vector<std::string>> logging_directories_list;
-
-const vector<string>& GetLoggingDirectories() {
+static std::unique_ptr<std::vector<std::wstring>> logging_directories_list;
+const vector<wstring>& GetLoggingDirectoriesW(const std::wstring &log_dir) {
   // Not strictly thread-safe but we're called early in InitGoogle().
   if (logging_directories_list == nullptr) {
-    logging_directories_list = std::make_unique<std::vector<std::string>>();
+    logging_directories_list = std::make_unique<std::vector<std::wstring>>();
 
-    if (!FLAGS_log_dir.empty()) {
+    if (!log_dir.empty()) {
       // Ensure the specified path ends with a directory delimiter.
       if (std::find(std::begin(possible_dir_delim),
                     std::end(possible_dir_delim),
-                    FLAGS_log_dir.back()) == std::end(possible_dir_delim)) {
-        logging_directories_list->push_back(FLAGS_log_dir + "/");
+                    log_dir.back()) == std::end(possible_dir_delim)) {
+        logging_directories_list->push_back(log_dir + L"/");
       } else {
-        logging_directories_list->push_back(FLAGS_log_dir);
+        logging_directories_list->push_back(log_dir);
       }
     } else {
       GetTempDirectories(*logging_directories_list);
 #ifdef GLOG_OS_WINDOWS
-      char tmp[MAX_PATH];
-      if (GetWindowsDirectoryA(tmp, MAX_PATH))
+      wchar_t tmp[MAX_PATH];
+      if (GetWindowsDirectoryW(tmp, MAX_PATH))
         logging_directories_list->push_back(tmp);
-      logging_directories_list->push_back(".\\");
+      logging_directories_list->push_back(L".\\");
 #else
-      logging_directories_list->push_back("./");
+      logging_directories_list->push_back(L"./");
 #endif
     }
   }
   return *logging_directories_list;
 }
 
+
+const vector<string> GetLoggingDirectories() {
+  auto wdirs = GetLoggingDirectoriesW();
+  vector<string> dirs;
+  for (const auto wdir : wdirs) {
+    dirs.push_back(logging::internal::StrConvert<wchar_t, char>(wdir));
+  }
+  return dirs;
+}
+
+const vector<wstring>& GetLoggingDirectoriesW() {
+  if (!FLAGS_log_wdir.empty()) {
+    return GetLoggingDirectoriesW(FLAGS_log_wdir);
+  } else {
+    return GetLoggingDirectoriesW(logging::internal::StrConvert<char, wchar_t>(FLAGS_log_dir));
+  }
+}
+
 // Returns a set of existing temporary directories, which will be a
 // subset of the directories returned by GetLoggingDirectories().
 // Thread-safe.
 GLOG_NO_EXPORT
-void GetExistingTempDirectories(vector<string>& list) {
+void GetExistingTempDirectories(vector<wstring>& list) {
   GetTempDirectories(list);
   auto i_dir = list.begin();
   while (i_dir != list.end()) {
     // zero arg to access means test for existence; no constant
     // defined on windows
-    if (access(i_dir->c_str(), 0)) {
+    if (details::access(i_dir->c_str(), 0)) {
       i_dir = list.erase(i_dir);
     } else {
       ++i_dir;

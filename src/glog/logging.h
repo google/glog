@@ -1493,6 +1493,9 @@ GLOG_EXPORT void FlushLogFilesUnsafe(LogSeverity min_severity);
 GLOG_EXPORT void SetLogDestination(LogSeverity severity,
                                    const char* base_filename);
 
+GLOG_EXPORT void SetLogDestination(LogSeverity severity,
+                                   const wchar_t* base_filename);
+
 //
 // Set the basename of the symlink to the latest log file at a given
 // severity.  If symlink_basename is empty, do not make a symlink.  If
@@ -1501,7 +1504,8 @@ GLOG_EXPORT void SetLogDestination(LogSeverity severity,
 //
 GLOG_EXPORT void SetLogSymlink(LogSeverity severity,
                                const char* symlink_basename);
-
+GLOG_EXPORT void SetLogSymlink(LogSeverity severity,
+                               const wchar_t* symlink_basename);
 //
 // Used to send logs to some other kind of destination
 // Users should subclass LogSink and override send to do whatever they want.
@@ -1557,6 +1561,7 @@ GLOG_EXPORT void RemoveLogSink(LogSink* destination);
 // name.  Thread-safe.
 //
 GLOG_EXPORT void SetLogFilenameExtension(const char* filename_extension);
+GLOG_EXPORT void SetLogFilenameExtension(const wchar_t* filename_extension);
 
 //
 // Make it so that all log messages of at least a particular severity
@@ -1584,7 +1589,8 @@ GLOG_EXPORT void SetEmailLogging(LogSeverity min_severity,
 GLOG_EXPORT bool SendEmail(const char* dest, const char* subject,
                            const char* body);
 
-GLOG_EXPORT const std::vector<std::string>& GetLoggingDirectories();
+GLOG_EXPORT const std::vector<std::string> GetLoggingDirectories();
+GLOG_EXPORT const std::vector<std::wstring>& GetLoggingDirectoriesW();
 
 // Print any fatal message again -- useful to call from signal handler
 // so that the last thing in the output is the fatal message.
