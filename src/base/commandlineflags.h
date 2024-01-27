@@ -117,10 +117,11 @@
     namespace fLS {                                                     \
         std::wstring FLAGS_##name##_buf(value);                         \
         GLOG_EXPORT std::wstring& FLAGS_##name = FLAGS_##name##_buf;    \
-        wchar_t FLAGS_no##name;                                         \
+        wchar_t FLAGS_no##name;                                      \
     }                                                                   \
-    using fLS::FLAGS_##name     
-#endif  // GLOG_USE_GFLAGS
+    using fLS::FLAGS_##name      
+
+#   endif  // GLOG_USE_GFLAGS
 
 // Define GLOG_DEFINE_* using DEFINE_* . By using these macros, we
 // have GLOG_* environ variables even if we have gflags installed.
