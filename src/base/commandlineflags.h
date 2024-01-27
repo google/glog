@@ -53,7 +53,7 @@
 #include <string>
 
 #include "config.h"
-#include "utilities.h"
+#include "../utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 
