@@ -143,7 +143,7 @@
   DEFINE_string(name, EnvToString("GLOG_" #name, value), meaning)
 
 #define GLOG_DEFINE_wstring(name, value, meaning) \
-  DEFINE_wstring(name, EnvToString(L"GLOG_" #name, value), meaning)
+  DEFINE_wstring(name, EnvToString(L"GLOG_", value), meaning)
 
 
 // These macros (could be functions, but I don't want to bother with a .cc
