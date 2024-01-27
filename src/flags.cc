@@ -35,7 +35,7 @@
 #include <array>
 #include "base/commandlineflags.h"
 #include "glog/log_severity.h"
-
+#include "utilities.h"
 namespace {
 
 // Compute the default value for --log_dir

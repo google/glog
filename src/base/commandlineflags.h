@@ -53,6 +53,7 @@
 #include <string>
 
 #include "config.h"
+#include "utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 
@@ -61,7 +62,6 @@
 #else
 
 #include "glog/logging.h"
-#include "utilities.h"
 
 #  define DECLARE_VARIABLE(type, shorttype, name, tn) \
     namespace fL##shorttype {                         \
