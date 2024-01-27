@@ -106,7 +106,7 @@
     }                                             \
     using fLS::FLAGS_##name
 
-#define DECLARE_wstring(name)                    \
+#  define DECLARE_wstring(name)                  \
   namespace fLS {                                \
   extern GLOG_EXPORT std::wstring& FLAGS_##name; \
   }                                              \
