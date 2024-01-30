@@ -53,14 +53,15 @@
 #include <string>
 
 #include "config.h"
+#include "../utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 
-#  include <gflags/gflags.h>
+#include <gflags/gflags.h>
 
 #else
 
-#  include "glog/logging.h"
+#include "glog/logging.h"
 
 #  define DECLARE_VARIABLE(type, shorttype, name, tn) \
     namespace fL##shorttype {                         \
@@ -107,6 +108,18 @@
     }                                                           \
     using fLS::FLAGS_##name
 
+#define DECLARE_wstring(name)                       \
+  namespace fLS {                                   \
+  extern GLOG_EXPORT std::wstring& FLAGS_##name;    \
+  }                                                 \
+  using fLS::FLAGS_##name
+#define DEFINE_wstring(name, value, meaning)                            \
+    namespace fLS {                                                     \
+        std::wstring FLAGS_##name##_buf(value);                         \
+        GLOG_EXPORT std::wstring& FLAGS_##name = FLAGS_##name##_buf;    \
+        wchar_t FLAGS_no##name;                                         \
+    }                                                                   \
+    using fLS::FLAGS_##name     
 #endif  // GLOG_USE_GFLAGS
 
 // Define GLOG_DEFINE_* using DEFINE_* . By using these macros, we
@@ -128,10 +141,17 @@
 #define GLOG_DEFINE_string(name, value, meaning) \
   DEFINE_string(name, EnvToString("GLOG_" #name, value), meaning)
 
+#define GLOG_DEFINE_wstring(name, value, meaning) \
+  DEFINE_wstring(name, EnvToString(L"GLOG_" #name, value), meaning)
+
+
 // These macros (could be functions, but I don't want to bother with a .cc
 // file), make it easier to initialize flags from the environment.
 
-#define EnvToString(envname, dflt) (!getenv(envname) ? (dflt) : getenv(envname))
+#define EnvToString(envname, dflt) \
+  (google::logging::internal::getenv(envname).empty() \
+       ? (dflt)                                         \
+       : google::logging::internal::getenv(envname))
 
 #define EnvToBool(envname, dflt) \
   (!getenv(envname) ? (dflt)     \
