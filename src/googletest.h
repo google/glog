@@ -196,8 +196,19 @@ void InitGoogleTest(int*, char**) {}
       }                                                                 \
     } while (0)
 
-vector<void (*)()> g_testlist;  // the tests to run
+#  define EXPECT_THROW(statement, exception)                    \
+    do {                                                        \
+      try {                                                     \
+        statement;                                              \
+      } catch (const exception&) {                              \
+        printf("ok\n");                                         \
+      } catch (...) {                                           \
+        fprintf(stderr, "%s\n", "Unexpected exception thrown"); \
+        exit(EXIT_FAILURE);                                     \
+      }                                                         \
+    } while (0)
 
+vector<void (*)()> g_testlist;  // the tests to run
 #  define TEST(a, b)                                   \
     struct Test_##a##_##b {                            \
       Test_##a##_##b() { g_testlist.push_back(&Run); } \
