@@ -473,7 +473,7 @@ it is executed.
 .. pull-quote::
    [!NOTE]
 
-   The placeholder ``google::COUNTER`` identifies the reccuring repetition.
+   The placeholder ``google::COUNTER`` identifies the recurring repetition.
 
 You can combine conditional and occasional logging with the following
 macro.
