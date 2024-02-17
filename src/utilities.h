@@ -162,8 +162,6 @@ const std::string& MyUserName();
 // (Doesn't modify filepath, contrary to basename() in libgen.h.)
 const char* const_basename(const char* filepath);
 
-void DumpStackTraceToString(std::string* stacktrace);
-
 void SetCrashReason(const logging::internal::CrashReason* r);
 
 void InitGoogleLoggingUtilities(const char* argv0);
