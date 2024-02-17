@@ -1733,6 +1733,9 @@ GLOG_EXPORT bool IsFailureSignalHandlerInstalled();
 GLOG_EXPORT void InstallFailureWriter(void (*writer)(const char* data,
                                                      size_t size));
 
+// Dump stack trace as a string.
+GLOG_EXPORT std::string GetStackTrace();
+
 }  // namespace google
 
 #endif  // GLOG_LOGGING_H

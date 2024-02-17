@@ -1705,8 +1705,7 @@ void LogMessage::Init(const char* file, int line, LogSeverity severity,
     std::snprintf(fileline, sizeof(fileline), "%s:%d", data_->basename_, line);
 #ifdef HAVE_STACKTRACE
     if (FLAGS_log_backtrace_at == fileline) {
-      string stacktrace;
-      DumpStackTraceToString(&stacktrace);
+      string stacktrace = GetStackTrace();
       stream() << " (stacktrace:\n" << stacktrace << ") ";
     }
 #endif

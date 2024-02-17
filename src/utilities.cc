@@ -287,12 +287,6 @@ static void MyUserNameInitializer() {
 }
 REGISTER_MODULE_INITIALIZER(utilities, MyUserNameInitializer())
 
-#ifdef HAVE_STACKTRACE
-void DumpStackTraceToString(string* stacktrace) {
-  DumpStackTrace(1, DebugWriteToString, stacktrace);
-}
-#endif
-
 // We use an atomic operation to prevent problems with calling CrashReason
 // from inside the Mutex implementation (potentially through RAW_CHECK).
 static std::atomic<const logging::internal::CrashReason*> g_reason{nullptr};
@@ -323,4 +317,13 @@ void ShutdownGoogleLoggingUtilities() {
 }
 
 }  // namespace glog_internal_namespace_
+
+#ifdef HAVE_STACKTRACE
+std::string GetStackTrace() {
+  std::string stacktrace;
+  DumpStackTrace(1, DebugWriteToString, &stacktrace);
+  return stacktrace;
+}
+#endif
+
 }  // namespace google
