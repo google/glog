@@ -56,9 +56,9 @@ their usage, please refer to the `user guide <#user-guide>`__.
 Usage in Projects
 ~~~~~~~~~~~~~~~~~
 
-Assuming that glog was previously `built glog using CMake <#cmake>`__ or
-installed using a package manager, you can use the CMake command
-:cmake:`find_package` to build against glog in your CMake project as follows:
+Assuming that glog was previously `built using CMake <#cmake>`__ or installed
+using a package manager, you can use the CMake command :cmake:`find_package` to
+build against glog in your CMake project as follows:
 
 .. code:: cmake
 
