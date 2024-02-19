@@ -681,7 +681,7 @@ macro can be used as follows:
 
 Verbose level condition macros ``VLOG_IF``, ``VLOG_EVERY_N`` and
 ``VLOG_IF_EVERY_N`` behave analogous to ``LOG_IF``, ``LOG_EVERY_N``,
-``LOF_IF_EVERY``, but accept a numeric verbosity level as opposed to a
+``LOG_IF_EVERY_N``, but accept a numeric verbosity level as opposed to a
 severity level.
 
 .. code:: cpp
