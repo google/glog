@@ -42,7 +42,7 @@
 #endif
 
 #if !defined(GLOG_EXPORT)
-#  error <glog/flags.h> was not included correctly. See the documention for how to consume the library.
+#  error <glog/flags.h> was not included correctly. See the documentation for how to consume the library.
 #endif
 
 #include "glog/platform.h"

@@ -41,7 +41,7 @@
 #endif
 
 #if !defined(GLOG_EXPORT)
-#  error <glog/raw_logging.h> was not included correctly. See the documention for how to consume the library.
+#  error <glog/raw_logging.h> was not included correctly. See the documentation for how to consume the library.
 #endif
 
 #include "glog/log_severity.h"

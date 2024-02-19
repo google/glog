@@ -35,7 +35,7 @@
 #endif
 
 #if !defined(GLOG_EXPORT)
-#  error <glog/log_severity.h> was not included correctly. See the documention for how to consume the library.
+#  error <glog/log_severity.h> was not included correctly. See the documentation for how to consume the library.
 #endif
 
 namespace google {
