@@ -342,28 +342,6 @@ static bool SendEmailInternal(const char* dest, const char* subject,
 
 base::Logger::~Logger() = default;
 
-void base::Logger::Write(bool /*force_flush*/, time_t /*timestamp*/,
-                         const char* /*message*/, size_t /*message_len*/) {}
-
-void base::Logger::Write(bool force_flush,
-                         const std::chrono::system_clock::time_point& timestamp,
-                         const char* message, size_t message_len) {
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-  return Write(force_flush, std::chrono::system_clock::to_time_t(timestamp),
-               message, message_len);
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
-}
-
 namespace {
 
 constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
@@ -372,44 +350,11 @@ constexpr std::intmax_t kSecondsInWeek = kSecondsInDay * 7;
 // Optional user-configured callback to print custom prefixes.
 class PrefixFormatter {
  public:
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-  PrefixFormatter(CustomPrefixCallback callback, void* data) noexcept
-      : version{V1}, callback_v1{callback}, data{data} {}
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
   PrefixFormatter(PrefixFormatterCallback callback, void* data) noexcept
       : version{V2}, callback_v2{callback}, data{data} {}
 
   void operator()(std::ostream& s, const LogMessage& message) const {
     switch (version) {
-      case V1:
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-        callback_v1(s,
-                    LogMessageInfo(LogSeverityNames[message.severity()],
-                                   message.basename(), message.line(),
-                                   message.thread_id(), message.time()),
-                    data);
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
-        break;
       case V2:
         callback_v2(s, message, data);
         break;
@@ -420,21 +365,8 @@ class PrefixFormatter {
   PrefixFormatter& operator=(const PrefixFormatter& other) = delete;
 
  private:
-  enum Version { V1, V2 } version;
+  enum Version { V2 } version;
   union {
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-    CustomPrefixCallback callback_v1;
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
     PrefixFormatterCallback callback_v2;
   };
   // User-provided data to pass to the callback:
@@ -2081,38 +2013,6 @@ void SetLogSymlink(LogSeverity severity, const char* symlink_basename) {
 
 LogSink::~LogSink() = default;
 
-void LogSink::send(LogSeverity severity, const char* full_filename,
-                   const char* base_filename, int line,
-                   const LogMessageTime& time, const char* message,
-                   size_t message_len) {
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-  send(severity, full_filename, base_filename, line, &time.tm(), message,
-       message_len);
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
-}
-
-void LogSink::send(LogSeverity severity, const char* full_filename,
-                   const char* base_filename, int line, const std::tm* t,
-                   const char* message, size_t message_len) {
-  (void)severity;
-  (void)full_filename;
-  (void)base_filename;
-  (void)line;
-  (void)t;
-  (void)message;
-  (void)message_len;
-}
-
 void LogSink::WaitTillSent() {
   // noop default
 }
@@ -2701,29 +2601,6 @@ void MakeCheckOpValueString(std::ostream* os, const std::nullptr_t& /*v*/) {
 }  // namespace logging
 
 void InitGoogleLogging(const char* argv0) { InitGoogleLoggingUtilities(argv0); }
-
-#if defined(__GNUG__)
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#elif defined(_MSC_VER)
-#  pragma warning(push)
-#  pragma warning(disable : 4996)
-#endif  // __GNUG__
-void InitGoogleLogging(const char* argv0, CustomPrefixCallback prefix_callback,
-                       void* prefix_callback_data) {
-  if (prefix_callback != nullptr) {
-    g_prefix_formatter = std::make_unique<PrefixFormatter>(
-        prefix_callback, prefix_callback_data);
-  } else {
-    g_prefix_formatter = nullptr;
-  }
-  InitGoogleLogging(argv0);
-}
-#if defined(__GNUG__)
-#  pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-#  pragma warning(pop)
-#endif  // __GNUG__
 
 void InstallPrefixFormatter(PrefixFormatterCallback callback, void* data) {
   if (callback != nullptr) {

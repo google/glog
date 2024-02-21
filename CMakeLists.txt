@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.22)
 project (glog
-  VERSION 0.7.0
+  VERSION 0.8.0
   DESCRIPTION "C++ implementation of the Google logging module"
   HOMEPAGE_URL https://github.com/google/glog
   LANGUAGES CXX
@@ -466,7 +466,7 @@ if (ANDROID)
 endif (ANDROID)
 
 set_target_properties (glog PROPERTIES VERSION ${glog_VERSION})
-set_target_properties (glog PROPERTIES SOVERSION 2)
+set_target_properties (glog PROPERTIES SOVERSION 3)
 
 if (CYGWIN OR WIN32)
   target_compile_definitions (glog PUBLIC GLOG_NO_ABBREVIATED_SEVERITIES)
