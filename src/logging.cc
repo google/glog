@@ -439,6 +439,8 @@ class LogCleaner {
   void Enable(const std::chrono::minutes& overdue);
   void Disable();
 
+  void OverrideFilePathPrefix(const std::string& prefix);
+
   void Run(const std::chrono::system_clock::time_point& current_time,
            bool base_filename_selected, const string& base_filename,
            const string& filename_extension);
@@ -464,6 +466,8 @@ class LogCleaner {
       std::chrono::duration<int, std::ratio<kSecondsInWeek>>{1}};
   std::chrono::system_clock::time_point
       next_cleanup_time_;  // cycle count at which to clean overdue log
+  bool override_required_file_path_prefix_{false};
+  std::string required_file_path_prefix_;
 };
 
 LogCleaner log_cleaner;
@@ -1291,6 +1295,11 @@ void LogCleaner::Enable(const std::chrono::minutes& overdue) {
 
 void LogCleaner::Disable() { enabled_ = false; }
 
+void LogCleaner::OverrideFilePathPrefix(const std::string& prefix) {
+  override_required_file_path_prefix_ = true;
+  required_file_path_prefix_ = prefix;
+}
+
 void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
                      bool base_filename_selected, const string& base_filename,
                      const string& filename_extension) {
@@ -1309,17 +1318,20 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
 
   vector<string> dirs;
 
-  if (!base_filename_selected) {
-    dirs = GetLoggingDirectories();
-  } else {
-    size_t pos = base_filename.find_last_of(possible_dir_delim, string::npos,
-                                            sizeof(possible_dir_delim));
+  if (base_filename_selected || override_required_file_path_prefix_) {
+    const string base_path = override_required_file_path_prefix_
+                                 ? required_file_path_prefix_
+                                 : base_filename;
+    size_t pos = base_path.find_last_of(possible_dir_delim, string::npos,
+                                        sizeof(possible_dir_delim));
     if (pos != string::npos) {
-      string dir = base_filename.substr(0, pos + 1);
+      string dir = base_path.substr(0, pos + 1);
       dirs.push_back(dir);
     } else {
       dirs.emplace_back(".");
     }
+  } else {
+    dirs = GetLoggingDirectories();
   }
 
   for (const std::string& dir : dirs) {
@@ -1377,6 +1389,22 @@ vector<string> LogCleaner::GetOverdueLogNames(
 bool LogCleaner::IsLogFromCurrentProject(
     const string& filepath, const string& base_filename,
     const string& filename_extension) const {
+  // If overriding log file path prefix, check if the file path starts with
+  // 'required_file_path_prefix_' and ends with `filename_extension`.
+  if (override_required_file_path_prefix_) {
+    if (filepath.find(required_file_path_prefix_) != 0) {
+      return false;
+    }
+    if (filename_extension.empty()) {
+      return true;
+    }
+    if (filepath.size() < filename_extension.size()) {
+      return false;
+    }
+    return filename_extension ==
+           filepath.substr(filepath.size() - filename_extension.size());
+  }
+
   // We should remove duplicated delimiters from `base_filename`, e.g.,
   // before: "/tmp//<base_filename>.<create_time>.<pid>"
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
@@ -2628,6 +2656,10 @@ void EnableLogCleaner(const std::chrono::minutes& overdue) {
 }
 
 void DisableLogCleaner() { log_cleaner.Disable(); }
+
+void OverrideLogCleanerFilePathPrefix(const std::string& prefix) {
+  log_cleaner.OverrideFilePathPrefix(prefix);
+}
 
 LogMessageTime::LogMessageTime() = default;
 

@@ -484,6 +484,7 @@ InstallFailureFunction(logging_fail_func_t fail_func);
 // Enable/Disable old log cleaner.
 GLOG_EXPORT void EnableLogCleaner(const std::chrono::minutes& overdue);
 GLOG_EXPORT void DisableLogCleaner();
+GLOG_EXPORT void OverrideLogCleanerFilePathPrefix(const std::string& prefix);
 GLOG_EXPORT void SetApplicationFingerprint(const std::string& fingerprint);
 
 class LogSink;  // defined below
