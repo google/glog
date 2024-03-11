@@ -61,24 +61,28 @@ def glog_library(with_gflags = 1, **kwargs):
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
+        # NOTE: users could optionally patch -DHAVE_UNWIND off if
+        # stacktrace dumping is not needed
         "-DHAVE_UNWIND",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
         "-DHAVE_PREAD",
+        # -DHAVE_MODE_T prevent repeated typedef mode_t leading
+        # to emcc compilation failure
+        "-DHAVE_MODE_T",
+        "-DHAVE_UNISTD_H",
     ]
 
     linux_or_darwin_copts = wasm_copts + [
         "-DGLOG_EXPORT=__attribute__((visibility(\\\"default\\\")))",
         "-DGLOG_NO_EXPORT=__attribute__((visibility(\\\"default\\\")))",
-        "-DHAVE_MODE_T",
         "-DHAVE_POSIX_FADVISE",
         "-DHAVE_SSIZE_T",
         "-DHAVE_SYS_TYPES_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
         # For src/logging.cc to create symlinks.
-        "-DHAVE_UNISTD_H",
         "-fvisibility-inlines-hidden",
         "-fvisibility=hidden",
     ]
