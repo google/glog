@@ -60,7 +60,7 @@ TEST(CleanImmediately, logging) {
   google::EnableLogCleaner(0h);
 
   for (unsigned i = 0; i < 1000; ++i) {
-    LOG(INFO) << "cleanup test";
+    LOG(WARNING) << "cleanup test";
   }
 
   google::DisableLogCleaner();
