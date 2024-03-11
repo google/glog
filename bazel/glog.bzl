@@ -231,6 +231,7 @@ def glog_library(with_gflags = 1, **kwargs):
         "cleanup_immediately",
         "cleanup_with_absolute_prefix",
         "cleanup_with_relative_prefix",
+        "cleanup_with_file_path_override",
         # "demangle", # Broken
         # "logging", # Broken
         # "mock-log", # Broken
