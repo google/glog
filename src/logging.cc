@@ -40,6 +40,7 @@
 #include <iterator>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <thread>
@@ -430,6 +431,17 @@ class LogFileObject : public base::Logger {
   bool CreateLogfile(const string& time_pid_string);
 };
 
+struct LogCleanerFileInfo {
+  std::string dir;
+  std::string base_filename;
+  std::string filename_extension;
+};
+
+bool operator<(const LogCleanerFileInfo& l, const LogCleanerFileInfo& r) {
+  return std::tie(l.dir, l.base_filename, l.filename_extension) <
+         std::tie(r.dir, r.base_filename, r.filename_extension);
+}
+
 // Encapsulate all log cleaner related states
 class LogCleaner {
  public:
@@ -439,11 +451,11 @@ class LogCleaner {
   void Enable(const std::chrono::minutes& overdue);
   void Disable();
 
-  void Run(const std::chrono::system_clock::time_point& current_time,
-           bool base_filename_selected, const string& base_filename,
-           const string& filename_extension);
+  void RegisterLogFile(const std::string& path, const std::string& ext);
+  void UnregisterLogFile(const std::string& path, const std::string& ext);
+  void UnregisterAllLogFiles();
 
-  bool enabled() const { return enabled_; }
+  void Run(const std::chrono::system_clock::time_point& current_time);
 
  private:
   vector<string> GetOverdueLogNames(
@@ -459,11 +471,15 @@ class LogCleaner {
       const string& filepath,
       const std::chrono::system_clock::time_point& current_time) const;
 
+  std::string RemoveDuplicatePathDelimiters(const std::string& path) const;
+  std::string GetLogDir(const std::string& filepath) const;
+
   bool enabled_{false};
   std::chrono::minutes overdue_{
       std::chrono::duration<int, std::ratio<kSecondsInWeek>>{1}};
-  std::chrono::system_clock::time_point
-      next_cleanup_time_;  // cycle count at which to clean overdue log
+  std::chrono::system_clock::time_point next_cleanup_time_;
+  std::set<LogCleanerFileInfo> log_files_;
+  std::mutex mutex_;
 };
 
 LogCleaner log_cleaner;
@@ -929,7 +945,11 @@ LogFileObject::LogFileObject(LogSeverity severity, const char* base_filename)
       filename_extension_(),
       severity_(severity),
       rollover_attempt_(kRolloverAttemptFrequency - 1),
-      start_time_(std::chrono::system_clock::now()) {}
+      start_time_(std::chrono::system_clock::now()) {
+  if (!base_filename_.empty()) {
+    log_cleaner.RegisterLogFile(base_filename_, filename_extension_);
+  }
+}
 
 LogFileObject::~LogFileObject() {
   std::lock_guard<std::mutex> l{mutex_};
@@ -940,24 +960,36 @@ void LogFileObject::SetBasename(const char* basename) {
   std::lock_guard<std::mutex> l{mutex_};
   base_filename_selected_ = true;
   if (base_filename_ != basename) {
+    if (!base_filename_.empty()) {
+      log_cleaner.UnregisterLogFile(base_filename_, filename_extension_);
+    }
     // Get rid of old log file since we are changing names
     if (file_ != nullptr) {
       file_ = nullptr;
       rollover_attempt_ = kRolloverAttemptFrequency - 1;
     }
     base_filename_ = basename;
+    if (!base_filename_.empty()) {
+      log_cleaner.RegisterLogFile(base_filename_, filename_extension_);
+    }
   }
 }
 
 void LogFileObject::SetExtension(const char* ext) {
   std::lock_guard<std::mutex> l{mutex_};
   if (filename_extension_ != ext) {
+    if (!base_filename_.empty()) {
+      log_cleaner.UnregisterLogFile(base_filename_, filename_extension_);
+    }
     // Get rid of old log file since we are changing names
     if (file_ != nullptr) {
       file_ = nullptr;
       rollover_attempt_ = kRolloverAttemptFrequency - 1;
     }
     filename_extension_ = ext;
+    if (!base_filename_.empty()) {
+      log_cleaner.RegisterLogFile(base_filename_, filename_extension_);
+    }
   }
 }
 
@@ -1097,11 +1129,8 @@ void LogFileObject::Write(
     return;
   }
 
-  auto cleanupLogs = [this, current_time = timestamp] {
-    if (log_cleaner.enabled()) {
-      log_cleaner.Run(current_time, base_filename_selected_, base_filename_,
-                      filename_extension_);
-    }
+  auto cleanupLogs = [current_time = timestamp] {
+    log_cleaner.Run(current_time);
   };
 
   // Remove old logs
@@ -1193,6 +1222,8 @@ void LogFileObject::Write(
         return;
       }
     }
+
+    log_cleaner.RegisterLogFile(base_filename_, filename_extension_);
 
     // Write a header message into the log file
     if (FLAGS_log_file_header) {
@@ -1291,11 +1322,33 @@ void LogCleaner::Enable(const std::chrono::minutes& overdue) {
 
 void LogCleaner::Disable() { enabled_ = false; }
 
-void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
-                     bool base_filename_selected, const string& base_filename,
-                     const string& filename_extension) {
-  assert(enabled_);
-  assert(!base_filename_selected || !base_filename.empty());
+void LogCleaner::RegisterLogFile(const std::string& base_filepath,
+                                 const std::string& filename_extension) {
+  std::lock_guard<std::mutex> l{mutex_};
+  log_files_.insert({GetLogDir(base_filepath), base_filepath, filename_extension});
+
+  // Reset the next cleanup time so that the next Run() will clean up the new logs
+  next_cleanup_time_ = {};
+}
+
+void LogCleaner::UnregisterLogFile(const std::string& base_filepath,
+                                 const std::string& filename_extension) {
+  std::lock_guard<std::mutex> l{mutex_};
+  log_files_.erase({GetLogDir(base_filepath), base_filepath, filename_extension});
+}
+
+void LogCleaner::UnregisterAllLogFiles()
+{
+  std::lock_guard<std::mutex> l{mutex_};
+  log_files_.clear();
+}
+
+void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time) {
+  if (!enabled_) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> l{mutex_};
 
   // avoid scanning logs too frequently
   if (current_time < next_cleanup_time_) {
@@ -1307,24 +1360,10 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
       std::chrono::duration_cast<std::chrono::system_clock::duration>(
           std::chrono::duration<int32>{FLAGS_logcleansecs});
 
-  vector<string> dirs;
-
-  if (!base_filename_selected) {
-    dirs = GetLoggingDirectories();
-  } else {
-    size_t pos = base_filename.find_last_of(possible_dir_delim, string::npos,
-                                            sizeof(possible_dir_delim));
-    if (pos != string::npos) {
-      string dir = base_filename.substr(0, pos + 1);
-      dirs.push_back(dir);
-    } else {
-      dirs.emplace_back(".");
-    }
-  }
-
-  for (const std::string& dir : dirs) {
-    vector<string> logs = GetOverdueLogNames(dir, current_time, base_filename,
-                                             filename_extension);
+  for (const auto& log_file_info : log_files_) {
+    const auto logs = GetOverdueLogNames(log_file_info.dir, current_time,
+                                         log_file_info.base_filename,
+                                         log_file_info.filename_extension);
     for (const std::string& log : logs) {
       // NOTE May fail on Windows if the file is still open
       int result = unlink(log.c_str());
@@ -1361,6 +1400,7 @@ vector<string> LogCleaner::GetOverdueLogNames(
                     log_directory[log_directory.size() - 1]) != dir_delim_end) {
         filepath = log_directory + filepath;
       }
+      filepath = RemoveDuplicatePathDelimiters(filepath);
 
       if (IsLogFromCurrentProject(filepath, base_filename,
                                   filename_extension) &&
@@ -1380,22 +1420,7 @@ bool LogCleaner::IsLogFromCurrentProject(
   // We should remove duplicated delimiters from `base_filename`, e.g.,
   // before: "/tmp//<base_filename>.<create_time>.<pid>"
   // after:  "/tmp/<base_filename>.<create_time>.<pid>"
-  string cleaned_base_filename;
-
-  const char* const dir_delim_end =
-      possible_dir_delim + sizeof(possible_dir_delim);
-
-  size_t real_filepath_size = filepath.size();
-  for (char c : base_filename) {
-    if (cleaned_base_filename.empty()) {
-      cleaned_base_filename += c;
-    } else if (std::find(possible_dir_delim, dir_delim_end, c) ==
-                   dir_delim_end ||
-               (!cleaned_base_filename.empty() &&
-                c != cleaned_base_filename[cleaned_base_filename.size() - 1])) {
-      cleaned_base_filename += c;
-    }
-  }
+  string cleaned_base_filename = RemoveDuplicatePathDelimiters(base_filename);
 
   // Return early if the filename doesn't start with `cleaned_base_filename`.
   if (filepath.find(cleaned_base_filename) != 0) {
@@ -1405,6 +1430,7 @@ bool LogCleaner::IsLogFromCurrentProject(
   // Check if in the string `filename_extension` is right next to
   // `cleaned_base_filename` in `filepath` if the user
   // has set a custom filename extension.
+  size_t real_filepath_size = filepath.size();
   if (!filename_extension.empty()) {
     if (cleaned_base_filename.size() >= real_filepath_size) {
       return false;
@@ -1476,6 +1502,36 @@ bool LogCleaner::IsLogLastModifiedOver(
 
   // If failed to get file stat, don't return true!
   return false;
+}
+
+std::string LogCleaner::RemoveDuplicatePathDelimiters(const std::string& path) const {
+  string cleaned_path;
+
+  const char* const dir_delim_end =
+      possible_dir_delim + sizeof(possible_dir_delim);
+
+  for (char c : path) {
+    if (cleaned_path.empty()) {
+      cleaned_path += c;
+    } else if (std::find(possible_dir_delim, dir_delim_end, c) ==
+                   dir_delim_end ||
+               (!cleaned_path.empty() &&
+                c != cleaned_path[cleaned_path.size() - 1])) {
+      cleaned_path += c;
+    }
+  }
+
+  return cleaned_path;
+}
+
+std::string LogCleaner::GetLogDir(const std::string& filepath) const {
+  const size_t pos = filepath.find_last_of(
+      possible_dir_delim, string::npos, sizeof(possible_dir_delim));
+  if (pos != std::string::npos) {
+    return filepath.substr(0, pos + 1);
+  } else {
+    return ".";
+  }
 }
 
 }  // namespace
@@ -2613,6 +2669,7 @@ void InstallPrefixFormatter(PrefixFormatterCallback callback, void* data) {
 void ShutdownGoogleLogging() {
   ShutdownGoogleLoggingUtilities();
   LogDestination::DeleteLogDestinations();
+  log_cleaner.UnregisterAllLogFiles();
   logging_directories_list = nullptr;
   g_prefix_formatter = nullptr;
 }
