@@ -237,7 +237,11 @@ const char* ProgramInvocationShortName() {
 #elif defined(HAVE___PROGNAME)
   return __progname;
 #elif defined(HAVE___ARGV)
-  return const_basename(__argv[0]);
+  if (__argv) {
+    return const_basename(__argv[0]);
+  } else {
+    return "UNKNOWN";
+  }
 #else
   return "UNKNOWN";
 #endif
