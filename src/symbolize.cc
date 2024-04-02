@@ -642,18 +642,13 @@ OpenObjectFileContainingPcAndGetStartAddress(uint64_t pc,
       return nullptr;  // Malformed line.
     }
 
+    strncpy(out_file_name, cursor, out_file_name_size);
+    // Making sure |out_file_name| is always null-terminated.
+    out_file_name[out_file_name_size - 1] = '\0';
+
     // Finally, "cursor" now points to file name of our interest.
-    FileDescriptor object_fd{
+    return FileDescriptor{
         FailureRetry([cursor] { return open(cursor, O_RDONLY); })};
-    if (!object_fd) {
-      // Failed to open object file.  Copy the object file name to
-      // |out_file_name|.
-      strncpy(out_file_name, cursor, out_file_name_size);
-      // Making sure |out_file_name| is always null-terminated.
-      out_file_name[out_file_name_size - 1] = '\0';
-      return nullptr;
-    }
-    return object_fd;
   }
 }
 
