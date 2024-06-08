@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.22)
 project (glog
-  VERSION 0.7.0
+  VERSION 0.7.1
   DESCRIPTION "C++ implementation of the Google logging module"
   HOMEPAGE_URL https://github.com/google/glog
   LANGUAGES CXX
