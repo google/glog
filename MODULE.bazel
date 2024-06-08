@@ -3,4 +3,5 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "gflags", version = "2.2.2", repo_name = "com_github_gflags_gflags")
+bazel_dep(name = "gflags", version = "2.2.2")
+bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)

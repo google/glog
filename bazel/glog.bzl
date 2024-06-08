@@ -126,7 +126,7 @@ def glog_library(with_gflags = 1, **kwargs):
         "src/windows/port.h",
     ]
 
-    gflags_deps = ["@com_github_gflags_gflags//:gflags"] if with_gflags else []
+    gflags_deps = ["@gflags//:gflags"] if with_gflags else []
 
     final_lib_defines = select({
         # GLOG_EXPORT is normally set by export.h, but that's not
@@ -259,7 +259,7 @@ def glog_library(with_gflags = 1, **kwargs):
             copts = final_lib_copts + test_only_copts,
             deps = gflags_deps + [
                 ":glog",
-                "@com_github_google_googletest//:gtest",
+                "@googletest//:gtest",
             ],
             **kwargs
         )
