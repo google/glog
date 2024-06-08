@@ -7,8 +7,8 @@ jobs:
     defaults:
       run:
         shell: bash
-    name: GCC-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
-    runs-on: ubuntu-22.04
+    name: ${{matrix.os}}-GCC-C++${{matrix.std}}-${{matrix.build_type}}-${{matrix.lib}}
+    runs-on: ${{matrix.os}}
     permissions:
       actions: read
       contents: read
@@ -16,6 +16,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
         build_type: [Release, Debug]
         lib: [shared, static]
         std: [14, 17, 20, 23]
