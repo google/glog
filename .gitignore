@@ -1,3 +1,4 @@
 *.orig
 /build*/
+/site/
 bazel-*
