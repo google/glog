@@ -1,0 +1,1551 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://google.github.io/glog/0.8.0/logging/">
+      
+      
+        <link rel="prev" href="../packages/">
+      
+      
+        <link rel="next" href="../failures/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+    
+    
+      
+        <title>Logging - Google Logging Library</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.6543a935.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        
+        <link rel="stylesheet" href="../assets/external/fonts.googleapis.com/css.49ea35f2.css">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#logging" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+          <aside class="md-banner md-banner--warning">
+            <div class="md-banner__inner md-grid md-typeset">
+              
+  You're not viewing the latest version.
+  <a href="../..">
+    <strong>Click here to go to latest.</strong>
+  </a>
+
+            </div>
+            <script>var el=document.querySelector("[data-md-component=outdated]"),outdated=__md_get("__outdated",sessionStorage);!0===outdated&&el&&(el.hidden=!1)</script>
+          </aside>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Google Logging Library" class="md-header__button md-logo" aria-label="Google Logging Library" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Google Logging Library
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Logging
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="indigo"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/google/glog" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    google/glog
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Google Logging Library" class="md-nav__button md-logo" aria-label="Google Logging Library" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Google Logging Library
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/google/glog" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    google/glog
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href=".." class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#severity-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Severity Levels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Log Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-line-prefix-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Log Line Prefix Format
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Log Line Prefix Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Format Customization
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjusting-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adjusting Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adjusting Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Command-line Parameters and Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifying-flags-programmatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modifying Flags Programmatically
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-occasional-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional / Occasional Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verbose-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verbose Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Checks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raw Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#google-style-perror" class="md-nav__link">
+    <span class="md-ellipsis">
+      Google Style perror()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#syslog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Syslog
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../failures/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failure Handler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_cleaner/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Log Removal
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_stripping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stripping Log Messages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../windows/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    System-specific Considerations
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../license/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    License
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#severity-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      Severity Levels
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Log Files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-line-prefix-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      Log Line Prefix Format
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Log Line Prefix Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format-customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Format Customization
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adjusting-output" class="md-nav__link">
+    <span class="md-ellipsis">
+      Adjusting Output
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Adjusting Output">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Command-line Parameters and Environment Variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modifying-flags-programmatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      Modifying Flags Programmatically
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#conditional-occasional-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conditional / Occasional Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verbose-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Verbose Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging Support
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-checks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime Checks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Raw Logging
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#google-style-perror" class="md-nav__link">
+    <span class="md-ellipsis">
+      Google Style perror()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#syslog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Syslog
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/google/glog/edit/master/docs/logging.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h1>
+<p>glog defines a series of macros that simplify many common logging tasks. You can
+log messages by <a href="#severity-levels">severity level</a>, <a href="#adjusting-output">control
+logging</a> behavior from the command line, log based on
+<a href="#conditional-occasional-logging">conditionals</a>, abort the program when
+<a href="#runtime-checks">expected conditions</a> are not met, introduce your <a href="#verbose-logging">own logging
+levels</a>, <a href="#format-customization">customize the prefix</a>
+attached to log messages, and more.</p>
+<h2 id="severity-levels">Severity Levels<a class="headerlink" href="#severity-levels" title="Permanent link">&para;</a></h2>
+<p>You can specify one of the following severity levels (in increasing order of
+severity):</p>
+<ol>
+<li><code>INFO</code>,</li>
+<li><code>WARNING</code>,</li>
+<li><code>ERROR</code>, and</li>
+<li><code>FATAL</code>.</li>
+</ol>
+<p>Logging a <code>FATAL</code> message terminates the program (after the message is logged).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Messages of a given severity are logged not only to corresponding severity
+logfile but also to other logfiles of lower severity. For instance, a
+message of severity <code>FATAL</code> will be logged to logfiles of severity <code>FATAL</code>,
+<code>ERROR</code>, <code>WARNING</code>, and <code>INFO</code>.</p>
+</div>
+<p>The <code>DFATAL</code> severity logs a <code>FATAL</code> error in <a href="#debugging-support">debug mode</a>
+(i.e., there is no <code>NDEBUG</code> macro defined), but avoids halting the program in
+production by automatically reducing the severity to <code>ERROR</code>.</p>
+<h2 id="log-files">Log Files<a class="headerlink" href="#log-files" title="Permanent link">&para;</a></h2>
+<p>Unless otherwise specified, glog uses the format</p>
+<div class="language-text highlight"><pre><span></span><code>&lt;tmp&gt;/&lt;program name&gt;.&lt;hostname&gt;.&lt;user name&gt;.log.&lt;severity level&gt;.&lt;date&gt;-&lt;time&gt;.&lt;pid&gt;
+</code></pre></div>
+<p>for log filenames written to a directory designated as <code>&lt;tmp&gt;</code> and
+determined according to the following rules.</p>
+<dl>
+<dt><strong>Windows</strong></dt>
+<dd>
+<p>glog uses the
+<a href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-gettemppatha">GetTempPathA</a>
+API function to retrieve the directory for temporary files with a
+fallback to</p>
+<ol>
+<li><code>C:\TMP\</code></li>
+<li><code>C:\TEMP\</code></li>
+</ol>
+<p>(in the order given.)</p>
+</dd>
+<dt><strong>non-Windows</strong></dt>
+<dd>
+<p>The directory is determined by referencing the environment variables</p>
+<ol>
+<li><code>TMPDIR</code></li>
+<li><code>TMP</code></li>
+</ol>
+<p>if set with a fallback to <code>/tmp/</code>.</p>
+</dd>
+</dl>
+<p>The default path to a log file on Linux, for instance, could be</p>
+<div class="language-text highlight"><pre><span></span><code>/tmp/hello_world.example.com.hamaji.log.INFO.20080709-222411.10474
+</code></pre></div>
+<p>By default, glog echos <code>ERROR</code> and <code>FATAL</code> messages to standard error in
+addition to log files.</p>
+<h2 id="log-line-prefix-format">Log Line Prefix Format<a class="headerlink" href="#log-line-prefix-format" title="Permanent link">&para;</a></h2>
+<p>Log lines have this form:</p>
+<div class="language-text highlight"><pre><span></span><code>Lyyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg...
+</code></pre></div>
+<p>where the fields are defined as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Placeholder</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>L</code></td>
+<td>A single character, representing the log level (e.g., <code>I</code> for <code>INFO</code>)</td>
+</tr>
+<tr>
+<td><code>yyyy</code></td>
+<td>The year</td>
+</tr>
+<tr>
+<td><code>mm</code></td>
+<td>The month (zero padded; i.e., May is <code>05</code>)</td>
+</tr>
+<tr>
+<td><code>dd</code></td>
+<td>The day (zero padded)</td>
+</tr>
+<tr>
+<td><code>hh:mm:ss.uuuuuu</code></td>
+<td>Time in hours, minutes and fractional seconds</td>
+</tr>
+<tr>
+<td><code>threadid</code></td>
+<td>The space-padded thread ID</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>The file name</td>
+</tr>
+<tr>
+<td><code>line</code></td>
+<td>The line number</td>
+</tr>
+<tr>
+<td><code>msg</code></td>
+<td>The user-supplied message</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition example">
+<p class="admonition-title">Default log line prefix format</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>I1103 11:57:31.739339 24395 google.cc:2341] Command line: ./some_prog
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>I1103 11:57:31.739403 24395 google.cc:2342] Process id 24395
+</span></code></pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although microseconds are useful for comparing events on a single machine,
+clocks on different machines may not be well synchronized. Hence, use with
+caution when comparing the low bits of timestamps from different machines.</p>
+</div>
+<h3 id="format-customization">Format Customization<a class="headerlink" href="#format-customization" title="Permanent link">&para;</a></h3>
+<p>The predefined log line prefix can be replaced using a user-provided callback
+that formats the corresponding output.</p>
+<p>For each log entry, the callback will be invoked with a reference to a
+<code>google::LogMessage</code> instance containing the severity, filename, line
+number, thread ID, and time of the event. It will also be given a
+reference to the output stream, whose contents will be prepended to the actual
+message in the final log line.</p>
+<p>To enable the use of a prefix formatter, use the</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">google</span><span class="o">::</span><span class="n">InstallPrefixFormatter</span><span class="p">(</span><span class="o">&amp;</span><span class="n">MyPrefixFormatter</span><span class="p">);</span>
+</span></code></pre></div>
+<p>function to pass a pointer to the corresponding <code>MyPrefixFormatter</code> callback
+during initialization. <code>InstallPrefixFormatter</code> takes a second optional argument
+of type <code class="language-cpp highlight"><span class="kt">void</span><span class="o">*</span></code> that allows supplying user data to the callback.</p>
+<div class="admonition example">
+<p class="admonition-title">Custom prefix formatter</p>
+<p>The following function outputs a prefix that matches glog's default format.
+The third parameter <code>data</code> can be used to access user-supplied data which
+unless specified defaults to <code class="language-cpp highlight"><span class="k">nullptr</span></code>.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kt">void</span><span class="w"> </span><span class="nf">MyPrefixFormatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="o">&amp;</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">LogMessage</span><span class="o">&amp;</span><span class="w"> </span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="cm">/*data*/</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">   </span><span class="n">s</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">GetLogSeverityName</span><span class="p">(</span><span class="n">m</span><span class="p">.</span><span class="n">severity</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1900</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">year</span><span class="p">()</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">month</span><span class="p">()</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">day</span><span class="p">()</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">hour</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;:&#39;</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">min</span><span class="p">()</span><span class="w">  </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;:&#39;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">sec</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;.&quot;</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">time</span><span class="p">().</span><span class="n">usec</span><span class="p">()</span>
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span>
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setfill</span><span class="p">(</span><span class="sc">&#39; &#39;</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setw</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">thread_id</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">setfill</span><span class="p">(</span><span class="sc">&#39;0&#39;</span><span class="p">)</span>
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span>
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">basename</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;:&#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">m</span><span class="p">.</span><span class="n">line</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;]&quot;</span><span class="p">;</span>
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="p">}</span>
+</span></code></pre></div>
+</div>
+<h2 id="adjusting-output">Adjusting Output<a class="headerlink" href="#adjusting-output" title="Permanent link">&para;</a></h2>
+<p>Several flags influence glog's output behavior.</p>
+<h3 id="using-command-line-parameters-and-environment-variables">Using Command-line Parameters and Environment Variables<a class="headerlink" href="#using-command-line-parameters-and-environment-variables" title="Permanent link">&para;</a></h3>
+<p>If the <a href="https://github.com/gflags/gflags">Google gflags
+library</a> is installed on your machine,
+the build system will automatically detect and use it, allowing you to
+pass flags on the command line.</p>
+<div class="admonition example">
+<p class="admonition-title">Activate <code>--logtostderr</code> in an application from the command line</p>
+<p>A binary <code>you_application</code> that uses glog can be started using
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./your_application<span class="w"> </span>--logtostderr<span class="o">=</span><span class="m">1</span>
+</span></code></pre></div>
+to log to <code>stderr</code> instead of writing the output to a log file.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can set boolean flags to <code>true</code> by specifying <code>1</code>, <code>true</code>, or <code>yes</code>. To
+set boolean flags to <code>false</code>, specify <code>0</code>, <code>false</code>, or <code>no</code>. In either case
+the spelling is case-insensitive.</p>
+</div>
+<p>If the Google gflags library isn't installed, you set flags via
+environment variables, prefixing the flag name with <code>GLOG_</code>, e.g.,</p>
+<div class="admonition example">
+<p class="admonition-title">Activate <code>logtostderr</code> without gflags</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">GLOG_logtostderr</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./your_application
+</span></code></pre></div>
+</div>
+<p>The following flags are most commonly used:</p>
+<dl>
+<dt><code>logtostderr</code> (<code>bool</code>, default=<code>false</code>)</dt>
+<dd>
+<p>Log messages to <code>stderr</code> instead of logfiles.</p>
+</dd>
+<dt><code>stderrthreshold</code> (<code>int</code>, default=2, which is <code>ERROR</code>)</dt>
+<dd>
+<p>Copy log messages at or above this level to <code>stderr</code> in addition to
+logfiles. The numbers of severity levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>,
+and <code>FATAL</code> are 0, 1, 2, and 3, respectively.</p>
+</dd>
+<dt><code>minloglevel</code> (<code>int</code>, default=0, which is <code>INFO</code>)</dt>
+<dd>
+<p>Log messages at or above this level. Again, the numbers of severity
+levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, and <code>FATAL</code> are 0, 1, 2, and 3,
+respectively.</p>
+</dd>
+<dt><code>log_dir</code> (<code>string</code>, default="")</dt>
+<dd>
+<p>If specified, logfiles are written into this directory instead of
+the default logging directory.</p>
+</dd>
+<dt><code>v</code> (<code>int</code>, default=0)</dt>
+<dd>
+<p>Show all <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="n">m</span><span class="p">)</span></code> messages for <code>m</code> less or equal the value of this
+flag. Overridable by <code class="language-bash highlight">--vmodule</code>. Refer to <a href="#verbose-logging">verbose
+logging</a> for more detail.</p>
+</dd>
+<dt><code>vmodule</code> (<code>string</code>, default="")</dt>
+<dd>
+<p>Per-module verbose level. The argument has to contain a
+comma-separated list of <code>&lt;module name&gt;=&lt;log level&gt;</code>. <code>&lt;module name&gt;</code>
+is a glob pattern (e.g., <code>gfs*</code> for all modules whose name starts
+with "gfs"), matched against the filename base (that is, name
+ignoring .cc/.h./-inl.h). <code>&lt;log level&gt;</code> overrides any value given by
+<code>--v</code>. See also <a href="#verbose-logging">verbose logging</a> for
+more details.</p>
+</dd>
+</dl>
+<p>Additional flags are defined in <a href="../src/flags.cc">flags.cc</a>. Please see the
+source for their complete list.</p>
+<h3 id="modifying-flags-programmatically">Modifying Flags Programmatically<a class="headerlink" href="#modifying-flags-programmatically" title="Permanent link">&para;</a></h3>
+<p>You can also modify flag values in your program by modifying global variables
+<code>FLAGS_*</code>. Most settings start working immediately after you update <code>FLAGS_*</code>.
+The exceptions are the flags related to destination files. For instance, you
+might want to set <code>FLAGS_log_dir</code> before calling <code>google::InitGoogleLogging</code>.</p>
+<div class="admonition example">
+<p class="admonition-title">Setting <code>log_dir</code> at runtime</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;file&quot;</span><span class="p">;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1">// Most flags work immediately after updating values.</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;stderr&quot;</span><span class="p">;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1">// This won’t change the log destination. If you want to set this</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">// value, you should do this before google::InitGoogleLogging .</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">FLAGS_log_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/some/log/directory&quot;</span><span class="p">;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;the same file&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+</div>
+<h2 id="conditional-occasional-logging">Conditional / Occasional Logging<a class="headerlink" href="#conditional-occasional-logging" title="Permanent link">&para;</a></h2>
+<p>Sometimes, you may only want to log a message under certain conditions.
+You can use the following macros to perform conditional logging:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">LOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>The "Got lots of cookies" message is logged only when the variable
+<code>num_cookies</code> exceeds 10. If a line of code is executed many times, it may be
+useful to only log a message at certain intervals. This kind of logging is most
+useful for informational messages.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">LOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>The above line outputs a log messages on the 1st, 11th, 21st, ... times
+it is executed.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The placeholder <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span></code> identifies the recurring repetition.</p>
+</div>
+<p>You can combine conditional and occasional logging with the following
+macro.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">LOG_IF_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">                                        </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th big cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>Instead of outputting a message every nth time, you can also limit the
+output to the first n occurrences:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">LOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>Outputs log messages for the first 20 times it is executed. The <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span></code> identifier indicates which repetition is happening.</p>
+<p>Other times, it is desired to only log a message periodically based on a
+time. For instance, to log a message every 10ms:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>Or every 2.35s:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">2.35</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<h2 id="verbose-logging">Verbose Logging<a class="headerlink" href="#verbose-logging" title="Permanent link">&para;</a></h2>
+<p>When you are chasing difficult bugs, thorough log messages are very
+useful. However, you may want to ignore too verbose messages in usual
+development. For such verbose logging, glog provides the <code>VLOG</code> macro, which
+allows you to define your own numeric logging levels.</p>
+<p>The <code class="language-bash highlight">--v</code> command line option controls which verbose messages are logged:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=1 or higher&quot;</span><span class="p">;</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=2 or higher&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>With <code>VLOG</code>, the lower the verbose level, the more likely messages are to be
+logged. For example, if <code class="language-bash highlight">--v<span class="o">==</span><span class="m">1</span></code>, <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></code> will log, but <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></code> will not log.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code>VLOG</code> behavior is opposite of the severity level logging, where
+<code>INFO</code>, <code>ERROR</code>, etc. are defined in increasing order and thus
+<code class="language-bash highlight">--minloglevel</code> of 1 will only log <code>WARNING</code> and above.</p>
+</div>
+<p>Though you can specify any integers for both <code>VLOG</code> macro and <code>--v</code> flag, the
+common values for them are small positive integers. For example, if you write
+<code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></code>, you should specify <code>--v=-1</code> or lower to silence it. This is less
+useful since we may not want verbose logs by default in most cases. The <code>VLOG</code>
+macros always log at the <code>INFO</code> log level (when they log at all).</p>
+<p>Verbose logging can be controlled from the command line on a per-module basis:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>--vmodule<span class="o">=</span><span class="nv">mapreduce</span><span class="o">=</span><span class="m">2</span>,file<span class="o">=</span><span class="m">1</span>,gfs*<span class="o">=</span><span class="m">3</span><span class="w"> </span>--v<span class="o">=</span><span class="m">0</span>
+</span></code></pre></div>
+<p>Specifying these options will specifically:</p>
+<ol>
+<li>Print <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></code> and lower messages from mapreduce.{h,cc}</li>
+<li>Print <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></code> and lower messages from file.{h,cc}</li>
+<li>Print <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span></code> and lower messages from files prefixed with "gfs"</li>
+<li>Print <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></code> and lower messages from elsewhere</li>
+</ol>
+<p>The wildcarding functionality 3. supports both <code>*</code> (matches 0 or more
+characters) and <code>?</code> (matches any single character) wildcards. Please also refer
+to <a href="#adjusting-output">command line flags</a> for more information.</p>
+<p>There's also <code class="language-cpp highlight"><span class="n">VLOG_IS_ON</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></code> "verbose level" condition macro. This macro
+returns <code class="language-cpp highlight"><span class="nb">true</span></code> when the <code>--v</code> is equal to or greater than <code>n</code>. The macro can be
+used as follows:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">VLOG_IS_ON</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="c1">// do some logging preparation and logging</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="c1">// that can’t be accomplished with just VLOG(2) &lt;&lt; ...;</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>Verbose level condition macros <code>VLOG_IF</code>, <code>VLOG_EVERY_N</code> and <code>VLOG_IF_EVERY_N</code>
+behave analogous to <code>LOG_IF</code>, <code>LOG_EVERY_N</code>, <code>LOG_IF_EVERY_N</code>, but accept a
+numeric verbosity level as opposed to a severity level.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">VLOG_IF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">))</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when size is more than 1024 and when you run the &quot;</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">      </span><span class="s">&quot;program with --v=1 or more&quot;</span><span class="p">;</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">VLOG_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed every 10th occurrence, and when you run the program &quot;</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">      </span><span class="s">&quot;with --v=1 or more. Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">VLOG_IF_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed on every 10th occurrence of case when size is more &quot;</span>
+</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">      </span><span class="s">&quot; than 1024, when you run the program with --v=1 or more. &quot;</span><span class="p">;</span>
+</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">      </span><span class="s">&quot;Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
+</span></code></pre></div>
+<div class="admonition info">
+<p class="admonition-title">Performance</p>
+<p>The conditional logging macros provided by glog (e.g., <code>CHECK</code>, <code>LOG_IF</code>,
+<code>VLOG</code>, etc.) are carefully implemented and don't execute the right hand
+side expressions when the conditions are false. So, the following check may
+not sacrifice the performance of your application.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">obj</span><span class="p">.</span><span class="n">ok</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">.</span><span class="n">CreatePrettyFormattedStringButVerySlow</span><span class="p">();</span>
+</span></code></pre></div>
+</div>
+<h2 id="debugging-support">Debugging Support<a class="headerlink" href="#debugging-support" title="Permanent link">&para;</a></h2>
+<p>Special debug mode logging macros only have an effect in debug mode and are
+compiled away to nothing for non-debug mode compiles. Use these macros to avoid
+slowing down your production application due to excessive logging.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">DLOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Found cookies&quot;</span><span class="p">;</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">DLOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">DLOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">DLOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">DLOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<h2 id="runtime-checks">Runtime Checks<a class="headerlink" href="#runtime-checks" title="Permanent link">&para;</a></h2>
+<p>It is a good practice to check expected conditions in your program
+frequently to detect errors as early as possible. The <code>CHECK</code> macro
+provides the ability to abort the application when a condition is not met,
+similar to the <code>assert</code> macro defined in the standard C library.</p>
+<p><code>CHECK</code> aborts the application if a condition is not true. Unlike
+<code>assert</code>, it is <strong>not</strong> controlled by <code>NDEBUG</code>, so the check will be executed
+regardless of compilation mode. Therefore, <code>fp-&gt;Write(x)</code> in the following
+example is always executed:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">fp</span><span class="o">-&gt;</span><span class="n">Write</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write failed!&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>There are various helper macros for equality/inequality checks
+-<code>CHECK_EQ</code>, <code>CHECK_NE</code>, <code>CHECK_LE</code>, <code>CHECK_LT</code>, <code>CHECK_GE</code>, and
+<code>CHECK_GT</code>. They compare two values, and log a <code>FATAL</code> message including the two
+values when the result is not as expected. The values must have
+<code class="language-cpp highlight"><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">ostream</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span></code> defined.</p>
+<p>You may append to the error message like so:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">CHECK_NE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: The world must be ending!&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>We are very careful to ensure that each argument is evaluated exactly
+once, and that anything which is legal to pass as a function argument is legal
+here. In particular, the arguments may be temporary expressions which will end
+up being destroyed at the end of the apparent statement, for example:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;abc&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="err">’</span><span class="n">b</span><span class="err">’</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The compiler reports an error if one of the arguments is a pointer and the other
+is <code class="language-cpp highlight"><span class="k">nullptr</span></code>. To work around this, simply <code class="language-cpp highlight"><span class="k">static_cast</span></code> <code class="language-cpp highlight"><span class="k">nullptr</span></code> to the type of the desired pointer.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">SomeType</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">nullptr</span><span class="p">));</span>
+</span></code></pre></div>
+<p>Better yet, use the <code>CHECK_NOTNULL</code> macro:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">);</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">some_ptr</span><span class="o">-&gt;</span><span class="n">DoSomething</span><span class="p">();</span>
+</span></code></pre></div>
+<p>Since this macro returns the given pointer, this is very useful in
+constructor initializer lists.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">S</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">    </span><span class="n">S</span><span class="p">(</span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ptr_</span><span class="p">(</span><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">ptr</span><span class="p">))</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">    </span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr_</span><span class="p">;</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="p">};</span>
+</span></code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Due to the argument forwarding, <code>CHECK_NOTNULL</code> cannot be used to
+simultaneously stream an additional custom message. To provide a custom
+message, one can use the macro <code>CHECK_EQ</code> prior to the failing check.</p>
+</div>
+<p>If you are comparing C strings (<code class="language-cpp highlight"><span class="kt">char</span><span class="w"> </span><span class="o">*</span></code>), a handy set of macros performs
+both case sensitive and insensitive comparisons - <code>CHECK_STREQ</code>, <code>CHECK_STRNE</code>,
+<code>CHECK_STRCASEEQ</code>, and <code>CHECK_STRCASENE</code>. The <code>CHECK_*CASE*</code> macro variants are
+case-insensitive. You can safely pass <code class="language-cpp highlight"><span class="k">nullptr</span></code> pointers to this macro.
+They treat <code class="language-cpp highlight"><span class="k">nullptr</span></code> and any non-<code class="language-cpp highlight"><span class="k">nullptr</span></code> string as not equal. Two
+<code class="language-cpp highlight"><span class="k">nullptr</span></code>s are equal.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Both arguments may be temporary objects which are destructed at the
+end of the current <em>full expression</em>, such as</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">CHECK_STREQ</span><span class="p">(</span><span class="n">Foo</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span><span class="w"> </span><span class="n">Bar</span><span class="p">().</span><span class="n">c_str</span><span class="p">());</span>
+</span></code></pre></div>
+<p>where <code>Foo</code> and <code>Bar</code> return <code>std::string</code>.</p>
+</div>
+<p>The <code>CHECK_DOUBLE_EQ</code> macro checks the equality of two floating point values,
+accepting a small error margin. <code>CHECK_NEAR</code> accepts a third floating point
+argument, which specifies the acceptable error margin.</p>
+<h2 id="raw-logging">Raw Logging<a class="headerlink" href="#raw-logging" title="Permanent link">&para;</a></h2>
+<p>The header file <code>&lt;glog/raw_logging.h&gt;</code> can be used for thread-safe logging,
+which does not allocate any memory or acquire any locks. Therefore, the macros
+defined in this header file can be used by low-level memory allocation and
+synchronization code. Please check
+<a href="../src/glog/raw_logging.h">src/glog/raw_logging.h</a> for detail.</p>
+<h2 id="google-style-perror">Google Style <code>perror()</code><a class="headerlink" href="#google-style-perror" title="Permanent link">&para;</a></h2>
+<p><code>PLOG()</code> and <code>PLOG_IF()</code> and <code>PCHECK()</code> behave exactly like their <code>LOG*</code> and
+<code>CHECK</code> equivalents with the addition that they append a description of the
+current state of <code>errno</code> to their output lines. E.g.</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">PCHECK</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write nullptr failed&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+<p>This check fails with the following error message.</p>
+<div class="language-text highlight"><pre><span></span><code>F0825 185142 test.cc:22] Check failed: write(1, nullptr, 2) &gt;= 0 Write nullptr failed: Bad address [14]
+</code></pre></div>
+<h2 id="syslog">Syslog<a class="headerlink" href="#syslog" title="Permanent link">&para;</a></h2>
+<p><code>SYSLOG</code>, <code>SYSLOG_IF</code>, and <code>SYSLOG_EVERY_N</code> macros are available. These log to
+syslog in addition to the normal logs. Be aware that logging to syslog can
+drastically impact performance, especially if syslog is configured for remote
+logging! Make sure you understand the implications of outputting to syslog
+before you use these macros. In general, it's wise to use these macros
+sparingly.</p>
+
+
+
+
+
+
+
+  
+    
+  
+  
+    
+  
+
+
+  <aside class="md-source-file">
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Last update">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 8, 2024</span>
+  </span>
+
+    
+    
+      
+  <span class="md-source-file__fact">
+    <span class="md-icon" title="Created">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
+    </span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 8, 2024</span>
+  </span>
+
+    
+    
+    
+      
+  <span class="md-source-file__fact">
+    
+      
+  <span class="md-icon" title="Contributors">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2Z"/></svg>
+  </span>
+  <span>GitHub</span>
+
+    
+    <nav>
+      
+        <a href="https://github.com/sergiud" class="md-author" title="@sergiud">
+          
+          <img src="../assets/external/avatars.githubusercontent.com/u/2170034.fe356448.png" alt="sergiud">
+        </a>
+      
+      
+      
+    </nav>
+  </span>
+
+    
+  </aside>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2024 Google Inc. &amp; contributors - <a href="#__consent">Change cookie settings</a>
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+      <div class="md-consent" data-md-component="consent" id="__consent" hidden>
+        <div class="md-consent__overlay"></div>
+        <aside class="md-consent__inner">
+          <form class="md-consent__form md-grid md-typeset" name="consent">
+            
+
+
+  
+    
+  
+
+
+
+
+<h4>Cookie consent</h4>
+<p>We use cookies to recognize your repeated visits and preferences, as well as to measure the effectiveness of our documentation and whether users find what they're searching for. With your consent, you're helping us to make our documentation better.</p>
+<input class="md-toggle" type="checkbox" id="__settings" >
+<div class="md-consent__settings">
+  <ul class="task-list">
+    
+      
+      
+        
+        
+      
+      <li class="task-list-item">
+        <label class="task-list-control">
+          <input type="checkbox" name="github" checked>
+          <span class="task-list-indicator"></span>
+          GitHub
+        </label>
+      </li>
+    
+  </ul>
+</div>
+<div class="md-consent__controls">
+  
+    
+    
+    
+      <label class="md-button" for="__settings">Manage settings</label>
+    
+  
+    
+      <button class="md-button md-button--primary">Accept</button>
+    
+    
+    
+  
+    
+    
+      <button type="reset" class="md-button md-button--primary">Reject</button>
+    
+    
+  
+</div>
+          </form>
+        </aside>
+      </div>
+      <script>var consent=__md_get("__consent");if(consent)for(var input of document.forms.consent.elements)input.name&&(input.checked=consent[input.name]||!1);else"file:"!==location.protocol&&setTimeout(function(){document.querySelector("[data-md-component=consent]").hidden=!1},250);var action,form=document.forms.consent;for(action of["submit","reset"])form.addEventListener(action,function(e){if(e.preventDefault(),"reset"===e.type)for(var n of document.forms.consent.elements)n.name&&(n.checked=!1);__md_set("__consent",Object.fromEntries(Array.from(new FormData(form).keys()).map(function(e){return[e,!0]}))),location.hash="",location.reload()})</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.code.annotate", "content.code.copy", "content.code.select", "header.autohide", "navigation.expand", "navigation.instant.preview", "navigation.instant.progress", "navigation.prune", "navigation.indexes", "toc.follow", "navigation.top", "navigation.path", "navigation.tracking", "search.highlight", "search.share", "search.suggest"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["dev", "stable"], "provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      
+    
+  </body>
+</html>
