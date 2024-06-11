@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.25">
     
     
       
@@ -206,7 +206,7 @@
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+      <div class="md-search__scrollwrap" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -1152,8 +1152,9 @@ ignoring .cc/.h./-inl.h). <code>&lt;log level&gt;</code> overrides any value giv
 more details.</p>
 </dd>
 </dl>
-<p>Additional flags are defined in <a href="../src/flags.cc">flags.cc</a>. Please see the
-source for their complete list.</p>
+<p>Additional flags are defined in
+<a href="https://github.com/google/glog/blob/master/src/flags.cc">flags.cc</a>. Please see
+the source for their complete list.</p>
 <h3 id="modifying-flags-programmatically">Modifying Flags Programmatically<a class="headerlink" href="#modifying-flags-programmatically" title="Permanent link">&para;</a></h3>
 <p>You can also modify flag values in your program by modifying global variables
 <code>FLAGS_*</code>. Most settings start working immediately after you update <code>FLAGS_*</code>.
@@ -1350,7 +1351,8 @@ argument, which specifies the acceptable error margin.</p>
 which does not allocate any memory or acquire any locks. Therefore, the macros
 defined in this header file can be used by low-level memory allocation and
 synchronization code. Please check
-<a href="../src/glog/raw_logging.h">src/glog/raw_logging.h</a> for detail.</p>
+<a href="https://github.com/google/glog/blob/master/src/glog/raw_logging.h">src/glog/raw_logging.h</a>
+for detail.</p>
 <h2 id="google-style-perror">Google Style <code>perror()</code><a class="headerlink" href="#google-style-perror" title="Permanent link">&para;</a></h2>
 <p><code>PLOG()</code> and <code>PLOG_IF()</code> and <code>PCHECK()</code> behave exactly like their <code>LOG*</code> and
 <code>CHECK</code> equivalents with the addition that they append a description of the
@@ -1544,7 +1546,7 @@ sparingly.</p>
     <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.code.annotate", "content.code.copy", "content.code.select", "header.autohide", "navigation.expand", "navigation.instant.preview", "navigation.instant.progress", "navigation.prune", "navigation.indexes", "toc.follow", "navigation.top", "navigation.path", "navigation.tracking", "search.highlight", "search.share", "search.suggest"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"alias": true, "default": ["dev", "stable"], "provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      <script src="../assets/javascripts/bundle.081f42fc.min.js"></script>
       
     
   </body>
