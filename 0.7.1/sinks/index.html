@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://google.github.io/glog/0.7.1/unwinder/">
+        <link rel="canonical" href="https://google.github.io/glog/0.7.1/sinks/">
       
       
-        <link rel="prev" href="../windows/">
+        <link rel="prev" href="../logging/">
       
       
-        <link rel="next" href="../contribute/">
+        <link rel="next" href="../failures/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Linux Unwinder - Google Logging Library</title>
+        <title>Custom Sinks - Google Logging Library</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#installation-notes-for-64-bit-linux-systems" class="md-skip">
+        <a href="#custom-sinks" class="md-skip">
           Skip to content
         </a>
       
@@ -132,7 +132,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Linux Unwinder
+              Custom Sinks
             
           </span>
         </div>
@@ -414,10 +414,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../sinks/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Custom Sinks
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -426,6 +446,53 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Interface
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registering-log-sinks" class="md-nav__link">
+    <span class="md-ellipsis">
+      Registering Log Sinks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Direct Logging
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -498,173 +565,42 @@
                 
   
   
-    
   
   
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
   
-    
-    
+  
+    <a href="../windows/" class="md-nav__link">
       
-        
-      
-        
-      
-    
-    
-    
-      
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" checked>
-        
-          
-          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
-            
   
   <span class="md-ellipsis">
     System-specific Considerations
   </span>
   
 
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_6">
-            <span class="md-nav__icon md-icon"></span>
-            System-specific Considerations
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../windows/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Usage on Windows
-  </span>
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
   
 
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Linux Unwinder
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  <span class="md-ellipsis">
-    Linux Unwinder
-  </span>
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#recommended-approach-libunwind" class="md-nav__link">
-    <span class="md-ellipsis">
-      Recommended Approach: libunwind
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#alternative-stack-unwinder" class="md-nav__link">
-    <span class="md-ellipsis">
-      Alternative Stack-unwinder
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Alternative Stack-unwinder">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#glibc-built-in-stack-unwinder" class="md-nav__link">
-    <span class="md-ellipsis">
-      glibc Built-in Stack-unwinder
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#frame-pointer-based-stack-unwinder" class="md-nav__link">
-    <span class="md-ellipsis">
-      Frame Pointer based Stack-unwinder
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
       
     </li>
   
@@ -745,44 +681,29 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#recommended-approach-libunwind" class="md-nav__link">
+  <a href="#basic-interface" class="md-nav__link">
     <span class="md-ellipsis">
-      Recommended Approach: libunwind
+      Basic Interface
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#alternative-stack-unwinder" class="md-nav__link">
+  <a href="#registering-log-sinks" class="md-nav__link">
     <span class="md-ellipsis">
-      Alternative Stack-unwinder
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Alternative Stack-unwinder">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#glibc-built-in-stack-unwinder" class="md-nav__link">
-    <span class="md-ellipsis">
-      glibc Built-in Stack-unwinder
+      Registering Log Sinks
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#frame-pointer-based-stack-unwinder" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#direct-logging" class="md-nav__link">
     <span class="md-ellipsis">
-      Frame Pointer based Stack-unwinder
+      Direct Logging
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -801,7 +722,7 @@
                   
 
   
-    <a href="https://github.com/google/glog/edit/0.7.x/docs/unwinder.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/google/glog/edit/0.7.x/docs/sinks.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
     </a>
@@ -809,53 +730,113 @@
   
 
 
-<h1 id="installation-notes-for-64-bit-linux-systems">Installation Notes for 64-bit Linux Systems<a class="headerlink" href="#installation-notes-for-64-bit-linux-systems" title="Permanent link">&para;</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The description on this page is possibly not up-to-date.</p>
-</div>
-<p>The <a href="#glibc-built-in-stack-unwinder">glibc built-in stack-unwinder</a> on 64-bit
-systems has some problems with glog. In particular, if you are using
-<a href="../failures/"><code>InstallFailureSignalHandler()</code></a>, the signal may be raised in the
-middle of <code>malloc</code>, holding some <code>malloc</code>-related locks when they invoke the
-stack unwinder. The built-in stack unwinder may call <code>malloc</code> recursively, which
-may require the thread to acquire a lock it already holds resulting in a
-deadlock.</p>
-<h2 id="recommended-approach-libunwind">Recommended Approach: <code>libunwind</code><a class="headerlink" href="#recommended-approach-libunwind" title="Permanent link">&para;</a></h2>
-<p>For above reason, if you use a 64-bit system and you need
-<code>InstallFailureSignalHandler()</code>, we strongly recommend you install <code>libunwind</code>
-before trying to configure or install google glog. libunwind can be found
-<a href="http://download.savannah.nongnu.org/releases/libunwind/libunwind-snap-070410.tar.gz">here</a>.</p>
-<p>Even if you already have <code>libunwind</code> installed, you will probably still need to
-install from the snapshot to get the latest version.</p>
+<h1 id="custom-sinks">Custom Sinks<a class="headerlink" href="#custom-sinks" title="Permanent link">&para;</a></h1>
+<p>Under certain circumstances, it is useful to send the log output to a
+destination other than a file, <code>stderr</code> and/or <code>stdout</code>. In case, the library
+provides the <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span></code> interface whose implementations can be used
+to write the log output to arbitrary locations.</p>
+<h2 id="basic-interface">Basic Interface<a class="headerlink" href="#basic-interface" title="Permanent link">&para;</a></h2>
+<p>The sink interface is defined as follows:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">LogSink</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">send</span><span class="p">(</span><span class="n">LogSeverity</span><span class="w"> </span><span class="n">severity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">full_filename</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">base_filename</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="n">LogMessageTime</span><span class="o">&amp;</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">message</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">                    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">message_len</span><span class="p">);</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">};</span>
+</span></code></pre></div>
+<p>The user must implement <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span><span class="o">::</span><span class="n">send</span></code>, which is called by the
+library every time a message is logged.</p>
 <div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>If you install libunwind from the URL above, be aware that you may have
-trouble if you try to statically link your binary with glog: that is, if you
-link with <code>gcc -static -lgcc_eh ...</code>. This is because both <code>libunwind</code> and
-<code>libgcc</code> implement the same C++ exception handling APIs, but they implement
-them differently on some platforms. This is not likely to be a problem on
-ia64, but may be on x86-64.</p>
+<p class="admonition-title">Possible deadlock due to nested logging</p>
+<p>This method can't use <code>LOG()</code> or <code>CHECK()</code> as logging system mutex(s) are
+held during this call.</p>
 </div>
-<p>Also, if you link binaries statically, make sure that you add
-<code>-Wl,--eh-frame-hdr</code> to your linker options. This is required so that
-<code>libunwind</code> can find the information generated by the compiler required for
-stack unwinding.</p>
-<p>Using <code>-static</code> is rare, though, so unless you know this will affect you it
-probably won't.</p>
-<h2 id="alternative-stack-unwinder">Alternative Stack-unwinder<a class="headerlink" href="#alternative-stack-unwinder" title="Permanent link">&para;</a></h2>
-<p>If you cannot or do not wish to install <code>libunwind</code>, you can still try to use
-two kinds of stack-unwinder:</p>
-<h3 id="glibc-built-in-stack-unwinder">glibc Built-in Stack-unwinder<a class="headerlink" href="#glibc-built-in-stack-unwinder" title="Permanent link">&para;</a></h3>
-<p>As we already mentioned, glibc's unwinder has a deadlock issue. However, if you
-don't use <code>InstallFailureSignalHandler()</code> or you don't worry about the rare
-possibilities of deadlocks, you can use this stack-unwinder. If you specify no
-options and <code>libunwind</code> isn't detected on your system, the configure script
-chooses this unwinder by default.</p>
-<h3 id="frame-pointer-based-stack-unwinder">Frame Pointer based Stack-unwinder<a class="headerlink" href="#frame-pointer-based-stack-unwinder" title="Permanent link">&para;</a></h3>
-<p>The frame pointer based stack unwinder requires that your application, the glog
-library, and system libraries like libc, all be compiled with a frame pointer.
-This is <em>not</em> the default for x86-64.</p>
+<h2 id="registering-log-sinks">Registering Log Sinks<a class="headerlink" href="#registering-log-sinks" title="Permanent link">&para;</a></h2>
+<p>To use the custom sink and instance of the above interface implementation must
+be registered using <code>google::AddLogSink</code> which expects a pointer to the
+<code>google::LogSink</code> instance. To unregister use <code>google::RemoveLogSink</code>. Both
+functions are thread-safe.</p>
+<div class="admonition danger">
+<p class="admonition-title"><code>LogSink</code> ownership</p>
+<p>The <code>google::LogSink</code> instance must not be destroyed until the referencing
+pointer is unregistered.</p>
+</div>
+<h2 id="direct-logging">Direct Logging<a class="headerlink" href="#direct-logging" title="Permanent link">&para;</a></h2>
+<p>Instead of registering the sink, we can directly use to log messages. While <code>LOG_TO_SINK(sink, severity)</code> allows to log both to the sink and to a global log
+registry, e.g., a file, <code class="language-cpp highlight"><span class="n">LOG_TO_SINK_BUT_NOT_TO_LOGFILE</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">severity</span><span class="p">)</span></code>
+will avoid the latter.</p>
+<div class="admonition example">
+<p class="admonition-title">Using a custom sink</p>
+<div class="language-cpp highlight"><span class="filename">custom_sink.cc</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;glog/logging.h&gt;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstddef&gt;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iterator&gt;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">namespace</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">struct</span><span class="w"> </span><span class="nc">MyLogSink</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// (1)!</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">google</span><span class="o">::</span><span class="n">LogSeverity</span><span class="w"> </span><span class="n">severity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="cm">/*full_filename*/</span><span class="p">,</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">base_filename</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">LogMessageTime</span><span class="o">&amp;</span><span class="w"> </span><span class="cm">/*time*/</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">message</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">message_len</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">GetLogSeverityName</span><span class="p">(</span><span class="n">severity</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">base_filename</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;:&#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">;</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">copy_n</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">message_len</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">ostreambuf_iterator</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">});</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="p">};</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="p">}</span><span class="w">  </span><span class="c1">// namespace</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="cm">/*argc*/</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">InitGoogleLogging</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">  </span><span class="n">MyLogSink</span><span class="w"> </span><span class="n">sink</span><span class="p">;</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">AddLogSink</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">);</span><span class="w">  </span><span class="c1">// (2)!</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">  </span><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;logging to MySink&quot;</span><span class="p">;</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">RemoveLogSink</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">);</span><span class="w">  </span><span class="c1">// (3)!</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">  </span><span class="c1">// We can directly log to a sink without registering it</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">  </span><span class="n">LOG_TO_SINK</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct logging&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// (4)!</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">  </span><span class="n">LOG_TO_SINK_BUT_NOT_TO_LOGFILE</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">INFO</span><span class="p">)</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">      </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct logging but not to file&quot;</span><span class="p">;</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="p">}</span>
+</span></code></pre></div>
+<ol>
+<li><code>MySink</code> implements a custom sink that sends log messages to <code>std::cout</code>.</li>
+<li>The custom sink must be registered to for use with existing logging
+   macros.</li>
+<li>Once the custom sink is no longer needed we remove it from the registry.</li>
+<li>A sink does not need to be registered globally. However, then, messages
+   must be logged using dedicated macros.</li>
+</ol>
+<p>Running the above example as <code class="language-bash highlight"><span class="nv">GLOG_log_dir</span><span class="o">=</span>.<span class="w"> </span>./custom_sink_example</code>
+will produce</p>
+<div class="annotate" markdown>
+<div class="language-text highlight"><span class="filename">Custom sink output</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>INFO custom_sink.cc:63 logging to MySink
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>INFO custom_sink.cc:68 direct logging
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>INFO custom_sink.cc:69 direct logging but not to file (1)
+</span></code></pre></div>
+</div>
+<ol>
+<li>This line is not present in the log file because we used
+   <code>LOG_TO_SINK_BUT_NOT_TO_LOGFILE</code> to log the message.</li>
+</ol>
+<p>and the corresponding log file will contain</p>
+<div class="language-text highlight"><span class="filename">Log file generated with the custom sink</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Log file created at: 2024/06/11 13:24:27
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Running on machine: pc
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Running duration (h:mm:ss): 0:00:00
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>I20240611 13:24:27.476620 126237946035776 custom_sink.cc:63] logging to MySink
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>I20240611 13:24:27.476796 126237946035776 custom_sink.cc:68] direct logging
+</span></code></pre></div>
+</div>
 
 
 
