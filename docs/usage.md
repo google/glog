@@ -8,7 +8,7 @@ find_package` to build against glog in your CMake project as follows:
 cmake_minimum_required (VERSION 3.16)
 project (myproj VERSION 1.0)
 
-find_package (glog 0.7.1 REQUIRED)
+find_package (glog 0.8.0 REQUIRED)
 
 add_executable (myapp main.cpp)
 target_link_libraries (myapp glog::glog)
