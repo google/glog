@@ -17,9 +17,9 @@ http_archive(
 
 http_archive(
     name = "com_github_google_glog",
-    sha256 = "122fb6b712808ef43fbf80f75c52a21c9760683dae470154f02bddfc61135022",
-    strip_prefix = "glog-0.6.0",
-    urls = ["https://github.com/google/glog/archive/v0.6.0.zip"],
+    sha256 = "c17d85c03ad9630006ef32c7be7c65656aba2e7e2fbfc82226b7e680c771fc88",
+    strip_prefix = "glog-0.7.1",
+    urls = ["https://github.com/google/glog/archive/v0.7.1.zip"],
 )
 ```
 

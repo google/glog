@@ -32,6 +32,7 @@ include (GetCacheVariables)
 include (GNUInstallDirs)
 
 option (BUILD_SHARED_LIBS "Build shared libraries" ON)
+option (BUILD_EXAMPLES "Build examples" ON)
 option (PRINT_UNSYMBOLIZED_STACK_TRACES
   "Print file offsets in traces instead of symbolizing" OFF)
 option (WITH_GFLAGS "Use gflags" ON)
@@ -959,6 +960,11 @@ if (BUILD_TESTING)
     PASS_REGULAR_EXPRESSION ""
   )
 endif (BUILD_TESTING)
+
+if (BUILD_EXAMPLES)
+  add_executable (custom_sink_example examples/custom_sink.cc)
+  target_link_libraries (custom_sink_example PRIVATE glog::glog)
+endif (BUILD_EXAMPLES)
 
 install (TARGETS glog
   EXPORT glog-targets

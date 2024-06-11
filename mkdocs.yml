@@ -7,7 +7,9 @@ edit_uri: edit/master/docs/
 copyright: Copyright &copy; 2024 Google Inc. &amp; contributors - <a href="#__consent">Change cookie settings</a>
 markdown_extensions:
   - admonition
+  - attr_list
   - def_list
+  - md_in_html
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
@@ -26,8 +28,9 @@ theme:
   name: material
   custom_dir: docs/overrides
   icon:
-    repo: fontawesome/brands/git-alt
+    annotation: material/chevron-right-circle
     edit: material/pencil
+    repo: fontawesome/brands/git-alt
     view: material/eye
   language: en
   features:
@@ -107,6 +110,7 @@ nav:
       - Installation using Package Managers: packages.md
   - User Guide:
       - Logging: logging.md
+      - Custom Sinks: sinks.md
       - Failure Handler: failures.md
       - Log Removal: log_cleaner.md
       - Stripping Log Messages: log_stripping.md
