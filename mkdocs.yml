@@ -1,0 +1,117 @@
+---
+site_name: Google Logging Library
+site_url: https://google.github.io/glog/
+repo_url: https://github.com/google/glog
+repo_name: google/glog
+edit_uri: edit/0.7.x/docs/
+copyright: Copyright &copy; 2024 Google Inc. &amp; contributors - <a href="#__consent">Change cookie settings</a>
+markdown_extensions:
+  - admonition
+  - def_list
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path:
+        - '.'
+      check_paths: true
+  - pymdownx.superfences
+  - tables
+  - toc:
+      permalink: true
+theme:
+  name: material
+  custom_dir: docs/overrides
+  icon:
+    repo: fontawesome/brands/git-alt
+    edit: material/pencil
+    view: material/eye
+  language: en
+  features:
+    - content.action.edit
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - header.autohide
+    - navigation.expand
+    - navigation.instant.preview
+    - navigation.instant.progress
+    - navigation.prune
+    - navigation.indexes
+    - toc.follow
+    - navigation.top
+    - navigation.path
+    # - navigation.sections
+    # - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: google/glog
+      branch: 0.7.x
+  - privacy
+  - search
+  - tags
+extra:
+  version:
+    alias: true
+    default:
+      - dev
+      - stable
+    provider: mike
+  consent:
+    actions:
+      - manage
+      - accept
+      - reject
+    title: Cookie consent
+    description: >-
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+nav:
+  - Getting Started:
+      - Overview: index.md
+      - Usage in CMake Projects: usage.md
+      - Building from Source: build.md
+      - Installation using Package Managers: packages.md
+  - User Guide:
+      - Logging: logging.md
+      - Failure Handler: failures.md
+      - Log Removal: log_cleaner.md
+      - Stripping Log Messages: log_stripping.md
+      - System-specific Considerations:
+          - Usage on Windows: windows.md
+          - Linux Unwinder: unwinder.md
+  - Contributing: contribute.md
+  - License: license.md
