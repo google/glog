@@ -46,6 +46,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://google.github.io/glog/0.8.0/sinks/</loc>
+         <lastmod>2024-06-11</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://google.github.io/glog/0.8.0/unwinder/</loc>
          <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>

@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://google.github.io/glog/0.8.0/build/">
+        <link rel="canonical" href="https://google.github.io/glog/0.8.0/sinks/">
       
       
-        <link rel="prev" href="../usage/">
+        <link rel="prev" href="../logging/">
       
       
-        <link rel="next" href="../packages/">
+        <link rel="next" href="../failures/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Building from Source - Google Logging Library</title>
+        <title>Custom Sinks - Google Logging Library</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#building-from-source" class="md-skip">
+        <a href="#custom-sinks" class="md-skip">
           Skip to content
         </a>
       
@@ -132,7 +132,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Building from Source
+              Custom Sinks
             
           </span>
         </div>
@@ -289,6 +289,57 @@
       
   
   
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href=".." class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Getting Started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -297,7 +348,9 @@
     
       
         
-          
+      
+        
+      
         
       
         
@@ -315,36 +368,26 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
-          
-          <div class="md-nav__link md-nav__container">
-            <a href=".." class="md-nav__link ">
-              
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
   
   <span class="md-ellipsis">
-    Getting Started
+    User Guide
   </span>
   
 
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
-            Getting Started
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
             
               
                 
@@ -353,11 +396,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../usage/" class="md-nav__link">
+      <a href="../logging/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Usage in CMake Projects
+    Logging
   </span>
   
 
@@ -387,7 +430,7 @@
           
   
   <span class="md-ellipsis">
-    Building from Source
+    Custom Sinks
   </span>
   
 
@@ -398,7 +441,7 @@
         
   
   <span class="md-ellipsis">
-    Building from Source
+    Custom Sinks
   </span>
   
 
@@ -420,18 +463,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#bazel" class="md-nav__link">
+  <a href="#basic-interface" class="md-nav__link">
     <span class="md-ellipsis">
-      Bazel
+      Basic Interface
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cmake" class="md-nav__link">
+  <a href="#registering-log-sinks" class="md-nav__link">
     <span class="md-ellipsis">
-      CMake
+      Registering Log Sinks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Direct Logging
     </span>
   </a>
   
@@ -453,11 +505,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../packages/" class="md-nav__link">
+      <a href="../failures/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Installation using Package Managers
+    Failure Handler
   </span>
   
 
@@ -467,29 +519,56 @@
 
               
             
-          </ul>
-        </nav>
-      
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_cleaner/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Log Removal
+  </span>
+  
+
+      </a>
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_stripping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stripping Log Messages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
   
   
   
   
     
     
-      
-        
-      
-        
-      
-        
-      
-        
       
         
       
@@ -508,11 +587,11 @@
         
   
   
-    <a href="../logging/" class="md-nav__link">
+    <a href="../windows/" class="md-nav__link">
       
   
   <span class="md-ellipsis">
-    User Guide
+    System-specific Considerations
   </span>
   
 
@@ -522,6 +601,14 @@
     </a>
   
 
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -594,18 +681,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#bazel" class="md-nav__link">
+  <a href="#basic-interface" class="md-nav__link">
     <span class="md-ellipsis">
-      Bazel
+      Basic Interface
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cmake" class="md-nav__link">
+  <a href="#registering-log-sinks" class="md-nav__link">
     <span class="md-ellipsis">
-      CMake
+      Registering Log Sinks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direct-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Direct Logging
     </span>
   </a>
   
@@ -626,7 +722,7 @@
                   
 
   
-    <a href="https://github.com/google/glog/edit/master/docs/build.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/google/glog/edit/master/docs/sinks.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
     </a>
@@ -634,66 +730,113 @@
   
 
 
-<h1 id="building-from-source">Building from Source<a class="headerlink" href="#building-from-source" title="Permanent link">&para;</a></h1>
-<h2 id="bazel">Bazel<a class="headerlink" href="#bazel" title="Permanent link">&para;</a></h2>
-<p>To use glog within a project which uses the <a href="https://bazel.build/">Bazel</a> build
-tool, add the following lines to your <code>WORKSPACE</code> file:</p>
-<div class="language-bazel highlight"><span class="filename">WORKSPACE</span><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">load</span><span class="p">(</span><span class="s2">&quot;@bazel_tools//tools/build_defs/repo:http.bzl&quot;</span><span class="p">,</span> <span class="s2">&quot;http_archive&quot;</span><span class="p">)</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">http_archive</span><span class="p">(</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;gflags&quot;</span><span class="p">,</span>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">sha256</span> <span class="o">=</span> <span class="s2">&quot;34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf&quot;</span><span class="p">,</span>
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="n">strip_prefix</span> <span class="o">=</span> <span class="s2">&quot;gflags-2.2.2&quot;</span><span class="p">,</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;https://github.com/gflags/gflags/archive/v2.2.2.tar.gz&quot;</span><span class="p">],</span>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">)</span>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">http_archive</span><span class="p">(</span>
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;com_github_google_glog&quot;</span><span class="p">,</span>
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">sha256</span> <span class="o">=</span> <span class="s2">&quot;c17d85c03ad9630006ef32c7be7c65656aba2e7e2fbfc82226b7e680c771fc88&quot;</span><span class="p">,</span>
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">strip_prefix</span> <span class="o">=</span> <span class="s2">&quot;glog-0.7.1&quot;</span><span class="p">,</span>
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">urls</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;https://github.com/google/glog/archive/v0.7.1.zip&quot;</span><span class="p">],</span>
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">)</span>
+<h1 id="custom-sinks">Custom Sinks<a class="headerlink" href="#custom-sinks" title="Permanent link">&para;</a></h1>
+<p>Under certain circumstances, it is useful to send the log output to a
+destination other than a file, <code>stderr</code> and/or <code>stdout</code>. In case, the library
+provides the <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span></code> interface whose implementations can be used
+to write the log output to arbitrary locations.</p>
+<h2 id="basic-interface">Basic Interface<a class="headerlink" href="#basic-interface" title="Permanent link">&para;</a></h2>
+<p>The sink interface is defined as follows:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">LogSink</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w"> </span><span class="k">public</span><span class="o">:</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">send</span><span class="p">(</span><span class="n">LogSeverity</span><span class="w"> </span><span class="n">severity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">full_filename</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">base_filename</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">                    </span><span class="k">const</span><span class="w"> </span><span class="n">LogMessageTime</span><span class="o">&amp;</span><span class="w"> </span><span class="n">time</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">message</span><span class="p">,</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">                    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">message_len</span><span class="p">);</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="p">};</span>
 </span></code></pre></div>
-<p>You can then add <code>@com_github_google_glog//:glog</code> to
-the deps section of a <code>cc_binary</code> or
-<code>cc_library</code> rule, and <code class="language-cpp highlight"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;glog/logging.h&gt;</span></code> to
-include it in your source code.</p>
+<p>The user must implement <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span><span class="o">::</span><span class="n">send</span></code>, which is called by the
+library every time a message is logged.</p>
+<div class="admonition warning">
+<p class="admonition-title">Possible deadlock due to nested logging</p>
+<p>This method can't use <code>LOG()</code> or <code>CHECK()</code> as logging system mutex(s) are
+held during this call.</p>
+</div>
+<h2 id="registering-log-sinks">Registering Log Sinks<a class="headerlink" href="#registering-log-sinks" title="Permanent link">&para;</a></h2>
+<p>To use the custom sink and instance of the above interface implementation must
+be registered using <code>google::AddLogSink</code> which expects a pointer to the
+<code>google::LogSink</code> instance. To unregister use <code>google::RemoveLogSink</code>. Both
+functions are thread-safe.</p>
+<div class="admonition danger">
+<p class="admonition-title"><code>LogSink</code> ownership</p>
+<p>The <code>google::LogSink</code> instance must not be destroyed until the referencing
+pointer is unregistered.</p>
+</div>
+<h2 id="direct-logging">Direct Logging<a class="headerlink" href="#direct-logging" title="Permanent link">&para;</a></h2>
+<p>Instead of registering the sink, we can directly use to log messages. While <code>LOG_TO_SINK(sink, severity)</code> allows to log both to the sink and to a global log
+registry, e.g., a file, <code class="language-cpp highlight"><span class="n">LOG_TO_SINK_BUT_NOT_TO_LOGFILE</span><span class="p">(</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">severity</span><span class="p">)</span></code>
+will avoid the latter.</p>
 <div class="admonition example">
-<p class="admonition-title">Using glog in a Bazel project</p>
-<div class="language-bazel highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">cc_binary</span><span class="p">(</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="n">srcs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;main.cc&quot;</span><span class="p">],</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">deps</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;@com_github_google_glog//:glog&quot;</span><span class="p">],</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">)</span>
+<p class="admonition-title">Using a custom sink</p>
+<div class="language-cpp highlight"><span class="filename">custom_sink.cc</span><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;glog/logging.h&gt;</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;algorithm&gt;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;cstddef&gt;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iostream&gt;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;iterator&gt;</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">namespace</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">struct</span><span class="w"> </span><span class="nc">MyLogSink</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">LogSink</span><span class="w"> </span><span class="p">{</span><span class="w">  </span><span class="c1">// (1)!</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">google</span><span class="o">::</span><span class="n">LogSeverity</span><span class="w"> </span><span class="n">severity</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="cm">/*full_filename*/</span><span class="p">,</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">base_filename</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">line</span><span class="p">,</span>
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">            </span><span class="k">const</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">LogMessageTime</span><span class="o">&amp;</span><span class="w"> </span><span class="cm">/*time*/</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">message</span><span class="p">,</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">            </span><span class="n">std</span><span class="o">::</span><span class="kt">size_t</span><span class="w"> </span><span class="n">message_len</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">GetLogSeverityName</span><span class="p">(</span><span class="n">severity</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">base_filename</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">              </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;:&#39;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">line</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39; &#39;</span><span class="p">;</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">copy_n</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">message_len</span><span class="p">,</span>
+</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">                </span><span class="n">std</span><span class="o">::</span><span class="n">ostreambuf_iterator</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span><span class="p">{</span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">});</span>
+</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="sc">&#39;\n&#39;</span><span class="p">;</span>
+</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="p">};</span>
+</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>
+</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="p">}</span><span class="w">  </span><span class="c1">// namespace</span>
+</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>
+</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="kt">int</span><span class="w"> </span><span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="cm">/*argc*/</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">InitGoogleLogging</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span id="__span-1-27"><a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
+</span><span id="__span-1-28"><a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="w">  </span><span class="n">MyLogSink</span><span class="w"> </span><span class="n">sink</span><span class="p">;</span>
+</span><span id="__span-1-29"><a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">AddLogSink</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">);</span><span class="w">  </span><span class="c1">// (2)!</span>
+</span><span id="__span-1-30"><a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a>
+</span><span id="__span-1-31"><a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="w">  </span><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;logging to MySink&quot;</span><span class="p">;</span>
+</span><span id="__span-1-32"><a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a>
+</span><span id="__span-1-33"><a id="__codelineno-1-33" name="__codelineno-1-33" href="#__codelineno-1-33"></a><span class="w">  </span><span class="n">google</span><span class="o">::</span><span class="n">RemoveLogSink</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">);</span><span class="w">  </span><span class="c1">// (3)!</span>
+</span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
+</span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">  </span><span class="c1">// We can directly log to a sink without registering it</span>
+</span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a><span class="w">  </span><span class="n">LOG_TO_SINK</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct logging&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// (4)!</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">  </span><span class="n">LOG_TO_SINK_BUT_NOT_TO_LOGFILE</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sink</span><span class="p">,</span><span class="w"> </span><span class="n">INFO</span><span class="p">)</span>
+</span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a><span class="w">      </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;direct logging but not to file&quot;</span><span class="p">;</span>
+</span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="p">}</span>
+</span></code></pre></div>
+<ol>
+<li><code>MySink</code> implements a custom sink that sends log messages to <code>std::cout</code>.</li>
+<li>The custom sink must be registered to for use with existing logging
+   macros.</li>
+<li>Once the custom sink is no longer needed we remove it from the registry.</li>
+<li>A sink does not need to be registered globally. However, then, messages
+   must be logged using dedicated macros.</li>
+</ol>
+<p>Running the above example as <code class="language-bash highlight"><span class="nv">GLOG_log_dir</span><span class="o">=</span>.<span class="w"> </span>./custom_sink_example</code>
+will produce</p>
+<div class="annotate" markdown>
+<div class="language-text highlight"><span class="filename">Custom sink output</span><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>INFO custom_sink.cc:63 logging to MySink
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>INFO custom_sink.cc:68 direct logging
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>INFO custom_sink.cc:69 direct logging but not to file (1)
 </span></code></pre></div>
 </div>
-<h2 id="cmake">CMake<a class="headerlink" href="#cmake" title="Permanent link">&para;</a></h2>
-<p>glog can be compiled using <a href="http://www.cmake.org">CMake</a> on a wide range of
-platforms. The typical workflow for building glog on a Unix-like system with GNU
-Make as build tool is as follows:</p>
 <ol>
-<li>Clone the repository and change into source directory.
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/google/glog.git
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nb">cd</span><span class="w"> </span>glog
-</span></code></pre></div></li>
-<li>Run CMake to configure the build tree.
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cmake<span class="w"> </span>-S<span class="w"> </span>.<span class="w"> </span>-B<span class="w"> </span>build<span class="w"> </span>-G<span class="w"> </span><span class="s2">&quot;Unix Makefiles&quot;</span>
-</span></code></pre></div>
-  CMake provides different generators, and by default will pick the most
-  relevant one to your environment. If you need a specific version of Visual
-  Studio, use <code class="language-bash highlight">cmake<span class="w"> </span>.<span class="w"> </span>-G<span class="w"> </span>&lt;generator-name&gt;</code>, and see <code class="language-bash highlight">cmake<span class="w">  </span>--help</code> for the available generators. Also see <code>-T &lt;toolset-name&gt;</code>, which can
-  be used to request the native x64 toolchain with <code>-T host=x64</code>.</li>
-<li>Afterwards, generated files can be used to compile the project.
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cmake<span class="w"> </span>--build<span class="w"> </span>build
-</span></code></pre></div></li>
-<li>Test the build software (optional).
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--target<span class="w"> </span><span class="nb">test</span>
-</span></code></pre></div></li>
-<li>Install the built files (optional).
-  <div class="language-bash highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>cmake<span class="w"> </span>--build<span class="w"> </span>build<span class="w"> </span>--target<span class="w"> </span>install
-</span></code></pre></div></li>
+<li>This line is not present in the log file because we used
+   <code>LOG_TO_SINK_BUT_NOT_TO_LOGFILE</code> to log the message.</li>
 </ol>
-<p>Once successfully built, glog can be <a href="../usage/">integrated into own projects</a>.</p>
+<p>and the corresponding log file will contain</p>
+<div class="language-text highlight"><span class="filename">Log file generated with the custom sink</span><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Log file created at: 2024/06/11 13:24:27
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Running on machine: pc
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Running duration (h:mm:ss): 0:00:00
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>I20240611 13:24:27.476620 126237946035776 custom_sink.cc:63] logging to MySink
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>I20240611 13:24:27.476796 126237946035776 custom_sink.cc:68] direct logging
+</span></code></pre></div>
+</div>
 
 
 
