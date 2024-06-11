@@ -2,62 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://google.github.io/glog/0.7.1/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/build/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/contribute/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/failures/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/license/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/log_cleaner/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/log_stripping/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/logging/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/packages/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/unwinder/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/usage/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://google.github.io/glog/0.7.1/windows/</loc>
-         <lastmod>2024-06-09</lastmod>
+         <lastmod>2024-06-11</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
