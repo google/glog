@@ -14,7 +14,7 @@
         <link rel="prev" href="../packages/">
       
       
-        <link rel="next" href="../sinks/">
+        <link rel="next" href="../flags/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -359,6 +359,8 @@
       
         
       
+        
+      
     
     
     
@@ -484,39 +486,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adjusting-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      Adjusting Output
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Adjusting Output">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using Command-line Parameters and Environment Variables
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modifying-flags-programmatically" class="md-nav__link">
-    <span class="md-ellipsis">
-      Modifying Flags Programmatically
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#conditional-occasional-logging" class="md-nav__link">
     <span class="md-ellipsis">
       Conditional / Occasional Logging
@@ -583,6 +552,27 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flags/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Adjusting Output
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -834,39 +824,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#adjusting-output" class="md-nav__link">
-    <span class="md-ellipsis">
-      Adjusting Output
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Adjusting Output">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
-    <span class="md-ellipsis">
-      Using Command-line Parameters and Environment Variables
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#modifying-flags-programmatically" class="md-nav__link">
-    <span class="md-ellipsis">
-      Modifying Flags Programmatically
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#conditional-occasional-logging" class="md-nav__link">
     <span class="md-ellipsis">
       Conditional / Occasional Logging
@@ -954,8 +911,8 @@
 
 <h1 id="logging">Logging<a class="headerlink" href="#logging" title="Permanent link">&para;</a></h1>
 <p>glog defines a series of macros that simplify many common logging tasks. You can
-log messages by <a href="#severity-levels">severity level</a>, <a href="#adjusting-output">control
-logging</a> behavior from the command line, log based on
+log messages by <a href="#severity-levels">severity level</a>, <a href="../flags/">control logging</a>
+behavior from the command line, log based on
 <a href="#conditional-occasional-logging">conditionals</a>, abort the program when
 <a href="#runtime-checks">expected conditions</a> are not met, introduce your <a href="#verbose-logging">own logging
 levels</a>, <a href="#format-customization">customize the prefix</a>
@@ -1114,104 +1071,16 @@ unless specified defaults to <code class="language-cpp highlight"><span class="k
 </span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="p">}</span>
 </span></code></pre></div>
 </div>
-<h2 id="adjusting-output">Adjusting Output<a class="headerlink" href="#adjusting-output" title="Permanent link">&para;</a></h2>
-<p>Several flags influence glog's output behavior.</p>
-<h3 id="using-command-line-parameters-and-environment-variables">Using Command-line Parameters and Environment Variables<a class="headerlink" href="#using-command-line-parameters-and-environment-variables" title="Permanent link">&para;</a></h3>
-<p>If the <a href="https://github.com/gflags/gflags">Google gflags
-library</a> is installed on your machine,
-the build system will automatically detect and use it, allowing you to
-pass flags on the command line.</p>
-<div class="admonition example">
-<p class="admonition-title">Activate <code>--logtostderr</code> in an application from the command line</p>
-<p>A binary <code>you_application</code> that uses glog can be started using
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>./your_application<span class="w"> </span>--logtostderr<span class="o">=</span><span class="m">1</span>
-</span></code></pre></div>
-to log to <code>stderr</code> instead of writing the output to a log file.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>You can set boolean flags to <code>true</code> by specifying <code>1</code>, <code>true</code>, or <code>yes</code>. To
-set boolean flags to <code>false</code>, specify <code>0</code>, <code>false</code>, or <code>no</code>. In either case
-the spelling is case-insensitive.</p>
-</div>
-<p>If the Google gflags library isn't installed, you set flags via
-environment variables, prefixing the flag name with <code>GLOG_</code>, e.g.,</p>
-<div class="admonition example">
-<p class="admonition-title">Activate <code>logtostderr</code> without gflags</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">GLOG_logtostderr</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./your_application
-</span></code></pre></div>
-</div>
-<p>The following flags are most commonly used:</p>
-<dl>
-<dt><code>logtostderr</code> (<code>bool</code>, default=<code>false</code>)</dt>
-<dd>
-<p>Log messages to <code>stderr</code> instead of logfiles.</p>
-</dd>
-<dt><code>stderrthreshold</code> (<code>int</code>, default=2, which is <code>ERROR</code>)</dt>
-<dd>
-<p>Copy log messages at or above this level to <code>stderr</code> in addition to
-logfiles. The numbers of severity levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>,
-and <code>FATAL</code> are 0, 1, 2, and 3, respectively.</p>
-</dd>
-<dt><code>minloglevel</code> (<code>int</code>, default=0, which is <code>INFO</code>)</dt>
-<dd>
-<p>Log messages at or above this level. Again, the numbers of severity
-levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, and <code>FATAL</code> are 0, 1, 2, and 3,
-respectively.</p>
-</dd>
-<dt><code>log_dir</code> (<code>string</code>, default="")</dt>
-<dd>
-<p>If specified, logfiles are written into this directory instead of
-the default logging directory.</p>
-</dd>
-<dt><code>v</code> (<code>int</code>, default=0)</dt>
-<dd>
-<p>Show all <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="n">m</span><span class="p">)</span></code> messages for <code>m</code> less or equal the value of this
-flag. Overridable by <code class="language-bash highlight">--vmodule</code>. Refer to <a href="#verbose-logging">verbose
-logging</a> for more detail.</p>
-</dd>
-<dt><code>vmodule</code> (<code>string</code>, default="")</dt>
-<dd>
-<p>Per-module verbose level. The argument has to contain a
-comma-separated list of <code>&lt;module name&gt;=&lt;log level&gt;</code>. <code>&lt;module name&gt;</code>
-is a glob pattern (e.g., <code>gfs*</code> for all modules whose name starts
-with "gfs"), matched against the filename base (that is, name
-ignoring .cc/.h./-inl.h). <code>&lt;log level&gt;</code> overrides any value given by
-<code>--v</code>. See also <a href="#verbose-logging">verbose logging</a> for
-more details.</p>
-</dd>
-</dl>
-<p>Additional flags are defined in
-<a href="https://github.com/google/glog/blob/master/src/flags.cc">flags.cc</a>. Please see
-the source for their complete list.</p>
-<h3 id="modifying-flags-programmatically">Modifying Flags Programmatically<a class="headerlink" href="#modifying-flags-programmatically" title="Permanent link">&para;</a></h3>
-<p>You can also modify flag values in your program by modifying global variables
-<code>FLAGS_*</code>. Most settings start working immediately after you update <code>FLAGS_*</code>.
-The exceptions are the flags related to destination files. For instance, you
-might want to set <code>FLAGS_log_dir</code> before calling <code>google::InitGoogleLogging</code>.</p>
-<div class="admonition example">
-<p class="admonition-title">Setting <code>log_dir</code> at runtime</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;file&quot;</span><span class="p">;</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="c1">// Most flags work immediately after updating values.</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;stderr&quot;</span><span class="p">;</span>
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1">// This won’t change the log destination. If you want to set this</span>
-</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">// value, you should do this before google::InitGoogleLogging .</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">FLAGS_log_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/some/log/directory&quot;</span><span class="p">;</span>
-</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;the same file&quot;</span><span class="p">;</span>
-</span></code></pre></div>
-</div>
 <h2 id="conditional-occasional-logging">Conditional / Occasional Logging<a class="headerlink" href="#conditional-occasional-logging" title="Permanent link">&para;</a></h2>
 <p>Sometimes, you may only want to log a message under certain conditions.
 You can use the following macros to perform conditional logging:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">LOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">LOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>The "Got lots of cookies" message is logged only when the variable
 <code>num_cookies</code> exceeds 10. If a line of code is executed many times, it may be
 useful to only log a message at certain intervals. This kind of logging is most
 useful for informational messages.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">LOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">LOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>The above line outputs a log messages on the 1st, 11th, 21st, ... times
 it is executed.</p>
@@ -1221,20 +1090,20 @@ it is executed.</p>
 </div>
 <p>You can combine conditional and occasional logging with the following
 macro.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">LOG_IF_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">                                        </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th big cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">LOG_IF_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">                                        </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th big cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>Instead of outputting a message every nth time, you can also limit the
 output to the first n occurrences:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">LOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">LOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>Outputs log messages for the first 20 times it is executed. The <code class="language-cpp highlight"><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span></code> identifier indicates which repetition is happening.</p>
 <p>Other times, it is desired to only log a message periodically based on a
 time. For instance, to log a message every 10ms:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>Or every 2.35s:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">2.35</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">LOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">2.35</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <h2 id="verbose-logging">Verbose Logging<a class="headerlink" href="#verbose-logging" title="Permanent link">&para;</a></h2>
 <p>When you are chasing difficult bugs, thorough log messages are very
@@ -1242,8 +1111,8 @@ useful. However, you may want to ignore too verbose messages in usual
 development. For such verbose logging, glog provides the <code>VLOG</code> macro, which
 allows you to define your own numeric logging levels.</p>
 <p>The <code class="language-bash highlight">--v</code> command line option controls which verbose messages are logged:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=1 or higher&quot;</span><span class="p">;</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=2 or higher&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=1 or higher&quot;</span><span class="p">;</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when you run the program with --v=2 or higher&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>With <code>VLOG</code>, the lower the verbose level, the more likely messages are to be
 logged. For example, if <code class="language-bash highlight">--v<span class="o">==</span><span class="m">1</span></code>, <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></code> will log, but <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span></code> will not log.</p>
@@ -1259,7 +1128,7 @@ common values for them are small positive integers. For example, if you write
 useful since we may not want verbose logs by default in most cases. The <code>VLOG</code>
 macros always log at the <code>INFO</code> log level (when they log at all).</p>
 <p>Verbose logging can be controlled from the command line on a per-module basis:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>--vmodule<span class="o">=</span><span class="nv">mapreduce</span><span class="o">=</span><span class="m">2</span>,file<span class="o">=</span><span class="m">1</span>,gfs*<span class="o">=</span><span class="m">3</span><span class="w"> </span>--v<span class="o">=</span><span class="m">0</span>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>--vmodule<span class="o">=</span><span class="nv">mapreduce</span><span class="o">=</span><span class="m">2</span>,file<span class="o">=</span><span class="m">1</span>,gfs*<span class="o">=</span><span class="m">3</span><span class="w"> </span>--v<span class="o">=</span><span class="m">0</span>
 </span></code></pre></div>
 <p>Specifying these options will specifically:</p>
 <ol>
@@ -1270,28 +1139,31 @@ macros always log at the <code>INFO</code> log level (when they log at all).</p>
 </ol>
 <p>The wildcarding functionality 3. supports both <code>*</code> (matches 0 or more
 characters) and <code>?</code> (matches any single character) wildcards. Please also refer
-to <a href="#adjusting-output">command line flags</a> for more information.</p>
+to <a href="../flags/">command line flags</a> for more information.</p>
 <p>There's also <code class="language-cpp highlight"><span class="n">VLOG_IS_ON</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></code> "verbose level" condition macro. This macro
 returns <code class="language-cpp highlight"><span class="nb">true</span></code> when the <code>--v</code> is equal to or greater than <code>n</code>. The macro can be
 used as follows:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">VLOG_IS_ON</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="w">    </span><span class="c1">// do some logging preparation and logging</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">    </span><span class="c1">// that can’t be accomplished with just VLOG(2) &lt;&lt; ...;</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="p">}</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">VLOG_IS_ON</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="c1">// (1)</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">}</span>
 </span></code></pre></div>
+<ol>
+<li>Here we can perform some logging preparation and logging that can’t be
+   accomplished with just <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;message ...&quot;</span><span class="p">;</span></code></li>
+</ol>
 <p>Verbose level condition macros <code>VLOG_IF</code>, <code>VLOG_EVERY_N</code> and <code>VLOG_IF_EVERY_N</code>
 behave analogous to <code>LOG_IF</code>, <code>LOG_EVERY_N</code>, <code>LOG_IF_EVERY_N</code>, but accept a
 numeric verbosity level as opposed to a severity level.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">VLOG_IF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">))</span>
-</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when size is more than 1024 and when you run the &quot;</span>
-</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="w">      </span><span class="s">&quot;program with --v=1 or more&quot;</span><span class="p">;</span>
-</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="n">VLOG_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed every 10th occurrence, and when you run the program &quot;</span>
-</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="w">      </span><span class="s">&quot;with --v=1 or more. Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
-</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="n">VLOG_IF_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
-</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed on every 10th occurrence of case when size is more &quot;</span>
-</span><span id="__span-15-9"><a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="w">      </span><span class="s">&quot; than 1024, when you run the program with --v=1 or more. &quot;</span><span class="p">;</span>
-</span><span id="__span-15-10"><a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="w">      </span><span class="s">&quot;Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="n">VLOG_IF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">))</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed when size is more than 1024 and when you run the &quot;</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="w">      </span><span class="s">&quot;program with --v=1 or more&quot;</span><span class="p">;</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="n">VLOG_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed every 10th occurrence, and when you run the program &quot;</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">      </span><span class="s">&quot;with --v=1 or more. Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">VLOG_IF_EVERY_N</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">size</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">1024</span><span class="p">),</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="w">   </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;I’m printed on every 10th occurrence of case when size is more &quot;</span>
+</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="w">      </span><span class="s">&quot; than 1024, when you run the program with --v=1 or more. &quot;</span><span class="p">;</span>
+</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="w">      </span><span class="s">&quot;Present occurrence is &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="p">;</span>
 </span></code></pre></div>
 <div class="admonition info">
 <p class="admonition-title">Performance</p>
@@ -1299,18 +1171,18 @@ numeric verbosity level as opposed to a severity level.</p>
 <code>VLOG</code>, etc.) are carefully implemented and don't execute the right hand
 side expressions when the conditions are false. So, the following check may
 not sacrifice the performance of your application.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">obj</span><span class="p">.</span><span class="n">ok</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">.</span><span class="n">CreatePrettyFormattedStringButVerySlow</span><span class="p">();</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">obj</span><span class="p">.</span><span class="n">ok</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">.</span><span class="n">CreatePrettyFormattedStringButVerySlow</span><span class="p">();</span>
 </span></code></pre></div>
 </div>
 <h2 id="debugging-support">Debugging Support<a class="headerlink" href="#debugging-support" title="Permanent link">&para;</a></h2>
 <p>Special debug mode logging macros only have an effect in debug mode and are
 compiled away to nothing for non-debug mode compiles. Use these macros to avoid
 slowing down your production application due to excessive logging.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">DLOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Found cookies&quot;</span><span class="p">;</span>
-</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">DLOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
-</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">DLOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
-</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="n">DLOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
-</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="n">DLOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="n">DLOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Found cookies&quot;</span><span class="p">;</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="n">DLOG_IF</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">num_cookies</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got lots of cookies&quot;</span><span class="p">;</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="n">DLOG_EVERY_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">DLOG_FIRST_N</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got the &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">google</span><span class="o">::</span><span class="n">COUNTER</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;th cookie&quot;</span><span class="p">;</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">DLOG_EVERY_T</span><span class="p">(</span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="mf">0.01</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got a cookie&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <h2 id="runtime-checks">Runtime Checks<a class="headerlink" href="#runtime-checks" title="Permanent link">&para;</a></h2>
 <p>It is a good practice to check expected conditions in your program
@@ -1321,7 +1193,7 @@ similar to the <code>assert</code> macro defined in the standard C library.</p>
 <code>assert</code>, it is <strong>not</strong> controlled by <code>NDEBUG</code>, so the check will be executed
 regardless of compilation mode. Therefore, <code>fp-&gt;Write(x)</code> in the following
 example is always executed:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">fp</span><span class="o">-&gt;</span><span class="n">Write</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write failed!&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="n">CHECK</span><span class="p">(</span><span class="n">fp</span><span class="o">-&gt;</span><span class="n">Write</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write failed!&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>There are various helper macros for equality/inequality checks
 -<code>CHECK_EQ</code>, <code>CHECK_NE</code>, <code>CHECK_LE</code>, <code>CHECK_LT</code>, <code>CHECK_GE</code>, and
@@ -1329,28 +1201,28 @@ example is always executed:</p>
 values when the result is not as expected. The values must have
 <code class="language-cpp highlight"><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="n">ostream</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span></code> defined.</p>
 <p>You may append to the error message like so:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">CHECK_NE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: The world must be ending!&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">CHECK_NE</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: The world must be ending!&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>We are very careful to ensure that each argument is evaluated exactly
 once, and that anything which is legal to pass as a function argument is legal
 here. In particular, the arguments may be temporary expressions which will end
 up being destroyed at the end of the apparent statement, for example:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;abc&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="err">’</span><span class="n">b</span><span class="err">’</span><span class="p">);</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">string</span><span class="p">(</span><span class="s">&quot;abc&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="err">’</span><span class="n">b</span><span class="err">’</span><span class="p">);</span>
 </span></code></pre></div>
 <p>The compiler reports an error if one of the arguments is a pointer and the other
 is <code class="language-cpp highlight"><span class="k">nullptr</span></code>. To work around this, simply <code class="language-cpp highlight"><span class="k">static_cast</span></code> <code class="language-cpp highlight"><span class="k">nullptr</span></code> to the type of the desired pointer.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">SomeType</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">nullptr</span><span class="p">));</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">CHECK_EQ</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">,</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">SomeType</span><span class="o">*&gt;</span><span class="p">(</span><span class="k">nullptr</span><span class="p">));</span>
 </span></code></pre></div>
 <p>Better yet, use the <code>CHECK_NOTNULL</code> macro:</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">);</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="n">some_ptr</span><span class="o">-&gt;</span><span class="n">DoSomething</span><span class="p">();</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">some_ptr</span><span class="p">);</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="n">some_ptr</span><span class="o">-&gt;</span><span class="n">DoSomething</span><span class="p">();</span>
 </span></code></pre></div>
 <p>Since this macro returns the given pointer, this is very useful in
 constructor initializer lists.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">S</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="w">    </span><span class="n">S</span><span class="p">(</span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ptr_</span><span class="p">(</span><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">ptr</span><span class="p">))</span><span class="w"> </span><span class="p">{}</span>
-</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="w">    </span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr_</span><span class="p">;</span>
-</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="p">};</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">struct</span><span class="w"> </span><span class="nc">S</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="n">S</span><span class="p">(</span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ptr_</span><span class="p">(</span><span class="n">CHECK_NOTNULL</span><span class="p">(</span><span class="n">ptr</span><span class="p">))</span><span class="w"> </span><span class="p">{}</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">    </span><span class="n">Something</span><span class="o">*</span><span class="w"> </span><span class="n">ptr_</span><span class="p">;</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="p">};</span>
 </span></code></pre></div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -1368,7 +1240,7 @@ They treat <code class="language-cpp highlight"><span class="k">nullptr</span></
 <p class="admonition-title">Note</p>
 <p>Both arguments may be temporary objects which are destructed at the
 end of the current <em>full expression</em>, such as</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="n">CHECK_STREQ</span><span class="p">(</span><span class="n">Foo</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span><span class="w"> </span><span class="n">Bar</span><span class="p">().</span><span class="n">c_str</span><span class="p">());</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="n">CHECK_STREQ</span><span class="p">(</span><span class="n">Foo</span><span class="p">().</span><span class="n">c_str</span><span class="p">(),</span><span class="w"> </span><span class="n">Bar</span><span class="p">().</span><span class="n">c_str</span><span class="p">());</span>
 </span></code></pre></div>
 <p>where <code>Foo</code> and <code>Bar</code> return <code>std::string</code>.</p>
 </div>
@@ -1386,7 +1258,7 @@ for detail.</p>
 <p><code>PLOG()</code> and <code>PLOG_IF()</code> and <code>PCHECK()</code> behave exactly like their <code>LOG*</code> and
 <code>CHECK</code> equivalents with the addition that they append a description of the
 current state of <code>errno</code> to their output lines. E.g.</p>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="n">PCHECK</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write nullptr failed&quot;</span><span class="p">;</span>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="n">PCHECK</span><span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Write nullptr failed&quot;</span><span class="p">;</span>
 </span></code></pre></div>
 <p>This check fails with the following error message.</p>
 <div class="language-text highlight"><pre><span></span><code>F0825 185142 test.cc:22] Check failed: write(1, nullptr, 2) &gt;= 0 Write nullptr failed: Bad address [14]
@@ -1420,7 +1292,7 @@ sparingly.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 11, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 12, 2024</span>
   </span>
 
     
