@@ -61,7 +61,13 @@ int main(int argc, char* argv[]) {
 ```
 
 By default, glog tries to dump the stacktrace and calls `#!cpp std::abort`. The
-stacktrace is generated only when running the application on a system supported
-by glog. Currently, glog supports x86, x86_64, PowerPC architectures,
-`libunwind`, and the Debug Help Library (`dbghelp`) on Windows for extracting
-the stack trace.
+stacktrace is generated only when running the application on a system
+supported[^1] by glog.
+
+[^1]: To extract the stack trace, glog currently supports the following targets:
+
+    * x86, x86_64,
+    * PowerPC architectures,
+    * `libunwind`,
+    * and the Debug Help Library (`dbghelp`) on Windows.
+

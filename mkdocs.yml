@@ -9,6 +9,7 @@ markdown_extensions:
   - admonition
   - attr_list
   - def_list
+  - footnotes
   - md_in_html
   - pymdownx.details
   - pymdownx.highlight:
