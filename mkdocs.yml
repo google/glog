@@ -9,6 +9,7 @@ markdown_extensions:
   - admonition
   - attr_list
   - def_list
+  - footnotes
   - md_in_html
   - pymdownx.details
   - pymdownx.highlight:
@@ -110,6 +111,7 @@ nav:
       - Installation using Package Managers: packages.md
   - User Guide:
       - Logging: logging.md
+      - Adjusting Output: flags.md
       - Custom Sinks: sinks.md
       - Failure Handler: failures.md
       - Log Removal: log_cleaner.md

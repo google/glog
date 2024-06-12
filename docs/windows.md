@@ -34,11 +34,11 @@ google::FlushLogFiles(google::GLOG_ERROR);
 ```
 
 If you don't need `ERROR` defined by `windows.h`, there are a couple of more
-workarounds which sometimes don't work:
+workarounds which sometimes don't work[^1]:
 
 -  `#!cpp #define WIN32_LEAN_AND_MEAN` or `NOGDI` **before**
    `#!cpp #include <windows.h>`.
 -  `#!cpp #undef ERROR` **after** `#!cpp #include <windows.h>`.
 
-See [this issue](http://code.google.com/p/google-glog/issues/detail?id=33) for
-more detail.
+[^1]: For more information refer to [this
+      issue](http://code.google.com/p/google-glog/issues/detail?id=33).

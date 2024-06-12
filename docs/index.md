@@ -13,13 +13,13 @@ You can log a message by simply streaming things to `LOG`(<a particular
 #include <glog/logging.h>
 
 int main(int argc, char* argv[]) {
-    // Initialize Google’s logging library.
-    google::InitGoogleLogging(argv[0]);
-
-    // ...
-    LOG(INFO) << "Found " << num_cookies << " cookies";
+    google::InitGoogleLogging(argv[0]); // (1)!
+    LOG(INFO) << "Found " << num_cookies << " cookies"; // (2)!
 }
 ```
+
+1. Initialize the Google Logging Library
+2. Log a message with informational severity
 
 The library can be installed using various [package managers](packages.md) or
 compiled [from source](build.md). For a detailed overview of glog features and

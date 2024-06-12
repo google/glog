@@ -21,15 +21,33 @@ from the signal handler.
         @     0x7f892f7ef1c4 (unknown)
         @           0x4046f9 (unknown)
 
-By default, the signal handler writes the failure dump to the standard
-error. You can customize the destination by
-`#!cpp InstallFailureWriter()`.
+
+## Customizing Handler Output
+
+By default, the signal handler writes the failure dump to the standard error.
+However, it is possible to customize the destination by installing a callback
+using the `#!cpp google::InstallFailureWriter()` function. The function expects
+a pointer to a function with the following signature:
+
+``` cpp
+void YourFailureWriter(const char* message/* (1)! */, std::size_t length/* (2)! */);
+```
+
+1. The pointer references the start of the failure message.
+
+    !!! danger
+        The string is **not null-terminated**.
+
+2. The message length in characters.
+
+!!! warning "Possible overflow errors"
+    Users should not expect the `message` string to be null-terminated.
 
 ## User-defined Failure Function
 
 `FATAL` severity level messages or unsatisfied `CHECK` condition
 terminate your program. You can change the behavior of the termination
-by `InstallFailureFunction`.
+by `google::InstallFailureFunction`.
 
 ``` cpp
 void YourFailureFunction() {
@@ -43,7 +61,13 @@ int main(int argc, char* argv[]) {
 ```
 
 By default, glog tries to dump the stacktrace and calls `#!cpp std::abort`. The
-stacktrace is generated only when running the application on a system supported
-by glog. Currently, glog supports x86, x86_64, PowerPC architectures,
-`libunwind`, and the Debug Help Library (`dbghelp`) on Windows for extracting
-the stack trace.
+stacktrace is generated only when running the application on a system
+supported[^1] by glog.
+
+[^1]: To extract the stack trace, glog currently supports the following targets:
+
+    * x86, x86_64,
+    * PowerPC architectures,
+    * `libunwind`,
+    * and the Debug Help Library (`dbghelp`) on Windows.
+
