@@ -253,10 +253,12 @@ used as follows:
 
 ``` cpp
 if (VLOG_IS_ON(2)) {
-    // do some logging preparation and logging
-    // that can’t be accomplished with just VLOG(2) << ...;
+    // (1)
 }
 ```
+
+1. Here we can perform some logging preparation and logging that can’t be
+   accomplished with just `#!cpp VLOG(2) << "message ...";`
 
 Verbose level condition macros `VLOG_IF`, `VLOG_EVERY_N` and `VLOG_IF_EVERY_N`
 behave analogous to `LOG_IF`, `LOG_EVERY_N`, `LOG_IF_EVERY_N`, but accept a
