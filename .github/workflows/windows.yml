@@ -45,18 +45,18 @@ jobs:
         uses: actions/cache@v4
         with:
           path: gtest/
-          key: ${{runner.os}}-gtest-1.11-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
+          key: ${{runner.os}}-gtest-1.14-${{matrix.lib}}-${{matrix.arch}}-${{matrix.build_type}}
 
       - name: Download GTest
         if: steps.cache-gtest.outputs.cache-hit != 'true'
         run: |
-          (New-Object System.Net.WebClient).DownloadFile("https://github.com/google/googletest/archive/refs/tags/release-1.11.0.zip", "release-1.11.0.zip")
-          Expand-Archive release-1.11.0.zip .
+          (New-Object System.Net.WebClient).DownloadFile("https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip", "v1.14.0.zip")
+          Expand-Archive v1.14.0.zip .
 
       - name: Build GTest
         if: steps.cache-gtest.outputs.cache-hit != 'true'
         run: |
-          cmake -S googletest-release-1.11.0 -B build-googletest `
+          cmake -S googletest-1.14.0 -B build-googletest `
                 -A ${{matrix.arch}} `
                 -DBUILD_SHARED_LIBS=${{matrix.lib == 'shared'}} `
                 -Dgtest_force_shared_crt=ON `
