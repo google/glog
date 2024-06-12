@@ -359,6 +359,8 @@
       
         
       
+        
+      
     
     
     
@@ -401,6 +403,27 @@
   
   <span class="md-ellipsis">
     Logging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../flags/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Adjusting Output
   </span>
   
 
@@ -518,10 +541,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_6" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_2_6" id="__nav_2_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -532,8 +555,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_6_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_6">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_7">
             <span class="md-nav__icon md-icon"></span>
             System-specific Considerations
           </label>
@@ -716,14 +739,21 @@ functions defined in <code>glog/logging.h</code>.</p>
 </span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="n">google</span><span class="o">::</span><span class="n">FlushLogFiles</span><span class="p">(</span><span class="n">google</span><span class="o">::</span><span class="n">GLOG_ERROR</span><span class="p">);</span>
 </span></code></pre></div>
 <p>If you don't need <code>ERROR</code> defined by <code>windows.h</code>, there are a couple of more
-workarounds which sometimes don't work:</p>
+workarounds which sometimes don't work<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>:</p>
 <ul>
 <li><code class="language-cpp highlight"><span class="cp">#define WIN32_LEAN_AND_MEAN</span></code> or <code>NOGDI</code> <strong>before</strong>
    <code class="language-cpp highlight"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;windows.h&gt;</span></code>.</li>
 <li><code class="language-cpp highlight"><span class="cp">#undef ERROR</span></code> <strong>after</strong> <code class="language-cpp highlight"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;windows.h&gt;</span></code>.</li>
 </ul>
-<p>See <a href="http://code.google.com/p/google-glog/issues/detail?id=33">this issue</a> for
-more detail.</p>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>For more information refer to <a href="http://code.google.com/p/google-glog/issues/detail?id=33">this
+  issue</a>.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
@@ -746,7 +776,7 @@ more detail.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 11, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 12, 2024</span>
   </span>
 
     

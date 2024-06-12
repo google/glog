@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://google.github.io/glog/0.7.1/contribute/">
+        <link rel="canonical" href="https://google.github.io/glog/0.7.1/flags/">
       
       
-        <link rel="prev" href="../unwinder/">
+        <link rel="prev" href="../logging/">
       
       
-        <link rel="next" href="../license/">
+        <link rel="next" href="../sinks/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Contributing - Google Logging Library</title>
+        <title>Adjusting Output - Google Logging Library</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-contribute" class="md-skip">
+        <a href="#adjusting-output" class="md-skip">
           Skip to content
         </a>
       
@@ -132,7 +132,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Adjusting Output
             
           </span>
         </div>
@@ -340,59 +340,80 @@
       
   
   
+    
   
   
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-    
-    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
-      
-        
   
-  
-    <a href="../logging/" class="md-nav__link">
+    
+    
       
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
   
   <span class="md-ellipsis">
     User Guide
   </span>
   
 
-      
-        <span class="md-nav__icon md-icon"></span>
-      
-    </a>
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Logging
+  </span>
   
 
-      
+      </a>
     </li>
   
 
-    
-      
-      
+              
+            
+              
+                
   
   
     
@@ -411,7 +432,7 @@
           
   
   <span class="md-ellipsis">
-    Contributing
+    Adjusting Output
   </span>
   
 
@@ -422,7 +443,7 @@
         
   
   <span class="md-ellipsis">
-    Contributing
+    Adjusting Output
   </span>
   
 
@@ -444,18 +465,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#contributor-license-agreement-cla" class="md-nav__link">
+  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      Contributor License Agreement (CLA)
+      Using Command-line Parameters and Environment Variables
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#submitting-a-patch" class="md-nav__link">
+  <a href="#modifying-flags-programmatically" class="md-nav__link">
     <span class="md-ellipsis">
-      Submitting a Patch
+      Modifying Flags Programmatically
     </span>
   </a>
   
@@ -465,6 +486,164 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sinks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Sinks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../failures/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Failure Handler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_cleaner/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Log Removal
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../log_stripping/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Stripping Log Messages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../windows/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    System-specific Considerations
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contribute/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -516,18 +695,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#contributor-license-agreement-cla" class="md-nav__link">
+  <a href="#using-command-line-parameters-and-environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
-      Contributor License Agreement (CLA)
+      Using Command-line Parameters and Environment Variables
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#submitting-a-patch" class="md-nav__link">
+  <a href="#modifying-flags-programmatically" class="md-nav__link">
     <span class="md-ellipsis">
-      Submitting a Patch
+      Modifying Flags Programmatically
     </span>
   </a>
   
@@ -548,7 +727,7 @@
                   
 
   
-    <a href="https://github.com/google/glog/edit/0.7.x/docs/contribute.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/google/glog/edit/0.7.x/docs/flags.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
     </a>
@@ -556,52 +735,93 @@
   
 
 
-<h1 id="how-to-contribute">How to Contribute<a class="headerlink" href="#how-to-contribute" title="Permanent link">&para;</a></h1>
-<p>We'd love to accept your patches and contributions to this project.
-There are a just a few small guidelines you need to follow.</p>
-<h2 id="contributor-license-agreement-cla">Contributor License Agreement (CLA)<a class="headerlink" href="#contributor-license-agreement-cla" title="Permanent link">&para;</a></h2>
-<p>Contributions to any Google project must be accompanied by a Contributor
-License Agreement. This is not a copyright <strong>assignment</strong>, it simply
-gives Google permission to use and redistribute your contributions as
-part of the project.</p>
-<ul>
-<li>If you are an individual writing original source code and you're
-    sure you own the intellectual property, then you'll need to sign an
-    <a href="https://developers.google.com/open-source/cla/individual">individual
-    CLA</a>.</li>
-<li>If you work for a company that wants to allow you to contribute your
-    work, then you'll need to sign a <a href="https://developers.google.com/open-source/cla/corporate">corporate
-    CLA</a>.</li>
-</ul>
-<p>You generally only need to submit a CLA once, so if you've already
-submitted one (even if it was for a different project), you probably
-don't need to do it again.</p>
-<p>Once your CLA is submitted (or if you already submitted one for another Google
-project), make a commit adding yourself to the
-<a href="https://github.com/google/glog/blob/0.7.x/AUTHORS">AUTHORS</a> and
-<a href="https://github.com/google/glog/blob/0.7.x/CONTRIBUTORS">CONTRIBUTORS</a> files.
-This commit can be part of your first <a href="https://help.github.com/articles/creating-a-pull-request">pull
-request</a>.</p>
-<h2 id="submitting-a-patch">Submitting a Patch<a class="headerlink" href="#submitting-a-patch" title="Permanent link">&para;</a></h2>
-<ol>
-<li>It's generally best to start by opening a new issue describing the
-    bug or feature you're intending to fix. Even if you think it's
-    relatively minor, it's helpful to know what people are working on.
-    Mention in the initial issue that you are planning to work on that
-    bug or feature so that it can be assigned to you.</li>
-<li>Follow the normal process of
-    <a href="https://help.github.com/articles/fork-a-repo">forking</a> the project,
-    and setup a new branch to work in. It's important that each group of
-    changes be done in separate branches in order to ensure that a pull
-    request only includes the commits related to that bug or feature.</li>
-<li>Do your best to have <a href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">well-formed commit
-    messages</a>
-    for each change. This provides consistency throughout the project,
-    and ensures that commit messages are able to be formatted properly
-    by various git tools.</li>
-<li>Finally, push the commits to your fork and submit a <a href="https://help.github.com/articles/creating-a-pull-request">pull
-    request</a>.</li>
-</ol>
+<h1 id="adjusting-output">Adjusting Output<a class="headerlink" href="#adjusting-output" title="Permanent link">&para;</a></h1>
+<p>Several flags influence glog's output behavior.</p>
+<h2 id="using-command-line-parameters-and-environment-variables">Using Command-line Parameters and Environment Variables<a class="headerlink" href="#using-command-line-parameters-and-environment-variables" title="Permanent link">&para;</a></h2>
+<p>If the <a href="https://github.com/gflags/gflags">Google gflags
+library</a> is installed on your machine,
+the build system will automatically detect and use it, allowing you to
+pass flags on the command line.</p>
+<div class="admonition example">
+<p class="admonition-title">Activate <code>--logtostderr</code> in an application from the command line</p>
+<p>A binary <code>you_application</code> that uses glog can be started using
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>./your_application<span class="w"> </span>--logtostderr<span class="o">=</span><span class="m">1</span>
+</span></code></pre></div>
+to log to <code>stderr</code> instead of writing the output to a log file.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can set boolean flags to <code>true</code> by specifying <code>1</code>, <code>true</code>, or <code>yes</code>. To
+set boolean flags to <code>false</code>, specify <code>0</code>, <code>false</code>, or <code>no</code>. In either case
+the spelling is case-insensitive.</p>
+</div>
+<p>If the Google gflags library isn't installed, you set flags via
+environment variables, prefixing the flag name with <code>GLOG_</code>, e.g.,</p>
+<div class="admonition example">
+<p class="admonition-title">Activate <code>logtostderr</code> without gflags</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">GLOG_logtostderr</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>./your_application
+</span></code></pre></div>
+</div>
+<p>The following flags are most commonly used:</p>
+<dl>
+<dt><code>logtostderr</code> (<code>bool</code>, default=<code>false</code>)</dt>
+<dd>
+<p>Log messages to <code>stderr</code> instead of logfiles.</p>
+</dd>
+<dt><code>stderrthreshold</code> (<code>int</code>, default=2, which is <code>ERROR</code>)</dt>
+<dd>
+<p>Copy log messages at or above this level to <code>stderr</code> in addition to
+logfiles. The numbers of severity levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>,
+and <code>FATAL</code> are 0, 1, 2, and 3, respectively.</p>
+</dd>
+<dt><code>minloglevel</code> (<code>int</code>, default=0, which is <code>INFO</code>)</dt>
+<dd>
+<p>Log messages at or above this level. Again, the numbers of severity
+levels <code>INFO</code>, <code>WARNING</code>, <code>ERROR</code>, and <code>FATAL</code> are 0, 1, 2, and 3,
+respectively.</p>
+</dd>
+<dt><code>log_dir</code> (<code>string</code>, default="")</dt>
+<dd>
+<p>If specified, logfiles are written into this directory instead of
+the default logging directory.</p>
+</dd>
+<dt><code>v</code> (<code>int</code>, default=0)</dt>
+<dd>
+<p>Show all <code class="language-cpp highlight"><span class="n">VLOG</span><span class="p">(</span><span class="n">m</span><span class="p">)</span></code> messages for <code>m</code> less or equal the value of this
+flag. Overridable by <code class="language-bash highlight">--vmodule</code>. Refer to <a href="../logging/#verbose-logging">verbose
+logging</a> for more detail.</p>
+</dd>
+<dt><code>vmodule</code> (<code>string</code>, default="")</dt>
+<dd>
+<p>Per-module verbose level. The argument has to contain a
+comma-separated list of <code>&lt;module name&gt;=&lt;log level&gt;</code>. <code>&lt;module name&gt;</code> is a
+glob pattern (e.g., <code>gfs*</code> for all modules whose name starts with "gfs"),
+matched against the filename base (that is, name ignoring .cc/.h./-inl.h).
+<code>&lt;log level&gt;</code> overrides any value given by <code>--v</code>. See also <a href="../logging/#verbose-logging">verbose
+logging</a> for more details.</p>
+</dd>
+</dl>
+<p>Additional flags are defined in
+<a href="https://github.com/google/glog/blob/0.7.x/src/flags.cc">flags.cc</a>. Please see
+the source for their complete list.</p>
+<h2 id="modifying-flags-programmatically">Modifying Flags Programmatically<a class="headerlink" href="#modifying-flags-programmatically" title="Permanent link">&para;</a></h2>
+<p>You can also modify flag values in your program by modifying global variables
+<code>FLAGS_*</code>. Most settings start working immediately after you update <code>FLAGS_*</code>.
+The exceptions are the flags related to destination files. For instance, you
+might want to set <code>FLAGS_log_dir</code> before calling <code>google::InitGoogleLogging</code>.</p>
+<div class="admonition example">
+<p class="admonition-title">Setting <code>log_dir</code> at runtime</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;file&quot;</span><span class="p">;</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1">// Most flags work immediately after updating values.</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;stderr&quot;</span><span class="p">;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">FLAGS_logtostderr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c1">// This won’t change the log destination. If you want to set this</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="c1">// value, you should do this before google::InitGoogleLogging .</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">FLAGS_log_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/some/log/directory&quot;</span><span class="p">;</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">LOG</span><span class="p">(</span><span class="n">INFO</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;the same file&quot;</span><span class="p">;</span>
+</span></code></pre></div>
+</div>
 
 
 
@@ -624,7 +844,7 @@ request</a>.</p>
     <span class="md-icon" title="Last update">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 13.1c-.1 0-.3.1-.4.2l-1 1 2.1 2.1 1-1c.2-.2.2-.6 0-.8l-1.3-1.3c-.1-.1-.2-.2-.4-.2m-1.9 1.8-6.1 6V23h2.1l6.1-6.1-2.1-2M12.5 7v5.2l4 2.4-1 1L11 13V7h1.5M11 21.9c-5.1-.5-9-4.8-9-9.9C2 6.5 6.5 2 12 2c5.3 0 9.6 4.1 10 9.3-.3-.1-.6-.2-1-.2s-.7.1-1 .2C19.6 7.2 16.2 4 12 4c-4.4 0-8 3.6-8 8 0 4.1 3.1 7.5 7.1 7.9l-.1.2v1.8Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 11, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 12, 2024</span>
   </span>
 
     
@@ -634,7 +854,7 @@ request</a>.</p>
     <span class="md-icon" title="Created">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.47 15.08 11 13V7h1.5v5.25l3.08 1.83c-.41.28-.79.62-1.11 1m-1.39 4.84c-.36.05-.71.08-1.08.08-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8c0 .37-.03.72-.08 1.08.69.1 1.33.32 1.92.64.1-.56.16-1.13.16-1.72 0-5.5-4.5-10-10-10S2 6.5 2 12s4.47 10 10 10c.59 0 1.16-.06 1.72-.16-.32-.59-.54-1.23-.64-1.92M18 15v3h-3v2h3v3h2v-3h3v-2h-3v-3h-2Z"/></svg>
     </span>
-    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 11, 2024</span>
+    <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">June 12, 2024</span>
   </span>
 
     
