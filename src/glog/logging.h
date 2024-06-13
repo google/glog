@@ -1419,7 +1419,7 @@ T CheckNotNull(const char* file, int line, const char* names, T&& t) {
 struct LogMessageVoidify {
   // This has to be an operator with a precedence lower than << but
   // higher than ?:
-  void operator&(std::ostream&) noexcept {}
+  constexpr void operator&(std::ostream&) const noexcept {}
 };
 
 }  // namespace internal
