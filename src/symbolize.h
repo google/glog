@@ -80,7 +80,7 @@
 #ifndef GLOG_NO_SYMBOLIZE_DETECTION
 #  ifndef HAVE_SYMBOLIZE
 // defined by gcc
-#    if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H)
+#    if defined(HAVE_ELF_H) || defined(HAVE_SYS_EXEC_ELF_H) || defined(HAVE_LINK_H)
 #      define HAVE_SYMBOLIZE
 #    elif defined(GLOG_OS_MACOSX) && defined(HAVE_DLADDR)
 // Use dladdr to symbolize.
