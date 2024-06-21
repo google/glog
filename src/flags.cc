@@ -32,22 +32,46 @@
 
 #include <cstdlib>
 #include <cstring>
-
+#include <array>
 #include "base/commandlineflags.h"
 #include "glog/log_severity.h"
-
+#include "utilities.h"
 namespace {
 
 // Compute the default value for --log_dir
-static const char* DefaultLogDir() {
-  constexpr const char* const names[]{"GOOGLE_LOG_DIR", "TEST_TMPDIR"};
-  for (const char* const name : names) {
-    const char* const env = std::getenv(name);
-    if (env != nullptr && env[0] != '\0') {
-      return env;
+
+ template <class Ch, int N>
+std::basic_string<Ch> DefaultLogDir(const std::array<const Ch*, N>& names) {
+  for (const Ch*  name : names) {
+    auto val = google::logging::internal::getenv(name);
+    if(!val.empty()) {
+      return val;
     }
+   
   }
-  return "";
+  return {};
+ }
+
+template<class Ch>
+struct LogDirEnvVar;
+
+template <>
+struct LogDirEnvVar<char> {
+  constexpr static std::array<const char*, 2> names() noexcept {
+    return {"GOOGLE_LOG_DIR", "TEST_TMPDIR"};
+  }
+};
+
+template <>
+struct LogDirEnvVar<wchar_t> {
+  constexpr static std::array<const wchar_t*, 2> names() noexcept {
+    return {L"GOOGLE_LOG_DIR", L"TEST_TMPDIR"};
+  }
+};
+
+template <class Ch>
+decltype(auto) DefaultLogDir() {
+  return DefaultLogDir<Ch, 2>(LogDirEnvVar<Ch>::names());
 }
 
 bool BoolFromEnv(const char* varname, bool defval) {
@@ -123,9 +147,15 @@ GLOG_DEFINE_string(logmailer, "", "Mailer used to send logging email");
 GLOG_DEFINE_int32(logfile_mode, 0664, "Log file mode/permissions.");
 
 GLOG_DEFINE_string(
-    log_dir, DefaultLogDir(),
+    log_dir, DefaultLogDir<char>(),
     "If specified, logfiles are written into this directory instead "
     "of the default logging directory.");
+
+GLOG_DEFINE_wstring(
+    log_wdir, DefaultLogDir<wchar_t>(),
+    L"If specified, logfiles are written into this directory instead "
+    L"of the default logging directory.");
+
 GLOG_DEFINE_string(log_link, "",
                    "Put additional links to the log "
                    "files in this directory");
