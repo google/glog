@@ -2541,8 +2541,11 @@ LogMessageFatal::LogMessageFatal(const char* file, int line,
     : LogMessage(file, line, result) {}
 
 LogMessageFatal::~LogMessageFatal() noexcept(false) {
-  Flush();
-  LogMessage::Fail();
+  // We really want [[noreturn]] on the destructor so the compiler can use it.
+  // We really just want to reuse the parent class's destructor since it has all
+  // the right logic in it.
+  LogMessage::~LogMessage();
+  Fail();
 }
 
 namespace logging {
