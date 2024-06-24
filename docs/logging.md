@@ -247,9 +247,11 @@ The wildcarding functionality 3. supports both `*` (matches 0 or more
 characters) and `?` (matches any single character) wildcards. Please also refer
 to [command line flags](flags.md) for more information.
 
+You can dynamically control the level of a module using the `#!cpp SetVLOGLevel` function.
+
 There's also `#!cpp VLOG_IS_ON(n)` "verbose level" condition macro. This macro
-returns `#!cpp true` when the `--v` is equal to or greater than `n`. The macro can be
-used as follows:
+returns `#!cpp true` when the matching `--vmodule`, else `--v` is equal to or greater than `n`.
+The macro can be used as follows:
 
 ``` cpp
 if (VLOG_IS_ON(2)) {
