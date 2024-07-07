@@ -3,27 +3,20 @@
 ## Bazel
 
 To use glog within a project which uses the [Bazel](https://bazel.build/) build
-tool, add the following lines to your `WORKSPACE` file:
+tool, add the following lines to your `MODULE.bazel` file:
 
-``` bazel title="WORKSPACE"
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+``` bazel title="MODULE.bazel"
+bazel_dep(name = "glog")
 
-http_archive(
-    name = "gflags",
-    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
-    strip_prefix = "gflags-2.2.2",
-    urls = ["https://github.com/gflags/gflags/archive/v2.2.2.tar.gz"],
-)
-
-http_archive(
-    name = "com_github_google_glog",
-    sha256 = "c17d85c03ad9630006ef32c7be7c65656aba2e7e2fbfc82226b7e680c771fc88",
-    strip_prefix = "glog-0.7.1",
-    urls = ["https://github.com/google/glog/archive/v0.7.1.zip"],
+archive_override(
+    module_name = "glog",
+    urls = "https://github.com/google/glog/archive/cc0de6c200375b33d907ee7632eee2f173b33a09.tar.gz",
+    strip_prefix = "glog-cc0de6c200375b33d907ee7632eee2f173b33a09",  # Latest commit as of 2024-06-08.
+    integrity = "sha256-rUrv4EBkdc+4Wbhfxp+KoRstlj2Iw842/OpLfDq0ivg=",
 )
 ```
 
-You can then add `@com_github_google_glog//:glog` to
+You can then add `@glog//:glog` to
 the deps section of a `cc_binary` or
 `cc_library` rule, and `#!cpp #include <glog/logging.h>` to
 include it in your source code.
@@ -33,7 +26,7 @@ include it in your source code.
     cc_binary(
         name = "main",
         srcs = ["main.cc"],
-        deps = ["@com_github_google_glog//:glog"],
+        deps = ["@glog//:glog"],
     )
     ```
 
