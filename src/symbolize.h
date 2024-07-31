@@ -77,6 +77,10 @@
 #  error "symbolize.h" was not included correctly.
 #endif
 
+// We prefer to let the build system detect the availability of certain features
+// such as symbolization support. HAVE_SYMBOLIZE should therefore be defined by
+// the build system in general unless there is a good reason to perform the
+// detection using the preprocessor.
 #ifndef GLOG_NO_SYMBOLIZE_DETECTION
 #  ifndef HAVE_SYMBOLIZE
 // defined by gcc
