@@ -540,6 +540,12 @@ class LogSink;  // defined below
           ? (void)0                    \
           : google::logging::internal::LogMessageVoidify() & SYSLOG(severity)
 
+#define LOG_TO_SINK_IF(sink, severity, condition) \
+  static_cast<void>(0),             \
+      !(condition)                  \
+          ? (void)0                 \
+          : google::logging::internal::LogMessageVoidify() & LOG_TO_SINK(sink, severity)
+
 #define LOG_ASSERT(condition) \
   LOG_IF(FATAL, !(condition)) << "Assert failed: " #condition
 #define SYSLOG_ASSERT(condition) \
@@ -1019,6 +1025,7 @@ constexpr LogSeverity GLOG_0 = GLOG_ERROR;
 #  define DLOG_FIRST_N(severity, n) LOG_FIRST_N(severity, n)
 #  define DLOG_EVERY_T(severity, T) LOG_EVERY_T(severity, T)
 #  define DLOG_ASSERT(condition) LOG_ASSERT(condition)
+#  define DLOG_TO_SINK(sink, severity) LOG_TO_SINK(sink, severity)
 
 // debug-only checking.  executed if DCHECK_IS_ON().
 #  define DCHECK(condition) CHECK(condition)
@@ -1076,6 +1083,11 @@ constexpr LogSeverity GLOG_0 = GLOG_ERROR;
 
 #  define DLOG_ASSERT(condition) \
     static_cast<void>(0), true ? (void)0 : (LOG_ASSERT(condition))
+
+#  define DLOG_TO_SINK(sink, severity) \
+    static_cast<void>(0),              \
+        true ? (void)0                 \
+             : google::logging::internal::LogMessageVoidify() & LOG(severity)
 
 // MSVC warning C4127: conditional expression is constant
 #  define DCHECK(condition)              \
