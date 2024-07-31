@@ -446,7 +446,7 @@ class LogCleaner {
   bool enabled() const { return enabled_; }
 
  private:
-  vector<string> GetOverdueLogNames(
+  vector<string> GetLogNamesToDelete(
       string log_directory,
       const std::chrono::system_clock::time_point& current_time,
       const string& base_filename, const string& filename_extension) const;
@@ -455,9 +455,9 @@ class LogCleaner {
                                const string& base_filename,
                                const string& filename_extension) const;
 
-  bool IsLogLastModifiedOver(
+  bool GetLastModifiedTime(
       const string& filepath,
-      const std::chrono::system_clock::time_point& current_time) const;
+      std::chrono::system_clock::time_point& last_modified_time) const;
 
   bool enabled_{false};
   std::chrono::minutes overdue_{
@@ -1323,8 +1323,8 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
   }
 
   for (const std::string& dir : dirs) {
-    vector<string> logs = GetOverdueLogNames(dir, current_time, base_filename,
-                                             filename_extension);
+    vector<string> logs = GetLogNamesToDelete(dir, current_time, base_filename,
+                                              filename_extension);
     for (const std::string& log : logs) {
       // NOTE May fail on Windows if the file is still open
       int result = unlink(log.c_str());
@@ -1335,14 +1335,13 @@ void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
   }
 }
 
-vector<string> LogCleaner::GetOverdueLogNames(
+vector<string> LogCleaner::GetLogNamesToDelete(
     string log_directory,
     const std::chrono::system_clock::time_point& current_time,
     const string& base_filename, const string& filename_extension) const {
-  // The names of overdue logs.
-  vector<string> overdue_log_names;
-
   // Try to get all files within log_directory.
+  using LogFileInfo = std::pair<std::chrono::system_clock::time_point, string>;
+  vector<LogFileInfo> log_file_info;
   DIR* dir;
   struct dirent* ent;
 
@@ -1362,16 +1361,39 @@ vector<string> LogCleaner::GetOverdueLogNames(
         filepath = log_directory + filepath;
       }
 
+      std::chrono::system_clock::time_point last_modified_time;
       if (IsLogFromCurrentProject(filepath, base_filename,
                                   filename_extension) &&
-          IsLogLastModifiedOver(filepath, current_time)) {
-        overdue_log_names.push_back(filepath);
+          GetLastModifiedTime(filepath, last_modified_time)) {
+        log_file_info.push_back(std::make_pair(last_modified_time, filepath));
       }
     }
     closedir(dir);
   }
 
-  return overdue_log_names;
+  // Sort the log files by last modified time, oldest first.
+  std::sort(log_file_info.begin(), log_file_info.end());
+
+  const auto max_num_log_files_set = FLAGS_max_num_log_files != 0;
+  const auto too_many_log_files =
+      max_num_log_files_set && log_file_info.size() > FLAGS_max_num_log_files;
+  const auto min_num_logs_to_del =
+      too_many_log_files ? log_file_info.size() - FLAGS_max_num_log_files : 0;
+
+  // The names of logs to delete.
+  vector<string> logs_to_delete;
+  for (const auto& info : log_file_info) {
+    const auto& last_modified_time = info.first;
+    const auto& filepath = info.second;
+
+    const auto is_overdue = current_time - last_modified_time >= overdue_;
+    const auto need_to_delete = logs_to_delete.size() < min_num_logs_to_del;
+
+    if (is_overdue || need_to_delete) {
+      logs_to_delete.push_back(filepath);
+    }
+  }
+  return logs_to_delete;
 }
 
 bool LogCleaner::IsLogFromCurrentProject(
@@ -1461,17 +1483,16 @@ bool LogCleaner::IsLogFromCurrentProject(
   return true;
 }
 
-bool LogCleaner::IsLogLastModifiedOver(
+bool LogCleaner::GetLastModifiedTime(
     const string& filepath,
-    const std::chrono::system_clock::time_point& current_time) const {
+    std::chrono::system_clock::time_point& last_modified_time) const {
   // Try to get the last modified time of this file.
   struct stat file_stat;
 
   if (stat(filepath.c_str(), &file_stat) == 0) {
-    const auto last_modified_time =
+    last_modified_time =
         std::chrono::system_clock::from_time_t(file_stat.st_mtime);
-    const auto diff = current_time - last_modified_time;
-    return diff >= overdue_;
+    return true;
   }
 
   // If failed to get file stat, don't return true!

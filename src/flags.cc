@@ -114,6 +114,11 @@ GLOG_DEFINE_int32(logbufsecs, 30,
 GLOG_DEFINE_int32(logcleansecs, 60 * 5,  // every 5 minutes
                   "Clean overdue logs every this many seconds");
 
+GLOG_DEFINE_uint32(max_num_log_files, 0,
+                   "Maximum number of log files retained per log level when "
+                   "using the log cleaner. Oldest logs are deleted first. "
+                   "If 0, all log files are kept.");
+
 GLOG_DEFINE_int32(logemaillevel, 999,
                   "Email log messages logged at this level or higher"
                   " (0 means email all; 3 means email FATAL only;"
