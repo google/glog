@@ -729,6 +729,11 @@ if (BUILD_TESTING)
 
   target_link_libraries (cleanup_with_relative_prefix_unittest PRIVATE glog_test)
 
+  add_executable (cleanup_too_many_logs_unittest
+    src/cleanup_too_many_logs_unittest.cc)
+
+  target_link_libraries (cleanup_too_many_logs_unittest PRIVATE glog_test)
+
   set (CLEANUP_LOG_DIR ${glog_BINARY_DIR}/cleanup_tests)
 
   add_test (NAME cleanup_init COMMAND
@@ -755,6 +760,13 @@ if (BUILD_TESTING)
     -DTEST_SUBDIR=test_subdir/
     -P ${glog_SOURCE_DIR}/cmake/RunCleanerTest3.cmake
     WORKING_DIRECTORY ${glog_BINARY_DIR})
+  add_test (NAME cleanup_too_many_logs COMMAND
+    ${CMAKE_COMMAND}
+    -DLOGCLEANUP=$<TARGET_FILE:cleanup_too_many_logs_unittest>
+    -DTEST_DIR=${glog_BINARY_DIR}/
+    -DTEST_SUBDIR=test_subdir/
+    -P ${glog_SOURCE_DIR}/cmake/RunCleanerTestTooManyLogs.cmake
+    WORKING_DIRECTORY ${glog_BINARY_DIR})
 
   # Fixtures setup
   set_tests_properties (cleanup_init PROPERTIES FIXTURES_SETUP logcleanuptest)
@@ -764,6 +776,7 @@ if (BUILD_TESTING)
   set_tests_properties (cleanup_immediately PROPERTIES FIXTURES_REQUIRED logcleanuptest)
   set_tests_properties (cleanup_with_absolute_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
   set_tests_properties (cleanup_with_relative_prefix PROPERTIES FIXTURES_REQUIRED logcleanuptest)
+  set_tests_properties (cleanup_too_many_logs PROPERTIES FIXTURES_REQUIRED logcleanuptest)
 
   add_executable (striplog0_unittest
     src/striplog_unittest.cc
