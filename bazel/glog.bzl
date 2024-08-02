@@ -64,6 +64,7 @@ def glog_library(with_gflags = 1, **kwargs):
         # NOTE: users could optionally patch -DHAVE_UNWIND off if
         # stacktrace dumping is not needed
         "-DHAVE_UNWIND",
+        "-DHAVE_SYMBOLIZE",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
