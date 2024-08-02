@@ -91,12 +91,14 @@ def glog_library(with_gflags = 1, **kwargs):
         # Enable declaration of _Unwind_Backtrace
         "-D_GNU_SOURCE",
         "-DHAVE_LINK_H",
+        "-DHAVE_SYMBOLIZE",  # Supported by <link.h>
     ]
 
     linux_only_copts = [
         # For utilities.h.
         "-DHAVE_EXECINFO_H",
         "-DHAVE_LINK_H",
+        "-DHAVE_SYMBOLIZE",  # Supported by <link.h>
     ]
 
     darwin_only_copts = [
