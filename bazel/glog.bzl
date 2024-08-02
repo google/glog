@@ -61,6 +61,9 @@ def glog_library(with_gflags = 1, **kwargs):
         "-DHAVE_SYS_UTSNAME_H",
         # For src/utilities.cc.
         "-DHAVE_SYS_TIME_H",
+        # NOTE: users could optionally patch -DHAVE_UNWIND off if
+        # stacktrace dumping is not needed
+        "-DHAVE_UNWIND",
         # Enable dumping stacktrace upon sigaction.
         "-DHAVE_SIGACTION",
         # For logging.cc.
@@ -80,10 +83,6 @@ def glog_library(with_gflags = 1, **kwargs):
         # For src/utilities.cc.
         "-DHAVE_SYS_SYSCALL_H",
         # For src/logging.cc to create symlinks.
-        # NOTE: users could optionally patch -DHAVE_UNWIND off if
-        # stacktrace dumping is not needed
-        "-DHAVE_UNWIND",
-        "-DHAVE_SYMBOLIZE",
         "-fvisibility-inlines-hidden",
         "-fvisibility=hidden",
     ]
