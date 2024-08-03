@@ -3,4 +3,4 @@
 /site/
 bazel-*
 # Bzlmod lockfile
-MODULE.bazel.lock
+/MODULE.bazel.lock
