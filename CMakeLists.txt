@@ -48,8 +48,8 @@ set (CMAKE_C_VISIBILITY_PRESET hidden)
 set (CMAKE_CXX_VISIBILITY_PRESET hidden)
 set (CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
-set(CMAKE_C_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -ffunction-sections -fdata-sections")
-set(CMAKE_CXX_FLAGS "-mcpu=cortex-r5 -mfloat-abi=hard  -mfpu=vfpv3-d16 -fno-exceptions -ffunction-sections -fdata-sections")
+set(CMAKE_C_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard  -mfpu=fpv5-d16 -ffunction-sections -fdata-sections -mthumb")
+set(CMAKE_CXX_FLAGS "-mcpu=cortex-m7 -mfloat-abi=hard  -mfpu=fpv5-d16 -fno-exceptions -ffunction-sections -fdata-sections -mthumb")
 
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
