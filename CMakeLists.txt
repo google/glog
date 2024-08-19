@@ -663,6 +663,8 @@ if (WIN32)
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 endif (WIN32)
 
+
+# These workspace folders need to be set by hand for now. A variable could have been created for the purpose, indicating error if not set
 if (FREERTOS)
   target_include_directories (glog PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/freertos>"
@@ -670,11 +672,9 @@ if (FREERTOS)
     if (HAVE_FREERTOS_THREADS)
       target_include_directories (glog
         PRIVATE
-        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/include
-        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/arm/cortexr5/platform/ZynqMP
-        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/XilinxProcessorIPLib/drivers/common_v1_00_a/src
-        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/ThirdParty/bsp/freertos10_xilinx_v1_3/src/Source/portable/GCC/ARM_CR5
-        /home/dev/programs/xilinx/SDK/2019.1/data/embeddedsw/lib/bsp/standalone_v7_0/src/common
+        C:/Users/Juho/STM32CubeIDE/STM32/interlas_dev/Core/Inc
+        C:/Users/Juho/STM32CubeIDE/STM32/interlas_dev/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F
+        C:/Users/Juho/STM32CubeIDE/STM32/interlas_dev/Middlewares/Third_Party/FreeRTOS/Source/include
         )
     endif (HAVE_FREERTOS_THREADS)
 endif (FREERTOS)
