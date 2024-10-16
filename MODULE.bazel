@@ -6,7 +6,8 @@ module(
 bazel_dep(name = "gflags", version = "2.2.2")
 bazel_dep(name = "googletest", version = "1.14.0", dev_dependency = True)
 bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_cc", version = "0.0.12")
 
 # Required for Windows clang-cl build: --extra_toolchains=@local_config_cc//:cc-toolchain-arm64_windows
-cc_configure = use_extension("@bazel_tools//tools/cpp:cc_configure.bzl", "cc_configure_extension")
+cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
