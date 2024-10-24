@@ -51,6 +51,7 @@
 #pragma push_macro("DECLARE_VARIABLE")
 #pragma push_macro("DECLARE_bool")
 #pragma push_macro("DECLARE_string")
+#pragma push_macro("DECLARE_wstring")
 #pragma push_macro("DECLARE_int32")
 #pragma push_macro("DECLARE_uint32")
 
@@ -64,6 +65,10 @@
 
 #ifdef DECLARE_string
 #  undef DECLARE_string
+#endif
+
+#ifdef DECLARE_wstring
+#  undef DECLARE_wstring
 #endif
 
 #ifdef DECLARE_int32
@@ -100,7 +105,16 @@
     extern GLOG_EXPORT std::string& FLAGS_##name; \
     }                                             \
     using fLS::FLAGS_##name
+
+#define DECLARE_wstring(name)                    \
+  namespace fLS {                                \
+  extern GLOG_EXPORT std::wstring& FLAGS_##name; \
+  }                                              \
+  using fLS::FLAGS_##name
+
 #endif
+
+
 
 DECLARE_int32(logemaillevel);
 DECLARE_int32(logcleansecs);
@@ -157,6 +171,10 @@ DECLARE_int32(minloglevel);
 // default logging directory.
 DECLARE_string(log_dir);
 
+// If specified, logfiles are written into this directory instead of the
+// default logging directory.
+DECLARE_wstring(log_wdir);
+
 // Set the log file mode.
 DECLARE_int32(logfile_mode);
 
@@ -185,6 +203,7 @@ DECLARE_bool(symbolize_stacktrace);
 #pragma pop_macro("DECLARE_VARIABLE")
 #pragma pop_macro("DECLARE_bool")
 #pragma pop_macro("DECLARE_string")
+#pragma pop_macro("DECLARE_wstring")
 #pragma pop_macro("DECLARE_int32")
 #pragma pop_macro("DECLARE_uint32")
 
