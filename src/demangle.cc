@@ -1350,7 +1350,13 @@ bool Demangle(const char* mangled, char* out, size_t out_size) {
     return false;
   }
 
-  std::copy_n(unmangled.get(), std::min(n, out_size), out);
+  if (out_size > 0) {
+    // n is the size of the allocated buffer, not the length of the string.
+    // Therefore, it includes the terminating zero (and possibly additional space).
+    std::size_t copy_size = std::min(n-1, out_size - 1);
+    std::copy_n(unmangled.get(), copy_size, out);
+    out[copy_size] = '\0'; // Ensure terminating null if n > out_size
+  }
   return status == 0;
 #else
   State state;
