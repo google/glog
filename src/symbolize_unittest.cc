@@ -39,12 +39,11 @@
 #include <map>
 #include <string>
 
-
 #include "config.h"
 #include "glog/logging.h"
 #include "googletest.h"
-#include "utilities.h"
 #include "stacktrace.h"
+#include "utilities.h"
 
 #ifdef GLOG_USE_GFLAGS
 #  include <gflags/gflags.h>
@@ -137,18 +136,36 @@ TEST(Symbolize, Symbolize) {
 
 struct Foo {
   static void func(int x);
-  static size_t longParamFunc(
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p0,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p1,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p2,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p3,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p4,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p5,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p6,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p7,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p8,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p9
-		);
+  static size_t longParamFunc(std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p0,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p1,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p2,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p3,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p4,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p5,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p6,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p7,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p8,
+                              std::map<std::map<std::string, std::string>,
+                                       std::map<std::string, std::string>>
+                                  p9);
 };
 
 void ATTRIBUTE_NOINLINE Foo::func(int x) {
@@ -158,19 +175,39 @@ void ATTRIBUTE_NOINLINE Foo::func(int x) {
   a = a + 1;
 }
 
-size_t ATTRIBUTE_NOINLINE Foo::longParamFunc(
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p0,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p1,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p2,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p3,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p4,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p5,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p6,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p7,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p8,
-		std::map<std::map<std::string, std::string>,std::map<std::string, std::string> > p9
-		) {
-  return p0.size() + p1.size() + p2.size() + p3.size() + p4.size() + p5.size() + p6.size() + p7.size() + p8.size() + p9.size();
+size_t ATTRIBUTE_NOINLINE
+Foo::longParamFunc(std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p0,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p1,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p2,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p3,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p4,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p5,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p6,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p7,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p8,
+                   std::map<std::map<std::string, std::string>,
+                            std::map<std::string, std::string>>
+                       p9) {
+  return p0.size() + p1.size() + p2.size() + p3.size() + p4.size() + p5.size() +
+         p6.size() + p7.size() + p8.size() + p9.size();
 }
 
 // With a modern GCC, Symbolize() should return demangled symbol
@@ -181,8 +218,8 @@ TEST(Symbolize, SymbolizeWithDemangling) {
 #      if !defined(_MSC_VER) || !defined(NDEBUG)
 #        if defined(HAVE___CXA_DEMANGLE)
   EXPECT_STREQ("Foo::func(int)", TrySymbolize((void*)(&Foo::func)));
-  // Very long functions can be truncated, but we should not crash or return null.
-  // Also the result should start properly.
+  // Very long functions can be truncated, but we should not crash or return
+  // null. Also the result should start properly.
   const char* symbol = TrySymbolize((void*)(&Foo::longParamFunc));
   EXPECT_TRUE(symbol == std::strstr(symbol, "Foo::longParamFunc("));
 #        else
