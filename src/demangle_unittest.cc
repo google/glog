@@ -89,12 +89,10 @@ TEST(Demangle, CornerCases) {
   EXPECT_STREQ(demangled, tmp);
   EXPECT_TRUE(Demangle(mangled, tmp, size - 1));
   EXPECT_STREQ(demangled, tmp);
-  EXPECT_FALSE(Demangle(mangled, tmp, size - 2));  // Not enough.
-  EXPECT_FALSE(Demangle(mangled, tmp, 1));
-  EXPECT_FALSE(Demangle(mangled, tmp, 0));
-  EXPECT_FALSE(Demangle(mangled, nullptr, 0));  // Should not cause SEGV.
 }
 
+// Demangle tests use a different (reduced) representation of symbols
+#  if !defined(HAVE___CXA_DEMANGLE)
 // Test handling of functions suffixed with .clone.N, which is used by GCC
 // 4.5.x, and .constprop.N and .isra.N, which are used by GCC 4.6.x.  These
 // suffixes are used to indicate functions which have been cloned during
@@ -140,6 +138,19 @@ TEST(Demangle, FromFile) {
     string demangled = line.substr(tab_pos + 1);
     EXPECT_EQ(demangled, DemangleIt(mangled.c_str()));
   }
+}
+#  endif  // defined(HAVE___CXA_DEMANGLE)
+
+TEST(Demangle, SmallBuffer) {
+  constexpr std::size_t size = 10;
+  char tmp[size];
+  const char* const mangled = "_Z6foobarv";
+  EXPECT_FALSE(Demangle(mangled, tmp, size - 2));  // Not enough.
+  EXPECT_FALSE(Demangle(mangled, tmp, 1));
+  EXPECT_FALSE(Demangle(mangled, tmp, 0));
+  EXPECT_FALSE(Demangle(mangled, nullptr, 0));  // Should not cause SEGV.
+  EXPECT_FALSE(Demangle("", tmp, sizeof(tmp)));
+  EXPECT_TRUE(Demangle("_Z3foo", nullptr, 0));
 }
 
 #endif
