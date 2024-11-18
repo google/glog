@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload Coverage to Codecov
         if: matrix.build_type == 'Debug'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: build_${{matrix.build_type}}/coverage.xml
