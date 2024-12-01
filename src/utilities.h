@@ -41,6 +41,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <stdlib.h>
 
 // printf macros for size_t, in the style of inttypes.h
 #ifdef _LP64
@@ -124,6 +125,59 @@ struct CrashReason {
   void* stack[32];
   int depth{0};
 };
+
+
+static size_t CharConvert(wchar_t* dst, const char* src, size_t n) {
+return mbstowcs(dst, src, n);
+}
+
+static size_t CharConvert(char* dst, const wchar_t* src, size_t n) {
+return wcstombs(dst, src, n);
+}
+
+template <class ChSrc, class ChDst>
+std::basic_string<ChDst> StrConvert(const std::basic_string<ChSrc>& src)
+{
+  auto converted_size = CharConvert(nullptr, src.c_str(), 0);
+  if (converted_size == (size_t)-1) {
+    return {};
+  }
+  std::basic_string<ChDst> dst(converted_size + 1, {});
+  converted_size = CharConvert(&dst[0], src.c_str(), converted_size + 1);
+  if (converted_size == (size_t)-1) {
+    return {};
+  }
+  return dst.substr(0, dst.size() - 1);
+}
+
+static std::basic_string<wchar_t> StrConvert(const wchar_t *src) {
+  return src;
+}
+static std::basic_string<wchar_t> StrConvert(const char* src) {
+  return StrConvert<char, wchar_t>(std::basic_string<char>(src));
+}
+
+static std::string getenv(const char * name)
+{
+  auto val = ::getenv(name);
+  if(val != nullptr && val[0] != '\0') {
+    return val;
+  }
+  return {};
+}
+static std::wstring getenv(const wchar_t* name) {
+#ifdef GLOG_OS_WINDOWS
+  auto val = ::_wgetenv(name);
+  if(val != nullptr && val[0] != '\0') {
+    return val;
+  }
+  return {};
+#else
+  auto str_name = StrConvert<wchar_t, char>(name);
+  auto str_val = getenv(str_name.c_str());
+  return StrConvert<char, wchar_t>(str_val);
+#endif  //  GLOG_OS_WINDOWS
+}
 
 }  // namespace internal
 }  // namespace logging
