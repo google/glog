@@ -996,6 +996,11 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
     // demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
   }
+  else{
+    // logs are written to a single file, truncate it if it exists.
+    flags = flags | O_TRUNC;
+  }
+
   FileDescriptor fd{
       open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode))};
   if (!fd) return false;
