@@ -110,6 +110,7 @@ static void TestLogSinkWaitTillSent();
 static void TestCHECK();
 static void TestDCHECK();
 static void TestSTREQ();
+static void TestMaxLogSizeWhenNoTimestamp();
 static void TestBasename();
 static void TestBasenameAppendWhenNoTimestamp();
 static void TestTwoProcessesWrite();
@@ -288,6 +289,7 @@ int main(int argc, char** argv) {
       MungeAndDiffTestStdout(FLAGS_test_srcdir + "/src/logging_unittest.out"));
   FLAGS_logtostdout = false;
 
+  TestMaxLogSizeWhenNoTimestamp();
   TestBasename();
   TestBasenameAppendWhenNoTimestamp();
   TestTwoProcessesWrite();
@@ -804,6 +806,47 @@ static void CheckFile(const string& name, const string& expected_string,
   }
   LOG(FATAL) << "Did " << (checkInFileOrNot ? "not " : "") << "find "
              << expected_string << " in " << files[0];
+}
+
+static void TestMaxLogSizeWhenNoTimestamp() {
+  fprintf(stderr, "==== Test setting max log size without timestamp\n");
+  const string dest = FLAGS_test_tmpdir + "/logging_test_max_log_size";
+  DeleteFiles(dest + "*");
+
+  auto original_max_log_size = FLAGS_max_log_size;
+  auto original_timestamp_in_logfile_name = FLAGS_timestamp_in_logfile_name;
+
+  FLAGS_max_log_size = 1;  // Set max log size to 1MB
+  FLAGS_timestamp_in_logfile_name = false;
+
+  // Set log destination
+  SetLogDestination(GLOG_INFO, dest.c_str());
+
+  // 1e4 info logs -> is about 772 KB in size
+  // 2e4 info logs -> is around 1500 KB in size -> 1.5MB
+  // If our max_log_size constraint is respected, it will truncate earlier logs
+  // and the file size will be lesser than 1MB (around 0.5MB)
+  const int num_logs = 2e4;
+  for (int i = 0; i < num_logs; i++) {
+    LOG(INFO) << "Hello world";
+  }
+  FlushLogFiles(GLOG_INFO);
+
+  // Check log file size
+  struct stat statbuf;
+  stat(dest.c_str(), &statbuf);
+
+  // Verify file size is less than the max log size limit
+  CHECK_LT(static_cast<unsigned int>(statbuf.st_size),
+           FLAGS_max_log_size << 20U);
+
+  // Reset flag values to their original values
+  FLAGS_max_log_size = original_max_log_size;
+  FLAGS_timestamp_in_logfile_name = original_timestamp_in_logfile_name;
+
+  // Release file handle for the destination file to unlock the file in Windows.
+  LogToStderr();
+  DeleteFiles(dest + "*");
 }
 
 static void TestBasename() {
