@@ -53,6 +53,8 @@
 #  include <sys/ucontext.h>
 #endif
 #ifdef HAVE_UNISTD_H
+#  include <sys/syscall.h>
+#  include <sys/types.h>
 #  include <unistd.h>
 #endif
 
@@ -218,8 +220,14 @@ void DumpSignalInfo(int signal_number, siginfo_t* siginfo) {
   formatter.AppendString(oss.str().c_str());
 
   formatter.AppendString(") ");
+
   // Only linux has the PID of the signal sender in si_pid.
 #  ifdef GLOG_OS_LINUX
+  pid_t tid = syscall(SYS_gettid);
+  formatter.AppendString("(LWP ");
+  formatter.AppendUint64(tid, 10);
+  formatter.AppendString(") ");
+
   formatter.AppendString("from PID ");
   formatter.AppendUint64(static_cast<uint64>(siginfo->si_pid), 10);
   formatter.AppendString("; ");
