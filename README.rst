@@ -1,23 +1,18 @@
 Google Logging Library
 ======================
 
-|Linux Github actions| |Windows Github actions| |macOS Github actions| |Codecov|
+**Deprecation notice**: This project is no longer maintained and will be archived on 2025-06-31.
+Consider using
+`ng-log <https://github.com/ng-log/ng-log>`_ (API-compatible,
+community-maintained) or
+`Abseil Logging <https://abseil.io/docs/cpp/guides/logging>`_
+(Google-maintained) instead. Thank you for all the contributions!
 
-Google Logging (glog) is a C++14 library that implements application-level
-logging. The library provides logging APIs based on C++-style streams and
+Google Logging (glog) was a C++14 library that implements application-level
+logging. The library provided logging APIs based on C++-style streams and
 various helper macros.
 
 Getting Started
 ---------------
 
 Please refer to project's `documentation <https://google.github.io/glog/>`_.
-
-
-.. |Linux Github actions| image:: https://github.com/google/glog/actions/workflows/linux.yml/badge.svg
-   :target: https://github.com/google/glog/actions
-.. |Windows Github actions| image:: https://github.com/google/glog/actions/workflows/windows.yml/badge.svg
-   :target: https://github.com/google/glog/actions
-.. |macOS Github actions| image:: https://github.com/google/glog/actions/workflows/macos.yml/badge.svg
-   :target: https://github.com/google/glog/actions
-.. |Codecov| image:: https://codecov.io/gh/google/glog/branch/master/graph/badge.svg?token=8an420vNju
-   :target: https://codecov.io/gh/google/glog
