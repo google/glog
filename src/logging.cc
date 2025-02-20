@@ -995,7 +995,22 @@ bool LogFileObject::CreateLogfile(const string& time_pid_string) {
   if (FLAGS_timestamp_in_logfile_name) {
     // demand that the file is unique for our timestamp (fail if it exists).
     flags = flags | O_EXCL;
+  } else {
+    // logs are written to a single file, where: a log file is created for the
+    // the first time or a file is being recreated due to exceeding max size
+
+    struct stat statbuf;
+    if (stat(filename, &statbuf) == 0) {
+      // truncate the file if it exceeds the max size
+      if ((static_cast<uint32>(statbuf.st_size) >> 20U) >= MaxLogSize()) {
+        flags |= O_TRUNC;
+      }
+
+      // update file length to sync file size
+      file_length_ = static_cast<uint32>(statbuf.st_size);
+    }
   }
+
   FileDescriptor fd{
       open(filename, flags, static_cast<mode_t>(FLAGS_logfile_mode))};
   if (!fd) return false;
