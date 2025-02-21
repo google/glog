@@ -471,7 +471,7 @@ class LogCleaner {
       const string& filepath,
       const std::chrono::system_clock::time_point& current_time) const;
 
-  std::unordered_map<LogSeverity, std::chrono::minutes> overdue_;
+  std::unordered_map<int, std::chrono::minutes> overdue_;
   std::chrono::system_clock::time_point
       next_cleanup_time_;  // cycle count at which to clean overdue log
 };
@@ -1295,9 +1295,11 @@ void LogFileObject::Write(
 LogCleaner::LogCleaner() = default;
 
 void LogCleaner::Enable(const std::chrono::minutes& overdue) {
+  // for the files that have no severity specified 
+  overdue_[-1] = overdue;
   // for backward compatability, set all severities to the same value
   for (int i = GLOG_INFO; i < NUM_SEVERITIES; i++) {
-    overdue_[static_cast<LogSeverity>(i)] = overdue;
+    overdue_[i] = overdue;
   }
 }
 
@@ -1492,14 +1494,7 @@ bool LogCleaner::IsLogLastModifiedOver(
         std::chrono::system_clock::from_time_t(file_stat.st_mtime);
     const auto diff = current_time - last_modified_time;
 
-    int severity = FindFilepathLogSeverity(filepath);
-    // if the filepath does not have a severity, cant clean it
-    if (severity < 0) {
-      perror(("Cannot clean the file. No severity found for: " + filepath).c_str());
-      return false;
-    }
-
-    auto severity_it = overdue_.find(static_cast<LogSeverity>(severity));
+    auto severity_it = overdue_.find(FindFilepathLogSeverity(filepath));
     if (severity_it == overdue_.end()) {
       return false;
     }
@@ -2665,6 +2660,10 @@ void EnableLogCleaner(LogSeverity severity, const std::chrono::minutes& overdue)
 }
 
 void DisableLogCleaner() { log_cleaner.Disable(); }
+
+void DisableLogCleaner(LogSeverity severity) {
+  log_cleaner.Disable(severity);
+}
 
 LogMessageTime::LogMessageTime() = default;
 
