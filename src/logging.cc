@@ -72,6 +72,7 @@
 #include <regex>
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 
 #ifdef HAVE__CHSIZE_S
 #  include <io.h>  // for truncate log file
@@ -455,7 +456,7 @@ class LogCleaner {
            bool base_filename_selected, const string& base_filename,
            const string& filename_extension);
 
-  bool enabled() const;
+  bool enabled() const { return !overdue_.empty(); }
 
  private:
   vector<string> GetOverdueLogNames(
@@ -471,7 +472,7 @@ class LogCleaner {
       const string& filepath,
       const std::chrono::system_clock::time_point& current_time) const;
 
-  vector<std::chrono::minutes> overdue_per_severity_;
+  std::unordered_map<LogSeverity, std::chrono::minutes> overdue_;
   std::chrono::system_clock::time_point
       next_cleanup_time_;  // cycle count at which to clean overdue log
 };
@@ -1292,32 +1293,23 @@ void LogFileObject::Write(
   }
 }
 
-LogCleaner::LogCleaner() {
-  overdue_per_severity_.resize(NUM_SEVERITIES, std::chrono::minutes::max());
-}
-
-bool LogCleaner::enabled() const {
-  // return true if any severity is enabled by iterating over the array
-  for (int i = 0; i < NUM_SEVERITIES; i++) {
-    if (overdue_per_severity_[i] != std::chrono::minutes::max()) return true;
-  }
-
-  return false;
-}
+LogCleaner::LogCleaner() = default;
 
 void LogCleaner::Enable(const std::chrono::minutes& overdue) {
   // for backward compatability, set all severities to the same value
-  fill(overdue_per_severity_.begin(), overdue_per_severity_.end(), overdue);
+  for (int i = GLOG_INFO; i < NUM_SEVERITIES; i++) {
+    overdue_[static_cast<LogSeverity>(i)] = overdue;
+  }
 }
 
 void LogCleaner::Enable(const LogSeverity severity, const std::chrono::minutes& overdue) {
-  overdue_per_severity_[severity] = overdue;
+  overdue_[severity] = overdue;
 }
 
-void LogCleaner::Disable() { fill(overdue_per_severity_.begin(), overdue_per_severity_.end(), std::chrono::minutes::max()); }
+void LogCleaner::Disable() { overdue_.clear(); }
 
-void LogCleaner::Disable(const LogSeverity severity) { 
-  overdue_per_severity_[severity] = std::chrono::minutes::max();
+void LogCleaner::Disable(const LogSeverity severity) {
+  overdue_.erase(severity); 
 }
 
 void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
@@ -1508,7 +1500,12 @@ bool LogCleaner::IsLogLastModifiedOver(
       return false;
     }
 
-    return diff >= overdue_per_severity_[severity];
+    auto severity_it = overdue_.find(static_cast<LogSeverity>(severity));
+    if (severity_it == overdue_.end()) {
+      return false;
+    }
+
+    return diff >= severity_it->second;
   }
 
   // If failed to get file stat, don't return true!
