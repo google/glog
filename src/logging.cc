@@ -356,7 +356,6 @@ base::Logger::~Logger() = default;
 namespace {
 
 constexpr std::intmax_t kSecondsInDay = 60 * 60 * 24;
-constexpr std::intmax_t kSecondsInWeek = kSecondsInDay * 7;
 
 // Optional user-configured callback to print custom prefixes.
 class PrefixFormatter {
