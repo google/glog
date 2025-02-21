@@ -2661,12 +2661,6 @@ void EnableLogCleaner(const std::chrono::minutes& overdue) {
   log_cleaner.Enable(overdue);
 }
 
-void EnableLogCleaner(LogSeverity severity, unsigned int overdue_days) {
-  log_cleaner.Enable(severity, std::chrono::duration_cast<std::chrono::minutes>(
-      std::chrono::duration<unsigned, std::ratio<kSecondsInDay>>{
-          overdue_days}));
-}
-
 void EnableLogCleaner(LogSeverity severity, const std::chrono::minutes& overdue) {
   log_cleaner.Enable(severity, overdue);
 }
