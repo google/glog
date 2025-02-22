@@ -485,6 +485,10 @@ InstallFailureFunction(logging_fail_func_t fail_func);
 GLOG_EXPORT void EnableLogCleaner(const std::chrono::minutes& overdue);
 GLOG_EXPORT void DisableLogCleaner();
 GLOG_EXPORT void SetApplicationFingerprint(const std::string& fingerprint);
+GLOG_EXPORT void EnableLogCleaner(LogSeverity severity, const std::chrono::minutes& overdue);
+GLOG_EXPORT void DisableLogCleaner(LogSeverity severity);
+GLOG_EXPORT void EnableLogCleanerForGenericLogs(const std::chrono::minutes& overdue);
+GLOG_EXPORT void DisableLogCleanerForGenericLogs();
 
 class LogSink;  // defined below
 
