@@ -450,6 +450,9 @@ class LogCleaner {
   void Enable(const LogSeverity severity, const std::chrono::minutes& overdue);
   void Disable();
   void Disable(const LogSeverity severity);
+  // For files with no severity in their names
+  void EnableForGenericLogs(const std::chrono::minutes& overdue);
+  void DisableForGenericLogs();
 
   void Run(const std::chrono::system_clock::time_point& current_time,
            bool base_filename_selected, const string& base_filename,
@@ -1295,11 +1298,11 @@ void LogFileObject::Write(
 LogCleaner::LogCleaner() = default;
 
 void LogCleaner::Enable(const std::chrono::minutes& overdue) {
-  // for the files that have no severity specified 
-  overdue_[-1] = overdue;
-  // for backward compatability, set all severities to the same value
+  // For the files that have no severity specified, we use -1 as the key 
+  EnableForGenericLogs(overdue);
+  // For backward compatability, set all severities to the same value
   for (int i = GLOG_INFO; i < NUM_SEVERITIES; i++) {
-    overdue_[i] = overdue;
+    Enable(static_cast<LogSeverity>(i), overdue);
   }
 }
 
@@ -1311,6 +1314,14 @@ void LogCleaner::Disable() { overdue_.clear(); }
 
 void LogCleaner::Disable(const LogSeverity severity) {
   overdue_.erase(severity); 
+}
+
+void LogCleaner::EnableForGenericLogs(const std::chrono::minutes& overdue) {
+  overdue_[-1] = overdue;
+}
+
+void LogCleaner::DisableForGenericLogs() {
+  overdue_.erase(-1);
 }
 
 void LogCleaner::Run(const std::chrono::system_clock::time_point& current_time,
@@ -2659,10 +2670,18 @@ void EnableLogCleaner(LogSeverity severity, const std::chrono::minutes& overdue)
   log_cleaner.Enable(severity, overdue);
 }
 
+void EnableLogCleanerForGenericLogs(const std::chrono::minutes& overdue) {
+  log_cleaner.EnableForGenericLogs(overdue);
+}
+
 void DisableLogCleaner() { log_cleaner.Disable(); }
 
 void DisableLogCleaner(LogSeverity severity) {
   log_cleaner.Disable(severity);
+}
+
+void DisableLogCleanerForGenericLogs() {
+  log_cleaner.DisableForGenericLogs();
 }
 
 LogMessageTime::LogMessageTime() = default;
