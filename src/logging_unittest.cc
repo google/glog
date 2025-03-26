@@ -1629,3 +1629,9 @@ TEST(Logging, FatalThrow) {
   ScopedExit<decltype(restore_fail)> restore{restore_fail};
   EXPECT_THROW({ LOG(FATAL) << "must throw to fail"; }, std::logic_error);
 }
+
+TEST(DeathLogging, ErrorMessage) {
+  ASSERT_DEATH({ LOG(FATAL) << "foo"; }, "Check failure stack trace");
+  ASSERT_DEATH({ LOG_AT_LEVEL(google::LogSeverity::FATAL) << "foo"; },
+               "Check failure stack trace");
+}
