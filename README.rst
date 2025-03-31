@@ -1,7 +1,7 @@
 Google Logging Library
 ======================
 
-**Deprecation notice**: This project is no longer maintained and will be archived on 2025-06-31.
+**Deprecation notice**: This project is no longer maintained and will be archived on 2025-06-30.
 Consider using
 `ng-log <https://github.com/ng-log/ng-log>`_ (API-compatible,
 community-maintained,
