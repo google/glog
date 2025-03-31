@@ -832,8 +832,9 @@ static ATTRIBUTE_NOINLINE bool SymbolizeAndDemangle(
   Dl_info info;
   if (dladdr(pc, &info)) {
     if (info.dli_sname) {
-      if (strlen(info.dli_sname) < out_size) {
-        strcpy(out, info.dli_sname);
+      int name_length = strlen(info.dli_sname);
+      if (name_length < out_size) {
+        strlcpy(out, info.dli_sname, name_length);
         // Symbolization succeeded.  Now we try to demangle the symbol.
         DemangleInplace(out, out_size);
         return true;
