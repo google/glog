@@ -586,10 +586,6 @@ if (BUILD_TESTING)
 
   add_test (NAME demangle COMMAND demangle_unittest)
 
-  if (HAVE___CXA_DEMANGLE)
-    # Demangle tests use a different (reduced) representation of symbols
-    set_tests_properties (demangle PROPERTIES DISABLED ON)
-  endif (HAVE___CXA_DEMANGLE)
 
   if (HAVE_STACKTRACE)
     add_executable (stacktrace_unittest
