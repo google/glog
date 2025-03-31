@@ -103,11 +103,9 @@ namespace google {
 // Set VLOG(_IS_ON) level for module_pattern to log_level.
 // This lets us dynamically control what is normally set by the --vmodule flag.
 // Returns the level that previously applied to module_pattern.
-// NOTE: To change the log level for VLOG(_IS_ON) sites
-//	 that have already executed after/during InitGoogleLogging,
-//	 one needs to supply the exact --vmodule pattern that applied to them.
-//       (If no --vmodule pattern applied to them
-//       the value of FLAGS_v will continue to control them.)
+// NOTE: All VLOG(_IS_ON) sites that have not matched any prior module_patterns
+// will be re-evaluated with the provided module_pattern. Sites that have
+// already matched a different module_pattern will not be affected.
 extern GLOG_EXPORT int SetVLOGLevel(const char* module_pattern, int log_level);
 
 // Various declarations needed for VLOG_IS_ON above: =========================
