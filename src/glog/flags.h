@@ -104,6 +104,7 @@
 
 DECLARE_int32(logemaillevel);
 DECLARE_int32(logcleansecs);
+DECLARE_uint32(max_num_log_files);
 
 #ifdef GLOG_OS_LINUX
 DECLARE_bool(drop_log_memory);
