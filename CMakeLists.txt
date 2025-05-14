@@ -171,6 +171,18 @@ endif (WITH_FUZZING STREQUAL none)
 check_cxx_symbol_exists (__argv cstdlib HAVE___ARGV)
 check_cxx_symbol_exists (getprogname cstdlib HAVE_GETPROGNAME)
 check_cxx_symbol_exists (program_invocation_short_name cerrno HAVE_PROGRAM_INVOCATION_SHORT_NAME)
+
+check_cxx_source_compiles([=[
+  #include <typeinfo>
+  int main() { typeid(int); return 0; }
+]=] HAVE_RTTI)
+
+if(HAVE_RTTI)
+  set(DISABLE_RTTI OFF)
+else()
+  set(DISABLE_RTTI ON)
+endif()
+
 check_cxx_source_compiles ([=[
 #include <cstdlib>
 extern char* __progname;

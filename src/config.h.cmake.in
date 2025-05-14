@@ -1,6 +1,9 @@
 #ifndef GLOG_CONFIG_H
 #define GLOG_CONFIG_H
 
+/* define if glog doesn't use RTTI */
+#cmakedefine DISABLE_RTTI
+
 /* Define if you have the `dladdr' function */
 #cmakedefine HAVE_DLADDR
 
